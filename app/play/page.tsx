@@ -5,13 +5,25 @@ import {
   Hash,
   Target,
   Headphones,
-  GraduationCap,
   Play,
   ChevronDown,
   ArrowLeft,
+  LucideIcon,
 } from "lucide-react";
 
-const juegos = [
+// 1. Define the Interface for your Game objects
+interface Juego {
+  id: number;
+  titulo: string;
+  sub: string;
+  desc: string;
+  icon: LucideIcon;
+  bg: string;
+  accent: string;
+  slug: string;
+}
+
+const juegos: Juego[] = [
   {
     id: 1,
     titulo: "Armaduras",
@@ -55,12 +67,15 @@ const juegos = [
 ];
 
 export default function Home() {
-  const [selectedGame, setSelectedGame] = useState(null);
-  const optionsRef = useRef(null);
+  // 2. Explicitly type the State
+  const [selectedGame, setSelectedGame] = useState<Juego | null>(null);
 
-  const handleSelectGame = (juego) => {
+  // 3. Explicitly type the Ref
+  const optionsRef = useRef<HTMLDivElement>(null);
+
+  const handleSelectGame = (juego: Juego) => {
     setSelectedGame(juego);
-    // Pequeño delay para que el componente se renderice antes del scroll
+    // Small delay to ensure DOM is updated
     setTimeout(() => {
       optionsRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -72,7 +87,7 @@ export default function Home() {
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
       <div className="min-h-screen bg-slate-900/40 backdrop-blur-[2px]">
-        {/* Navbar mejorada */}
+        {/* Navbar */}
         <div className="pt-6 px-4">
           <nav className="max-w-5xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-8 py-4 flex justify-between items-center shadow-2xl">
             <div className="flex items-center gap-4">
@@ -104,7 +119,7 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* --- SECCIÓN 1: GRID DE SELECCIÓN --- */}
+        {/* --- SECTION 1: GRID --- */}
         <main className="max-w-6xl mx-auto px-6 py-24 min-h-[90vh] flex flex-col justify-center">
           <header className="mb-20 text-center">
             <h1 className="text-6xl md:text-8xl font-thin tracking-tighter text-white mb-6">
@@ -142,12 +157,18 @@ export default function Home() {
                 </div>
 
                 <h2
-                  className={`text-2xl font-bold tracking-tight mb-2 ${selectedGame?.id === j.id ? "text-slate-900" : "text-white"}`}
+                  className={`text-2xl font-bold tracking-tight mb-2 ${
+                    selectedGame?.id === j.id ? "text-slate-900" : "text-white"
+                  }`}
                 >
                   {j.titulo}
                 </h2>
                 <p
-                  className={`text-sm leading-relaxed ${selectedGame?.id === j.id ? "text-slate-800 font-medium" : "text-slate-400"}`}
+                  className={`text-sm leading-relaxed ${
+                    selectedGame?.id === j.id
+                      ? "text-slate-800 font-medium"
+                      : "text-slate-400"
+                  }`}
                 >
                   {j.desc}
                 </p>
@@ -162,7 +183,7 @@ export default function Home() {
           </div>
         </main>
 
-        {/* --- SECCIÓN 2: CONFIGURACIÓN (SCROLL DOWN) --- */}
+        {/* --- SECTION 2: CONFIGURATION --- */}
         <div
           ref={optionsRef}
           className={`min-h-screen transition-all duration-1000 flex items-center justify-center p-6 ${
@@ -173,7 +194,6 @@ export default function Home() {
         >
           {selectedGame && (
             <div className="w-full max-w-4xl bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row">
-              {/* Lateral Informativo */}
               <div
                 className={`md:w-1/3 p-12 flex flex-col justify-between ${selectedGame.bg} bg-opacity-10`}
               >
@@ -202,10 +222,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Formulario de Opciones */}
               <div className="md:w-2/3 p-12 bg-slate-900/50">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  {/* Columna 1 */}
                   <div className="space-y-6">
                     <div>
                       <label className="text-[10px] uppercase font-black text-amber-400 tracking-tighter block mb-4">
@@ -226,7 +244,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Columna 2 */}
                   <div className="space-y-6">
                     <div>
                       <label className="text-[10px] uppercase font-black text-amber-400 tracking-tighter block mb-4">
