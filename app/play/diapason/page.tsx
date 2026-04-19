@@ -51,11 +51,11 @@ export default function GamePage() {
       setCurrentQuestion(notes_images[backupIndex]);
     }
   };
-
   useEffect(() => {
-    getRandomImage();
+    requestAnimationFrame(() => {
+      getRandomImage();
+    });
   }, []);
-
   const handleAnswer = (notaSeleccionada: string) => {
     if (step >= 10 || !currentQuestion || isImageLoading) return;
 
