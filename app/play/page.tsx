@@ -30,7 +30,7 @@ const juegos: Juego[] = [
     icon: Hash,
     bg: "bg-amber-500/20",
     accent: "text-amber-400",
-    slug: "/play/armaduras", 
+    slug: "/play/armadura", 
   },
   {
     id: 2,
