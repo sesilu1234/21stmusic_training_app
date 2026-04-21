@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { notes_images } from "./notes_images";
+import { chords_images } from "./chords_images";
 
 export default function GamePage() {
   const [currentQuestion, setCurrentQuestion] = useState<{
@@ -13,53 +13,36 @@ export default function GamePage() {
     Array(10).fill(null),
   );
 
-  // NUEVO: Estado para controlar el skeleton
   const [isImageLoading, setIsImageLoading] = useState(true);
 
-  const notas = [
-    "C",
-    "C#",
-    "D",
-    "D#",
-    "E",
-    "F",
-    "F#",
-    "G",
-    "G#",
-    "A",
-    "A#",
-    "B",
-  ];
+  const notas = ["Mayor", "Menor", "Aumentado", "Disminuido"];
 
-  const imageFiles = Array.from({ length: 6 }, (_, c) =>
-    Array.from({ length: 12 }, (_, t) => `${t + 1} Traste ${c + 1}.png`),
-  ).flat();
+  const notes_images_length = chords_images.length;
 
   const getRandomImage = () => {
-    setIsImageLoading(true); // Reiniciar carga al cambiar imagen
-    const randomIndex = Math.floor(Math.random() * imageFiles.length);
-    const randomFileName = imageFiles[randomIndex];
-
-    const foundData = notes_images.find(
-      (item) => item.image === `images/${randomFileName}`,
-    );
-
-    if (foundData) {
-      setCurrentQuestion(foundData);
-    } else {
-      const backupIndex = Math.floor(Math.random() * notes_images.length);
-      setCurrentQuestion(notes_images[backupIndex]);
-    }
+    setIsImageLoading(true);
+    const randomIndex = Math.floor(Math.random() * notes_images_length);
+    const randomFileName = chords_images[randomIndex];
+    setCurrentQuestion(randomFileName);
   };
+
   useEffect(() => {
     requestAnimationFrame(() => {
       getRandomImage();
     });
   }, []);
+
   const handleAnswer = (notaSeleccionada: string) => {
     if (step >= 10 || !currentQuestion || isImageLoading) return;
 
-    const isCorrect = notaSeleccionada === currentQuestion.answer;
+    const mapping: Record<string, string> = {
+  "Mayor": "Mayores",
+  "Menor": "Menores",
+  "Aumentado": "aug",
+  "Disminuido": "dim"
+};
+
+    const isCorrect = mapping[notaSeleccionada] === currentQuestion.answer;
     const newResults = [...results];
     newResults[step] = isCorrect ? "correct" : "wrong";
     setResults(newResults);
@@ -78,30 +61,28 @@ export default function GamePage() {
       className="relative min-h-screen flex flex-col items-center justify-center p-6 bg-cover bg-center overflow-hidden"
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
+      {/* Logos */}
       <img
         src="/assets/logo21stCM_no_white_1.png"
-        className="absolute top-8 left-12 h-24 shadow-none"
+        className="absolute top-8 left-12 h-16 md:h-24 shadow-none hidden sm:block"
         alt="logo"
       />
       <img
         src="/assets/logo21stCM_no_white_1.png"
-        className="absolute top-8 right-12 h-24 shadow-none"
+        className="absolute top-8 right-12 h-16 md:h-24 shadow-none hidden sm:block"
         alt="logo"
       />
 
-      <div className="relative z-10 flex flex-col items-center gap-8 mr-24">
-        <h1 className="text-white text-3xl font-black drop-shadow-lg uppercase tracking-tighter">
+      <div className="relative z-10 flex flex-col items-center gap-8 w-full max-w-4xl px-4">
+        <h1 className="text-white text-2xl md:text-3xl font-black drop-shadow-lg uppercase tracking-tighter">
           ¿QUÉ NOTA ES?
         </h1>
 
-        {/* CONTENEDOR CON TAMAÑO FIJO (SKELETON) */}
-        <div className="relative bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl w-[90vw] max-w-2xl h-[250px] flex items-center justify-center overflow-hidden">
-          {/* Skeleton Overlay */}
-          {isImageLoading && null}
-
+        {/* Imagen Card */}
+        <div className="relative bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl w-full max-w-2xl h-[200px] md:h-[300px] flex items-center justify-center overflow-hidden">
           {currentQuestion && (
             <img
-              src={`/assets/diapason_notas/${currentQuestion.image.replace("images/", "")}`}
+              src={`/assets/diapason_acordes/${currentQuestion.image}`}
               alt="Nota"
               onLoad={() => setIsImageLoading(false)}
               className={`max-w-full max-h-full h-auto rounded-lg transition-opacity duration-300 ${
@@ -111,13 +92,14 @@ export default function GamePage() {
           )}
         </div>
 
-        <div className="grid grid-cols-4 md:grid-cols-6 gap-4 w-full max-w-2xl">
+        {/* Improved Buttons Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-2xl">
           {notas.map((nota) => (
             <button
               key={nota}
               disabled={isImageLoading}
               onClick={() => handleAnswer(nota)}
-              className="aspect-square flex items-center justify-center bg-white/10 hover:bg-yellow-500 hover:text-black border border-white/20 text-white text-2xl font-bold rounded-xl transition-all active:scale-90 backdrop-blur-sm shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center py-4 px-2 bg-white/10 hover:bg-yellow-500 hover:text-black border border-white/20 text-white text-lg md:text-xl font-bold rounded-xl transition-all active:scale-95 backdrop-blur-sm shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {nota}
             </button>
@@ -128,8 +110,8 @@ export default function GamePage() {
           21st Century Music
         </p>
 
-        {/* Panel de progreso */}
-        <div className="absolute -right-64 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
+        {/* Progress Panel - Adjusted for better responsiveness */}
+        <div className="hidden xl:flex absolute -right-48 top-1/2 -translate-y-1/2 flex-col items-center gap-3">
           <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-1">
             Progreso
           </p>
