@@ -10,7 +10,8 @@ import {
   Gamepad2,
   StickyNote,
   Plus,
-  Calendar
+  Calendar,
+  Activity // Icono añadido para Intervalos
 } from "lucide-react";
 
 // --- TIPOS ---
@@ -35,11 +36,12 @@ const juegos: Juego[] = [
   { id: 1, titulo: "Armaduras", desc: "Identifica tonalidades y alteraciones.", icon: Hash, bg: "bg-amber-500/20", accent: "text-amber-400", slug: "/play/armadura" },
   { id: 2, titulo: "Diapasón", desc: "Ubica notas en el mástil rápidamente.", icon: Target, bg: "bg-sky-500/20", accent: "text-sky-400", slug: "/play/diapason" },
   { id: 3, titulo: "Acordes", desc: "Reconoce la estructura de los acordes.", icon: Headphones, bg: "bg-emerald-500/20", accent: "text-emerald-400", slug: "/play/diapason_acordes" },
+  { id: 4, titulo: "Intervalos", desc: "Mide la distancia entre dos notas.", icon: Activity, bg: "bg-fuchsia-500/20", accent: "text-fuchsia-400", slug: "/play/intervalos" },
 ];
 
 const historialTabla = [
-  { fecha: "Hoy", armaduras: "24/24", diapason: "20/24", acordes: "18/24" },
-  { fecha: "Ayer", armaduras: "22/24", diapason: "15/24", acordes: "24/24" },
+  { fecha: "Hoy", armaduras: "24/24", diapason: "20/24", acordes: "18/24", intervalos: "21/24" },
+  { fecha: "Ayer", armaduras: "22/24", diapason: "15/24", acordes: "24/24", intervalos: "19/24" },
 ];
 
 export default function Home() {
@@ -68,10 +70,9 @@ export default function Home() {
         <div className="pt-6 px-4 z-50">
           <nav className="max-w-5xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl px-8 py-5 flex justify-between items-center shadow-2xl">
             <div className="flex items-center gap-6">
-              {/* LOGO MÁS GRANDE (h-16) */}
               <img 
                 src="/assets/logo21stCM_no_white_1.png" 
-                className="h-16 w-auto brightness-0 invert opacity-90 transition-transform hover:scale-105" 
+                className="h-16 w-auto brightness-99 transition-transform hover:scale-105" 
                 alt="logo" 
               />
               <div className="flex flex-col">
@@ -94,13 +95,12 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* --- CONTENEDOR PRINCIPAL CON TRANSICIONES --- */}
+        {/* --- CONTENEDOR PRINCIPAL --- */}
         <main className="flex-1 relative mt-10">
           
           {/* SECCIÓN JUEGOS */}
           <div className={`absolute inset-0 transition-all duration-700 ease-in-out px-6 flex flex-col justify-center items-center ${view === 'juegos' ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}`}>
             <header className="mb-16 text-center">
-              {/* SOLUCIÓN CORTE LETRA O: px-4 y un pequeño margen derecho */}
               <h1 className="text-5xl md:text-8xl italic font-black tracking-tighter mb-6 leading-tight inline-block text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/60 drop-shadow-2xl px-4" 
                   style={{ fontFamily: 'Chaney, sans-serif' }}>
                 Elige tu <span className="text-amber-400 uppercase mr-1">D</span>ESAFÍO
@@ -109,37 +109,39 @@ export default function Home() {
                 Selecciona una disciplina para comenzar tu entrenamiento.
               </p>
             </header>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-[85rem] w-full">
               {juegos.map((j) => (
-                <Link key={j.id} href={j.slug} className="group p-10 rounded-[3rem] transition-all duration-500 border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-105 hover:border-amber-400/50 backdrop-blur-md shadow-2xl block">
+                <Link key={j.id} href={j.slug} className="group p-8 rounded-[2.5rem] transition-all duration-500 border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-105 hover:border-amber-400/50 backdrop-blur-md shadow-2xl block">
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 ${j.bg}`}><j.icon size={28} className={j.accent} /></div>
-                  <h2 className="text-2xl italic font-black tracking-tighter mb-3 text-white uppercase group-hover:text-amber-400 transition-colors" style={{ fontFamily: 'Chaney, sans-serif' }}>{j.titulo}</h2>
-                  <p className="text-sm leading-relaxed text-slate-400 font-sans font-medium">{j.desc}</p>
+                  <h2 className="text-xl italic font-black tracking-tighter mb-3 text-white uppercase group-hover:text-amber-400 transition-colors" style={{ fontFamily: 'Chaney, sans-serif' }}>{j.titulo}</h2>
+                  <p className="text-xs leading-relaxed text-slate-400 font-sans font-medium">{j.desc}</p>
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* SECCIÓN PROGRESO (TABLA) */}
+          {/* SECCIÓN PROGRESO */}
           <div className={`absolute inset-0 transition-all duration-700 ease-in-out px-6 flex flex-col justify-center items-center ${view === 'progreso' ? 'translate-x-0 opacity-100' : view === 'juegos' ? 'translate-x-full opacity-0' : '-translate-x-full opacity-0'} pointer-events-none ${view === 'progreso' && 'pointer-events-auto'}`}>
             <div className="w-full max-w-5xl">
               <h2 className="text-white text-5xl italic font-black tracking-tighter uppercase text-center mb-16" style={{ fontFamily: 'Chaney, sans-serif' }}>Tu <span className="text-amber-400">P</span>rogreso</h2>
               <table className="w-full text-left border-separate border-spacing-y-4">
                 <thead>
                   <tr className="italic font-black uppercase tracking-widest text-sm" style={{ fontFamily: 'Chaney, sans-serif' }}>
-                    <th className="px-8 pb-4 text-white/40">Día</th>
-                    <th className="px-8 pb-4 text-amber-400">Armaduras</th>
-                    <th className="px-8 pb-4 text-sky-400">Diapasón</th>
-                    <th className="px-8 pb-4 text-emerald-400">Acordes</th>
+                    <th className="px-8 pb-4 text-white/40 text-xs">Día</th>
+                    <th className="px-8 pb-4 text-amber-400 text-xs">Armaduras</th>
+                    <th className="px-8 pb-4 text-sky-400 text-xs">Diapasón</th>
+                    <th className="px-8 pb-4 text-emerald-400 text-xs">Acordes</th>
+                    <th className="px-8 pb-4 text-fuchsia-400 text-xs">Intervalos</th>
                   </tr>
                 </thead>
                 <tbody>
                   {historialTabla.map((fila, i) => (
                     <tr key={i}>
-                      <td className="px-8 py-8 bg-white/5 rounded-l-[2rem] border-y border-l border-white/10 text-white font-bold">{fila.fecha}</td>
-                      <td className="px-8 py-8 bg-white/5 border-y border-white/10"><span className="text-2xl italic font-black text-white" style={{ fontFamily: 'Chaney, sans-serif' }}>{fila.armaduras}</span></td>
-                      <td className="px-8 py-8 bg-white/5 border-y border-white/10"><span className="text-2xl italic font-black text-white" style={{ fontFamily: 'Chaney, sans-serif' }}>{fila.diapason}</span></td>
-                      <td className="px-8 py-8 bg-white/5 rounded-r-[2rem] border-y border-r border-white/10"><span className="text-2xl italic font-black text-white" style={{ fontFamily: 'Chaney, sans-serif' }}>{fila.acordes}</span></td>
+                      <td className="px-8 py-6 bg-white/5 rounded-l-[2rem] border-y border-l border-white/10 text-white font-bold text-sm">{fila.fecha}</td>
+                      <td className="px-8 py-6 bg-white/5 border-y border-white/10"><span className="text-xl italic font-black text-white" style={{ fontFamily: 'Chaney, sans-serif' }}>{fila.armaduras}</span></td>
+                      <td className="px-8 py-6 bg-white/5 border-y border-white/10"><span className="text-xl italic font-black text-white" style={{ fontFamily: 'Chaney, sans-serif' }}>{fila.diapason}</span></td>
+                      <td className="px-8 py-6 bg-white/5 border-y border-white/10"><span className="text-xl italic font-black text-white" style={{ fontFamily: 'Chaney, sans-serif' }}>{fila.acordes}</span></td>
+                      <td className="px-8 py-6 bg-white/5 rounded-r-[2rem] border-y border-r border-white/10"><span className="text-xl italic font-black text-white" style={{ fontFamily: 'Chaney, sans-serif' }}>{fila.intervalos}</span></td>
                     </tr>
                   ))}
                 </tbody>
