@@ -1,0 +1,88 @@
+// Cuerda 1 (E aguda)
+
+export const diapason_data = [
+  // Cuerda 1 (Mi)
+  { image: "/assets/diapason_notas/1 Traste 1.png", answer: "Fa" },
+  { image: "/assets/diapason_notas/2 Traste 1.png", answer: "Fa#/Solb" },
+  { image: "/assets/diapason_notas/3 Traste 1.png", answer: "Sol" },
+  { image: "/assets/diapason_notas/4 Traste 1.png", answer: "Sol#/Lab" },
+  { image: "/assets/diapason_notas/5 Traste 1.png", answer: "La" },
+  { image: "/assets/diapason_notas/6 Traste 1.png", answer: "La#/Sib" },
+  { image: "/assets/diapason_notas/7 Traste 1.png", answer: "Si" },
+  { image: "/assets/diapason_notas/8 Traste 1.png", answer: "Do" },
+  { image: "/assets/diapason_notas/9 Traste 1.png", answer: "Do#/Reb" },
+  { image: "/assets/diapason_notas/10 Traste 1.png", answer: "Re" },
+  { image: "/assets/diapason_notas/11 Traste 1.png", answer: "Re#/Mib" },
+  { image: "/assets/diapason_notas/12 Traste 1.png", answer: "Mi" },
+
+  // Cuerda 2 (Si)
+  { image: "/assets/diapason_notas/1 Traste 2.png", answer: "Do" },
+  { image: "/assets/diapason_notas/2 Traste 2.png", answer: "Do#/Reb" },
+  { image: "/assets/diapason_notas/3 Traste 2.png", answer: "Re" },
+  { image: "/assets/diapason_notas/4 Traste 2.png", answer: "Re#/Mib" },
+  { image: "/assets/diapason_notas/5 Traste 2.png", answer: "Mi" },
+  { image: "/assets/diapason_notas/6 Traste 2.png", answer: "Fa" },
+  { image: "/assets/diapason_notas/7 Traste 2.png", answer: "Fa#/Solb" },
+  { image: "/assets/diapason_notas/8 Traste 2.png", answer: "Sol" },
+  { image: "/assets/diapason_notas/9 Traste 2.png", answer: "Sol#/Lab" },
+  { image: "/assets/diapason_notas/10 Traste 2.png", answer: "La" },
+  { image: "/assets/diapason_notas/11 Traste 2.png", answer: "La#/Sib" },
+  { image: "/assets/diapason_notas/12 Traste 2.png", answer: "Si" },
+
+  // Cuerda 3 (Sol)
+  { image: "/assets/diapason_notas/1 Traste 3.png", answer: "Sol#/Lab" },
+  { image: "/assets/diapason_notas/2 Traste 3.png", answer: "La" },
+  { image: "/assets/diapason_notas/3 Traste 3.png", answer: "La#/Sib" },
+  { image: "/assets/diapason_notas/4 Traste 3.png", answer: "Si" },
+  { image: "/assets/diapason_notas/5 Traste 3.png", answer: "Do" },
+  { image: "/assets/diapason_notas/6 Traste 3.png", answer: "Do#/Reb" },
+  { image: "/assets/diapason_notas/7 Traste 3.png", answer: "Re" },
+  { image: "/assets/diapason_notas/8 Traste 3.png", answer: "Re#/Mib" },
+  { image: "/assets/diapason_notas/9 Traste 3.png", answer: "Mi" },
+  { image: "/assets/diapason_notas/10 Traste 3.png", answer: "Fa" },
+  { image: "/assets/diapason_notas/11 Traste 3.png", answer: "Fa#/Solb" },
+  { image: "/assets/diapason_notas/12 Traste 3.png", answer: "Sol" },
+
+  // Cuerda 4 (Re)
+  { image: "/assets/diapason_notas/1 Traste 4.png", answer: "Re#/Mib" },
+  { image: "/assets/diapason_notas/2 Traste 4.png", answer: "Mi" },
+  { image: "/assets/diapason_notas/3 Traste 4.png", answer: "Fa" },
+  { image: "/assets/diapason_notas/4 Traste 4.png", answer: "Fa#/Solb" },
+  { image: "/assets/diapason_notas/5 Traste 4.png", answer: "Sol" },
+  { image: "/assets/diapason_notas/6 Traste 4.png", answer: "Sol#/Lab" },
+  { image: "/assets/diapason_notas/7 Traste 4.png", answer: "La" },
+  { image: "/assets/diapason_notas/8 Traste 4.png", answer: "La#/Sib" },
+  { image: "/assets/diapason_notas/9 Traste 4.png", answer: "Si" },
+  { image: "/assets/diapason_notas/10 Traste 4.png", answer: "Do" },
+  { image: "/assets/diapason_notas/11 Traste 4.png", answer: "Do#/Reb" },
+  { image: "/assets/diapason_notas/12 Traste 4.png", answer: "Re" },
+
+  // Cuerda 5 (La)
+  { image: "/assets/diapason_notas/1 Traste 5.png", answer: "La#/Sib" },
+  { image: "/assets/diapason_notas/2 Traste 5.png", answer: "Si" },
+  { image: "/assets/diapason_notas/3 Traste 5.png", answer: "Do" },
+  { image: "/assets/diapason_notas/4 Traste 5.png", answer: "Do#/Reb" },
+  { image: "/assets/diapason_notas/5 Traste 5.png", answer: "Re" },
+  { image: "/assets/diapason_notas/6 Traste 5.png", answer: "Re#/Mib" },
+  { image: "/assets/diapason_notas/7 Traste 5.png", answer: "Mi" },
+  { image: "/assets/diapason_notas/8 Traste 5.png", answer: "Fa" },
+  { image: "/assets/diapason_notas/9 Traste 5.png", answer: "Fa#/Solb" },
+  { image: "/assets/diapason_notas/10 Traste 5.png", answer: "Sol" },
+  { image: "/assets/diapason_notas/11 Traste 5.png", answer: "Sol#/Lab" },
+  { image: "/assets/diapason_notas/12 Traste 5.png", answer: "La" },
+
+  // Cuerda 6 (Mi grave)
+  { image: "/assets/diapason_notas/1 Traste 6.png", answer: "Fa" },
+  { image: "/assets/diapason_notas/2 Traste 6.png", answer: "Fa#/Solb" },
+  { image: "/assets/diapason_notas/3 Traste 6.png", answer: "Sol" },
+  { image: "/assets/diapason_notas/4 Traste 6.png", answer: "Sol#/Lab" },
+  { image: "/assets/diapason_notas/5 Traste 6.png", answer: "La" },
+  { image: "/assets/diapason_notas/6 Traste 6.png", answer: "La#/Sib" },
+  { image: "/assets/diapason_notas/7 Traste 6.png", answer: "Si" },
+  { image: "/assets/diapason_notas/8 Traste 6.png", answer: "Do" },
+  { image: "/assets/diapason_notas/9 Traste 6.png", answer: "Do#/Reb" },
+  { image: "/assets/diapason_notas/10 Traste 6.png", answer: "Re" },
+  { image: "/assets/diapason_notas/11 Traste 6.png", answer: "Re#/Mib" },
+  { image: "/assets/diapason_notas/12 Traste 6.png", answer: "Mi" },
+];
+

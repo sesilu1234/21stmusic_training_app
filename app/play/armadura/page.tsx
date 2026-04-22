@@ -19,15 +19,26 @@ export default function ArmadurasGame() {
   const [userAnswers, setUserAnswers] = useState<(string | null)[]>(Array(24).fill(null));
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [gameOver, setGameOver] = useState(false);
-  
-  // Este estado controlará si el botón "Siguiente" debe ser visible
   const [isReviewing, setIsReviewing] = useState(false);
 
   const currentQuestion = quizList[step];
   const esPreguntaMayor = currentQuestion?.image.includes(" M.png");
   const respuestaCorrecta = esPreguntaMayor ? currentQuestion?.mayor : currentQuestion?.menor;
 
-  // El progreso máximo alcanzado hasta ahora
+  useEffect(() => {
+    quizList.forEach((q) => {
+      const img = new Image();
+      img.src = encodeURI(q.image);
+    });
+  }, [quizList]);
+
+  useEffect(() => {
+    setIsImageLoading(true);
+    const img = new Image();
+    img.src = encodeURI(currentQuestion.image);
+    if (img.complete) setIsImageLoading(false);
+  }, [step, currentQuestion.image]);
+
   const progresoMaximo = useMemo(() => {
     const index = userAnswers.indexOf(null);
     return index === -1 ? 24 : index;
@@ -38,14 +49,8 @@ export default function ArmadurasGame() {
     return texto.replace('Dos', 'Do#').replace('Res', 'Re#').replace('Fas', 'Fa#').replace('Sols', 'Sol#').replace('Las', 'La#');
   };
 
-  useEffect(() => {
-    setIsImageLoading(true);
-  }, [step]);
-
   const handleNoteClick = (notaBoton: string) => {
     if (gameOver || userAnswers[step] !== null) return;
-    
-    // Al contestar una nueva, dejamos de estar en modo revisión "histórica"
     setIsReviewing(false);
 
     const primeraPalabraSolucion = respuestaCorrecta?.split(" ")[0] || "";
@@ -62,7 +67,6 @@ export default function ArmadurasGame() {
 
     const newAnswers = [...userAnswers];
     newAnswers[step] = notaBoton; 
-    setUserAnswers(newAnswers);
 
     if (step < 23) {
       setTimeout(() => setStep(step + 1), 400);
@@ -72,52 +76,60 @@ export default function ArmadurasGame() {
   };
 
   const goBack = () => {
-    setIsReviewing(true); // Activamos el modo revisión al ir atrás
+    setIsReviewing(true);
     setStep(prev => Math.max(0, prev - 1));
   };
 
   const goNext = () => {
     const nextStep = step + 1;
     setStep(nextStep);
-    
-    // Si al avanzar llegamos a la pregunta que aún no se ha contestado,
-    // o a la última contestada, ocultamos el botón Siguiente
-    if (nextStep >= progresoMaximo) {
-      setIsReviewing(false);
-    }
+    if (nextStep >= progresoMaximo) setIsReviewing(false);
   };
 
   return (
+    
     <div className="relative min-h-screen flex flex-col items-center justify-center p-6 bg-cover bg-center overflow-hidden"
          style={{ backgroundImage: "url('/assets/background.jpeg')" }}>
       
-      <button onClick={() => router.push("/play")} className="absolute top-8 left-8 text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/20 px-4 py-2 rounded-full border border-white/10 z-20">
+      <button 
+        onClick={() => router.push("/play")} 
+        className="absolute top-8 left-8 text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/20 px-4 py-2 rounded-full border border-white/10 z-20"
+      >
         ← Menú Principal
       </button>
 
-      <div className="mb-6 text-center">
-        <h2 className="text-white text-2xl font-light tracking-wide">
-          ¿Qué tonalidad <span className={`font-black border-b-4 uppercase italic px-2 ${esPreguntaMayor ? 'border-amber-400' : 'border-sky-400'}`}>
-            {esPreguntaMayor ? "Mayor" : "Menor"}
-          </span> indica esta armadura?
+      {/* PREGUNTA: ¿ + Q y MAYOR/MENOR en mayúsculas */}
+      <div className="mb-6 text-center max-w-2xl px-4">
+        <h2 className="text-white text-3xl font-black italic tracking-tighter leading-tight" 
+            style={{ fontFamily: 'Chaney, sans-serif' }}>
+          ¿<span className="uppercase">Q</span>ué tonalidad 
+          <span className="text-black mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
+            {esPreguntaMayor ? "MAYOR" : "MENOR"}
+          </span> 
+          indica esta armadura?
         </h2>
       </div>
 
       <div className="relative flex flex-col items-center w-full max-w-md mb-8">
-        <div className="bg-white p-8 rounded-[3.5rem] shadow-2xl w-full h-48 flex items-center justify-center border-4 border-white relative">
+        <div className="bg-white p-8 rounded-[3.5rem] shadow-2xl w-full h-48 flex items-center justify-center border-4 border-white relative overflow-hidden">
           <div className="absolute top-4 right-6 text-black/5 font-black italic text-xl">#{step + 1}</div>
-          {currentQuestion && (
-            <img 
-              key={currentQuestion.image} 
-              src={encodeURI(currentQuestion.image)} 
-              alt="Armadura" 
-              onLoad={() => setIsImageLoading(false)}
-              className={`max-h-full transition-all duration-300 ${isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`} 
-            />
+          
+          {isImageLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
+              <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
           )}
+
+          <img 
+            key={currentQuestion.image} 
+            src={encodeURI(currentQuestion.image)} 
+            alt="Armadura" 
+            onLoad={() => setIsImageLoading(false)}
+            className={`max-h-full transition-all duration-300 ${isImageLoading ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`} 
+          />
         </div>
 
-        {/* SOLUCIÓN: Solo visible si hemos vuelto atrás (isReviewing) y hay respuesta */}
+        {/* SOLUCIÓN ESTILO CHANEY */}
         <div className={`absolute -bottom-12 left-0 right-0 z-30 transition-all duration-500 transform ${isReviewing && userAnswers[step] !== null ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95 pointer-events-none'}`}>
           <div className="mx-auto w-48 h-16 rounded-2xl border-2 border-amber-400/50 bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center shadow-2xl">
             <span className="text-[8px] text-amber-400 uppercase font-black tracking-widest">Solución</span>
@@ -128,6 +140,7 @@ export default function ArmadurasGame() {
         </div>
       </div>
 
+      {/* BOTONES NOTAS: FONT-SEMIBOLD SANS */}
       <div className={`bg-black/40 p-8 rounded-[3rem] border border-white/10 w-full max-w-6xl backdrop-blur-md transition-all ${userAnswers[step] !== null ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
         <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-9 gap-4">
           {todasLasNotas.map(nota => (
@@ -135,30 +148,20 @@ export default function ArmadurasGame() {
               key={nota} 
               disabled={userAnswers[step] !== null || gameOver} 
               onClick={() => handleNoteClick(nota)} 
-              className="py-5 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500/10 hover:border-amber-500/50 transition-all shadow-sm active:scale-95"
-              style={{ fontFamily: 'Chaney, sans-serif', fontStyle: 'italic', fontWeight: 'bold' }}
+              className="py-5 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black hover:border-amber-500 transition-all active:scale-95 shadow-sm"
             >
-              <span className="text-sm uppercase tracking-tighter">{nota}</span>
+              <span className="text-sm font-semibold font-sans tracking-normal">{nota}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="w-full max-w-2xl flex flex-col items-center gap-6 mt-12">
+      <div className="w-full max-w-2xl flex flex-col items-center gap-6 mt-16">
         <div className="flex gap-4 h-10 items-center">
-          <button 
-            onClick={goBack} 
-            className={`px-6 py-2 bg-white/5 border border-white/10 text-white text-[10px] font-bold rounded-full uppercase tracking-widest hover:bg-white/10 transition-all ${step === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-          >
+          <button onClick={goBack} className={`px-6 py-2 bg-white/5 border border-white/10 text-white text-[10px] font-bold rounded-full uppercase tracking-widest hover:bg-white/10 transition-all ${step === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             ← Anterior
           </button>
-
-          {/* Botón Siguiente: Solo si isReviewing es verdadero y no estamos en la última posible */}
-          <button 
-            onClick={goNext} 
-            className={`px-6 py-2 bg-amber-500 text-black text-[10px] font-bold rounded-full uppercase tracking-widest hover:scale-105 transition-all 
-              ${(isReviewing && step < progresoMaximo) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-          >
+          <button onClick={goNext} className={`px-6 py-2 bg-amber-500 text-black text-[10px] font-bold rounded-full uppercase tracking-widest hover:scale-105 transition-all ${(isReviewing && step < progresoMaximo) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             Siguiente →
           </button>
         </div>
