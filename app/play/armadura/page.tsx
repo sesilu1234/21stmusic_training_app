@@ -66,7 +66,8 @@ export default function ArmadurasGame() {
     setResults(newResults);
 
     const newAnswers = [...userAnswers];
-    newAnswers[step] = notaBoton; 
+    newAnswers[step] = notaBoton;
+    setUserAnswers(newAnswers);
 
     if (step < 23) {
       setTimeout(() => setStep(step + 1), 400);
@@ -81,13 +82,17 @@ export default function ArmadurasGame() {
   };
 
   const goNext = () => {
-    const nextStep = step + 1;
-    setStep(nextStep);
-    if (nextStep >= progresoMaximo) setIsReviewing(false);
+    if (step < 23) {
+      const nextStep = step + 1;
+      setStep(nextStep);
+      // Si llegamos a la pregunta donde nos habíamos quedado, dejamos de "revisar"
+      if (nextStep >= progresoMaximo) {
+        setIsReviewing(false);
+      }
+    }
   };
 
   return (
-    
     <div className="relative min-h-screen flex flex-col items-center justify-center p-6 bg-cover bg-center overflow-hidden"
          style={{ backgroundImage: "url('/assets/background.jpeg')" }}>
       
@@ -98,7 +103,6 @@ export default function ArmadurasGame() {
         ← Menú Principal
       </button>
 
-      {/* PREGUNTA: ¿ + Q y MAYOR/MENOR en mayúsculas */}
       <div className="mb-6 text-center max-w-2xl px-4">
         <h2 className="text-white text-3xl font-black italic tracking-tighter leading-tight" 
             style={{ fontFamily: 'Chaney, sans-serif' }}>
@@ -140,7 +144,6 @@ export default function ArmadurasGame() {
         </div>
       </div>
 
-      {/* BOTONES NOTAS: FONT-SEMIBOLD SANS */}
       <div className={`bg-black/40 p-8 rounded-[3rem] border border-white/10 w-full max-w-6xl backdrop-blur-md transition-all ${userAnswers[step] !== null ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
         <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-9 gap-4">
           {todasLasNotas.map(nota => (
@@ -157,11 +160,19 @@ export default function ArmadurasGame() {
       </div>
 
       <div className="w-full max-w-2xl flex flex-col items-center gap-6 mt-16">
-        <div className="flex gap-4 h-10 items-center">
-          <button onClick={goBack} className={`px-6 py-2 bg-white/5 border border-white/10 text-white text-[10px] font-bold rounded-full uppercase tracking-widest hover:bg-white/10 transition-all ${step === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className="flex gap-4 h-12 items-center">
+          <button 
+            onClick={goBack} 
+            className={`px-8 py-3 bg-white/5 border border-white/10 text-white text-[10px] font-bold rounded-full uppercase tracking-widest hover:bg-white/10 transition-all ${step === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          >
             ← Anterior
           </button>
-          <button onClick={goNext} className={`px-6 py-2 bg-amber-500 text-black text-[10px] font-bold rounded-full uppercase tracking-widest hover:scale-105 transition-all ${(isReviewing && step < progresoMaximo) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          
+          {/* BOTÓN SIGUIENTE AMARILLO: Solo aparece si isReviewing es true */}
+          <button 
+            onClick={goNext} 
+            className={`px-10 py-3 bg-amber-500 text-black text-[10px] font-black rounded-full uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-amber-500/20 ${ isReviewing ? 'opacity-100' : 'opacity-0 pointer-events-none' }`}
+          >
             Siguiente →
           </button>
         </div>
