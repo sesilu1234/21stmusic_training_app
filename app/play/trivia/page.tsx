@@ -15,9 +15,105 @@ const preguntasTrivial = [
     respuesta: "Scorpions"
   },
   {
+    pregunta: "¿Qué famosa respuesta dio Jimi Hendrix cuando le preguntaron qué se sentía al ser el mejor guitarrista del mundo?",
+    opciones: ["'No lo sé, preguntadle a Rory Gallagher'", "'Es un honor'", "'Prefiero a Eric Clapton'", "'Solo soy un músico'"],
+    respuesta: "'No lo sé, preguntadle a Rory Gallagher'"
+  },
+  {
     pregunta: "¿Cómo se llama la famosa Gibson Les Paul de 1959 que perteneció a Peter Green y luego a Gary Moore?",
     opciones: ["Blackie", "Greeny", "Pearly Gates", "Lucy"],
     respuesta: "Greeny"
+  },
+  {
+    pregunta: "¿Qué guitarrista alemán grabó el legendario álbum en directo 'Tokyo Tapes' con Scorpions en 1978?",
+    opciones: ["Michael Schenker", "Matthias Jabs", "Uli Jon Roth", "Rudolf Schenker"],
+    respuesta: "Uli Jon Roth"
+  },
+  {
+    pregunta: "¿Cómo se llama el revolucionario solo instrumental de Eddie Van Halen que cambió la guitarra eléctrica en 1978?",
+    opciones: ["Cathedral", "Spanish Fly", "Eruption", "Mean Street"],
+    respuesta: "Eruption"
+  },
+  {
+    pregunta: "¿Qué modelo de guitarra eléctrica, famosa por tener el acabado casi totalmente desgastado, era la seña de identidad de Rory Gallagher?",
+    opciones: ["Fender Telecaster 1952", "Fender Stratocaster 1961", "Gibson Les Paul Junior", "Vox Phantom"],
+    respuesta: "Fender Stratocaster 1961"
+  },
+  {
+    pregunta: "¿Qué guitarrista alemán de los años 70 es citado a menudo como una gran influencia temprana en el estilo de Eddie Van Halen?",
+    opciones: ["Michael Schenker", "Uli Jon Roth", "Rudolf Schenker", "Wolf Hoffmann"],
+    respuesta: "Uli Jon Roth"
+  },
+  {
+    pregunta: "¿Qué banda incluía una cláusula en su contrato exigiendo un bol de M&Ms sin caramelos marrones para verificar la seguridad del escenario?",
+    opciones: ["Led Zeppelin", "Van Halen", "Aerosmith", "Mötley Crüe"],
+    respuesta: "Van Halen"
+  },
+  {
+    pregunta: "¿Qué afinación abierta utiliza Jimmy Page en la canción 'Kashmir' para lograr ese sonido épico y oriental?",
+    opciones: ["Open G", "DADGAD", "Drop D", "Open E"],
+    respuesta: "DADGAD"
+  },
+  {
+    pregunta: "¿Qué banda británica fue pionera en separar drásticamente los instrumentos en la mezcla (ej. batería a un lado, guitarras al otro) en sus primeros discos?",
+    opciones: ["The Rolling Stones", "The Who", "The Beatles", "Led Zeppelin"],
+    respuesta: "The Beatles"
+  },
+  {
+    pregunta: "¿En qué legendaria canción de Van Halen se escucha a Eddie bajando la sexta cuerda a un Re (Drop D) en mitad del riff?",
+    opciones: ["Unchained", "Panama", "Ain't Talkin' 'bout Love", "Runnin' with the Devil"],
+    respuesta: "Unchained"
+  },
+  {
+    pregunta: "¿Qué técnica popularizó masivamente Eddie Van Halen utilizando ambas manos en el mástil?",
+    opciones: ["Sweep Picking", "Tapping", "Slide", "Chicken Picking"],
+    respuesta: "Tapping"
+  },
+  {
+    pregunta: "¿Cómo se llama la guitarra icónica de rayas blancas y negras (o rojas) construida por el propio Eddie Van Halen?",
+    opciones: ["Blackie", "Frankenstrat", "Wolfgang", "The Log"],
+    respuesta: "Frankenstrat"
+  },
+  {
+    pregunta: "¿En qué canción de Michael Jackson grabó Eddie Van Halen el solo de guitarra de forma gratuita?",
+    opciones: ["Billie Jean", "Thriller", "Beat It", "Bad"],
+    respuesta: "Beat It"
+  },
+
+  {
+    pregunta: "¿Qué sistema de puente flotante ayudó a desarrollar Eddie Van Halen para que la guitarra no se desafinara al usar la palanca?",
+    opciones: ["Bigsby", "Floyd Rose", "Wilkinson", "Vintage Tremolo"],
+    respuesta: "Floyd Rose"
+  },
+  {
+    pregunta: "¿Qué guitarrista compuso y grabó el tema instrumental 'Jessica' de The Allman Brothers Band?",
+    opciones: ["Duane Allman", "Dickey Betts", "Derek Trucks", "Warren Haynes"],
+    respuesta: "Dickey Betts"
+  },
+  {
+    pregunta: "¿Qué joven prodigio de la guitarra grabó los álbumes 'Blizzard of Ozz' y 'Diary of a Madman' con Ozzy Osbourne?",
+    opciones: ["Zakk Wylde", "Randy Rhoads", "Jake E. Lee", "Tony Iommi"],
+    respuesta: "Randy Rhoads"
+  },
+  {
+    pregunta: "¿En qué legendario álbum en directo de UFO se puede escuchar la mejor versión de 'Rock Bottom' de Michael Schenker?",
+    opciones: ["Phenomenon", "Force It", "Strangers in the Night", "No Heavy Petting"],
+    respuesta: "Strangers in the Night"
+  },
+  {
+    pregunta: "¿Qué guitarrista de los Allman Brothers falleció trágicamente en un accidente de moto en 1971, poco después del álbum 'At Fillmore East'?",
+    opciones: ["Gregg Allman", "Berry Oakley", "Duane Allman", "Butch Trucks"],
+    respuesta: "Duane Allman"
+  },
+  {
+    pregunta: "¿Qué técnica de guitarra, de la cual Duane Allman era un maestro absoluto, define el sonido de 'Statesboro Blues'?",
+    opciones: ["Tapping", "Slide (con un bote de cristal de Coricidin)", "Fingerpicking", "Sweep Picking"],
+    respuesta: "Slide (con un bote de cristal de Coricidin)"
+  },
+  {
+    pregunta: "¿Quién es el actual guitarrista de la 'Tedeschi Trucks Band' y sobrino de uno de los fundadores de los Allman Brothers?",
+    opciones: ["Marcus King", "Derek Trucks", "Joe Bonamassa", "Kenny Wayne Shepherd"],
+    respuesta: "Derek Trucks"
   },
   {
     pregunta: "¿Cuál fue la primera guitarra de cuerpo sólido comercializada masivamente por Leo Fender?",
@@ -28,6 +124,16 @@ const preguntasTrivial = [
     pregunta: "¿Qué álbum de 'The Beatles' incluye el famoso solo de Eric Clapton en 'While My Guitar Gently Weeps'?",
     opciones: ["Abbey Road", "Revolver", "The White Album", "Let It Be"],
     respuesta: "The White Album"
+  },
+  {
+    pregunta: "¿Qué guitarrista británico grabó la famosa versión de 'Hideaway' en 1966?",
+    opciones: ["Jeff Beck", "Jimmy Page", "Eric Clapton", "Peter Green"],
+    respuesta: "Eric Clapton"
+  },
+  {
+    pregunta: "¿Qué legendario 'King' del blues grabó e hizo famosa originalmente la canción instrumental 'The Stumble' en 1961?",
+    opciones: ["B.B. King", "Albert King", "Freddie King", "Earl King"],
+    respuesta: "Freddie King"
   },
   {
     pregunta: "¿Qué modelo de Gibson es inseparable de la imagen de Jimmy Page?",
