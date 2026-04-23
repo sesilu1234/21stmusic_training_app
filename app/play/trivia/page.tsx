@@ -2,414 +2,632 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, XCircle } from "lucide-react";
+interface Pregunta {
+  pregunta: string;
+  opciones: string[];
+  respuesta: string;
+}
 
-const preguntasTrivial = [
+const preguntasTrivial: Pregunta[] = [
   {
-    pregunta: "¿Qué guitarrista es conocido por su icónica Fender Stratocaster negra llamada 'Blackie'?",
-    opciones: ["Jimi Hendrix", "Eric Clapton", "Jeff Beck", "Ritchie Blackmore"],
-    respuesta: "Eric Clapton"
+    pregunta:
+      "¿Qué guitarrista es conocido por su icónica Fender Stratocaster negra llamada 'Blackie'?",
+    opciones: [
+      "Jimi Hendrix",
+      "Eric Clapton",
+      "Jeff Beck",
+      "Ritchie Blackmore",
+    ],
+    respuesta: "Eric Clapton",
   },
   {
-    pregunta: "¿En qué banda militaron juntos Michael Schenker y su hermano Rudolf?",
+    pregunta:
+      "¿En qué banda militaron juntos Michael Schenker y su hermano Rudolf?",
     opciones: ["UFO", "MSG", "Scorpions", "Europe"],
-    respuesta: "Scorpions"
+    respuesta: "Scorpions",
   },
   {
-    pregunta: "¿Qué famosa respuesta dio Jimi Hendrix cuando le preguntaron qué se sentía al ser el mejor guitarrista del mundo?",
-    opciones: ["'No lo sé, preguntadle a Rory Gallagher'", "'Es un honor'", "'Prefiero a Eric Clapton'", "'Solo soy un músico'"],
-    respuesta: "'No lo sé, preguntadle a Rory Gallagher'"
+    pregunta:
+      "¿Qué famosa respuesta dio Jimi Hendrix cuando le preguntaron qué se sentía al ser el mejor guitarrista del mundo?",
+    opciones: [
+      "'No lo sé, preguntadle a Rory Gallagher'",
+      "'Es un honor'",
+      "'Prefiero a Eric Clapton'",
+      "'Solo soy un músico'",
+    ],
+    respuesta: "'No lo sé, preguntadle a Rory Gallagher'",
   },
   {
-    pregunta: "¿Cómo se llama la famosa Gibson Les Paul de 1959 que perteneció a Peter Green y luego a Gary Moore?",
+    pregunta:
+      "¿Cómo se llama la famosa Gibson Les Paul de 1959 que perteneció a Peter Green y luego a Gary Moore?",
     opciones: ["Blackie", "Greeny", "Pearly Gates", "Lucy"],
-    respuesta: "Greeny"
+    respuesta: "Greeny",
   },
   {
-    pregunta: "¿Qué guitarrista alemán grabó el legendario álbum en directo 'Tokyo Tapes' con Scorpions en 1978?",
-    opciones: ["Michael Schenker", "Matthias Jabs", "Uli Jon Roth", "Rudolf Schenker"],
-    respuesta: "Uli Jon Roth"
+    pregunta:
+      "¿Qué guitarrista alemán grabó el legendario álbum en directo 'Tokyo Tapes' con Scorpions en 1978?",
+    opciones: [
+      "Michael Schenker",
+      "Matthias Jabs",
+      "Uli Jon Roth",
+      "Rudolf Schenker",
+    ],
+    respuesta: "Uli Jon Roth",
   },
   {
-    pregunta: "¿Cómo se llama el revolucionario solo instrumental de Eddie Van Halen que cambió la guitarra eléctrica en 1978?",
+    pregunta:
+      "¿Cómo se llama el revolucionario solo instrumental de Eddie Van Halen que cambió la guitarra eléctrica en 1978?",
     opciones: ["Cathedral", "Spanish Fly", "Eruption", "Mean Street"],
-    respuesta: "Eruption"
+    respuesta: "Eruption",
   },
   {
-    pregunta: "¿Qué modelo de guitarra eléctrica, famosa por tener el acabado casi totalmente desgastado, era la seña de identidad de Rory Gallagher?",
-    opciones: ["Fender Telecaster 1952", "Fender Stratocaster 1961", "Gibson Les Paul Junior", "Vox Phantom"],
-    respuesta: "Fender Stratocaster 1961"
+    pregunta:
+      "¿Qué modelo de guitarra eléctrica, famosa por tener el acabado casi totalmente desgastado, era la seña de identidad de Rory Gallagher?",
+    opciones: [
+      "Fender Telecaster 1952",
+      "Fender Stratocaster 1961",
+      "Gibson Les Paul Junior",
+      "Vox Phantom",
+    ],
+    respuesta: "Fender Stratocaster 1961",
   },
   {
-    pregunta: "¿Qué guitarrista alemán de los años 70 es citado a menudo como una gran influencia temprana en el estilo de Eddie Van Halen?",
-    opciones: ["Michael Schenker", "Uli Jon Roth", "Rudolf Schenker", "Wolf Hoffmann"],
-    respuesta: "Uli Jon Roth"
+    pregunta:
+      "¿Qué guitarrista alemán de los años 70 es citado a menudo como una gran influencia temprana en el estilo de Eddie Van Halen?",
+    opciones: [
+      "Michael Schenker",
+      "Uli Jon Roth",
+      "Rudolf Schenker",
+      "Wolf Hoffmann",
+    ],
+    respuesta: "Uli Jon Roth",
   },
   {
-    pregunta: "¿Qué banda incluía una cláusula en su contrato exigiendo un bol de M&Ms sin caramelos marrones para verificar la seguridad del escenario?",
+    pregunta:
+      "¿Qué banda incluía una cláusula en su contrato exigiendo un bol de M&Ms sin caramelos marrones para verificar la seguridad del escenario?",
     opciones: ["Led Zeppelin", "Van Halen", "Aerosmith", "Mötley Crüe"],
-    respuesta: "Van Halen"
+    respuesta: "Van Halen",
   },
   {
-    pregunta: "¿Qué afinación abierta utiliza Jimmy Page en la canción 'Kashmir' para lograr ese sonido épico y oriental?",
+    pregunta:
+      "¿Qué afinación abierta utiliza Jimmy Page en la canción 'Kashmir' para lograr ese sonido épico y oriental?",
     opciones: ["Open G", "DADGAD", "Drop D", "Open E"],
-    respuesta: "DADGAD"
+    respuesta: "DADGAD",
   },
   {
-    pregunta: "¿Qué banda británica fue pionera en separar drásticamente los instrumentos en la mezcla (ej. batería a un lado, guitarras al otro) en sus primeros discos?",
+    pregunta:
+      "¿Qué banda británica fue pionera en separar drásticamente los instrumentos en la mezcla (ej. batería a un lado, guitarras al otro) en sus primeros discos?",
     opciones: ["The Rolling Stones", "The Who", "The Beatles", "Led Zeppelin"],
-    respuesta: "The Beatles"
+    respuesta: "The Beatles",
   },
   {
-    pregunta: "¿En qué legendaria canción de Van Halen se escucha a Eddie bajando la sexta cuerda a un Re (Drop D) en mitad del riff?",
-    opciones: ["Unchained", "Panama", "Ain't Talkin' 'bout Love", "Runnin' with the Devil"],
-    respuesta: "Unchained"
+    pregunta:
+      "¿En qué legendaria canción de Van Halen se escucha a Eddie bajando la sexta cuerda a un Re (Drop D) en mitad del riff?",
+    opciones: [
+      "Unchained",
+      "Panama",
+      "Ain't Talkin' 'bout Love",
+      "Runnin' with the Devil",
+    ],
+    respuesta: "Unchained",
   },
   {
-    pregunta: "¿Qué técnica popularizó masivamente Eddie Van Halen utilizando ambas manos en el mástil?",
+    pregunta:
+      "¿Qué técnica popularizó masivamente Eddie Van Halen utilizando ambas manos en el mástil?",
     opciones: ["Sweep Picking", "Tapping", "Slide", "Chicken Picking"],
-    respuesta: "Tapping"
+    respuesta: "Tapping",
   },
   {
-    pregunta: "¿Cómo se llama la guitarra icónica de rayas blancas y negras (o rojas) construida por el propio Eddie Van Halen?",
+    pregunta:
+      "¿Cómo se llama la guitarra icónica de rayas blancas y negras (o rojas) construida por el propio Eddie Van Halen?",
     opciones: ["Blackie", "Frankenstrat", "Wolfgang", "The Log"],
-    respuesta: "Frankenstrat"
+    respuesta: "Frankenstrat",
   },
   {
-    pregunta: "¿En qué canción de Michael Jackson grabó Eddie Van Halen el solo de guitarra de forma gratuita?",
+    pregunta:
+      "¿En qué canción de Michael Jackson grabó Eddie Van Halen el solo de guitarra de forma gratuita?",
     opciones: ["Billie Jean", "Thriller", "Beat It", "Bad"],
-    respuesta: "Beat It"
+    respuesta: "Beat It",
   },
   {
-    pregunta: "¿Qué sistema de puente flotante ayudó a desarrollar Eddie Van Halen para que la guitarra no se desafinara al usar la palanca?",
+    pregunta:
+      "¿Qué sistema de puente flotante ayudó a desarrollar Eddie Van Halen para que la guitarra no se desafinara al usar la palanca?",
     opciones: ["Bigsby", "Floyd Rose", "Wilkinson", "Vintage Tremolo"],
-    respuesta: "Floyd Rose"
+    respuesta: "Floyd Rose",
   },
   {
-    pregunta: "¿Qué guitarrista compuso y grabó el tema instrumental 'Jessica' de The Allman Brothers Band?",
+    pregunta:
+      "¿Qué guitarrista compuso y grabó el tema instrumental 'Jessica' de The Allman Brothers Band?",
     opciones: ["Duane Allman", "Dickey Betts", "Derek Trucks", "Warren Haynes"],
-    respuesta: "Dickey Betts"
+    respuesta: "Dickey Betts",
   },
   {
-    pregunta: "¿Qué joven prodigio de la guitarra grabó los álbumes 'Blizzard of Ozz' y 'Diary of a Madman' con Ozzy Osbourne?",
+    pregunta:
+      "¿Qué joven prodigio de la guitarra grabó los álbumes 'Blizzard of Ozz' y 'Diary of a Madman' con Ozzy Osbourne?",
     opciones: ["Zakk Wylde", "Randy Rhoads", "Jake E. Lee", "Tony Iommi"],
-    respuesta: "Randy Rhoads"
+    respuesta: "Randy Rhoads",
   },
   {
-    pregunta: "¿En qué legendario álbum en directo de UFO se puede escuchar la mejor versión de 'Rock Bottom' de Michael Schenker?",
-    opciones: ["Phenomenon", "Force It", "Strangers in the Night", "No Heavy Petting"],
-    respuesta: "Strangers in the Night"
+    pregunta:
+      "¿En qué legendario álbum en directo de UFO se puede escuchar la mejor versión de 'Rock Bottom' de Michael Schenker?",
+    opciones: [
+      "Phenomenon",
+      "Force It",
+      "Strangers in the Night",
+      "No Heavy Petting",
+    ],
+    respuesta: "Strangers in the Night",
   },
   {
-    pregunta: "¿Qué guitarrista de los Allman Brothers falleció trágicamente en un accidente de moto en 1971, poco después del álbum 'At Fillmore East'?",
+    pregunta:
+      "¿Qué guitarrista de los Allman Brothers falleció trágicamente en un accidente de moto en 1971, poco después del álbum 'At Fillmore East'?",
     opciones: ["Gregg Allman", "Berry Oakley", "Duane Allman", "Butch Trucks"],
-    respuesta: "Duane Allman"
+    respuesta: "Duane Allman",
   },
   {
-    pregunta: "¿Qué técnica de guitarra, de la cual Duane Allman era un maestro absoluto, define el sonido de 'Statesboro Blues'?",
-    opciones: ["Tapping", "Slide (con un bote de cristal de Coricidin)", "Fingerpicking", "Sweep Picking"],
-    respuesta: "Slide (con un bote de cristal de Coricidin)"
+    pregunta:
+      "¿Qué técnica de guitarra, de la cual Duane Allman era un maestro absoluto, define el sonido de 'Statesboro Blues'?",
+    opciones: [
+      "Tapping",
+      "Slide (con un bote de cristal de Coricidin)",
+      "Fingerpicking",
+      "Sweep Picking",
+    ],
+    respuesta: "Slide (con un bote de cristal de Coricidin)",
   },
   {
-    pregunta: "¿Quién es el actual guitarrista de la 'Tedeschi Trucks Band' y sobrino de uno de los fundadores de los Allman Brothers?",
-    opciones: ["Marcus King", "Derek Trucks", "Joe Bonamassa", "Kenny Wayne Shepherd"],
-    respuesta: "Derek Trucks"
+    pregunta:
+      "¿Quién es el actual guitarrista de la 'Tedeschi Trucks Band' y sobrino de uno de los fundadores de los Allman Brothers?",
+    opciones: [
+      "Marcus King",
+      "Derek Trucks",
+      "Joe Bonamassa",
+      "Kenny Wayne Shepherd",
+    ],
+    respuesta: "Derek Trucks",
   },
   {
-    pregunta: "¿Cuál fue la primera guitarra de cuerpo sólido comercializada masivamente por Leo Fender?",
+    pregunta:
+      "¿Cuál fue la primera guitarra de cuerpo sólido comercializada masivamente por Leo Fender?",
     opciones: ["Stratocaster", "Telecaster", "Broadcaster", "Jazzmaster"],
-    respuesta: "Broadcaster"
+    respuesta: "Broadcaster",
   },
   {
-    pregunta: "¿Qué álbum de 'The Beatles' incluye el famoso solo de Eric Clapton en 'While My Guitar Gently Weeps'?",
+    pregunta:
+      "¿Qué álbum de 'The Beatles' incluye el famoso solo de Eric Clapton en 'While My Guitar Gently Weeps'?",
     opciones: ["Abbey Road", "Revolver", "The White Album", "Let It Be"],
-    respuesta: "The White Album"
+    respuesta: "The White Album",
   },
   {
-    pregunta: "¿Qué guitarrista británico grabó la famosa versión de 'Hideaway' en 1966?",
+    pregunta:
+      "¿Qué guitarrista británico grabó la famosa versión de 'Hideaway' en 1966?",
     opciones: ["Jeff Beck", "Jimmy Page", "Eric Clapton", "Peter Green"],
-    respuesta: "Eric Clapton"
+    respuesta: "Eric Clapton",
   },
   {
-    pregunta: "¿Qué legendario 'King' del blues grabó e hizo famosa originalmente la canción instrumental 'The Stumble' en 1961?",
+    pregunta:
+      "¿Qué legendario 'King' del blues grabó e hizo famosa originalmente la canción instrumental 'The Stumble' en 1961?",
     opciones: ["B.B. King", "Albert King", "Freddie King", "Earl King"],
-    respuesta: "Freddie King"
+    respuesta: "Freddie King",
   },
   {
-    pregunta: "¿Qué modelo de Gibson es inseparable de la imagen de Jimmy Page?",
+    pregunta:
+      "¿Qué modelo de Gibson es inseparable de la imagen de Jimmy Page?",
     opciones: ["SG", "Les Paul Standard", "Flying V", "Explorer"],
-    respuesta: "Les Paul Standard"
+    respuesta: "Les Paul Standard",
   },
   {
-    pregunta: "¿Quién compuso y grabó el legendario solo de 'Sultans of Swing'?",
+    pregunta:
+      "¿Quién compuso y grabó el legendario solo de 'Sultans of Swing'?",
     opciones: ["Mark Knopfler", "David Gilmour", "Jeff Beck", "Gary Moore"],
-    respuesta: "Mark Knopfler"
+    respuesta: "Mark Knopfler",
   },
   {
-    pregunta: "¿Qué guitarrista de Blues es famoso por tocar una Stratocaster llamada 'Number One'?",
-    opciones: ["Rory Gallagher", "Stevie Ray Vaughan", "Buddy Guy", "Kenny Wayne Shepherd"],
-    respuesta: "Stevie Ray Vaughan"
+    pregunta:
+      "¿Qué guitarrista de Blues es famoso por tocar una Stratocaster llamada 'Number One'?",
+    opciones: [
+      "Rory Gallagher",
+      "Stevie Ray Vaughan",
+      "Buddy Guy",
+      "Kenny Wayne Shepherd",
+    ],
+    respuesta: "Stevie Ray Vaughan",
   },
   {
-    pregunta: "Ritchie Blackmore dejó Deep Purple para fundar su propia banda llamada...",
+    pregunta:
+      "Ritchie Blackmore dejó Deep Purple para fundar su propia banda llamada...",
     opciones: ["Whitesnake", "Rainbow", "Black Sabbath", "Dio"],
-    respuesta: "Rainbow"
+    respuesta: "Rainbow",
   },
   {
-    pregunta: "¿Cuál es el intervalo característico de la escala 'Blues' que la diferencia de la pentatónica menor?",
-    opciones: ["Segunda mayor", "Cuarta aumentada", "Sexta mayor", "Séptima mayor"],
-    respuesta: "Cuarta aumentada"
+    pregunta:
+      "¿Cuál es el intervalo característico de la escala 'Blues' que la diferencia de la pentatónica menor?",
+    opciones: [
+      "Segunda mayor",
+      "Cuarta aumentada",
+      "Sexta mayor",
+      "Séptima mayor",
+    ],
+    respuesta: "Cuarta aumentada",
   },
   {
     pregunta: "¿En qué año se fabricó la primera Fender Stratocaster?",
     opciones: ["1950", "1952", "1954", "1958"],
-    respuesta: "1954"
+    respuesta: "1954",
   },
   {
-    pregunta: "¿Quiénes compusieron la mítica canción 'Hotel California' de The Eagles?",
-    opciones: ["Don Felder, Don Henley y Glenn Frey", "Joe Walsh y Don Henley", "Don Henley y Randy Meisner", "Glenn Frey y Bernie Leadon"],
-    respuesta: "Don Felder, Don Henley y Glenn Frey"
+    pregunta:
+      "¿Quiénes compusieron la mítica canción 'Hotel California' de The Eagles?",
+    opciones: [
+      "Don Felder, Don Henley y Glenn Frey",
+      "Joe Walsh y Don Henley",
+      "Don Henley y Randy Meisner",
+      "Glenn Frey y Bernie Leadon",
+    ],
+    respuesta: "Don Felder, Don Henley y Glenn Frey",
   },
   {
-    pregunta: "¿Qué guitarrista de los Beatles utilizó una Fender Stratocaster apodada 'Rocky' pintada con colores psicodélicos?",
+    pregunta:
+      "¿Qué guitarrista de los Beatles utilizó una Fender Stratocaster apodada 'Rocky' pintada con colores psicodélicos?",
     opciones: ["John Lennon", "George Harrison", "Paul McCartney", "Pete Best"],
-    respuesta: "George Harrison"
+    respuesta: "George Harrison",
   },
   {
-    pregunta: "¿Cómo se llama la famosa guitarra Fender Stratocaster destrozada de Jimi Hendrix que subastaron por millones?",
-    opciones: ["Black Beauty", "Monterey Strat", "Woodstock White", "Saville Strat"],
-    respuesta: "Monterey Strat"
+    pregunta:
+      "¿Cómo se llama la famosa guitarra Fender Stratocaster destrozada de Jimi Hendrix que subastaron por millones?",
+    opciones: [
+      "Black Beauty",
+      "Monterey Strat",
+      "Woodstock White",
+      "Saville Strat",
+    ],
+    respuesta: "Monterey Strat",
   },
   {
-    pregunta: "¿Qué modelo de guitarra Gibson utiliza casi exclusivamente Marcus King?",
+    pregunta:
+      "¿Qué modelo de guitarra Gibson utiliza casi exclusivamente Marcus King?",
     opciones: ["Les Paul Goldtop", "ES-345 TD", "SG Standard", "Explorer"],
-    respuesta: "ES-345 TD"
+    respuesta: "ES-345 TD",
   },
   {
-    pregunta: "¿Qué guitarrista de ZZ Top es conocido por su 'Pearly Gates', una Les Paul de 1959?",
+    pregunta:
+      "¿Qué guitarrista de ZZ Top es conocido por su 'Pearly Gates', una Les Paul de 1959?",
     opciones: ["Dusty Hill", "Frank Beard", "Billy Gibbons", "Joe Bonamassa"],
-    respuesta: "Billy Gibbons"
+    respuesta: "Billy Gibbons",
   },
   {
     pregunta: "¿En qué banda tocó Eric Clapton antes de formar Cream?",
     opciones: ["The Yardbirds", "The Who", "The Kinks", "Led Zeppelin"],
-    respuesta: "The Yardbirds"
+    respuesta: "The Yardbirds",
   },
   {
-    pregunta: "¿Cuál es el nombre del álbum debut de Jimi Hendrix Experience lanzado en 1967?",
-    opciones: ["Axis: Bold as Love", "Electric Ladyland", "Are You Experienced", "Band of Gypsys"],
-    respuesta: "Are You Experienced"
+    pregunta:
+      "¿Cuál es el nombre del álbum debut de Jimi Hendrix Experience lanzado en 1967?",
+    opciones: [
+      "Axis: Bold as Love",
+      "Electric Ladyland",
+      "Are You Experienced",
+      "Band of Gypsys",
+    ],
+    respuesta: "Are You Experienced",
   },
   {
-    pregunta: "¿Qué guitarrista de The Eagles toca el famoso solo de slide en 'Victim of Love'?",
+    pregunta:
+      "¿Qué guitarrista de The Eagles toca el famoso solo de slide en 'Victim of Love'?",
     opciones: ["Joe Walsh", "Don Felder", "Glenn Frey", "Bernie Leadon"],
-    respuesta: "Don Felder"
+    respuesta: "Don Felder",
   },
   {
-    pregunta: "¿Qué técnica de mano derecha es característica del sonido de ZZ Top y Billy Gibbons?",
-    opciones: ["Sweep Picking", "Pinch Harmonics (Armónicos de púa)", "Tapping", "Fingerstyle puro"],
-    respuesta: "Pinch Harmonics (Armónicos de púa)"
+    pregunta:
+      "¿Qué técnica de mano derecha es característica del sonido de ZZ Top y Billy Gibbons?",
+    opciones: [
+      "Sweep Picking",
+      "Pinch Harmonics (Armónicos de púa)",
+      "Tapping",
+      "Fingerstyle puro",
+    ],
+    respuesta: "Pinch Harmonics (Armónicos de púa)",
   },
   {
-    pregunta: "¿Qué amplificadores utilizaba mayoritariamente Jimi Hendrix en directo?",
-    opciones: ["Fender Twin Reverb", "Marshall Super Lead (Plexi)", "Vox AC30", "Orange Rockerverb"],
-    respuesta: "Marshall Super Lead (Plexi)"
+    pregunta:
+      "¿Qué amplificadores utilizaba mayoritariamente Jimi Hendrix en directo?",
+    opciones: [
+      "Fender Twin Reverb",
+      "Marshall Super Lead (Plexi)",
+      "Vox AC30",
+      "Orange Rockerverb",
+    ],
+    respuesta: "Marshall Super Lead (Plexi)",
   },
   {
-    pregunta: "¿En qué legendario festival Jimi Hendrix quemó su Fender Stratocaster negra por primera vez?",
-    opciones: ["Woodstock", "Isle of Wight", "Monterey Pop Festival", "Fillmore East"],
-    respuesta: "Monterey Pop Festival"
+    pregunta:
+      "¿En qué legendario festival Jimi Hendrix quemó su Fender Stratocaster negra por primera vez?",
+    opciones: [
+      "Woodstock",
+      "Isle of Wight",
+      "Monterey Pop Festival",
+      "Fillmore East",
+    ],
+    respuesta: "Monterey Pop Festival",
   },
   {
-    pregunta: "¿Qué canción de los Beatles contiene uno de los primeros ejemplos de 'feedback' o acople de guitarra grabado?",
+    pregunta:
+      "¿Qué canción de los Beatles contiene uno de los primeros ejemplos de 'feedback' o acople de guitarra grabado?",
     opciones: ["I Feel Fine", "Help!", "A Hard Day's Night", "Ticket to Ride"],
-    respuesta: "I Feel Fine"
+    respuesta: "I Feel Fine",
   },
   {
-    pregunta: "¿Marcus King es considerado un prodigio de qué mezcla de géneros?",
-    opciones: ["Punk y Metal", "Jazz y Country", "Southern Rock, Blues y Soul", "Indie y Folk"],
-    respuesta: "Southern Rock, Blues y Soul"
+    pregunta:
+      "¿Marcus King es considerado un prodigio de qué mezcla de géneros?",
+    opciones: [
+      "Punk y Metal",
+      "Jazz y Country",
+      "Southern Rock, Blues y Soul",
+      "Indie y Folk",
+    ],
+    respuesta: "Southern Rock, Blues y Soul",
   },
   {
-    pregunta: "¿Cómo se llama el guitarrista rítmico y fundador de The Eagles que falleció en 2016?",
+    pregunta:
+      "¿Cómo se llama el guitarrista rítmico y fundador de The Eagles que falleció en 2016?",
     opciones: ["Randy Meisner", "Timothy B. Schmit", "Glenn Frey", "Joe Walsh"],
-    respuesta: "Glenn Frey"
+    respuesta: "Glenn Frey",
   },
   {
-    pregunta: "¿Qué pedal de efecto es fundamental para el sonido de Hendrix en 'Voodoo Child (Slight Return)'?",
+    pregunta:
+      "¿Qué pedal de efecto es fundamental para el sonido de Hendrix en 'Voodoo Child (Slight Return)'?",
     opciones: ["Fuzz Face", "Wah-Wah", "Univibe", "Octavia"],
-    respuesta: "Wah-Wah"
+    respuesta: "Wah-Wah",
   },
   {
     pregunta: "¿En qué ciudad se formó la banda ZZ Top?",
-    opciones: ["Austin, Texas", "Houston, Texas", "Dallas, Texas", "Memphis, Tennessee"],
-    respuesta: "Houston, Texas"
+    opciones: [
+      "Austin, Texas",
+      "Houston, Texas",
+      "Dallas, Texas",
+      "Memphis, Tennessee",
+    ],
+    respuesta: "Houston, Texas",
   },
   {
-    pregunta: "¿Qué guitarrista de The Beatles tocó el solo de guitarra en 'Taxman'?",
-    opciones: ["George Harrison", "John Lennon", "Paul McCartney", "Eric Clapton"],
-    respuesta: "Paul McCartney"
+    pregunta:
+      "¿Qué guitarrista de The Beatles tocó el solo de guitarra en 'Taxman'?",
+    opciones: [
+      "George Harrison",
+      "John Lennon",
+      "Paul McCartney",
+      "Eric Clapton",
+    ],
+    respuesta: "Paul McCartney",
   },
   {
-    pregunta: "¿Qué marca de guitarras acústicas es la preferida históricamente por The Eagles para sus directos?",
+    pregunta:
+      "¿Qué marca de guitarras acústicas es la preferida históricamente por The Eagles para sus directos?",
     opciones: ["Takamine", "Gibson", "Martin", "Taylor"],
-    respuesta: "Takamine"
+    respuesta: "Takamine",
   },
   {
-    pregunta: "¿Cuál era el apodo de Eric Clapton durante su estancia en los Yardbirds?",
+    pregunta:
+      "¿Cuál era el apodo de Eric Clapton durante su estancia en los Yardbirds?",
     opciones: ["God", "Slowhand", "The King", "The Raven"],
-    respuesta: "Slowhand"
+    respuesta: "Slowhand",
   },
   {
-    pregunta: "¿Qué guitarrista de los Rolling Stones es famoso por usar una afinación abierta de Sol (Open G) y solo 5 cuerdas?",
+    pregunta:
+      "¿Qué guitarrista de los Rolling Stones es famoso por usar una afinación abierta de Sol (Open G) y solo 5 cuerdas?",
     opciones: ["Mick Taylor", "Brian Jones", "Keith Richards", "Ronnie Wood"],
-    respuesta: "Keith Richards"
+    respuesta: "Keith Richards",
   },
   {
     pregunta: "¿Cómo apodó B.B. King a todas sus guitarras Gibson ES-355?",
     opciones: ["Mary Lou", "Lucille", "Bernice", "Blackie"],
-    respuesta: "Lucille"
+    respuesta: "Lucille",
   },
   {
-    pregunta: "¿Qué guitarrista de 'Europe' grabó el legendario solo de 'The Final Countdown'?",
-    opciones: ["John Norum", "Kee Marcello", "Yngwie Malmsteen", "Vinnie Moore"],
-    respuesta: "John Norum"
+    pregunta:
+      "¿Qué guitarrista de 'Europe' grabó el legendario solo de 'The Final Countdown'?",
+    opciones: [
+      "John Norum",
+      "Kee Marcello",
+      "Yngwie Malmsteen",
+      "Vinnie Moore",
+    ],
+    respuesta: "John Norum",
   },
   {
-    pregunta: "¿Cuál es el modelo 'Signature' más famoso de Paul Reed Smith (PRS), diseñado para un guitarrista mexicano?",
+    pregunta:
+      "¿Cuál es el modelo 'Signature' más famoso de Paul Reed Smith (PRS), diseñado para un guitarrista mexicano?",
     opciones: ["PRS Santana", "PRS Dragon", "PRS Custom 24", "PRS Tremonti"],
-    respuesta: "PRS Santana"
+    respuesta: "PRS Santana",
   },
   {
-    pregunta: "¿Qué guitarrista de blues-rock grabó el álbum 'Irish Tour '74' con una Stratocaster extremadamente desgastada?",
+    pregunta:
+      "¿Qué guitarrista de blues-rock grabó el álbum 'Irish Tour '74' con una Stratocaster extremadamente desgastada?",
     opciones: ["Gary Moore", "Rory Gallagher", "Jeff Beck", "Joe Bonamassa"],
-    respuesta: "Rory Gallagher"
+    respuesta: "Rory Gallagher",
   },
   {
-    pregunta: "¿Quién sustituyó a Ritchie Blackmore en Deep Purple para grabar el álbum 'Come Taste the Band'?",
+    pregunta:
+      "¿Quién sustituyó a Ritchie Blackmore en Deep Purple para grabar el álbum 'Come Taste the Band'?",
     opciones: ["Joe Satriani", "Steve Morse", "Tommy Bolin", "David Gilmour"],
-    respuesta: "Tommy Bolin"
+    respuesta: "Tommy Bolin",
   },
   {
-    pregunta: "¿En qué canción de Jimi Hendrix se escucha por primera vez el efecto Octavia (que dobla la nota una octava arriba)?",
+    pregunta:
+      "¿En qué canción de Jimi Hendrix se escucha por primera vez el efecto Octavia (que dobla la nota una octava arriba)?",
     opciones: ["Purple Haze", "Little Wing", "Fire", "Voodoo Child"],
-    respuesta: "Purple Haze"
+    respuesta: "Purple Haze",
   },
   {
-    pregunta: "¿Qué marca de guitarras fundó el luthier Grover Jackson, famosa por sus modelos 'Rhoads' y 'Soloist'?",
+    pregunta:
+      "¿Qué marca de guitarras fundó el luthier Grover Jackson, famosa por sus modelos 'Rhoads' y 'Soloist'?",
     opciones: ["Ibanez", "Jackson", "Charvel", "ESP"],
-    respuesta: "Jackson"
+    respuesta: "Jackson",
   },
   {
-    pregunta: "¿Qué guitarrista pasó por Thin Lizzy y Whitesnake, grabando el superventas álbum homónimo de 1987?",
+    pregunta:
+      "¿Qué guitarrista pasó por Thin Lizzy y Whitesnake, grabando el superventas álbum homónimo de 1987?",
     opciones: ["Gary Moore", "John Sykes", "Bernie Marsden", "Micky Moody"],
-    respuesta: "John Sykes"
+    respuesta: "John Sykes",
   },
   {
-    pregunta: "¿Qué modelo de Fender utilizaba Jeff Beck en su etapa con The Yardbirds (famosa por tener el cuerpo recortado)?",
+    pregunta:
+      "¿Qué modelo de Fender utilizaba Jeff Beck en su etapa con The Yardbirds (famosa por tener el cuerpo recortado)?",
     opciones: ["Stratocaster", "Telecaster", "Esquire", "Mustang"],
-    respuesta: "Esquire"
+    respuesta: "Esquire",
   },
   {
-    pregunta: "¿A qué legendario guitarrista de Blues pertenece la frase: 'The Thrill is Gone'?",
+    pregunta:
+      "¿A qué legendario guitarrista de Blues pertenece la frase: 'The Thrill is Gone'?",
     opciones: ["Muddy Waters", "B.B. King", "Buddy Guy", "John Lee Hooker"],
-    respuesta: "B.B. King"
+    respuesta: "B.B. King",
   },
   {
-    pregunta: "¿Qué guitarrista de los Beatles compuso 'Something', considerada por Sinatra como la mejor canción de amor?",
-    opciones: ["John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr"],
-    respuesta: "George Harrison"
+    pregunta:
+      "¿Qué guitarrista de los Beatles compuso 'Something', considerada por Sinatra como la mejor canción de amor?",
+    opciones: [
+      "John Lennon",
+      "Paul McCartney",
+      "George Harrison",
+      "Ringo Starr",
+    ],
+    respuesta: "George Harrison",
   },
   {
-    pregunta: "¿Qué guitarrista de Thin Lizzy grabó el famoso solo de 'Parisienne Walkways' junto a Phil Lynott?",
+    pregunta:
+      "¿Qué guitarrista de Thin Lizzy grabó el famoso solo de 'Parisienne Walkways' junto a Phil Lynott?",
     opciones: ["Brian Robertson", "Gary Moore", "Scott Gorham", "John Sykes"],
-    respuesta: "Gary Moore"
+    respuesta: "Gary Moore",
   },
   {
-    pregunta: "¿Qué modelo de guitarra Gibson es la seña de identidad absoluta de Angus Young de AC/DC?",
+    pregunta:
+      "¿Qué modelo de guitarra Gibson es la seña de identidad absoluta de Angus Young de AC/DC?",
     opciones: ["Les Paul", "Flying V", "Explorer", "SG Standard"],
-    respuesta: "SG Standard"
+    respuesta: "SG Standard",
   },
   {
-    pregunta: "¿Cuál es el nombre del sistema de vibrato que utiliza Angus Young en algunas de sus Gibson SG antiguas?",
+    pregunta:
+      "¿Cuál es el nombre del sistema de vibrato que utiliza Angus Young en algunas de sus Gibson SG antiguas?",
     opciones: ["Floyd Rose", "Bigsby", "Maestro Vibrola", "Kahler"],
-    respuesta: "Maestro Vibrola"
+    respuesta: "Maestro Vibrola",
   },
   {
-    pregunta: "¿Qué modelo de Fender Stratocaster usaba Jimi Hendrix en el festival de Woodstock (color blanco)?",
-    opciones: ["Stratocaster 1954", "Stratocaster 1962", "Stratocaster 1968", "Stratocaster 1970"],
-    respuesta: "Stratocaster 1968"
+    pregunta:
+      "¿Qué modelo de Fender Stratocaster usaba Jimi Hendrix en el festival de Woodstock (color blanco)?",
+    opciones: [
+      "Stratocaster 1954",
+      "Stratocaster 1962",
+      "Stratocaster 1968",
+      "Stratocaster 1970",
+    ],
+    respuesta: "Stratocaster 1968",
   },
   {
-    pregunta: "¿Qué modelo de Fender es famoso por tener una escala más corta (24 pulgadas), usada por Kurt Cobain?",
+    pregunta:
+      "¿Qué modelo de Fender es famoso por tener una escala más corta (24 pulgadas), usada por Kurt Cobain?",
     opciones: ["Stratocaster", "Jaguar", "Telecaster", "Jazzmaster"],
-    respuesta: "Jaguar"
+    respuesta: "Jaguar",
   },
   {
-    pregunta: "¿En qué año lanzó Gibson el modelo 'Flying V', 'Explorer' y 'Moderne' por primera vez?",
+    pregunta:
+      "¿En qué año lanzó Gibson el modelo 'Flying V', 'Explorer' y 'Moderne' por primera vez?",
     opciones: ["1952", "1954", "1958", "1961"],
-    respuesta: "1958"
+    respuesta: "1958",
   },
   {
-    pregunta: "¿Cuál era la principal diferencia de la Gibson Les Paul 'Goldtop' de 1952 respecto a las posteriores?",
-    opciones: ["No tenía pastillas", "El puente era un cordal trapezoidal", "Era de cuerpo hueco", "Tenía 3 pastillas"],
-    respuesta: "El puente era un cordal trapezoidal"
+    pregunta:
+      "¿Cuál era la principal diferencia de la Gibson Les Paul 'Goldtop' de 1952 respecto a las posteriores?",
+    opciones: [
+      "No tenía pastillas",
+      "El puente era un cordal trapezoidal",
+      "Era de cuerpo hueco",
+      "Tenía 3 pastillas",
+    ],
+    respuesta: "El puente era un cordal trapezoidal",
   },
   {
-    pregunta: "¿Qué guitarrista de Scorpions grabó los solos del álbum 'Lovedrive' antes de dejar la banda definitivamente?",
-    opciones: ["Matthias Jabs", "Michael Schenker", "Uli Jon Roth", "Rudolf Schenker"],
-    respuesta: "Michael Schenker"
+    pregunta:
+      "¿Qué guitarrista de Scorpions grabó los solos del álbum 'Lovedrive' antes de dejar la banda definitivamente?",
+    opciones: [
+      "Matthias Jabs",
+      "Michael Schenker",
+      "Uli Jon Roth",
+      "Rudolf Schenker",
+    ],
+    respuesta: "Michael Schenker",
   },
   {
-    pregunta: "¿Qué legendario bluesman se dice que vendió su alma al diablo en un cruce de caminos (Cruce 61 y 49)?",
+    pregunta:
+      "¿Qué legendario bluesman se dice que vendió su alma al diablo en un cruce de caminos (Cruce 61 y 49)?",
     opciones: ["Robert Johnson", "Muddy Waters", "Howlin' Wolf", "Son House"],
-    respuesta: "Robert Johnson"
+    respuesta: "Robert Johnson",
   },
   {
-    pregunta: "¿Quién fue el guitarrista de 'The Who' famoso por destrozar sus guitarras y hacer el movimiento del 'molinillo'?",
-    opciones: ["Roger Daltrey", "John Entwistle", "Pete Townshend", "Keith Moon"],
-    respuesta: "Pete Townshend"
+    pregunta:
+      "¿Quién fue el guitarrista de 'The Who' famoso por destrozar sus guitarras y hacer el movimiento del 'molinillo'?",
+    opciones: [
+      "Roger Daltrey",
+      "John Entwistle",
+      "Pete Townshend",
+      "Keith Moon",
+    ],
+    respuesta: "Pete Townshend",
   },
   {
-    pregunta: "¿Qué guitarrista de 'The Beatles' tocaba el bajo originalmente antes de pasar a la guitarra rítmica?",
-    opciones: ["John Lennon", "George Harrison", "Paul McCartney", "Ninguno de ellos"],
-    respuesta: "Ninguno de ellos"
+    pregunta:
+      "¿Qué guitarrista de 'The Beatles' tocaba el bajo originalmente antes de pasar a la guitarra rítmica?",
+    opciones: [
+      "John Lennon",
+      "George Harrison",
+      "Paul McCartney",
+      "Ninguno de ellos",
+    ],
+    respuesta: "Ninguno de ellos",
   },
   {
-    pregunta: "¿Cómo se llama la técnica de tocar la guitarra con un tubo de metal o cristal en el dedo, típica del Blues?",
+    pregunta:
+      "¿Cómo se llama la técnica de tocar la guitarra con un tubo de metal o cristal en el dedo, típica del Blues?",
     opciones: ["Tapping", "Bending", "Slide (o Bottleneck)", "Palm Mute"],
-    respuesta: "Slide (o Bottleneck)"
+    respuesta: "Slide (o Bottleneck)",
   },
   {
-    pregunta: "¿Qué marca de guitarras compró CBS en 1965, iniciando una era de producción masiva muy criticada?",
+    pregunta:
+      "¿Qué marca de guitarras compró CBS en 1965, iniciando una era de producción masiva muy criticada?",
     opciones: ["Gibson", "Fender", "Gretsch", "Guild"],
-    respuesta: "Fender"
+    respuesta: "Fender",
   },
   {
-    pregunta: "¿Qué guitarrista grabó el solo de 'While My Guitar Gently Weeps' pero no apareció en los créditos originales?",
+    pregunta:
+      "¿Qué guitarrista grabó el solo de 'While My Guitar Gently Weeps' pero no apareció en los créditos originales?",
     opciones: ["Jeff Beck", "Eric Clapton", "Jimmy Page", "Keith Richards"],
-    respuesta: "Eric Clapton"
+    respuesta: "Eric Clapton",
   },
   {
-    pregunta: "¿Qué guitarrista sustituyó a Mick Taylor en 'The Rolling Stones' en 1975?",
+    pregunta:
+      "¿Qué guitarrista sustituyó a Mick Taylor en 'The Rolling Stones' en 1975?",
     opciones: ["Ronnie Wood", "Brian Jones", "Keith Richards", "Jeff Beck"],
-    respuesta: "Ronnie Wood"
-  }
+    respuesta: "Ronnie Wood",
+  },
 ];
 
 export default function TrivialGuitarra() {
   const router = useRouter();
 
   const [isMounted, setIsMounted] = useState(false);
-  const [quizList, setQuizList] = useState<any[]>([]);
+  const [quizList, setQuizList] = useState<Pregunta[]>([]);
   const [step, setStep] = useState(0);
   const [results, setResults] = useState<(null | "correct" | "wrong")[]>([]);
   const [userAnswers, setUserAnswers] = useState<(string | null)[]>([]);
   const [gameOver, setGameOver] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
-  const [showFeedback, setShowFeedback] = useState<null | "correct" | "wrong">(null);
+  const [showFeedback, setShowFeedback] = useState<null | "correct" | "wrong">(
+    null,
+  );
 
   useEffect(() => {
-    const shuffled = [...preguntasTrivial].sort(() => Math.random() - 0.5).slice(0, 24);
+    const shuffled = [...preguntasTrivial]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 24);
     setQuizList(shuffled);
     setResults(Array(shuffled.length).fill(null));
     setUserAnswers(Array(shuffled.length).fill(null));
@@ -431,7 +649,7 @@ export default function TrivialGuitarra() {
 
     const isCorrect = opcionSeleccionada === currentQuestion.respuesta;
     setShowFeedback(isCorrect ? "correct" : "wrong");
-    
+
     const newResults = [...results];
     newResults[step] = isCorrect ? "correct" : "wrong";
     setResults(newResults);
@@ -456,7 +674,7 @@ export default function TrivialGuitarra() {
   const goBack = () => {
     setIsReviewing(true);
     setShowFeedback(null);
-    setStep(prev => Math.max(0, prev - 1));
+    setStep((prev) => Math.max(0, prev - 1));
   };
 
   const goNext = () => {
@@ -469,36 +687,60 @@ export default function TrivialGuitarra() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center overflow-x-hidden"
-         style={{ backgroundImage: "url('/assets/background.jpeg')" }}>
-      
+    <div
+      className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center overflow-x-hidden"
+      style={{ backgroundImage: "url('/assets/background.jpeg')" }}
+    >
       <div className="absolute top-8 left-12 z-20">
-        <button onClick={() => router.push("/play")} className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-6 py-2.5 rounded-full border border-white/10 transition-all hover:bg-black/60">
+        <button
+          onClick={() => router.push("/play")}
+          className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-6 py-2.5 rounded-full border border-white/10 transition-all hover:bg-black/60"
+        >
           ← Menú Principal
         </button>
       </div>
 
       <div className="absolute top-24 left-0 right-0 flex justify-between px-32 pointer-events-none z-0">
-        <img src="/assets/logo21stCM_no_white_1.png" className="h-28 w-auto drop-shadow-2xl opacity-90" alt="logo" />
-        <img src="/assets/logo21stCM_no_white_1.png" className="h-28 w-auto drop-shadow-2xl opacity-90" alt="logo" />
+        <img
+          src="/assets/logo21stCM_no_white_1.png"
+          className="h-28 w-auto drop-shadow-2xl opacity-90"
+          alt="logo"
+        />
+        <img
+          src="/assets/logo21stCM_no_white_1.png"
+          className="h-28 w-auto drop-shadow-2xl opacity-90"
+          alt="logo"
+        />
       </div>
 
       <div className="min-h-screen bg-black/10 flex flex-col items-center justify-center p-6 z-10">
-        
         <div className="mb-6 text-center mt-20">
-          <h2 className="text-white text-3xl font-black italic tracking-tighter leading-tight" 
-              style={{ fontFamily: 'Chaney, sans-serif' }}>
-            ¿<span className="uppercase">Q</span>uánto sabes de <span className="text-black mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">GUITARRA</span>?
+          <h2
+            className="text-white text-3xl font-black italic tracking-tighter leading-tight"
+            style={{ fontFamily: "Chaney, sans-serif" }}
+          >
+            ¿<span className="uppercase">Q</span>uánto sabes de{" "}
+            <span className="text-black mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
+              GUITARRA
+            </span>
+            ?
           </h2>
         </div>
 
         <div className="relative flex flex-col items-center w-full max-w-2xl mb-8">
-          <div className={`bg-white p-10 rounded-[3.5rem] shadow-2xl w-full min-h-[12rem] flex flex-col items-center justify-center border-4 relative overflow-hidden transition-all duration-150 ${
-            showFeedback === "correct" ? "border-green-500 scale-[1.01]" : 
-            showFeedback === "wrong" ? "border-red-500" : "border-white"
-          }`}>
-            <div className="absolute top-4 right-8 text-black/5 font-black italic text-xl">#{step + 1}</div>
-            
+          <div
+            className={`bg-white p-10 rounded-[3.5rem] shadow-2xl w-full min-h-[12rem] flex flex-col items-center justify-center border-4 relative overflow-hidden transition-all duration-150 ${
+              showFeedback === "correct"
+                ? "border-green-500 scale-[1.01]"
+                : showFeedback === "wrong"
+                  ? "border-red-500"
+                  : "border-white"
+            }`}
+          >
+            <div className="absolute top-4 right-8 text-black/5 font-black italic text-xl">
+              #{step + 1}
+            </div>
+
             {showFeedback && (
               <div className="absolute inset-0 z-20 flex items-center justify-center backdrop-blur-[1px]">
                 {showFeedback === "correct" ? (
@@ -509,48 +751,72 @@ export default function TrivialGuitarra() {
               </div>
             )}
 
-            <p className={`text-black text-xl font-bold text-center leading-snug transition-opacity duration-100 ${showFeedback ? 'opacity-10' : 'opacity-100'}`}>
+            <p
+              className={`text-black text-xl font-bold text-center leading-snug transition-opacity duration-100 ${showFeedback ? "opacity-10" : "opacity-100"}`}
+            >
               {currentQuestion.pregunta}
             </p>
           </div>
 
           {/* SOLUCIÓN: SOLO APARECE EN MODO REVISIÓN, NO DURANTE EL FEEDBACK DE ERROR */}
-          <div className={`absolute -bottom-10 left-0 right-0 z-30 transition-all duration-200 transform ${isReviewing && userAnswers[step] !== null ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}>
+          <div
+            className={`absolute -bottom-10 left-0 right-0 z-30 transition-all duration-200 transform ${isReviewing && userAnswers[step] !== null ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 pointer-events-none"}`}
+          >
             <div className="mx-auto w-64 h-14 rounded-2xl border-2 border-amber-400/50 bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center shadow-2xl">
-              <span className="text-[8px] text-amber-400 uppercase font-black tracking-widest">Respuesta Correcta</span>
-              <span className="text-sm font-semibold text-white font-sans">{currentQuestion.respuesta}</span>
+              <span className="text-[8px] text-amber-400 uppercase font-black tracking-widest">
+                Respuesta Correcta
+              </span>
+              <span className="text-sm font-semibold text-white font-sans">
+                {currentQuestion.respuesta}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className={`bg-black/40 p-8 rounded-[3rem] border border-white/10 w-full max-w-4xl backdrop-blur-md transition-opacity duration-150 ${userAnswers[step] !== null || showFeedback ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+        <div
+          className={`bg-black/40 p-8 rounded-[3rem] border border-white/10 w-full max-w-4xl backdrop-blur-md transition-opacity duration-150 ${userAnswers[step] !== null || showFeedback ? "opacity-40 pointer-events-none" : "opacity-100"}`}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {currentQuestion.opciones.map(opcion => (
-              <button 
-                key={opcion} 
+            {currentQuestion.opciones.map((opcion) => (
+              <button
+                key={opcion}
                 onClick={() => handleAnswer(opcion)}
                 className="py-5 px-6 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black transition-all active:scale-90 text-left"
               >
-                <span className="text-sm font-semibold font-sans">{opcion}</span>
+                <span className="text-sm font-semibold font-sans">
+                  {opcion}
+                </span>
               </button>
             ))}
           </div>
         </div>
 
         <div className="w-full max-w-4xl mt-16 flex items-center justify-center gap-4 px-4">
-          <button onClick={goBack} className={`shrink-0 px-6 py-3 bg-white/5 border border-white/10 text-white text-[10px] font-bold rounded-full uppercase transition-all ${step === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <button
+            onClick={goBack}
+            className={`shrink-0 px-6 py-3 bg-white/5 border border-white/10 text-white text-[10px] font-bold rounded-full uppercase transition-all ${step === 0 ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+          >
             ← Anterior
           </button>
 
           <div className="flex flex-wrap justify-center gap-1.5 p-3 bg-black/20 rounded-2xl border border-white/5 shadow-inner">
             {results.map((res, i) => (
-              <div 
-                key={i} 
-                onClick={() => { if(userAnswers[i] !== null) { setIsReviewing(true); setStep(i); } }}
+              <div
+                key={i}
+                onClick={() => {
+                  if (userAnswers[i] !== null) {
+                    setIsReviewing(true);
+                    setStep(i);
+                  }
+                }}
                 className={`w-6 h-6 rounded-md border flex items-center justify-center text-[8px] font-black cursor-pointer transition-all ${
-                  res === "correct" ? "bg-green-500 text-white border-green-400" : 
-                  res === "wrong" ? "bg-red-500 text-white border-red-400" : 
-                  i === step ? "border-amber-400 bg-white/20 text-white scale-110 shadow-[0_0_10px_rgba(251,191,36,0.3)]" : "border-white/5 text-white/10"
+                  res === "correct"
+                    ? "bg-green-500 text-white border-green-400"
+                    : res === "wrong"
+                      ? "bg-red-500 text-white border-red-400"
+                      : i === step
+                        ? "border-amber-400 bg-white/20 text-white scale-110 shadow-[0_0_10px_rgba(251,191,36,0.3)]"
+                        : "border-white/5 text-white/10"
                 }`}
               >
                 {i + 1}
@@ -558,7 +824,10 @@ export default function TrivialGuitarra() {
             ))}
           </div>
 
-          <button onClick={goNext} className={`shrink-0 px-8 py-3 bg-amber-500 text-black text-[10px] font-black rounded-full uppercase transition-all shadow-xl shadow-amber-500/20 ${ isReviewing || (userAnswers[step] !== null && !showFeedback) ? 'opacity-100' : 'opacity-0 pointer-events-none' }`}>
+          <button
+            onClick={goNext}
+            className={`shrink-0 px-8 py-3 bg-amber-500 text-black text-[10px] font-black rounded-full uppercase transition-all shadow-xl shadow-amber-500/20 ${isReviewing || (userAnswers[step] !== null && !showFeedback) ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          >
             Siguiente →
           </button>
         </div>
@@ -571,11 +840,25 @@ export default function TrivialGuitarra() {
       {gameOver && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md">
           <div className="text-center p-12 bg-white/5 rounded-[4rem] border border-white/10 max-w-sm w-full mx-4 animate-in fade-in zoom-in duration-300">
-            <h2 className="text-4xl font-black text-white mb-2 uppercase italic tracking-tighter" style={{ fontFamily: 'Chaney, sans-serif' }}>¡Hecho!</h2>
-            <div className="text-5xl font-black text-amber-400 my-8 italic" style={{ fontFamily: 'Chaney, sans-serif' }}>
-              {results.filter(r => r === "correct").length}<span className="text-white/20 text-2xl mx-2">/</span>24
+            <h2
+              className="text-4xl font-black text-white mb-2 uppercase italic tracking-tighter"
+              style={{ fontFamily: "Chaney, sans-serif" }}
+            >
+              ¡Hecho!
+            </h2>
+            <div
+              className="text-5xl font-black text-amber-400 my-8 italic"
+              style={{ fontFamily: "Chaney, sans-serif" }}
+            >
+              {results.filter((r) => r === "correct").length}
+              <span className="text-white/20 text-2xl mx-2">/</span>24
             </div>
-            <button onClick={() => window.location.reload()} className="w-full py-4 bg-amber-500 text-black font-black rounded-2xl text-xs uppercase hover:scale-105 transition-all">Reiniciar</button>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full py-4 bg-amber-500 text-black font-black rounded-2xl text-xs uppercase hover:scale-105 transition-all"
+            >
+              Reiniciar
+            </button>
           </div>
         </div>
       )}
