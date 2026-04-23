@@ -15,6 +15,11 @@ const preguntasTrivial = [
     respuesta: "Scorpions"
   },
   {
+    pregunta: "¿Cómo se llama la famosa Gibson Les Paul de 1959 que perteneció a Peter Green y luego a Gary Moore?",
+    opciones: ["Blackie", "Greeny", "Pearly Gates", "Lucy"],
+    respuesta: "Greeny"
+  },
+  {
     pregunta: "¿Cuál fue la primera guitarra de cuerpo sólido comercializada masivamente por Leo Fender?",
     opciones: ["Stratocaster", "Telecaster", "Broadcaster", "Jazzmaster"],
     respuesta: "Broadcaster"
@@ -35,7 +40,7 @@ const preguntasTrivial = [
     respuesta: "Mark Knopfler"
   },
   {
-    pregunta: "¿Qué guitarrista de Blues es famoso por tocar una Stratocaster castigada llamada 'Number One'?",
+    pregunta: "¿Qué guitarrista de Blues es famoso por tocar una Stratocaster llamada 'Number One'?",
     opciones: ["Rory Gallagher", "Stevie Ray Vaughan", "Buddy Guy", "Kenny Wayne Shepherd"],
     respuesta: "Stevie Ray Vaughan"
   },
