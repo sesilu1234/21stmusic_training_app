@@ -6,10 +6,10 @@ import { intervalos_data } from "./intervalos_data";
 export default function IntervalosGame() {
   const router = useRouter();
 
+  // Reorganizado en 2 filas para mejor centrado con el botón largo
   const filasBotones = [
-    ["0", "b2", "2", "b3", "3"],
-    ["4", "#4", "b5", "5", "#5"],
-    ["b6", "6", "b7", "7", "8"]
+    ["Unisono", "b2", "2", "b3", "3", "4", "#4"],
+    ["b5", "5", "#5", "b6", "6", "b7", "7", "8"]
   ];
 
   const quizList = useMemo(() => {
@@ -44,7 +44,10 @@ export default function IntervalosGame() {
     if (userAnswers[step] !== null || gameOver) return;
     setIsReviewing(false);
 
-    const isCorrect = val === currentQuestion.answer;
+    // Mapeo interno para que "Unisono" compare contra "0" si es necesario
+    const answerToCompare = val === "Unisono" ? "0" : val;
+    const isCorrect = answerToCompare === currentQuestion.answer;
+    
     const newResults = [...results];
     newResults[step] = isCorrect ? "correct" : "wrong";
     setResults(newResults);
@@ -64,8 +67,11 @@ export default function IntervalosGame() {
 
   const safeImagePath = currentQuestion.image.split('/').map(part => encodeURIComponent(part)).join('/');
   
-  // Asegura b minúscula para la solución
-  const formatAnswer = (text: string) => text.replace(/B/g, 'b');
+  // Formatea B a b y 0 a Unisono
+  const formatAnswer = (text: string) => {
+    if (text === "0") return "Unisono";
+    return text.replace(/B/g, 'b');
+  };
 
   const goBack = () => {
     setIsReviewing(true);
@@ -84,7 +90,7 @@ export default function IntervalosGame() {
     <div className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center overflow-x-hidden"
          style={{ backgroundImage: "url('/assets/background.jpeg')" }}>
       
-      {/* BOTÓN MENÚ PRINCIPAL ARRIBA IZQUIERDA */}
+      {/* NAVEGACIÓN SUPERIOR */}
       <div className="absolute top-8 left-12 z-20">
         <button 
           onClick={() => router.push("/play")} 
@@ -94,7 +100,7 @@ export default function IntervalosGame() {
         </button>
       </div>
 
-      {/* LOGOS HACIA EL CENTRO (Copiado de ChordsGame) */}
+      {/* LOGOS HACIA EL CENTRO */}
       <div className="absolute top-24 left-0 right-0 flex justify-between px-32 pointer-events-none z-0">
         <img src="/assets/logo21stCM_no_white_1.png" className="h-28 w-auto drop-shadow-2xl opacity-90" alt="logo" />
         <img src="/assets/logo21stCM_no_white_1.png" className="h-28 w-auto drop-shadow-2xl opacity-90" alt="logo" />
@@ -132,27 +138,27 @@ export default function IntervalosGame() {
             />
           </div>
 
-          {/* SOLUCIÓN EN REVISIÓN (Formato idéntico al de Chords) */}
+          {/* SOLUCIÓN EN REVISIÓN (Fuente de botones, no Chaney) */}
           <div className={`absolute -bottom-12 left-0 right-0 z-30 transition-all duration-500 transform ${isReviewing && userAnswers[step] !== null ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95 pointer-events-none'}`}>
             <div className="mx-auto w-48 h-16 rounded-2xl border-2 border-amber-400/50 bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center shadow-2xl">
-              <span className="text-[8px] text-amber-400 uppercase font-black tracking-widest">Solución</span>
-              <span className="text-2xl font-black text-white italic uppercase tracking-tighter" style={{ fontFamily: 'Chaney, sans-serif' }}>
+              <span className="text-[8px] text-amber-400 uppercase font-black tracking-widest mb-1">Solución</span>
+              <span className="text-xl font-bold text-white tracking-tight">
                 {formatAnswer(currentQuestion.answer)}
               </span>
             </div>
           </div>
         </div>
 
-        {/* BOTONES RESPUESTA (Formato de cuadrícula de Chords) */}
-        <div className={`bg-black/40 p-8 rounded-[3rem] border border-white/10 w-full max-w-4xl backdrop-blur-md transition-all ${userAnswers[step] !== null ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+        {/* BOTONES RESPUESTA (2 FILAS) */}
+        <div className={`bg-black/40 p-8 rounded-[3rem] border border-white/10 w-full max-w-5xl backdrop-blur-md transition-all ${userAnswers[step] !== null ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
           <div className="flex flex-col gap-4">
             {filasBotones.map((fila, idx) => (
-              <div key={idx} className="flex justify-center gap-4">
+              <div key={idx} className="flex justify-center gap-3">
                 {fila.map(btn => (
                   <button 
                     key={btn} 
                     onClick={() => handleAnswer(btn)}
-                    className="w-20 h-14 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black hover:border-amber-500 transition-all active:scale-95 shadow-sm"
+                    className={`${btn === "Unisono" ? "px-8" : "w-20"} h-14 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black hover:border-amber-500 transition-all active:scale-95 shadow-sm`}
                   >
                     <span className="text-sm font-semibold">{btn}</span>
                   </button>
@@ -195,7 +201,6 @@ export default function IntervalosGame() {
           </button>
         </div>
 
-        {/* FOOTER */}
         <footer className="py-12 text-center text-slate-600 text-[8px] tracking-[0.8em] uppercase">
           © 2026 21st Century Music
         </footer>

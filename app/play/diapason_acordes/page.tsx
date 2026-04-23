@@ -143,11 +143,11 @@ export default function ChordsGame() {
             />
           </div>
 
-          {/* SOLUCIÓN EN REVISIÓN */}
+          {/* SOLUCIÓN EN REVISIÓN - Letra cambiada por la de los botones */}
           <div className={`absolute -bottom-12 left-0 right-0 z-30 transition-all duration-500 transform ${isReviewing && userAnswers[step] !== null ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95 pointer-events-none'}`}>
             <div className="mx-auto w-48 h-16 rounded-2xl border-2 border-amber-400/50 bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center shadow-2xl">
               <span className="text-[8px] text-amber-400 uppercase font-black tracking-widest">Solución</span>
-              <span className="text-xl font-black text-white italic uppercase tracking-tighter" style={{ fontFamily: 'Chaney, sans-serif' }}>
+              <span className="text-sm font-semibold text-white tracking-normal">
                 {Object.keys({ "Mayor": "Mayores", "Menor": "Menores", "Aumentado": "aug", "Disminuido": "dim" }).find(k => {
                   const m: any = { "Mayor": "Mayores", "Menor": "Menores", "Aumentado": "aug", "Disminuido": "dim" };
                   return m[k] === currentQuestion.answer;

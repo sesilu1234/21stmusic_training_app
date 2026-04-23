@@ -81,7 +81,6 @@ export default function DiapasonGame() {
     <div className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center overflow-x-hidden"
          style={{ backgroundImage: "url('/assets/background.jpeg')" }}>
       
-      {/* BOTÓN MENÚ PRINCIPAL ARRIBA IZQUIERDA */}
       <div className="absolute top-8 left-12 z-20">
         <button 
           onClick={() => router.push("/play")} 
@@ -91,30 +90,25 @@ export default function DiapasonGame() {
         </button>
       </div>
 
-      {/* LOGOS HACIA EL CENTRO */}
       <div className="absolute top-24 left-0 right-0 flex justify-between px-32 pointer-events-none z-0">
-        <img 
-          src="/assets/logo21stCM_no_white_1.png" 
-          className="h-28 w-auto drop-shadow-2xl opacity-90" 
-          alt="logo" 
-        />
-        <img 
-          src="/assets/logo21stCM_no_white_1.png" 
-          className="h-28 w-auto drop-shadow-2xl opacity-90" 
-          alt="logo" 
-        />
+        <img src="/assets/logo21stCM_no_white_1.png" className="h-28 w-auto drop-shadow-2xl opacity-90" alt="logo" />
+        <img src="/assets/logo21stCM_no_white_1.png" className="h-28 w-auto drop-shadow-2xl opacity-90" alt="logo" />
       </div>
 
       <div className="min-h-screen bg-black/10 flex flex-col items-center justify-center p-6 z-10">
         
-        {/* TITULO */}
+        {/* Título ajustado para calcar el estilo de ACORDE */}
         <div className="mb-6 text-center mt-20">
-          <h2 className="text-white text-3xl font-black italic uppercase tracking-tighter" style={{ fontFamily: 'Chaney, sans-serif' }}>
-            ¿Qué nota es?
+          <h2 className="text-white text-3xl font-black italic tracking-tighter leading-tight" 
+              style={{ fontFamily: 'Chaney, sans-serif' }}>
+            ¿<span className="uppercase">Q</span>ué tipo de 
+            <span className="text-black mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
+              NOTA
+            </span> 
+            es esta?
           </h2>
         </div>
 
-        {/* IMAGEN PREGUNTA (Formato idéntico al de Armaduras) */}
         <div className="relative flex flex-col items-center w-full max-w-md mb-8">
           <div className="bg-white p-8 rounded-[3.5rem] shadow-2xl w-full h-48 flex items-center justify-center border-4 border-white relative overflow-hidden">
             <div className="absolute top-4 right-6 text-black/5 font-black italic text-xl">#{step + 1}</div>
@@ -134,18 +128,16 @@ export default function DiapasonGame() {
             />
           </div>
 
-          {/* SOLUCIÓN */}
           <div className={`absolute -bottom-12 left-0 right-0 z-30 transition-all duration-500 transform ${isReviewing && userAnswers[step] !== null ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95 pointer-events-none'}`}>
             <div className="mx-auto w-48 h-16 rounded-2xl border-2 border-amber-400/50 bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center shadow-2xl">
-              <span className="text-[8px] text-amber-400 uppercase font-black tracking-widest">Solución</span>
-              <span className="text-xl font-black text-white italic uppercase tracking-tighter" style={{ fontFamily: 'Chaney, sans-serif' }}>
+              <span className="text-[8px] text-amber-400 uppercase font-black tracking-widest mb-1">Solución</span>
+              <span className="text-sm font-semibold text-white tracking-normal font-sans">
                 {currentQuestion?.answer}
               </span>
             </div>
           </div>
         </div>
 
-        {/* BOTONES NOTAS */}
         <div className={`bg-black/40 p-8 rounded-[3rem] border border-white/10 w-full max-w-6xl backdrop-blur-md transition-all ${userAnswers[step] !== null ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {botonesNotas.map(nota => (
@@ -161,7 +153,6 @@ export default function DiapasonGame() {
           </div>
         </div>
 
-        {/* NAVEGACIÓN Y PROGRESO INTEGRADOS */}
         <div className="w-full max-w-4xl mt-16 flex items-center justify-center gap-4 px-4">
           <button 
             onClick={goBack} 
@@ -194,7 +185,6 @@ export default function DiapasonGame() {
           </button>
         </div>
 
-        {/* FOOTER */}
         <footer className="py-12 text-center text-slate-600 text-[8px] tracking-[0.8em] uppercase">
           © 2026 21st Century Music
         </footer>
