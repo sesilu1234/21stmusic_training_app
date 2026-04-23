@@ -215,11 +215,6 @@ const preguntasTrivial = [
     respuesta: "Robert Johnson"
   },
   {
-    pregunta: "¿Qué modelo de guitarra acústica Taylor es famoso por ser utilizado por Taylor Swift y muchos artistas de country modernos?",
-    opciones: ["Taylor 814ce", "Taylor GS Mini", "Taylor Baby", "Taylor 214ce"],
-    respuesta: "Taylor 814ce"
-  },
-  {
     pregunta: "¿Quién fue el guitarrista de 'The Who' famoso por destrozar sus guitarras y hacer el movimiento del 'molinillo'?",
     opciones: ["Roger Daltrey", "John Entwistle", "Pete Townshend", "Keith Moon"],
     respuesta: "Pete Townshend"
