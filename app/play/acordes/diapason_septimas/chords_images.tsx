@@ -222,7 +222,7 @@ export const chords_images = [
     answer: "min 7",
   },
   {
-    image: "min 7/min7 Fa#.png",
+    image: "min 7/min7 Fa_sostenido.png",
     answer: "min 7",
   },
   {
