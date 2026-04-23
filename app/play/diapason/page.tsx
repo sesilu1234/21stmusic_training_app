@@ -101,11 +101,11 @@ export default function DiapasonGame() {
         <div className="mb-6 text-center mt-20">
           <h2 className="text-white text-3xl font-black italic tracking-tighter leading-tight" 
               style={{ fontFamily: 'Chaney, sans-serif' }}>
-            ¿<span className="uppercase">Q</span>ué tipo de 
+            ¿<span className="uppercase">Q</span>ué 
             <span className="text-black mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
               NOTA
             </span> 
-            es esta?
+            es?
           </h2>
         </div>
 
