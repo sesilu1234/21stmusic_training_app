@@ -11,7 +11,9 @@ import {
   StickyNote,
   Plus,
   Calendar,
-  Activity // Icono añadido para Intervalos
+  Activity,
+  Music,    // Icono para Trivial
+  Layers    // Icono para Acordes+
 } from "lucide-react";
 
 // --- TIPOS ---
@@ -31,12 +33,14 @@ interface Nota {
   contenido: string;
 }
 
-// --- DATOS DE EJEMPLO ---
+// --- DATOS DE JUEGOS ---
 const juegos: Juego[] = [
   { id: 1, titulo: "Armaduras", desc: "Identifica tonalidades y alteraciones.", icon: Hash, bg: "bg-amber-500/20", accent: "text-amber-400", slug: "/play/armadura" },
   { id: 2, titulo: "Diapasón", desc: "Ubica notas en el mástil rápidamente.", icon: Target, bg: "bg-sky-500/20", accent: "text-sky-400", slug: "/play/diapason" },
   { id: 3, titulo: "Acordes", desc: "Reconoce la estructura de los acordes.", icon: Headphones, bg: "bg-emerald-500/20", accent: "text-emerald-400", slug: "/play/diapason_acordes" },
   { id: 4, titulo: "Intervalos", desc: "Mide la distancia entre dos notas.", icon: Activity, bg: "bg-fuchsia-500/20", accent: "text-fuchsia-400", slug: "/play/intervalos" },
+  { id: 5, titulo: "Trivial", desc: "Cultura general de guitarra y artistas.", icon: Music, bg: "bg-red-500/20", accent: "text-red-400", slug: "/play/trivia" },
+  { id: 6, titulo: "Acordes+", desc: "Entrena tu oído con acordes reales.", icon: Layers, bg: "bg-indigo-500/20", accent: "text-indigo-400", slug: "/play/acordes_plus" },
 ];
 
 const historialTabla = [
@@ -70,11 +74,7 @@ export default function Home() {
         <div className="pt-6 px-4 z-50">
           <nav className="max-w-5xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl px-8 py-5 flex justify-between items-center shadow-2xl">
             <div className="flex items-center gap-6">
-              <img 
-                src="/assets/logo21stCM_no_white_1.png" 
-                className="h-16 w-auto brightness-99 transition-transform hover:scale-105" 
-                alt="logo" 
-              />
+              <img src="/assets/logo21stCM_no_white_1.png" className="h-16 w-auto brightness-99 transition-transform hover:scale-105" alt="logo" />
               <div className="flex flex-col">
                 <span className="text-white italic font-black tracking-tighter leading-none text-base uppercase" style={{ fontFamily: 'Chaney, sans-serif' }}>21st Century Music</span>
                 <span className="font-light tracking-[0.3em] text-[8px] uppercase text-amber-400">Music Academy</span>
@@ -100,16 +100,13 @@ export default function Home() {
           
           {/* SECCIÓN JUEGOS */}
           <div className={`absolute inset-0 transition-all duration-700 ease-in-out px-6 flex flex-col justify-center items-center ${view === 'juegos' ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}`}>
-            <header className="mb-16 text-center">
+            <header className="mb-10 text-center">
               <h1 className="text-5xl md:text-8xl italic font-black tracking-tighter mb-6 leading-tight inline-block text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/60 drop-shadow-2xl px-4" 
                   style={{ fontFamily: 'Chaney, sans-serif' }}>
                 Elige tu <span className="text-amber-400 uppercase mr-1">D</span>ESAFÍO
               </h1>
-              <p className="text-slate-200 font-medium text-lg max-w-xl mx-auto drop-shadow-md">
-                Selecciona una disciplina para comenzar tu entrenamiento.
-              </p>
             </header>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-[85rem] w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full">
               {juegos.map((j) => (
                 <Link key={j.id} href={j.slug} className="group p-8 rounded-[2.5rem] transition-all duration-500 border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-105 hover:border-amber-400/50 backdrop-blur-md shadow-2xl block">
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 ${j.bg}`}><j.icon size={28} className={j.accent} /></div>
@@ -120,7 +117,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* SECCIÓN PROGRESO */}
+          {/* SECCIÓN PROGRESO (RESTAURADA) */}
           <div className={`absolute inset-0 transition-all duration-700 ease-in-out px-6 flex flex-col justify-center items-center ${view === 'progreso' ? 'translate-x-0 opacity-100' : view === 'juegos' ? 'translate-x-full opacity-0' : '-translate-x-full opacity-0'} pointer-events-none ${view === 'progreso' && 'pointer-events-auto'}`}>
             <div className="w-full max-w-5xl">
               <h2 className="text-white text-5xl italic font-black tracking-tighter uppercase text-center mb-16" style={{ fontFamily: 'Chaney, sans-serif' }}>Tu <span className="text-amber-400">P</span>rogreso</h2>
@@ -149,7 +146,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* SECCIÓN NOTAS */}
+          {/* SECCIÓN NOTAS (RESTAURADA) */}
           <div className={`absolute inset-0 transition-all duration-700 ease-in-out px-6 flex flex-col justify-center items-center ${view === 'notas' ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
             <div className="w-full max-w-3xl">
               <h2 className="text-white text-5xl italic font-black tracking-tighter uppercase text-center mb-10" style={{ fontFamily: 'Chaney, sans-serif' }}>Notas de <span className="text-amber-400">E</span>studio</h2>
