@@ -104,10 +104,10 @@ const preguntasTrivial = [
     opciones: ["Fender Twin Reverb", "Marshall Super Lead (Plexi)", "Vox AC30", "Orange Rockerverb"],
     respuesta: "Marshall Super Lead (Plexi)"
   },
-  {
-    pregunta: "¿A qué guitarrista dedicó Eric Clapton la trágica canción 'Tears in Heaven'?",
-    opciones: ["A su padre", "A su hijo Conor", "A Jimi Hendrix", "A Duane Allman"],
-    respuesta: "A su hijo Conor"
+{
+    pregunta: "¿En qué legendario festival Jimi Hendrix quemó su Fender Stratocaster negra por primera vez?",
+    opciones: ["Woodstock", "Isle of Wight", "Monterey Pop Festival", "Fillmore East"],
+    respuesta: "Monterey Pop Festival"
   },
   {
     pregunta: "¿Qué canción de los Beatles contiene uno de los primeros ejemplos de 'feedback' o acople de guitarra grabado?",
@@ -189,15 +189,55 @@ const preguntasTrivial = [
     opciones: ["Ibanez", "Jackson", "Charvel", "ESP"],
     respuesta: "Jackson"
   },
-  {
-    pregunta: "¿Qué guitarrista de Whitesnake y Thin Lizzy es conocido por su técnica de 'vibrato' agresivo y el álbum 'Still Got the Blues'?",
-    opciones: ["John Sykes", "Gary Moore", "Adrian Vandenberg", "Doug Aldrich"],
-    respuesta: "Gary Moore"
+{
+    pregunta: "¿Qué guitarrista pasó por Thin Lizzy y Whitesnake, grabando el superventas álbum homónimo de 1987?",
+    opciones: ["Gary Moore", "John Sykes", "Bernie Marsden", "Micky Moody"],
+    respuesta: "John Sykes"
   },
   {
     pregunta: "¿Qué modelo de Fender utilizaba Jeff Beck en su etapa con The Yardbirds (famosa por tener el cuerpo recortado)?",
     opciones: ["Stratocaster", "Telecaster", "Esquire", "Mustang"],
     respuesta: "Esquire"
+  },
+  {
+    pregunta: "¿A qué legendario guitarrista de Blues pertenece la frase: 'The Thrill is Gone'?",
+    opciones: ["Muddy Waters", "B.B. King", "Buddy Guy", "John Lee Hooker"],
+    respuesta: "B.B. King"
+  },
+  {
+    pregunta: "¿Qué guitarrista de los Beatles compuso 'Something', considerada por Sinatra como la mejor canción de amor?",
+    opciones: ["John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr"],
+    respuesta: "George Harrison"
+  },
+  {
+    pregunta: "¿Qué guitarrista de Thin Lizzy grabó el famoso solo de 'Parisienne Walkways' junto a Phil Lynott?",
+    opciones: ["Brian Robertson", "Gary Moore", "Scott Gorham", "John Sykes"],
+    respuesta: "Gary Moore"
+  },
+  {
+    pregunta: "¿Qué modelo de guitarra Gibson es la seña de identidad absoluta de Angus Young de AC/DC?",
+    opciones: ["Les Paul", "Flying V", "Explorer", "SG Standard"],
+    respuesta: "SG Standard"
+  },
+  {
+    pregunta: "¿Cuál es el nombre del sistema de vibrato que utiliza Angus Young en algunas de sus Gibson SG antiguas?",
+    opciones: ["Floyd Rose", "Bigsby", "Maestro Vibrola", "Kahler"],
+    respuesta: "Maestro Vibrola"
+  },
+  {
+    pregunta: "¿Qué modelo de Fender Stratocaster usaba Jimi Hendrix en el festival de Woodstock (color blanco)?",
+    opciones: ["Stratocaster 1954", "Stratocaster 1962", "Stratocaster 1968", "Stratocaster 1970"],
+    respuesta: "Stratocaster 1968"
+  },
+  {
+    pregunta: "¿Qué modelo de Fender es famoso por tener una escala más corta (24 pulgadas), usada por Kurt Cobain?",
+    opciones: ["Stratocaster", "Jaguar", "Telecaster", "Jazzmaster"],
+    respuesta: "Jaguar"
+  },
+  {
+    pregunta: "¿En qué año lanzó Gibson el modelo 'Flying V' y 'Explorer' por primera vez?",
+    opciones: ["1952", "1954", "1958", "1961"],
+    respuesta: "1958"
   },
   {
     pregunta: "¿Cuál era la principal diferencia de la Gibson Les Paul 'Goldtop' de 1952 respecto a las posteriores?",
@@ -218,11 +258,6 @@ const preguntasTrivial = [
     pregunta: "¿Quién fue el guitarrista de 'The Who' famoso por destrozar sus guitarras y hacer el movimiento del 'molinillo'?",
     opciones: ["Roger Daltrey", "John Entwistle", "Pete Townshend", "Keith Moon"],
     respuesta: "Pete Townshend"
-  },
-  {
-    pregunta: "¿Qué pastillas inventó Seth Lover para Gibson en 1955 para eliminar el ruido de fondo?",
-    opciones: ["Single Coil", "P-90", "Humbucker (PAF)", "Lipstick"],
-    respuesta: "Humbucker (PAF)"
   },
   {
     pregunta: "¿Qué guitarrista de 'The Beatles' tocaba el bajo originalmente antes de pasar a la guitarra rítmica?",
