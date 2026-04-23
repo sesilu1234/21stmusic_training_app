@@ -1,39 +1,79 @@
 // intervalos_data.ts
-
 export interface IntervaloPregunta {
   image: string;
   answer: string;
 }
 
-const tipos = [
-  { folder: "1. b2", prefix: "b2", ans: "b2" },
-  { folder: "2. 2", prefix: "2", ans: "2" },
-  { folder: "3. b3", prefix: "b3", ans: "b3" },
-  { folder: "4. 3", prefix: "3", ans: "3" },
-  { folder: "5. 4", prefix: "4", ans: "4" },
-  { folder: "6. #4", prefix: "#4", ans: "#4" },
-  { folder: "7. b5", prefix: "b5", ans: "b5" },
-  { folder: "8. 5", prefix: "5", ans: "5" },
-  { folder: "9. #5", prefix: "#5", ans: "#5" },
-  { folder: "10. b6", prefix: "b6", ans: "b6" },
-  { folder: "11. 6", prefix: "6", ans: "6" },
-  { folder: "12. b7", prefix: "b7", ans: "b7" },
-  { folder: "13. 7", prefix: "7", ans: "7" }
-];
+export const intervalos_data: IntervaloPregunta[] = [
+  // CARPETA 1. b2
+  { image: "/assets/intervalos/1. b2/b2 do a.png", answer: "b2" },
+  { image: "/assets/intervalos/1. b2/b2 do.png", answer: "b2" },
+  { image: "/assets/intervalos/1. b2/b2 fa.png", answer: "b2" },
+  { image: "/assets/intervalos/1. b2/b2 la.png", answer: "b2" },
+  { image: "/assets/intervalos/1. b2/b2 mi.png", answer: "b2" },
+  { image: "/assets/intervalos/1. b2/b2 re.png", answer: "b2" },
+  { image: "/assets/intervalos/1. b2/b2 si.png", answer: "b2" },
+  { image: "/assets/intervalos/1. b2/b2 sol.png", answer: "b2" },
 
-const nombresArchivos = [
-  "do a.pdf", "sol.pdf", "si.pdf", "re.pdf", 
-  "mi.pdf", "la.pdf", "fa.pdf", "do.pdf"
-];
+  // CARPETA 2. 2 (Agunos espacio doble)
+  { image: "/assets/intervalos/2. 2/2 do a.png", answer: "2" },
+  { image: "/assets/intervalos/2. 2/2  do.png", answer: "2" },
+  { image: "/assets/intervalos/2. 2/2 fa.png", answer: "2" },
+  { image: "/assets/intervalos/2. 2/2  la.png", answer: "2" },
+  { image: "/assets/intervalos/2. 2/2  mi.png", answer: "2" },
+  { image: "/assets/intervalos/2. 2/2  re.png", answer: "2" },
+  { image: "/assets/intervalos/2. 2/2  si.png", answer: "2" },
+  { image: "/assets/intervalos/2. 2/2  sol.png", answer: "2" },
 
-export const intervalos_data: IntervaloPregunta[] = tipos.flatMap((tipo) =>
-  nombresArchivos.map((nombre) => {
-    // Aquí hacemos la magia: cambiamos la extensión de .pdf a .png automáticamente
-    const nombreLimpio = nombre.replace(".pdf", ".png");
-    
-    return {
-      image: `/assets/intervalos/${tipo.folder}/${tipo.prefix} ${nombreLimpio}`,
-      answer: tipo.ans
-    };
-  })
-);
+  // CARPETA 3. b3 
+  { image: "/assets/intervalos/3. b3/b3 do a.png", answer: "b3" },
+  { image: "/assets/intervalos/3. b3/b3 do.png", answer: "b3" },
+  { image: "/assets/intervalos/3. b3/b3 fa.png", answer: "b3" },
+  { image: "/assets/intervalos/3. b3/b3 la.png", answer: "b3" },
+  { image: "/assets/intervalos/3. b3/b3 mi.png", answer: "b3" },
+  { image: "/assets/intervalos/3. b3/b3 re.png", answer: "b3" },
+  { image: "/assets/intervalos/3. b3/b3 si.png", answer: "b3" },
+  { image: "/assets/intervalos/3. b3/b3 sol.png", answer: "b3" },
+
+  // CARPETA 4. 3 
+  { image: "/assets/intervalos/4. 3/3 do a.png", answer: "3" },
+  { image: "/assets/intervalos/4. 3/3 do.png", answer: "3" },
+  { image: "/assets/intervalos/4. 3/3 fa.png", answer: "3" },
+  { image: "/assets/intervalos/4. 3/3 la.png", answer: "3" },
+  { image: "/assets/intervalos/4. 3/3 mi.png", answer: "3" },
+  { image: "/assets/intervalos/4. 3/3 re.png", answer: "3" },
+  { image: "/assets/intervalos/4. 3/3 si.png", answer: "3" },
+  { image: "/assets/intervalos/4. 3/3 sol.png", answer: "3" },
+
+  // CARPETA 5. 4
+  { image: "/assets/intervalos/5. 4/4 do a.png", answer: "4" },
+  { image: "/assets/intervalos/5. 4/4 do.png", answer: "4" },
+  { image: "/assets/intervalos/5. 4/4 fa.png", answer: "4" },
+  { image: "/assets/intervalos/5. 4/4 la.png", answer: "4" },
+  { image: "/assets/intervalos/5. 4/4 mi.png", answer: "4" },
+  { image: "/assets/intervalos/5. 4/4 re.png", answer: "4" },
+  { image: "/assets/intervalos/5. 4/4 si.png", answer: "4" },
+  { image: "/assets/intervalos/5. 4/4 sol.png", answer: "4" },
+
+  // CARPETA 12. b7
+  { image: "/assets/intervalos/12. b7/b7 do a.png", answer: "b7" },
+  { image: "/assets/intervalos/12. b7/b7 do.png", answer: "b7" },
+  { image: "/assets/intervalos/12. b7/b7 fa.png", answer: "b7" },
+  { image: "/assets/intervalos/12. b7/b7 la.png", answer: "b7" },
+  { image: "/assets/intervalos/12. b7/b7 mi.png", answer: "b7" },
+  { image: "/assets/intervalos/12. b7/b7 re.png", answer: "b7" },
+  { image: "/assets/intervalos/12. b7/b7 si.png", answer: "b7" },
+  { image: "/assets/intervalos/12. b7/b7 sol.png", answer: "b7" },
+
+
+  // CARPETA 13. 7
+  { image: "/assets/intervalos/13. 7/7 do a.png", answer: "7" },
+  { image: "/assets/intervalos/13. 7/7 do.png", answer: "7" },
+  { image: "/assets/intervalos/13. 7/7 fa.png", answer: "7" },
+  { image: "/assets/intervalos/13. 7/7 la.png", answer: "7" },
+  { image: "/assets/intervalos/13. 7/7 mi.png", answer: "7" },
+  { image: "/assets/intervalos/13. 7/7 re.png", answer: "7" },
+  { image: "/assets/intervalos/13. 7/7 si.png", answer: "7" },
+  { image: "/assets/intervalos/13. 7/7 sol.png", answer: "7" }
+
+];
