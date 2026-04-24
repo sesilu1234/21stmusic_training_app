@@ -105,14 +105,14 @@ export default function ArmadurasGame() {
     if (gameOver || userAnswers[step] !== null || showFeedback) return;
     setIsReviewing(false);
 
-    const primeraPalabraSolucion = respuestaCorrecta?.split(" ") || "";
+    const primeraPalabraSolucion = respuestaCorrecta?.split(" ")[0] || "";
+
     const solucionNormalizada = primeraPalabraSolucion
       .replace("Dos", "Do#")
       .replace("Res", "Re#")
       .replace("Fas", "Fa#")
       .replace("Sols", "Sol#")
       .replace("Las", "La#");
-
     const isCorrect = notaBoton === solucionNormalizada;
     setShowFeedback(isCorrect ? "correct" : "wrong");
 
