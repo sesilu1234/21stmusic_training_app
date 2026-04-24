@@ -1,5 +1,6 @@
 "use client";
 
+import { Music2, ArrowLeft } from "lucide-react";
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -10,14 +11,12 @@ import {
   Gamepad2,
   StickyNote,
   Plus,
-  Calendar,
   Activity,
   Music,
   Layers,
-  ChevronLeft,
+  BookOpen, // Nuevo icono para modos
 } from "lucide-react";
 
-// --- TIPOS ---
 interface Juego {
   id: number;
   titulo: string;
@@ -35,7 +34,6 @@ interface Nota {
   contenido: string;
 }
 
-// --- DATOS DE JUEGOS ---
 const juegos: Juego[] = [
   {
     id: 1,
@@ -67,6 +65,15 @@ const juegos: Juego[] = [
   },
   {
     id: 4,
+    titulo: "Modos Griegos",
+    desc: "Identifica escalas y modos en el pentagrama.",
+    icon: Music2,
+    bg: "bg-indigo-500/20",
+    accent: "text-indigo-400",
+    slug: "/play/modos",
+  },
+  {
+    id: 5,
     titulo: "Intervalos",
     desc: "Mide la distancia entre dos notas.",
     icon: Activity,
@@ -75,7 +82,7 @@ const juegos: Juego[] = [
     slug: "/play/intervalos",
   },
   {
-    id: 5,
+    id: 6,
     titulo: "Trivial",
     desc: "Cultura general de guitarra y artistas.",
     icon: Music,
@@ -126,8 +133,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 relative overflow-hidden font-sans">
-      {/* --- BACKGROUND CON ZOOM --- */}
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden font-sans text-white">
+      {/* BACKGROUND */}
       <div
         className="fixed inset-0 bg-cover bg-center transition-transform duration-1000 ease-out z-0"
         style={{
@@ -139,283 +146,285 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* --- NAVBAR --- */}
-        <div className="pt-6 px-4">
-          <nav className="max-w-5xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl px-8 py-5 flex justify-between items-center shadow-2xl">
-            <div className="flex items-center gap-6">
+        {/* NAVBAR */}
+        <div className="pt-3 px-3 md:pt-4 md:px-4">
+          <nav className="max-w-5xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-3 py-2 md:px-4 md:py-3 flex justify-between items-center gap-2 shadow-2xl">
+            <div className="flex items-center gap-2 md:gap-4 min-w-0">
               <img
                 src="/assets/logo21stCM_no_white_1.png"
-                className="h-24 w-auto brightness-99"
+                className="h-10 md:h-16 lg:h-24 w-auto flex-shrink-0"
                 alt="logo"
               />
-              <div className="flex flex-col">
-                <span
-                  className="text-white italic font-black tracking-tighter text-2xl"
-                  style={{ fontFamily: "Chaney" }}
-                >
+              <div className="flex flex-col min-w-0">
+                <span className="text-white italic font-black tracking-tighter text-sm md:text-xl lg:text-2xl leading-tight truncate">
                   21st Century Music
                 </span>
-                <span className="font-light tracking-[0.3em] text-[8px] uppercase text-amber-400">
+                <span className="font-light tracking-widest text-[6px] md:text-[8px] uppercase text-amber-400">
                   Music Academy
                 </span>
               </div>
             </div>
 
-            <div className="hidden md:flex gap-8 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">
-              <button
-                onClick={() => {
-                  setView("juegos");
-                  setShowAcordesMenu(false);
-                }}
-                className={`transition-all pb-1 flex items-center gap-2 ${view === "juegos" ? "text-white border-b border-amber-400" : "hover:text-white"}`}
-              >
-                <Gamepad2 size={14} /> Juegos
-              </button>
-              <button
-                onClick={() => setView("progreso")}
-                className={`transition-all pb-1 flex items-center gap-2 ${view === "progreso" ? "text-white border-b border-amber-400" : "hover:text-white"}`}
-              >
-                <History size={14} /> Progreso
-              </button>
-              <button
-                onClick={() => setView("notas")}
-                className={`transition-all pb-1 flex items-center gap-2 ${view === "notas" ? "text-white border-b border-amber-400" : "hover:text-white"}`}
-              >
-                <StickyNote size={14} /> Notas
-              </button>
+            <div className="flex gap-3 md:gap-8 flex-shrink-0">
+              {[
+                { key: "juegos", label: "Juegos", Icon: Gamepad2 },
+                { key: "progreso", label: "Progreso", Icon: History },
+                { key: "notas", label: "Notas", Icon: StickyNote },
+              ].map(({ key, label, Icon }) => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setView(key as any);
+                    setShowAcordesMenu(false);
+                  }}
+                  className={`pb-0.5 flex flex-col md:flex-row items-center gap-1 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] transition-colors
+                    ${view === key ? "text-white border-b border-amber-400" : "text-slate-400 hover:text-white"}`}
+                >
+                  <Icon size={13} className="md:hidden" />
+                  <Icon size={14} className="hidden md:block" />
+                  <span className="hidden md:inline">{label}</span>
+                </button>
+              ))}
             </div>
           </nav>
         </div>
 
-        {/* --- CONTENEDOR PRINCIPAL --- */}
-        <main className="flex-1 relative mt-10">
-          {/* SECCIÓN JUEGOS PRINCIPAL (Efecto Zoom Out) */}
-          <div
-            className={`absolute inset-0 transition-all duration-500 ease-in-out px-6 flex flex-col justify-center items-center 
-            ${view === "juegos" && !showAcordesMenu ? "opacity-100 scale-100" : "opacity-0 scale-90 blur-md pointer-events-none"}`}
-          >
-            <header className="mb-10 text-center">
-              <h1
-                className="text-5xl md:text-8xl italic font-black tracking-tighter text-white drop-shadow-2xl"
-                style={{ fontFamily: "Chaney" }}
-              >
-                ELIGE TU <span className="text-amber-400">D</span>ESAFÍO
-              </h1>
-            </header>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full">
-              {juegos.map((j) => (
-                <button
-                  key={j.id}
-                  onClick={() =>
-                    j.hasSubmenu
-                      ? setShowAcordesMenu(true)
-                      : (window.location.href = j.slug)
-                  }
-                  className="group p-8 rounded-[2.5rem] border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-105 hover:border-amber-400/50 backdrop-blur-md transition-all text-left shadow-2xl"
-                >
-                  <div
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 ${j.bg}`}
-                  >
-                    <j.icon size={28} className={j.accent} />
-                  </div>
-                  <h2
-                    className="text-xl italic font-black text-white uppercase group-hover:text-amber-400 transition-colors"
-                    style={{ fontFamily: "Chaney" }}
-                  >
-                    {j.titulo}
-                  </h2>
-                  <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                    {j.desc}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* SUBMENÚ ACORDES (Efecto Zoom In) */}
-          <div
-            className={`absolute inset-0 transition-all duration-500 ease-out px-6 flex flex-col justify-center items-center 
-            ${showAcordesMenu ? "opacity-100 scale-100" : "opacity-0 scale-110 blur-xl pointer-events-none"}`}
-          >
-            <div className="w-full max-w-4xl">
-              <button
-                onClick={() => setShowAcordesMenu(false)}
-                className="group mb-8 flex items-center gap-2 text-white/50 hover:text-amber-400 transition-colors uppercase text-[10px] tracking-[0.3em] font-bold"
-              >
-                <ChevronLeft
-                  size={16}
-                  className="group-hover:-translate-x-1 transition-transform"
-                />{" "}
-                Volver a juegos
-              </button>
-              <header className="mb-12 text-center md:text-left">
-                <h2
-                  className="text-5xl md:text-7xl italic font-black text-white uppercase"
-                  style={{ fontFamily: "Chaney" }}
-                >
-                  Modo de <span className="text-emerald-400">A</span>cordes
-                </h2>
-                <p className="text-slate-400 mt-4 tracking-[0.2em] text-[10px] uppercase">
-                  Selecciona el nivel de complejidad
-                </p>
+        {/* MAIN */}
+        <main className="flex-1 flex flex-col">
+          {view === "juegos" && !showAcordesMenu && (
+            <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
+              <header className="mb-6 md:mb-10 text-center px-2">
+                <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl italic font-black tracking-tighter text-white leading-none uppercase">
+                  Elige tu <span className="text-amber-400">D</span>esafío
+                </h1>
               </header>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <Link
-                  href="/play/acordes/diapason_triadas"
-                  className="group p-1 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-[3rem] transition-transform hover:scale-[1.02]"
-                >
-                  <div className="bg-slate-900/80 backdrop-blur-2xl p-10 rounded-[2.9rem] h-full border border-white/5 group-hover:border-emerald-400/40 transition-all">
-                    <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-6">
-                      <Layers size={32} />
-                    </div>
-                    <h3
-                      className="text-3xl italic font-black text-white mb-2"
-                      style={{ fontFamily: "Chaney" }}
-                    >
-                      Tríadas
-                    </h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">
-                      Fundamental, tercera y quinta. La base de toda la armonía
-                      moderna.
-                    </p>
-                  </div>
-                </Link>
-
-                <Link
-                  href="/play/acordes/diapason_septimas"
-                  className="group p-1 bg-gradient-to-br from-indigo-500/20 to-transparent rounded-[3rem] transition-transform hover:scale-[1.02]"
-                >
-                  <div className="bg-slate-900/80 backdrop-blur-2xl p-10 rounded-[2.9rem] h-full border border-white/5 group-hover:border-indigo-400/40 transition-all">
-                    <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-6">
-                      <Music size={32} />
-                    </div>
-                    <h3
-                      className="text-3xl italic font-black text-white mb-2"
-                      style={{ fontFamily: "Chaney" }}
-                    >
-                      Séptimas
-                    </h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">
-                      Añade color y tensión. Acordes May7, Dom7, m7 y m7b5.
-                    </p>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* SECCIÓN PROGRESO */}
-          <div
-            className={`absolute inset-0 transition-all duration-700 px-6 flex flex-col justify-center items-center 
-            ${view === "progreso" ? "translate-x-0 opacity-100" : "translate-x-full opacity-0 pointer-events-none"}`}
-          >
-            <div className="w-full max-w-5xl">
-              <h2
-                className="text-white text-5xl italic font-black tracking-tighter uppercase text-center mb-16"
-                style={{ fontFamily: "Chaney" }}
-              >
-                Tu <span className="text-amber-400">P</span>rogreso
-              </h2>
-              <table className="w-full text-left border-separate border-spacing-y-4">
-                <thead>
-                  <tr
-                    className="italic font-black uppercase text-xs text-white/40"
-                    style={{ fontFamily: "Chaney" }}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 max-w-6xl w-full">
+                {juegos.map((j) => (
+                  <button
+                    key={j.id}
+                    onClick={() =>
+                      j.hasSubmenu
+                        ? setShowAcordesMenu(true)
+                        : (window.location.href = j.slug)
+                    }
+                    className="group flex items-center md:flex-col md:items-start gap-4 md:gap-0 p-4 md:p-8 rounded-2xl md:rounded-3xl border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-[1.02] md:hover:scale-105 backdrop-blur-md transition-all text-left shadow-xl"
                   >
-                    <th className="px-8 pb-4">Día</th>
-                    <th className="px-8 pb-4 text-amber-400">Armaduras</th>
-                    <th className="px-8 pb-4 text-sky-400">Diapasón</th>
-                    <th className="px-8 pb-4 text-emerald-400">Acordes</th>
-                    <th className="px-8 pb-4 text-fuchsia-400">Intervalos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {historialTabla.map((fila, i) => (
-                    <tr key={i} className="text-white">
-                      <td className="px-8 py-6 bg-white/5 rounded-l-[2rem] border-y border-l border-white/10 font-bold">
-                        {fila.fecha}
-                      </td>
-                      <td
-                        className="px-8 py-6 bg-white/5 border-y border-white/10 italic font-black"
-                        style={{ fontFamily: "Chaney" }}
-                      >
-                        {fila.armaduras}
-                      </td>
-                      <td
-                        className="px-8 py-6 bg-white/5 border-y border-white/10 italic font-black"
-                        style={{ fontFamily: "Chaney" }}
-                      >
-                        {fila.diapason}
-                      </td>
-                      <td
-                        className="px-8 py-6 bg-white/5 border-y border-white/10 italic font-black"
-                        style={{ fontFamily: "Chaney" }}
-                      >
-                        {fila.acordes}
-                      </td>
-                      <td
-                        className="px-8 py-6 bg-white/5 rounded-r-[2rem] border-y border-r border-white/10 italic font-black"
-                        style={{ fontFamily: "Chaney" }}
-                      >
-                        {fila.intervalos}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* SECCIÓN NOTAS */}
-          <div
-            className={`absolute inset-0 transition-all duration-700 px-6 flex flex-col justify-center items-center 
-            ${view === "notas" ? "translate-x-0 opacity-100" : "translate-x-full opacity-0 pointer-events-none"}`}
-          >
-            <div className="w-full max-w-3xl">
-              <h2
-                className="text-white text-5xl italic font-black text-center mb-10"
-                style={{ fontFamily: "Chaney" }}
-              >
-                Notas de <span className="text-amber-400">E</span>studio
-              </h2>
-              <div className="bg-black/40 backdrop-blur-md border border-white/10 p-6 rounded-[2.5rem] mb-8 flex gap-4">
-                <textarea
-                  value={nuevaNota}
-                  onChange={(e) => setNuevaNota(e.target.value)}
-                  placeholder="Escribe algo sobre tu práctica..."
-                  className="flex-1 bg-transparent text-white border-none focus:ring-0 placeholder:text-white/20 resize-none h-12"
-                />
-                <button
-                  onClick={agregarNota}
-                  className="bg-amber-500 text-black p-4 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-amber-500/20"
-                >
-                  <Plus size={20} strokeWidth={3} />
-                </button>
-              </div>
-              <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
-                {notas.map((n) => (
-                  <div
-                    key={n.id}
-                    className="bg-white/5 border border-white/10 p-6 rounded-3xl"
-                  >
-                    <div className="flex items-center gap-2 text-amber-400/60 text-[10px] font-black uppercase tracking-widest mb-2">
-                      <Calendar size={12} /> {n.fecha}
+                    <div
+                      className={`w-11 h-11 md:w-14 md:h-14 flex-shrink-0 rounded-xl md:rounded-2xl flex items-center justify-center md:mb-6 ${j.bg}`}
+                    >
+                      <j.icon size={22} className={j.accent} />
                     </div>
-                    <p className="text-slate-200 text-sm font-medium">
-                      {n.contenido}
-                    </p>
-                  </div>
+                    <div>
+                      <h2 className="text-sm md:text-xl italic font-black text-white group-hover:text-amber-400 transition-colors uppercase">
+                        {j.titulo}
+                      </h2>
+                      <p className="text-[10px] md:text-xs text-slate-400 leading-relaxed font-light">
+                        {j.desc}
+                      </p>
+                    </div>
+                  </button>
                 ))}
               </div>
             </div>
-          </div>
+          )}
+
+          {/* ACORDES SUBMENU */}
+          {view === "juegos" && showAcordesMenu && (
+            <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
+              <div className="w-full max-w-4xl">
+                <button
+                  onClick={() => setShowAcordesMenu(false)}
+                  className="group mb-6 md:mb-8 text-white/40 hover:text-emerald-400 text-[10px] uppercase tracking-[0.3em] transition-colors flex items-center gap-2"
+                >
+                  <ArrowLeft
+                    size={12}
+                    className="group-hover:-translate-x-1 transition-transform"
+                  />
+                  Volver
+                </button>
+                <h2 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl italic font-black text-white mb-8 md:mb-12 leading-tight uppercase">
+                  Modo de{" "}
+                  <span className="text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]">
+                    Acordes
+                  </span>
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10">
+                  <Link href="/play/acordes/diapason_triadas" className="group">
+                    <div className="relative overflow-hidden bg-slate-900/60 p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] border border-white/10 transition-all duration-500 hover:border-emerald-500/50 hover:bg-slate-800/80 hover:-translate-y-1 shadow-xl">
+                      <div className="flex items-center md:flex-col md:items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                          <Music2 size={24} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl md:text-3xl font-bold text-white mb-1 uppercase italic">
+                            Tríadas
+                          </h3>
+                          <p className="text-white/40 text-xs md:text-base font-light">
+                            Fundamental, tercera y quinta.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/play/acordes/diapason_septimas"
+                    className="group"
+                  >
+                    <div className="relative overflow-hidden bg-slate-900/60 p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] border border-white/10 transition-all duration-500 hover:border-emerald-500/50 hover:bg-slate-800/80 hover:-translate-y-1 shadow-xl">
+                      <div className="flex items-center md:flex-col md:items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                          <Layers size={24} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl md:text-3xl font-bold text-white mb-1 uppercase italic">
+                            Séptimas
+                          </h3>
+                          <p className="text-white/40 text-xs md:text-base font-light">
+                            Acordes de 4 notas. Color y tensión.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PROGRESO */}
+          {view === "progreso" && (
+            <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
+              <div className="w-full max-w-5xl">
+                <h2 className="text-2xl md:text-4xl italic font-black text-white mb-6 md:mb-8 uppercase tracking-tighter">
+                  Tu <span className="text-amber-400">P</span>rogreso
+                </h2>
+                {/* Mobile Cards */}
+                <div className="block md:hidden space-y-4">
+                  {historialTabla.map((fila, i) => (
+                    <div
+                      key={i}
+                      className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4"
+                    >
+                      <div className="text-amber-400 font-bold text-xs uppercase tracking-widest mb-3">
+                        {fila.fecha}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-[10px]">
+                        <div className="bg-white/5 p-2 rounded-lg">
+                          <span className="text-slate-500 block">
+                            ARMADURAS
+                          </span>{" "}
+                          {fila.armaduras}
+                        </div>
+                        <div className="bg-white/5 p-2 rounded-lg">
+                          <span className="text-slate-500 block">DIAPASÓN</span>{" "}
+                          {fila.diapason}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto bg-black/20 rounded-3xl p-6 border border-white/5">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="text-[10px] uppercase tracking-widest text-slate-500 border-b border-white/10">
+                        <th className="pb-4">Fecha</th>
+                        <th className="pb-4">Armaduras</th>
+                        <th className="pb-4">Diapasón</th>
+                        <th className="pb-4">Acordes</th>
+                        <th className="pb-4">Intervalos</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-sm">
+                      {historialTabla.map((f, i) => (
+                        <tr
+                          key={i}
+                          className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
+                        >
+                          <td className="py-4 font-bold">{f.fecha}</td>
+                          <td className="py-4 text-amber-400 font-black">
+                            {f.armaduras}
+                          </td>
+                          <td className="py-4 text-sky-400 font-black">
+                            {f.diapason}
+                          </td>
+                          <td className="py-4 text-emerald-400 font-black">
+                            {f.acordes}
+                          </td>
+                          <td className="py-4 text-fuchsia-400 font-black">
+                            {f.intervalos}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* NOTAS */}
+          {view === "notas" && (
+            <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
+              <div className="w-full max-w-3xl">
+                <h2 className="text-2xl md:text-4xl italic font-black text-white mb-6 md:mb-8 uppercase tracking-tighter">
+                  Mis <span className="text-amber-400">N</span>otas
+                </h2>
+                <div className="bg-black/40 backdrop-blur-md border border-white/10 p-4 rounded-2xl mb-5 flex gap-3">
+                  <textarea
+                    value={nuevaNota}
+                    onChange={(e) => setNuevaNota(e.target.value)}
+                    placeholder="Escribe una nota de estudio..."
+                    className="flex-1 bg-transparent text-white text-sm outline-none resize-none h-12 font-light"
+                  />
+                  <button
+                    onClick={agregarNota}
+                    className="bg-amber-400 text-black rounded-xl px-4 font-bold hover:bg-amber-300 transition-colors"
+                  >
+                    <Plus size={20} />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {notas.map((n) => (
+                    <div
+                      key={n.id}
+                      className="bg-black/30 border border-white/5 p-4 rounded-2xl"
+                    >
+                      <div className="text-[8px] uppercase text-amber-400 mb-1">
+                        {n.fecha}
+                      </div>
+                      <p className="text-sm text-slate-300 font-light">
+                        {n.contenido}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
-        <footer className="py-12 text-center text-slate-600 text-[8px] tracking-[0.8em] uppercase">
+        <footer className="py-6 text-center text-slate-600 text-[8px] tracking-widest uppercase">
           © 2026 21st Century Music
         </footer>
       </div>
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease forwards;
+        }
+      `}</style>
     </div>
   );
 }

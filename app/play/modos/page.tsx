@@ -1,21 +1,45 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { chords_images } from "./chords_images";
+import { modes_images } from "./modes_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 
 export default function ChordsGame() {
   const router = useRouter();
 
-  const opcionesSeptimas = [
-    "Mayor 7",
-    "Menor 7",
-    "Dominante 7",
-    "Semidisminuido",
+  const opcionesModos = [
+    "Jónico",
+    "Dórico",
+    "Frigio",
+    "Lidio",
+    "Mixolidio",
+    "Eólico",
+    "Locrio",
   ];
 
-  // Hydration fix: Mezclar en el cliente
-  const [quizList, setQuizList] = useState<typeof chords_images>([]);
+  // label del botón → answer key en modes_images
+  const mapping: Record<string, string> = {
+    Jónico: "Jonico",
+    Dórico: "Dorico",
+    Frigio: "Frigio",
+    Lidio: "Lidio",
+    Mixolidio: "Mixo",
+    Eólico: "Eolico",
+    Locrio: "Locrio",
+  };
+
+  // answer key → label del botón
+  const reverseMapping: Record<string, string> = {
+    Jonico: "Jónico",
+    Dorico: "Dórico",
+    Frigio: "Frigio",
+    Lidio: "Lidio",
+    Mixo: "Mixolidio",
+    Eolico: "Eólico",
+    Locrio: "Locrio",
+  };
+
+  const [quizList, setQuizList] = useState<typeof modes_images>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [step, setStep] = useState(0);
   const [results, setResults] = useState<(null | "correct" | "wrong")[]>(
@@ -32,7 +56,7 @@ export default function ChordsGame() {
   );
 
   useEffect(() => {
-    const shuffled = [...chords_images]
+    const shuffled = [...modes_images]
       .sort(() => Math.random() - 0.5)
       .slice(0, 24);
     setQuizList(shuffled);
@@ -45,7 +69,7 @@ export default function ChordsGame() {
     if (quizList.length > 0) {
       quizList.forEach((q) => {
         const img = new Image();
-        img.src = `/assets/diapason_septimas/${q.image}`;
+        img.src = `/assets/modos_griegos/${q.image}`;
       });
     }
   }, [quizList]);
@@ -54,7 +78,7 @@ export default function ChordsGame() {
     if (currentQuestion) {
       setIsImageLoading(true);
       const img = new Image();
-      img.src = `/assets/diapason_septimas/${currentQuestion.image}`;
+      img.src = `/assets/modos_griegos/${currentQuestion.image}`;
       if (img.complete) setIsImageLoading(false);
       img.onload = () => setIsImageLoading(false);
     }
@@ -68,16 +92,35 @@ export default function ChordsGame() {
   if (!isMounted || !currentQuestion)
     return <div className="min-h-screen bg-slate-900" />;
 
+  // Respuesta correcta expresada como label de botón ("Jónico", "Mixolidio"...)
+  const correctOption = reverseMapping[currentQuestion.answer] || "";
+
+  const getButtonStyle = (nota: string) => {
+    const isAnswered = userAnswers[step] !== null;
+    const isThisCorrect = nota === correctOption;
+    const isThisSelected = nota === userAnswers[step];
+
+    if (showFeedback) {
+      if (isThisCorrect)
+        return "bg-green-500/30 border-green-400 text-white scale-[1.02]";
+      if (isThisSelected && showFeedback === "wrong")
+        return "bg-red-500/30 border-red-400 text-white";
+      return "opacity-30 border-white/10 bg-white/5 text-white";
+    }
+
+    if (isReviewing && isAnswered) {
+      if (isThisCorrect) return "bg-green-500/30 border-green-400 text-white";
+      if (isThisSelected && results[step] === "wrong")
+        return "bg-red-500/20 border-red-400/60 text-white";
+      return "opacity-30 border-white/10 bg-white/5 text-white";
+    }
+
+    return "border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black";
+  };
+
   const handleAnswer = (notaSeleccionada: string) => {
     if (userAnswers[step] !== null || gameOver || !!showFeedback) return;
     setIsReviewing(false);
-
-    const mapping: Record<string, string> = {
-      "Mayor 7": "maj7",
-      "Menor 7": "min 7",
-      "Dominante 7": "7",
-      Semidisminuido: "min 7 b5",
-    };
 
     const isCorrect = mapping[notaSeleccionada] === currentQuestion.answer;
     setShowFeedback(isCorrect ? "correct" : "wrong");
@@ -116,15 +159,7 @@ export default function ChordsGame() {
     if (nextStep >= progresoMaximo) setIsReviewing(false);
   };
 
-  const getSolucionTexto = () => {
-    const mapping: any = {
-      maj7: "Mayor 7",
-      "min 7": "Menor 7",
-      "7": "Dominante 7",
-      "min 7 b5": "Semidisminuido",
-    };
-    return mapping[currentQuestion.answer] || "";
-  };
+  const getSolucionTexto = () => reverseMapping[currentQuestion.answer] || "";
 
   return (
     <div
@@ -154,9 +189,9 @@ export default function ChordsGame() {
             className="text-white text-xl md:text-3xl font-black italic tracking-tighter uppercase"
             style={{ fontFamily: "Chaney, sans-serif" }}
           >
-            ¿Qué tipo de{" "}
-            <span className="text-black bg-white/90 px-2 rounded drop-shadow-sm">
-              ACORDE
+            ¿Qué{" "}
+            <span className="text-black bg-white/90 px-1 mx-1 rounded drop-shadow-sm">
+              MODO
             </span>{" "}
             es?
           </h2>
@@ -195,15 +230,20 @@ export default function ChordsGame() {
 
             <img
               key={currentQuestion.image}
-              src={`/assets/diapason_septimas/${currentQuestion.image}`}
-              alt="Acorde"
+              src={`/assets/modos_griegos/${currentQuestion.image}`}
+              alt="Modo"
               className={`max-h-full max-w-full object-contain transition-all duration-300 ${isImageLoading ? "opacity-0" : "opacity-100"}`}
             />
           </div>
 
           {/* SOLUCIÓN BADGE */}
           <div
-            className={`absolute -bottom-8 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 transform ${(isReviewing || showFeedback === "wrong") && userAnswers[step] !== null ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"}`}
+            className={`absolute -bottom-8 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 transform ${
+              (isReviewing || showFeedback === "wrong") &&
+              userAnswers[step] !== null
+                ? "translate-y-0 opacity-100"
+                : "translate-y-4 opacity-0 pointer-events-none"
+            }`}
           >
             <div className="px-6 py-2 rounded-2xl border-2 border-amber-400/50 bg-black/90 backdrop-blur-xl flex flex-col items-center shadow-2xl min-w-[140px]">
               <span className="text-[7px] text-amber-400 uppercase font-black tracking-widest">
@@ -216,17 +256,33 @@ export default function ChordsGame() {
           </div>
         </div>
 
-        {/* GRID DE BOTONES RESPONSIVE */}
+        {/* GRID DE BOTONES */}
         <div
-          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-all ${userAnswers[step] !== null || showFeedback ? "opacity-40 pointer-events-none" : "opacity-100"}`}
+          className={`bg-black/40 p-3 md:p-5 rounded-[2rem] border border-white/10 w-full backdrop-blur-md transition-all ${
+            showFeedback ? "pointer-events-none" : ""
+          } ${
+            userAnswers[step] !== null && !showFeedback
+              ? "opacity-40 pointer-events-none"
+              : ""
+          }`}
         >
-          <div className="grid grid-cols-2 gap-3 md:gap-4">
-            {opcionesSeptimas.map((nota) => (
+          <div className="grid grid-cols-2 gap-2 md:gap-3">
+            {/* Jónico ocupa toda la fila */}
+            <button
+              disabled={userAnswers[step] !== null || !!showFeedback}
+              onClick={() => handleAnswer("Jónico")}
+              className={`col-span-2 py-3 md:py-4 rounded-xl border transition-all active:scale-95 shadow-sm ${getButtonStyle("Jónico")}`}
+            >
+              <span className="text-xs md:text-sm font-bold">Jónico</span>
+            </button>
+
+            {/* Los otros 6 en 2 columnas */}
+            {opcionesModos.slice(1).map((nota) => (
               <button
                 key={nota}
                 disabled={userAnswers[step] !== null || !!showFeedback}
                 onClick={() => handleAnswer(nota)}
-                className="py-4 md:py-6 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black transition-all active:scale-95"
+                className={`py-3 md:py-4 rounded-xl border transition-all active:scale-95 shadow-sm ${getButtonStyle(nota)}`}
               >
                 <span className="text-xs md:text-sm font-bold">{nota}</span>
               </button>
@@ -271,7 +327,11 @@ export default function ChordsGame() {
 
             <button
               onClick={goNext}
-              className={`p-3 bg-amber-500 text-black rounded-full shadow-lg transition-all ${isReviewing || (userAnswers[step] !== null && !showFeedback) ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+              className={`p-3 bg-amber-500 text-black rounded-full shadow-lg transition-all ${
+                isReviewing || (userAnswers[step] !== null && !showFeedback)
+                  ? "opacity-100"
+                  : "opacity-0 pointer-events-none"
+              }`}
             >
               <ArrowRight size={20} />
             </button>
