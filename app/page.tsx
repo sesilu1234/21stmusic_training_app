@@ -90,6 +90,15 @@ const juegos: Juego[] = [
     accent: "text-red-400",
     slug: "/play/trivia",
   },
+  {
+    id: 7,
+    titulo: "Ritmo",
+    desc: "Pulsa al ritmo exacto de la partitura.",
+    icon: Activity,
+    bg: "bg-orange-500/20",
+    accent: "text-orange-400",
+    slug: "/play/ritmo",
+  },
 ];
 
 const historialTabla = [

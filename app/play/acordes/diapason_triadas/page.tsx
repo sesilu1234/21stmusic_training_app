@@ -164,7 +164,7 @@ export default function TriadsGame() {
       <div className="w-full px-4 pt-6 md:px-12 flex justify-between items-center z-20">
         {/* 3 — Icono de casita en vez de texto */}
         <button
-          onClick={() => router.push("/play")}
+          onClick={() => router.push("/")}
           className="text-white/50 hover:text-white bg-black/40 p-2.5 rounded-xl border border-white/10 transition-all hover:bg-black/60"
         >
           <Home size={16} />

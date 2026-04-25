@@ -90,7 +90,7 @@ export default function TrivialGuitarra() {
       {/* NAVBAR */}
       <div className="relative z-20 w-full px-4 pt-5 md:px-12 flex justify-between items-center">
         <button
-          onClick={() => router.push("/play")}
+          onClick={() => router.push("/")}
           className="text-white/50 hover:text-white bg-black/40 p-2.5 rounded-full border border-white/10 transition-all hover:bg-black/60"
         >
           <Home size={16} />

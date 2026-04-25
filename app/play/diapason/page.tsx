@@ -129,7 +129,7 @@ export default function DiapasonGame() {
     >
       <div className="w-full px-4 pt-6 md:px-12 md:pt-8 flex justify-between items-center z-20">
         <button
-          onClick={() => router.push("/play")}
+          onClick={() => router.push("/")}
           className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-4 py-2 md:px-6 md:py-2.5 rounded-full border border-white/10 transition-all"
         >
           ← <span className="hidden sm:inline">Menú Principal</span>
