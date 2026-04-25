@@ -3,8 +3,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import MusicDisplay from "./MusicDisplay";
-import VexFlowMelody from "./VexFlowMelody";
-import JustSymbols from "./JustSymbols";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 interface RhythmQuestion {
