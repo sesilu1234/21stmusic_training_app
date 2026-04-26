@@ -274,7 +274,7 @@ export default function MusicLine() {
       {/* Calqueta con flechita arriba */}
       <button
         className="w-12 h-12 bg-green-500 cursor-pointer"
-        onClick={() => metroRef.current.start()}
+        onClick={() => metroRef.current?.start()} // Added the '?'
       >
         Start
       </button>
