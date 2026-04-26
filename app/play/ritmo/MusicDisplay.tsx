@@ -113,35 +113,6 @@ function TimeSig44({ sz }: { sz: number }) {
   );
 }
 
-function Measure({ notes, sz }: { notes: NoteItem[]; sz: number }) {
-  const small = sz * 0.55;
-  const margin = "ml-[9] mr-[24] md:ml-[18] md:mr-[48]";
-
-  return (
-    <>
-      {notes.map((item, i) => {
-        // ── plain glyph ──────────────────────────────────────────
-        if (typeof item === "string") {
-          return (
-            <Glyph
-              key={i}
-              g={item}
-              sz={small}
-              className={`${margin} ${item === G.restHalf ? "translate-y-1/8" : ""}`}
-            />
-          );
-        }
-        // ── beamed group ─────────────────────────────────────────
-        return (
-          <span key={i} className={`inline-flex items-center ${margin}`}>
-            <BeamedGroup count={item.beam} sz={sz} />
-          </span>
-        );
-      })}
-    </>
-  );
-}
-
 const notesDurations = {
   quarterUp: 1,
   halfUp: 2,
@@ -151,9 +122,38 @@ const notesDurations = {
 
 // Create a type based on the keys of the object above
 type NoteDurationKey = keyof typeof notesDurations;
-
 type NoteItem = NoteDurationKey | { beam: number };
 
+// 2. Add a type for the result AFTER mapping (contains Unicode strings)
+type MappedNoteItem = string | { beam: number };
+
+function Measure({ notes, sz }: { notes: MappedNoteItem[]; sz: number }) {
+  const small = sz * 0.55;
+  // Note: fixed the margin syntax (Tailwind uses ml-2, not ml-)
+  const margin = "ml-2 mr-6 md:ml-4 md:mr-12";
+
+  return (
+    <>
+      {notes.map((item, i) => {
+        if (typeof item === "string") {
+          return (
+            <Glyph
+              key={i}
+              g={item} // item is now the Unicode glyph
+              sz={small}
+              className={`${margin} ${item === G.restHalf ? "translate-y-1" : ""}`}
+            />
+          );
+        }
+        return (
+          <span key={i} className={`inline-flex items-center ${margin}`}>
+            <BeamedGroup count={item.beam} sz={sz} />
+          </span>
+        );
+      })}
+    </>
+  );
+}
 // Now, when you check (typeof item === "string"),
 // TypeScript automatically knows it MUST be a NoteDurationKey.
 
@@ -180,9 +180,15 @@ const measuresTimings = measureKeys.map((measure) =>
 
 console.log("measuresTimings", measuresTimings);
 
-const mapNotes = (arr: NoteItem[]) =>
+// 1. Keep your existing types
+
+// 3. Update Measure to accept the mapped strings
+
+// 4. Update mapNotes to transform NoteItem[] -> MappedNoteItem[]
+const mapNotes = (arr: NoteItem[]): MappedNoteItem[] =>
   arr.map((n) => (typeof n === "string" ? G[n] : n));
 
+// The rest of your logic remains the same
 const measures = measureKeys.map((n) => mapNotes(n));
 
 export default function MusicLine() {
