@@ -190,7 +190,7 @@ export default function RitmoGame() {
       </div>
 
       {/* ── MAIN ── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 z-10 w-full max-w-[90%] mx-auto">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 z-10 w-full md:max-w-[90%] mx-auto">
         {/* Title */}
         <div className="mb-6 text-center">
           <h2 className="text-white text-xl md:text-3xl font-black italic tracking-tighter leading-tight uppercase">
@@ -202,14 +202,14 @@ export default function RitmoGame() {
         </div>
 
         {/* ── PENTAGRAMA CONTAINER ── */}
-        <div className="relative w-full max-w-[90%] mb-8">
-          <div className="bg-white p-6 md:p-8 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl w-full h-44 md:h-56 flex flex-col items-center justify-center border-4 border-white relative overflow-hidden">
+        <div className="relative w-full md:max-w-[90%] mb-8">
+          <div className="bg-white p-0 md:p-8 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl w-full h-44 md:h-56 flex flex-col items-center justify-center border-4 border-white relative overflow-hidden">
             {/* ─────────────────────────────────────────────────────────────
                 AQUÍ VA TU PENTAGRAMA / PARTITURA
                 currentQuestion.beats → los golpes a representar
                 currentQuestion.bpm   → tempo
             ───────────────────────────────────────────────────────────── */}
-            <div className="w-full h-full flex flex-col items-left justify-center text-black/20 text-xsselect-none">
+            <div className="w-full h-full flex flex-col items-start justify-center text-black/20 text-xs select-none">
               <MusicLine />
             </div>
           </div>
@@ -223,7 +223,7 @@ export default function RitmoGame() {
           }
           className={`
             relative w-full max-w-2xl h-28 md:h-36 rounded-[2rem] border-2 flex flex-col items-center justify-center cursor-pointer select-none
-            transition-all duration-75 active:scale-[0.98]
+            transition-all duration-75 active:scale-[0.98] max-w-[90%]
             ${
               gamePhase === "playing"
                 ? lastTapFlash
