@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import MusicDisplay from "./MusicDisplay";
+import MusicLine from "./MusicDisplay";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 interface RhythmQuestion {
@@ -190,7 +190,7 @@ export default function RitmoGame() {
       </div>
 
       {/* ── MAIN ── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 z-10 w-full max-w-7xl mx-auto">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 z-10 w-full max-w-[90%] mx-auto">
         {/* Title */}
         <div className="mb-6 text-center">
           <h2 className="text-white text-xl md:text-3xl font-black italic tracking-tighter leading-tight uppercase">
@@ -209,10 +209,8 @@ export default function RitmoGame() {
                 currentQuestion.beats → los golpes a representar
                 currentQuestion.bpm   → tempo
             ───────────────────────────────────────────────────────────── */}
-            <div className="relative w-full h-full flex flex-col items-left justify-center text-black/20 text-xsselect-none">
-              <MusicDisplay />
-
-              <hr className="absolute w-full border-t-[2.0px] border-black" />
+            <div className="w-full h-full flex flex-col items-left justify-center text-black/20 text-xsselect-none">
+              <MusicLine />
             </div>
           </div>
         </div>
