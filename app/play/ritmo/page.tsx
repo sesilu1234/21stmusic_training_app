@@ -223,7 +223,7 @@ export default function RitmoGame() {
           }
           className={`
             relative w-full max-w-2xl h-28 md:h-36 rounded-[2rem] border-2 flex flex-col items-center justify-center cursor-pointer select-none
-            transition-all duration-75 active:scale-[0.98] max-w-[90%]
+            transition-all duration-75 active:scale-[0.98] max-w-[700px]
             ${
               gamePhase === "playing"
                 ? lastTapFlash
