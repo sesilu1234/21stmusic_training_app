@@ -15,9 +15,6 @@ const G = {
 const BRAVURA =
   "https://cdn.jsdelivr.net/npm/@vexflow-fonts/bravura/bravura.woff2";
 
-// A note item is either a plain glyph string or a beamed group spec
-type NoteItem = string | { beam: number };
-
 function Glyph({
   g,
   sz,
@@ -150,7 +147,15 @@ const notesDurations = {
   halfUp: 2,
   restQuarter: 1,
   restHalf: 2,
-};
+} as const; // 'as const' makes the values read-only and specific
+
+// Create a type based on the keys of the object above
+type NoteDurationKey = keyof typeof notesDurations;
+
+type NoteItem = NoteDurationKey | { beam: number };
+
+// Now, when you check (typeof item === "string"),
+// TypeScript automatically knows it MUST be a NoteDurationKey.
 
 const N1: NoteItem[] = ["quarterUp", "quarterUp", "halfUp"];
 const N2: NoteItem[] = ["restHalf", { beam: 2 }, "quarterUp"];
