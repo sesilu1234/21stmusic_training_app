@@ -355,7 +355,7 @@ const MusicLine = forwardRef((props, ref) => {
     let segmentStartX = positions[0] - baseLeft;
     let segmentStartTime = startTime;
 
-    scoreheadRef.current!.style.transform = `translateX(-${segmentStartX}px)`;
+    playheadRef.current!.style.transform = `translateX(${segmentStartX}px)`;
 
     metroRef.current?.start(startTime);
 
@@ -368,7 +368,7 @@ const MusicLine = forwardRef((props, ref) => {
       let elapsed = now - segmentStartTime;
 
       // avanzar segmentos correctamente (puede saltar varios)
-      if (elapsed >= flatTimings[i] && i < flatTimings.length - 1) {
+      while (elapsed >= flatTimings[i] && i < flatTimings.length - 1) {
         const distance = positions[i + 1] - positions[i];
 
         segmentStartX += distance;
@@ -384,7 +384,7 @@ const MusicLine = forwardRef((props, ref) => {
 
       const movedX = segmentStartX + elapsed * speed;
 
-      scoreheadRef.current!.style.transform = `translateX(-${movedX}px)`;
+      playheadRef.current!.style.transform = `translateX(${movedX}px)`;
 
       requestAnimationFrame(loop);
     };
@@ -392,8 +392,6 @@ const MusicLine = forwardRef((props, ref) => {
     requestAnimationFrame(loop);
   };
   const playheadRef = useRef<HTMLDivElement | null>(null);
-
-  const scoreheadRef = useRef<HTMLDivElement | null>(null);
 
   useImperativeHandle(ref, () => ({
     handleStart,
@@ -418,10 +416,7 @@ const MusicLine = forwardRef((props, ref) => {
   if (!loaded) return null;
 
   return (
-    <div
-      className="flex items-center justify-center w-fit py-12 px-2 md:px-8 bg-white select-none "
-      ref={scoreheadRef}
-    >
+    <div className="flex items-center justify-center w-fit py-12 px-2 md:px-8 bg-white select-none">
       {/* Calqueta — línea verde fina al inicio */}
       {/* Calqueta con flechita arriba */}
 
