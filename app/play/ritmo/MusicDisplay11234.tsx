@@ -107,7 +107,7 @@ export default function SimpleMovingScore() {
   const [fontLoaded, setFontLoaded] = useState(false);
   const startTimeRef = useRef<number>(0);
 
-  const SPEED = 1; // px per second
+  const SPEED = 41; // px per second
   const HEIGHT = 120;
 
   // 1. Load Font
