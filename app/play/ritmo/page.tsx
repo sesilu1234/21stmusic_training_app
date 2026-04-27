@@ -156,6 +156,8 @@ export default function RitmoGame() {
     }
   };
 
+  const ref = useRef<{ handleStart: () => void }>(null);
+
   const progresoMaximo =
     results.indexOf(null) === -1 ? TOTAL_QUESTIONS : results.indexOf(null);
 
@@ -210,17 +212,16 @@ export default function RitmoGame() {
                 currentQuestion.bpm   → tempo
             ───────────────────────────────────────────────────────────── */}
             <div className="w-full h-full flex flex-col items-start justify-center text-black/20 text-xs select-none">
-              <MusicLine />
+              <MusicLine ref={ref} />
             </div>
           </div>
         </div>
 
         {/* ── TAP ZONE ── */}
+
         <div
           ref={containerRef}
-          onPointerDown={() =>
-            gamePhase === "idle" ? startRound() : handleTap()
-          }
+          onPointerDown={() => ref.current?.handleStart()}
           className={`
             relative w-full max-w-2xl h-28 md:h-36 rounded-[2rem] border-2 flex flex-col items-center justify-center cursor-pointer select-none
             transition-all duration-75 active:scale-[0.98] max-w-[700px]

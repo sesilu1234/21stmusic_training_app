@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 
 const G = {
   quarterUp: "\uE1D5",
@@ -228,7 +234,7 @@ const mapNotes = (arr: NoteItem[]): MappedNoteItem[] =>
 // The rest of your logic remains the same
 const measures = measureKeys.map((n) => mapNotes(n));
 
-export default function MusicLine() {
+const MusicLine = forwardRef((props, ref) => {
   const [loaded, setLoaded] = useState(false);
   const [sz, setSz] = useState(96);
 
@@ -387,6 +393,10 @@ export default function MusicLine() {
   };
   const playheadRef = useRef<HTMLDivElement | null>(null);
 
+  useImperativeHandle(ref, () => ({
+    handleStart,
+  }));
+
   {
     /*  ///////////////////////  */
   }
@@ -409,13 +419,7 @@ export default function MusicLine() {
     <div className="flex items-center justify-center w-fit py-12 px-2 md:px-8 bg-white select-none">
       {/* Calqueta — línea verde fina al inicio */}
       {/* Calqueta con flechita arriba */}
-      <button
-        className="w-12 h-12 bg-green-500 cursor-pointer"
-        onClick={handleStart}
-      >
-        Start
-      </button>
-      ;
+
       <TimeSig44 sz={sz} />
       {/* First barline with calqueta on top */}
       <div className="relative flex flex-col items-center  ml-4">
@@ -469,4 +473,6 @@ export default function MusicLine() {
       </div>
     </div>
   );
-}
+});
+
+export default MusicLine;
