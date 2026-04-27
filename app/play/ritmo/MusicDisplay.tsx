@@ -2,12 +2,14 @@
 
 import React, {
   useEffect,
-  useState,
   useRef,
   forwardRef,
   useImperativeHandle,
 } from "react";
 
+// ---------------------------------------------------------------------------
+// SMuFL glyphs (Bravura)
+// ---------------------------------------------------------------------------
 const G = {
   quarterUp: "\uE1D5",
   halfUp: "\uE1D3",
@@ -15,469 +17,443 @@ const G = {
   restHalf: "\uE4E4",
   timeSig4: "\uE084",
   barline: "\uE030",
-  noteheadBlack: "\uE0A4", // ← notehead only, no stem/flag
+  noteheadBlack: "\uE0A4",
 };
 
-const BRAVURA =
+const BRAVURA_URL =
   "https://cdn.jsdelivr.net/npm/@vexflow-fonts/bravura/bravura.woff2";
 
-const Glyph = React.forwardRef<
-  HTMLSpanElement,
-  {
-    g: string;
-    sz: number;
-    className?: string;
-    style?: React.CSSProperties;
-  }
->(({ g, sz, className, style }, ref) => {
-  return (
-    <span
-      ref={ref}
-      className={`inline-block font-['Bravura'] leading-[0.5] text-[#111] ${className ?? ""}`}
-      style={{ fontSize: sz, ...style }}
-    >
-      {g}
-    </span>
-  );
-});
-
-/**
- * Renders N eighth notes beamed together.
- *
- * Key insight: the SVG height is 2×(topPad + stemH), so the vertical
- * midpoint (where the notehead sits) aligns with the staff line when
- * the parent uses `items-center`.
- */
-
-function BeamedGroup({
-  count = 2,
-  sz,
-  startIndex,
-  setRef,
-}: {
-  count: number;
-  sz: number;
-  startIndex: number;
-  setRef: (el: HTMLSpanElement | null, i: number) => void;
-}) {
-  const small = sz * 0.55;
-  const sp = small * 0.25;
-
-  const topPad = sp * 0.4;
-  const stemH = sp * 3.5;
-  const noteY = topPad + stemH;
-  const H = noteY * 2;
-
-  const beamThickness = sp * 0.52;
-  const beamY = topPad;
-
-  const stemOffset = sp * 1.05;
-  const spacing = sp * 2.6;
-
-  const noteX = (i: number) => sp * 0.3 + i * spacing;
-  const stemXi = (i: number) => noteX(i) + stemOffset;
-  const W = noteX(count - 1) + stemOffset + sp * 0.6;
-
-  return (
-    <svg width={W} height={H} style={{ overflow: "visible", display: "block" }}>
-      <rect
-        x={stemXi(0) - 0.5}
-        y={beamY}
-        width={stemXi(count - 1) - stemXi(0) + 1}
-        height={beamThickness}
-        fill="#111"
-      />
-
-      {Array.from({ length: count }).map((_, i) => {
-        const idx = startIndex + i;
-
-        return (
-          <g key={i}>
-            <line
-              x1={stemXi(i)}
-              y1={noteY - sp * 0.18}
-              x2={stemXi(i)}
-              y2={beamY + beamThickness}
-              stroke="#111"
-              strokeWidth={sp * 0.13}
-              strokeLinecap="square"
-            />
-
-            <text
-              ref={(el) => setRef(el as any, idx)}
-              fontFamily="Bravura"
-              fontSize={small}
-              x={noteX(i)}
-              y={noteY}
-              fill="#111"
-            >
-              {G.noteheadBlack}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-function TimeSig44({ sz }: { sz: number }) {
-  const small = sz * 0.55;
-  return (
-    <div className="flex flex-col">
-      <Glyph g={G.timeSig4} sz={small} />
-      <Glyph g={G.timeSig4} sz={small} />
-    </div>
-  );
-}
-
+// ---------------------------------------------------------------------------
+// Score data
+// ---------------------------------------------------------------------------
 const notesDurations = {
   quarterUp: 1,
   halfUp: 2,
   restQuarter: 1,
   restHalf: 2,
-} as const; // 'as const' makes the values read-only and specific
+} as const;
 
-// Create a type based on the keys of the object above
 type NoteDurationKey = keyof typeof notesDurations;
 type NoteItem = NoteDurationKey | { beam: number };
-
-// 2. Add a type for the result AFTER mapping (contains Unicode strings)
-type MappedNoteItem = string | { beam: number };
-
-function Measure({
-  notes,
-  sz,
-  setRef,
-  startIndex,
-}: {
-  notes: MappedNoteItem[];
-  sz: number;
-  setRef: (el: HTMLSpanElement | null, i: number) => void;
-  startIndex: number;
-}) {
-  const small = sz * 0.55;
-
-  const margin_1 = "mr-4 md:mr-8";
-  const margin_2 = "mr-8 md:mr-16";
-  const margin_1_2 = "mr-4 md:mr-8";
-
-  let idx = startIndex;
-
-  return (
-    <>
-      {notes.map((item, i) => {
-        if (typeof item === "string") {
-          const current = idx++;
-          const isWide = item === G.restHalf || item === G.halfUp;
-          return (
-            <Glyph
-              key={i}
-              ref={(el) => setRef(el, current)}
-              g={item}
-              sz={small}
-              className={`${isWide ? margin_2 : margin_1} ${i === 0 ? "ml-4" : ""}`}
-            />
-          );
-        }
-
-        const current = idx;
-        idx += item.beam;
-
-        return (
-          <span key={i} className={`inline-flex items-center mr-4`}>
-            <BeamedGroup
-              count={item.beam}
-              sz={sz}
-              startIndex={current}
-              setRef={setRef}
-            />
-          </span>
-        );
-      })}
-    </>
-  );
-}
-// Now, when you check (typeof item === "string"),
-// TypeScript automatically knows it MUST be a NoteDurationKey.
 
 const N1: NoteItem[] = ["quarterUp", "quarterUp", "halfUp"];
 const N2: NoteItem[] = ["restHalf", { beam: 2 }, "quarterUp"];
 const N3: NoteItem[] = ["restQuarter", "quarterUp", "restQuarter", "quarterUp"];
 
-const measureKeys = [N1, N2, N3];
+const measureDefs = [N1, N2, N3];
 
-const bpm = 80;
-const beatTime = 60 / bpm;
+const BPM = 80;
+const BEAT_TIME = 60 / BPM; // seconds per beat
 
-const measuresTimings = measureKeys.map((measure) =>
+/** Flat array of durations (seconds) for every note/sub-beat */
+const flatTimings: number[] = measureDefs.flatMap((measure) =>
   measure.flatMap((item) => {
-    if (typeof item === "string") {
-      return [notesDurations[item] * beatTime];
-    }
-
-    // beam: split ONE beat into N parts
-    const sub = beatTime / item.beam;
+    if (typeof item === "string") return [notesDurations[item] * BEAT_TIME];
+    const sub = BEAT_TIME / item.beam;
     return Array.from({ length: item.beam }, () => sub);
   }),
 );
 
-console.log("measuresTimings", measuresTimings);
+// ---------------------------------------------------------------------------
+// Metronome factory (unchanged from original)
+// ---------------------------------------------------------------------------
+function createMetronome(bpm: number, getAudioCtx: () => AudioContext) {
+  let nextClickTime = 0;
+  let schedulerTimer: number | null = null;
 
-// 1. Keep your existing types
+  const SCHEDULE_AHEAD = 0.1;
+  const INTERVAL_MS = 25;
 
-// 3. Update Measure to accept the mapped strings
-
-// 4. Update mapNotes to transform NoteItem[] -> MappedNoteItem[]
-const mapNotes = (arr: NoteItem[]): MappedNoteItem[] =>
-  arr.map((n) => (typeof n === "string" ? G[n] : n));
-
-// The rest of your logic remains the same
-const measures = measureKeys.map((n) => mapNotes(n));
-
-const MusicLine = forwardRef((props, ref) => {
-  const [loaded, setLoaded] = useState(false);
-  const [sz, setSz] = useState(96);
-
-  useEffect(() => {
-    const font = new FontFace("Bravura", `url(${BRAVURA})`);
-    font.load().then((f) => {
-      document.fonts.add(f);
-      setLoaded(true);
-    });
-  }, []);
-
-  useEffect(() => {
-    const update = () => setSz(window.innerWidth < 640 ? 64 : 96);
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
-  const small = sz * 0.55;
-
-  let ctx: AudioContext | null = null;
-
-  const getCtx = () => {
-    if (!ctx) ctx = new AudioContext();
-    return ctx;
+  const scheduleClick = (time: number) => {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 800;
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.exponentialRampToValueAtTime(0.5, time + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.06);
+    osc.start(time);
+    osc.stop(time + 0.07);
   };
 
-  function createMetronome(bpm: number) {
-    let nextClickTime = 0;
-    let schedulerTimer: number | null = null;
+  const scheduler = () => {
+    const ctx = getAudioCtx();
+    const interval = 60 / bpm;
+    if (nextClickTime < ctx.currentTime + SCHEDULE_AHEAD) {
+      scheduleClick(nextClickTime);
+      nextClickTime += interval;
+    }
+  };
 
-    const SCHEDULE_AHEAD = 0.1;
-    const INTERVAL_MS = 25;
+  return {
+    start(startAt?: number) {
+      if (schedulerTimer) return;
+      nextClickTime = startAt ?? getAudioCtx().currentTime;
+      scheduler();
+      schedulerTimer = window.setInterval(scheduler, INTERVAL_MS);
+    },
+    stop() {
+      if (!schedulerTimer) return;
+      clearInterval(schedulerTimer);
+      schedulerTimer = null;
+    },
+  };
+}
 
-    const scheduleClick = (time: number) => {
-      const ctx = getCtx();
+// ---------------------------------------------------------------------------
+// Canvas renderer
+// ---------------------------------------------------------------------------
 
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+interface DrawState {
+  /** x-positions of every note (for playhead interpolation) */
+  notePositions: number[];
+  /** x where the playhead rests at start */
+  playheadX: number;
+  canvasWidth: number;
+  canvasHeight: number;
+}
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+function buildScore(
+  canvas: HTMLCanvasElement,
+  ctx2d: CanvasRenderingContext2D,
+  sz: number, // "base" size — same semantic as original
+  playheadFraction = 0.12, // where the playhead sits as fraction of width
+): DrawState {
+  const W = canvas.width;
+  const H = canvas.height;
+  const sm = sz * 0.55; // glyph font size (matches original `small`)
+  const sp = sm * 0.25; // spacing unit
 
-      osc.frequency.value = 800;
+  ctx2d.clearRect(0, 0, W, H);
+  ctx2d.fillStyle = "#fff";
+  ctx2d.fillRect(0, 0, W, H);
 
-      gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(0.5, time + 0.005);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.06);
+  const midY = H / 2; // staff line y
+  const glyphBase = midY + sm * 0.28; // approximate baseline for SMuFL glyphs
 
-      osc.start(time);
-      osc.stop(time + 0.07);
-    };
+  // staff line
+  ctx2d.strokeStyle = "#111";
+  ctx2d.lineWidth = 1.5;
+  ctx2d.beginPath();
+  ctx2d.moveTo(0, midY);
+  ctx2d.lineTo(W, midY);
+  ctx2d.stroke();
 
-    const scheduler = () => {
-      const ctx = getCtx();
-      const interval = 60 / bpm;
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const font = (size: number) => `${size}px Bravura`;
 
-      if (nextClickTime < ctx.currentTime + SCHEDULE_AHEAD) {
-        scheduleClick(nextClickTime);
-        nextClickTime += interval;
+  const drawGlyph = (g: string, x: number, size: number) => {
+    ctx2d.font = font(size);
+    ctx2d.fillStyle = "#111";
+    ctx2d.fillText(g, x, glyphBase);
+  };
+
+  const measureGlyph = (g: string, size: number): number => {
+    ctx2d.font = font(size);
+    return ctx2d.measureText(g).width;
+  };
+
+  // ── time signature ────────────────────────────────────────────────────────
+  let cursorX = sp * 2;
+
+  const tsW = measureGlyph(G.timeSig4, sm);
+  drawGlyph(G.timeSig4, cursorX, sm * 0.9);
+  // draw "4" twice, vertically stacked — canvas doesn't do flex-col,
+  // so we just draw them at different y offsets
+  ctx2d.font = font(sm * 0.9);
+  ctx2d.fillStyle = "#111";
+  ctx2d.fillText(G.timeSig4, cursorX, midY - sm * 0.05);
+  ctx2d.fillText(G.timeSig4, cursorX, midY + sm * 0.55);
+  cursorX += tsW + sp * 2;
+
+  // ── playhead position ─────────────────────────────────────────────────────
+  const playheadX = cursorX;
+
+  // draw playhead indicator (green triangle + line)
+  const drawPlayhead = (x: number) => {
+    ctx2d.fillStyle = "#22c55e";
+    ctx2d.strokeStyle = "#22c55e";
+    ctx2d.lineWidth = 2;
+
+    // triangle
+    const triH = sp * 1.4;
+    const triW = sp * 0.9;
+    ctx2d.beginPath();
+    ctx2d.moveTo(x, midY - sm * 1.2 - triH);
+    ctx2d.lineTo(x - triW / 2, midY - sm * 1.2);
+    ctx2d.lineTo(x + triW / 2, midY - sm * 1.2);
+    ctx2d.closePath();
+    ctx2d.fill();
+
+    // stem
+    ctx2d.beginPath();
+    ctx2d.moveTo(x, midY - sm * 1.2);
+    ctx2d.lineTo(x, midY + sm * 0.8);
+    ctx2d.stroke();
+  };
+
+  drawPlayhead(playheadX);
+
+  // ── opening barline ───────────────────────────────────────────────────────
+  drawGlyph(G.barline, cursorX, sm);
+  cursorX += measureGlyph(G.barline, sm) + sp;
+
+  // ── measures ──────────────────────────────────────────────────────────────
+  const notePositions: number[] = [];
+
+  const NOTE_GAP_WIDE = sp * 4;
+  const NOTE_GAP_NARROW = sp * 2.5;
+
+  for (const measure of measureDefs) {
+    let first = true;
+
+    for (const item of measure) {
+      if (first) {
+        cursorX += sp;
+        first = false;
       }
-    };
 
-    return {
-      start(startAt?: number) {
-        const ctx = getCtx();
+      if (typeof item === "string") {
+        const glyph = G[item];
+        const isWide = item === "halfUp" || item === "restHalf";
+        const noteX = cursorX;
 
-        if (schedulerTimer) return;
+        notePositions.push(noteX + measureGlyph(glyph, sm) / 2);
 
-        nextClickTime = startAt ?? ctx.currentTime;
+        drawGlyph(glyph, noteX, sm);
+        cursorX +=
+          measureGlyph(glyph, sm) + (isWide ? NOTE_GAP_WIDE : NOTE_GAP_NARROW);
+      } else {
+        // beamed group (eighth notes)
+        const count = item.beam;
+        const spacing = sp * 2.6;
+        const stemOff = sp * 1.05;
+        const noteSize = sm;
+        const stemH = sp * 3.5;
+        const beamThick = sp * 0.52;
 
-        scheduler();
-        schedulerTimer = window.setInterval(scheduler, INTERVAL_MS);
-      },
+        // beam bar
+        const x0 = cursorX + sp * 0.3 + stemOff;
+        const x1 = cursorX + sp * 0.3 + (count - 1) * spacing + stemOff;
+        ctx2d.fillStyle = "#111";
+        ctx2d.fillRect(
+          x0 - 0.5,
+          midY - stemH - beamThick,
+          x1 - x0 + 1,
+          beamThick,
+        );
 
-      stop() {
-        if (!schedulerTimer) return;
-        clearInterval(schedulerTimer);
-        schedulerTimer = null;
-      },
-    };
+        for (let n = 0; n < count; n++) {
+          const nx = cursorX + sp * 0.3 + n * spacing;
+          const sx = nx + stemOff;
+
+          // stem
+          ctx2d.strokeStyle = "#111";
+          ctx2d.lineWidth = sp * 0.13;
+          ctx2d.beginPath();
+          ctx2d.moveTo(sx, midY + sm * 0.18);
+          ctx2d.lineTo(sx, midY - stemH);
+          ctx2d.stroke();
+
+          // notehead
+          ctx2d.font = font(noteSize);
+          ctx2d.fillStyle = "#111";
+          ctx2d.fillText(G.noteheadBlack, nx, glyphBase);
+
+          notePositions.push(nx + measureGlyph(G.noteheadBlack, noteSize) / 2);
+        }
+
+        cursorX +=
+          sp * 0.3 +
+          (count - 1) * spacing +
+          stemOff +
+          sp * 0.6 +
+          NOTE_GAP_NARROW;
+      }
+    }
+
+    // barline
+    drawGlyph(G.barline, cursorX, sm);
+    cursorX += measureGlyph(G.barline, sm) + sp;
   }
 
-  const metroRef = useRef<ReturnType<typeof createMetronome> | null>(null);
-
-  useEffect(() => {
-    metroRef.current = createMetronome(bpm);
-    return () => metroRef.current?.stop(); // cleanup on unmount
-  }, []);
-
-  const refs = useRef<(HTMLSpanElement | null)[]>([]);
-
-  const setRef = (el: HTMLSpanElement | null, i: number) => {
-    refs.current[i] = el;
+  return {
+    notePositions,
+    playheadX,
+    canvasWidth: W,
+    canvasHeight: H,
   };
-  let globalIndex = 0;
+}
 
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+const MusicLine = forwardRef((_props, ref) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const metroRef = useRef<ReturnType<typeof createMetronome> | null>(null);
+  const drawStateRef = useRef<DrawState | null>(null);
+  const fontLoadedRef = useRef(false);
+
+  const getAudioCtx = (): AudioContext => {
+    if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
+    return audioCtxRef.current;
+  };
+
+  // Determine canvas size from window
+  const getSize = () => ({
+    w: Math.min(window.innerWidth - 32, 900),
+    h: window.innerWidth < 640 ? 110 : 160,
+    sz: window.innerWidth < 640 ? 64 : 96,
+  });
+
+  // Draw / redraw the static score
+  const redraw = (offsetX = 0) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !fontLoadedRef.current) return;
+
+    const ctx2d = canvas.getContext("2d");
+    if (!ctx2d) return;
+
+    const { sz } = getSize();
+
+    // translate for scroll
+    ctx2d.save();
+    ctx2d.translate(-offsetX, 0);
+    const state = buildScore(canvas, ctx2d, sz);
+    ctx2d.restore();
+    drawStateRef.current = state;
+  };
+
+  // Load font then draw
   useEffect(() => {
-    console.log(refs);
+    const face = new FontFace("Bravura", `url(${BRAVURA_URL})`);
+    face.load().then((f) => {
+      document.fonts.add(f);
+      fontLoadedRef.current = true;
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const { w, h } = getSize();
+      canvas.width = w;
+      canvas.height = h;
+      redraw();
+    });
+
+    metroRef.current = createMetronome(BPM, getAudioCtx);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      metroRef.current?.stop();
+    };
   }, []);
 
+  // Resize handler
+  useEffect(() => {
+    const onResize = () => {
+      const canvas = canvasRef.current;
+      if (!canvas || !fontLoadedRef.current) return;
+      const { w, h } = getSize();
+      canvas.width = w;
+      canvas.height = h;
+      redraw();
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // ── animation ─────────────────────────────────────────────────────────────
   const handleStart = () => {
-    const ctx = getCtx();
-    const startTime = ctx.currentTime;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
-    const flatTimings = measuresTimings.flat();
+    const audioCtx = getAudioCtx();
+    const startTime = audioCtx.currentTime;
 
-    // posiciones PRECALCULADAS (clave)
-    const positions = refs.current.map(
-      (el) => el!.getBoundingClientRect().left,
-    );
+    // make sure score is drawn fresh so drawStateRef is populated
+    redraw();
+    const state = drawStateRef.current;
+    if (!state) return;
 
-    let i = 0;
+    const { notePositions, playheadX } = state;
 
-    // posición inicial relativa al playhead
-    const baseLeft = playheadRef.current!.getBoundingClientRect().left;
+    // relative positions: how far each note is from the playhead x
+    const relPos = notePositions.map((p) => p - playheadX);
 
-    let segmentStartX = positions[0] - baseLeft;
-    let segmentStartTime = startTime;
-
-    scoreheadRef.current!.style.transform = `translateX(-${segmentStartX}px)`;
+    let seg = 0;
+    let segStartTime = startTime;
+    let segStartX = relPos[0];
+    let speed =
+      relPos.length > 1 ? (relPos[1] - relPos[0]) / flatTimings[0] : 0;
 
     metroRef.current?.start(startTime);
 
-    // velocidad inicial
-    let speed = (positions[1] - positions[0]) / flatTimings[0];
+    const canvas = canvasRef.current!;
+    const ctx2d = canvas.getContext("2d")!;
+    const { sz } = getSize();
+    const sm = sz * 0.55;
+    const sp = sm * 0.25;
 
     const loop = () => {
-      const now = getCtx().currentTime;
+      const now = audioCtx.currentTime;
+      let elapsed = now - segStartTime;
 
-      let elapsed = now - segmentStartTime;
-
-      // avanzar segmentos correctamente (puede saltar varios)
-      if (elapsed >= flatTimings[i] && i < flatTimings.length - 1) {
-        const distance = positions[i + 1] - positions[i];
-
-        segmentStartX += distance;
-        segmentStartTime += flatTimings[i];
-
-        i++;
-
-        const nextDistance = positions[i + 1] - positions[i];
-        speed = nextDistance / flatTimings[i];
-
-        elapsed = now - segmentStartTime;
+      // advance segments
+      while (seg < flatTimings.length - 1 && elapsed >= flatTimings[seg]) {
+        segStartX += relPos[seg + 1] - relPos[seg];
+        segStartTime += flatTimings[seg];
+        seg++;
+        speed =
+          seg < flatTimings.length - 1
+            ? (relPos[seg + 1] - relPos[seg]) / flatTimings[seg]
+            : 0;
+        elapsed = now - segStartTime;
       }
 
-      const movedX = segmentStartX + elapsed * speed;
+      const scrollX = segStartX + elapsed * speed;
 
-      scoreheadRef.current!.style.transform = `translateX(-${movedX}px)`;
+      // redraw score translated
+      ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+      ctx2d.save();
+      ctx2d.translate(-scrollX, 0);
+      buildScore(canvas, ctx2d, sz);
+      ctx2d.restore();
 
-      requestAnimationFrame(loop);
+      // draw playhead on top (fixed)
+      const midY = canvas.height / 2;
+      const triH = sp * 1.4;
+      const triW = sp * 0.9;
+      const x = playheadX;
+
+      ctx2d.fillStyle = "#22c55e";
+      ctx2d.strokeStyle = "#22c55e";
+      ctx2d.lineWidth = 2;
+      ctx2d.beginPath();
+      ctx2d.moveTo(x, midY - sm * 1.2 - triH);
+      ctx2d.lineTo(x - triW / 2, midY - sm * 1.2);
+      ctx2d.lineTo(x + triW / 2, midY - sm * 1.2);
+      ctx2d.closePath();
+      ctx2d.fill();
+      ctx2d.beginPath();
+      ctx2d.moveTo(x, midY - sm * 1.2);
+      ctx2d.lineTo(x, midY + sm * 0.8);
+      ctx2d.stroke();
+
+      rafRef.current = requestAnimationFrame(loop);
     };
 
-    requestAnimationFrame(loop);
+    rafRef.current = requestAnimationFrame(loop);
   };
-  const playheadRef = useRef<HTMLDivElement | null>(null);
 
-  const scoreheadRef = useRef<HTMLDivElement | null>(null);
-
-  useImperativeHandle(ref, () => ({
-    handleStart,
-  }));
-
-  {
-    /*  ///////////////////////  */
-  }
-  {
-    /*  ///////////////////////  */
-  }
-  {
-    /*  ///////////////////////  */
-  }
-  {
-    /*  ///////////////////////  */
-  }
-  {
-    /*  ///////////////////////  */
-  }
-
-  if (!loaded) return null;
+  useImperativeHandle(ref, () => ({ handleStart }));
 
   return (
-    <div
-      className="flex items-center justify-center w-fit py-12 px-2 md:px-8 bg-white select-none "
-      ref={scoreheadRef}
-    >
-      {/* Calqueta — línea verde fina al inicio */}
-      {/* Calqueta con flechita arriba */}
-
-      <TimeSig44 sz={sz} />
-      {/* First barline with calqueta on top */}
-      <div className="relative flex flex-col items-center  ml-4">
-        {/* Calqueta */}
-        <div
-          className="absolute inset-0 -top-18 flex flex-col items-center pointer-events-none self-stretch h-36 transition-none"
-          ref={playheadRef}
-        >
-          <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[7px] border-l-transparent border-r-transparent border-b-green-500" />
-          <div className="flex-1 w-[2px] bg-green-500 rounded-b-full" />
-        </div>
-
-        <Glyph
-          g={G.barline}
-          sz={small}
-          className={`mr-0 ${sz < 80 ? "translate-y-4" : "translate-y-6.5"}`}
-        />
-      </div>
-      <div className="flex overflow-hidden min-h-32">
-        <div className="flex transition-transform duration-300 ease-out">
-          {measures.map((m, i) => {
-            const startIndex = globalIndex;
-
-            const count = m.reduce((acc, item) => {
-              return acc + (typeof item === "string" ? 1 : item.beam);
-            }, 0);
-
-            globalIndex += count;
-
-            return (
-              <div key={i} className="relative flex items-center">
-                <hr className="absolute w-full border-t-[2.0px] border-black" />
-
-                <Measure
-                  notes={m}
-                  sz={sz}
-                  setRef={setRef}
-                  startIndex={startIndex}
-                />
-
-                {/* barline intentionally has NO ref */}
-                <Glyph
-                  g={G.barline}
-                  sz={small}
-                  className={sz < 80 ? "translate-y-4" : "translate-y-6.5"}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+    <canvas ref={canvasRef} style={{ display: "block", background: "#fff" }} />
   );
 });
 
+MusicLine.displayName = "MusicLine";
 export default MusicLine;
