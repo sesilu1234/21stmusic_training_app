@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import MusicLine from "./MusicDisplay";
 
-import SimpleMovingScore from "./MusicDisplay11234.tsx";
+import SimpleMovingScore from "./MusicDisplay11234";
 
 export default function RitmoGame() {
   const router = useRouter();
