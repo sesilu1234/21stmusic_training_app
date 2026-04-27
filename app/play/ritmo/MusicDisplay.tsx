@@ -15,26 +15,25 @@ const G = {
 const BRAVURA =
   "https://cdn.jsdelivr.net/npm/@vexflow-fonts/bravura/bravura.woff2";
 
-function Glyph({
-  g,
-  sz,
-  className,
-  style,
-}: {
-  g: string;
-  sz: number;
-  className?: string;
-  style?: React.CSSProperties;
-}) {
+const Glyph = React.forwardRef<
+  HTMLSpanElement,
+  {
+    g: string;
+    sz: number;
+    className?: string;
+    style?: React.CSSProperties;
+  }
+>(({ g, sz, className, style }, ref) => {
   return (
     <span
-      className={`inline-block font-['Bravura'] leading-[0.5] text-[#111] ${className}`}
+      ref={ref}
+      className={`inline-block font-['Bravura'] leading-[0.5] text-[#111] ${className ?? ""}`}
       style={{ fontSize: sz, ...style }}
     >
       {g}
     </span>
   );
-}
+});
 
 /**
  * Renders N eighth notes beamed together.
@@ -43,62 +42,74 @@ function Glyph({
  * midpoint (where the notehead sits) aligns with the staff line when
  * the parent uses `items-center`.
  */
-function BeamedGroup({ count = 2, sz }: { count: number; sz: number }) {
-  const small = sz * 0.55;
-  const sp = small * 0.25; // 1 staff space ≈ 25 % of font-size
 
-  // Vertical geometry — noteY is H/2 so items-center lands it on the staff
+function BeamedGroup({
+  count = 2,
+  sz,
+  startIndex,
+  setRef,
+}: {
+  count: number;
+  sz: number;
+  startIndex: number;
+  setRef: (el: HTMLSpanElement | null, i: number) => void;
+}) {
+  const small = sz * 0.55;
+  const sp = small * 0.25;
+
   const topPad = sp * 0.4;
   const stemH = sp * 3.5;
-  const noteY = topPad + stemH; // = H / 2
+  const noteY = topPad + stemH;
   const H = noteY * 2;
 
-  // Beam
   const beamThickness = sp * 0.52;
   const beamY = topPad;
 
-  // Horizontal geometry
-  const stemOffset = sp * 1.05; // how far right of noteX the stem sits
-  const spacing = sp * 2.6; // notehead-to-notehead gap
+  const stemOffset = sp * 1.05;
+  const spacing = sp * 2.6;
+
   const noteX = (i: number) => sp * 0.3 + i * spacing;
   const stemXi = (i: number) => noteX(i) + stemOffset;
   const W = noteX(count - 1) + stemOffset + sp * 0.6;
 
   return (
     <svg width={W} height={H} style={{ overflow: "visible", display: "block" }}>
-      {/* ── Beam (drawn first so stems render on top) ── */}
       <rect
-        x={stemXi(0)}
+        x={stemXi(0) - 0.5}
         y={beamY}
-        width={stemXi(count - 1) - stemXi(0)}
+        width={stemXi(count - 1) - stemXi(0) + 1}
         height={beamThickness}
         fill="#111"
       />
 
-      {Array.from({ length: count }).map((_, i) => (
-        <g key={i}>
-          {/* Stem */}
-          <line
-            x1={stemXi(i)}
-            y1={noteY - sp * 0.18}
-            x2={stemXi(i)}
-            y2={beamY + beamThickness}
-            stroke="#111"
-            strokeWidth={sp * 0.13}
-            strokeLinecap="square"
-          />
-          {/* Notehead (noteheadBlack, no flag) */}
-          <text
-            fontFamily="Bravura"
-            fontSize={small}
-            x={noteX(i)}
-            y={noteY}
-            fill="#111"
-          >
-            {G.noteheadBlack}
-          </text>
-        </g>
-      ))}
+      {Array.from({ length: count }).map((_, i) => {
+        const idx = startIndex + i;
+
+        return (
+          <g key={i}>
+            <line
+              x1={stemXi(i)}
+              y1={noteY - sp * 0.18}
+              x2={stemXi(i)}
+              y2={beamY + beamThickness}
+              stroke="#111"
+              strokeWidth={sp * 0.13}
+              strokeLinecap="square"
+            />
+
+            <text
+              ref={(el) => setRef(el as any, idx)}
+              fontFamily="Bravura"
+              fontSize={small}
+              x={noteX(i)}
+              y={noteY}
+              fill="#111"
+            >
+              {G.noteheadBlack}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -127,27 +138,53 @@ type NoteItem = NoteDurationKey | { beam: number };
 // 2. Add a type for the result AFTER mapping (contains Unicode strings)
 type MappedNoteItem = string | { beam: number };
 
-function Measure({ notes, sz }: { notes: MappedNoteItem[]; sz: number }) {
+function Measure({
+  notes,
+  sz,
+  setRef,
+  startIndex,
+}: {
+  notes: MappedNoteItem[];
+  sz: number;
+  setRef: (el: HTMLSpanElement | null, i: number) => void;
+  startIndex: number;
+}) {
   const small = sz * 0.55;
-  // Note: fixed the margin syntax (Tailwind uses ml-2, not ml-)
-  const margin = "ml-2 mr-6 md:ml-4 md:mr-12";
+
+  const margin_1 = "mr-4 md:mr-8";
+  const margin_2 = "mr-8 md:mr-16";
+  const margin_1_2 = "mr-4 md:mr-8";
+
+  let idx = startIndex;
 
   return (
     <>
       {notes.map((item, i) => {
         if (typeof item === "string") {
+          const current = idx++;
+          const isWide = item === G.restHalf || item === G.halfUp;
           return (
             <Glyph
               key={i}
-              g={item} // item is now the Unicode glyph
+              ref={(el) => setRef(el, current)}
+              g={item}
               sz={small}
-              className={`${margin} ${item === G.restHalf ? "translate-y-1" : ""}`}
+              className={`${isWide ? margin_2 : margin_1} ${i === 0 ? "ml-4" : ""}`}
             />
           );
         }
+
+        const current = idx;
+        idx += item.beam;
+
         return (
-          <span key={i} className={`inline-flex items-center ${margin}`}>
-            <BeamedGroup count={item.beam} sz={sz} />
+          <span key={i} className={`inline-flex items-center mr-4`}>
+            <BeamedGroup
+              count={item.beam}
+              sz={sz}
+              startIndex={current}
+              setRef={setRef}
+            />
           </span>
         );
       })}
@@ -212,37 +249,43 @@ export default function MusicLine() {
 
   const small = sz * 0.55;
 
+  let ctx: AudioContext | null = null;
+
+  const getCtx = () => {
+    if (!ctx) ctx = new AudioContext();
+    return ctx;
+  };
+
   function createMetronome(bpm: number) {
-    let ctx: AudioContext | null = null;
     let nextClickTime = 0;
     let schedulerTimer: number | null = null;
 
-    const SCHEDULE_AHEAD = 0.1; // seconds to look ahead
-    const INTERVAL_MS = 25; // how often the scheduler runs
+    const SCHEDULE_AHEAD = 0.1;
+    const INTERVAL_MS = 25;
 
     const scheduleClick = (time: number) => {
-      if (!ctx) return;
+      const ctx = getCtx();
+
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
+
       osc.connect(gain);
       gain.connect(ctx.destination);
 
-      osc.type = "sine";
-      osc.frequency.value = 800; // lower = less harsh
+      osc.frequency.value = 800;
 
-      // Fade IN to avoid the pop, then fade out
       gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(0.5, time + 0.005); // 5ms attack
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.06); // 55ms decay
+      gain.gain.exponentialRampToValueAtTime(0.5, time + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.06);
 
       osc.start(time);
-      osc.stop(time + 0.065);
+      osc.stop(time + 0.07);
     };
 
     const scheduler = () => {
-      if (!ctx) return;
+      const ctx = getCtx();
       const interval = 60 / bpm;
-      // Schedule any clicks that fall within the lookahead window
+
       if (nextClickTime < ctx.currentTime + SCHEDULE_AHEAD) {
         scheduleClick(nextClickTime);
         nextClickTime += interval;
@@ -250,13 +293,17 @@ export default function MusicLine() {
     };
 
     return {
-      start() {
+      start(startAt?: number) {
+        const ctx = getCtx();
+
         if (schedulerTimer) return;
-        if (!ctx) ctx = new AudioContext();
-        nextClickTime = ctx.currentTime; // start immediately
+
+        nextClickTime = startAt ?? ctx.currentTime;
+
         scheduler();
         schedulerTimer = window.setInterval(scheduler, INTERVAL_MS);
       },
+
       stop() {
         if (!schedulerTimer) return;
         clearInterval(schedulerTimer);
@@ -268,9 +315,93 @@ export default function MusicLine() {
   const metroRef = useRef<ReturnType<typeof createMetronome> | null>(null);
 
   useEffect(() => {
-    metroRef.current = createMetronome(120);
+    metroRef.current = createMetronome(bpm);
     return () => metroRef.current?.stop(); // cleanup on unmount
   }, []);
+
+  const refs = useRef<(HTMLSpanElement | null)[]>([]);
+
+  const setRef = (el: HTMLSpanElement | null, i: number) => {
+    refs.current[i] = el;
+  };
+  let globalIndex = 0;
+
+  useEffect(() => {
+    console.log(refs);
+  }, []);
+
+  const handleStart = () => {
+    const ctx = getCtx();
+    const startTime = ctx.currentTime;
+
+    const flatTimings = measuresTimings.flat();
+
+    // posiciones PRECALCULADAS (clave)
+    const positions = refs.current.map(
+      (el) => el!.getBoundingClientRect().left,
+    );
+
+    let i = 0;
+
+    // posición inicial relativa al playhead
+    const baseLeft = playheadRef.current!.getBoundingClientRect().left;
+
+    let segmentStartX = positions[0] - baseLeft;
+    let segmentStartTime = startTime;
+
+    playheadRef.current!.style.transform = `translateX(${segmentStartX}px)`;
+
+    metroRef.current?.start(startTime);
+
+    // velocidad inicial
+    let speed = (positions[1] - positions[0]) / flatTimings[0];
+
+    const loop = () => {
+      const now = getCtx().currentTime;
+
+      let elapsed = now - segmentStartTime;
+
+      // avanzar segmentos correctamente (puede saltar varios)
+      while (elapsed >= flatTimings[i] && i < flatTimings.length - 1) {
+        const distance = positions[i + 1] - positions[i];
+
+        segmentStartX += distance;
+        segmentStartTime += flatTimings[i];
+
+        i++;
+
+        const nextDistance = positions[i + 1] - positions[i];
+        speed = nextDistance / flatTimings[i];
+
+        elapsed = now - segmentStartTime;
+      }
+
+      const movedX = segmentStartX + elapsed * speed;
+
+      playheadRef.current!.style.transform = `translateX(${movedX}px)`;
+
+      requestAnimationFrame(loop);
+    };
+
+    requestAnimationFrame(loop);
+  };
+  const playheadRef = useRef<HTMLDivElement | null>(null);
+
+  {
+    /*  ///////////////////////  */
+  }
+  {
+    /*  ///////////////////////  */
+  }
+  {
+    /*  ///////////////////////  */
+  }
+  {
+    /*  ///////////////////////  */
+  }
+  {
+    /*  ///////////////////////  */
+  }
 
   if (!loaded) return null;
 
@@ -280,7 +411,7 @@ export default function MusicLine() {
       {/* Calqueta con flechita arriba */}
       <button
         className="w-12 h-12 bg-green-500 cursor-pointer"
-        onClick={() => metroRef.current?.start()} // Added the '?'
+        onClick={handleStart}
       >
         Start
       </button>
@@ -289,7 +420,10 @@ export default function MusicLine() {
       {/* First barline with calqueta on top */}
       <div className="relative flex flex-col items-center  ml-4">
         {/* Calqueta */}
-        <div className="absolute inset-0 -top-18 flex flex-col items-center pointer-events-none self-stretch h-36">
+        <div
+          className="absolute inset-0 -top-18 flex flex-col items-center pointer-events-none self-stretch h-36 transition-none"
+          ref={playheadRef}
+        >
           <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[7px] border-l-transparent border-r-transparent border-b-green-500" />
           <div className="flex-1 w-[2px] bg-green-500 rounded-b-full" />
         </div>
@@ -302,17 +436,35 @@ export default function MusicLine() {
       </div>
       <div className="flex overflow-hidden min-h-32">
         <div className="flex transition-transform duration-300 ease-out">
-          {measures.map((m, i) => (
-            <div key={i} className="relative flex items-center">
-              <hr className="absolute w-full border-t-[2.0px] border-black" />
-              <Measure notes={m} sz={sz} />
-              <Glyph
-                g={G.barline}
-                sz={small}
-                className={sz < 80 ? "translate-y-4" : "translate-y-6.5"}
-              />
-            </div>
-          ))}
+          {measures.map((m, i) => {
+            const startIndex = globalIndex;
+
+            const count = m.reduce((acc, item) => {
+              return acc + (typeof item === "string" ? 1 : item.beam);
+            }, 0);
+
+            globalIndex += count;
+
+            return (
+              <div key={i} className="relative flex items-center">
+                <hr className="absolute w-full border-t-[2.0px] border-black" />
+
+                <Measure
+                  notes={m}
+                  sz={sz}
+                  setRef={setRef}
+                  startIndex={startIndex}
+                />
+
+                {/* barline intentionally has NO ref */}
+                <Glyph
+                  g={G.barline}
+                  sz={small}
+                  className={sz < 80 ? "translate-y-4" : "translate-y-6.5"}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
