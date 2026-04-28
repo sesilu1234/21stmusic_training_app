@@ -1,0 +1,1 @@
+- intentandolo hacerlo a tierra justo : 0.6min - 0.15max , con un [0, 0.20] va bien creo , a 120 bpm
