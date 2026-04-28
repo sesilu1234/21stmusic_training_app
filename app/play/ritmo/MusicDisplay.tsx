@@ -181,17 +181,52 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
     let posIndex = 0;
     let scrollX = 0;
+    let scrollXBase = 0;
+    let timeBase = 0;
     // 2. Animation loop
+    // const animate = (time: number) => {
+    //   const ctx = ctxCanvasRef.current;
+    //   if (!ctx) return;
+
+    //   const timecurrent = getCtx().currentTime;
+
+    //   if (timecurrent > startTimeRef.current + TIME_LINE[posIndex]) {
+    //     scrollX = LENGTH_LINE[posIndex];
+    //     posIndex++;
+    //   }
+
+    //   draw(ctx, scrollX, window.innerWidth);
+
+    //   requestRef.current = requestAnimationFrame(animate);
+    // };
+
     const animate = (time: number) => {
       const ctx = ctxCanvasRef.current;
       if (!ctx) return;
 
       const timecurrent = getCtx().currentTime;
 
-      if (timecurrent > startTimeRef.current + TIME_LINE[posIndex]) {
-        scrollX = LENGTH_LINE[posIndex];
-        posIndex++;
+      if (posIndex >= TIME_LINE.length) {
+        scrollX = LENGTH_LINE[LENGTH_LINE.length - 1]; // final position
+        draw(ctx, scrollX, window.innerWidth);
+
+        speedRef.current = 0;
+        cancelAnimationFrame(requestRef.current);
+        if (metronomeRef.current) metronomeRef.current.stop();
+        return;
       }
+
+      if (timecurrent > startTimeRef.current + TIME_LINE[posIndex]) {
+        scrollXBase = scrollX;
+        timeBase = timecurrent;
+        posIndex++;
+
+        speedRef.current =
+          (LENGTH_LINE[posIndex] - scrollXBase) /
+          (startTimeRef.current + TIME_LINE[posIndex] - timeBase);
+      }
+
+      scrollX = scrollXBase + speedRef.current * (timecurrent - timeBase);
 
       draw(ctx, scrollX, window.innerWidth);
 
