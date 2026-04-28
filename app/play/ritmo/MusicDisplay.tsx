@@ -8,7 +8,7 @@ import React, {
   useImperativeHandle,
 } from "react";
 
-import { createMetronome } from "./metronome"; //
+import { createMetronome, getCtx } from "./metronome"; //
 
 const BRAVURA_URL =
   "https://cdn.jsdelivr.net/npm/@vexflow-fonts/bravura/bravura.woff2";
@@ -26,7 +26,12 @@ const G = {
   time4: "\uE084",
 };
 
-const VALUES = [{ note: G.eighth, rest: G.eighthRest, beats: 0.5 }];
+const VALUES = [
+  // { note: G.whole, rest: G.wholeRest, beats: 4 },
+  // { note: G.half, rest: G.halfRest, beats: 2 },
+  // { note: G.quarter, rest: G.quarterRest, beats: 1 },
+  { note: G.eighth, rest: G.eighthRest, beats: 0.5 },
+];
 
 const rand = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -48,37 +53,73 @@ const createScore = (measures: number) => {
   return score;
 };
 
-const MY_SCORE = [
-  { glyph: G.barline, beats: 0 },
-  { glyph: G.quarterRest, beats: 1 },
-  { glyph: G.quarterRest, beats: 1 },
-  { glyph: G.quarterRest, beats: 1 },
-  { glyph: G.quarterRest, beats: 1 },
-  ...createScore(24),
-];
-
 export interface MusicRef {
   handleStart: () => void;
 }
 
 interface SimpleMovingScoreProps {
-  bpm?: number; // El signo ? lo hace opcional
+  BPM?: number; // El signo ? lo hace opcional
 }
 
 const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
-  ({ bpm = 100 }, ref) => {
+  ({ BPM = 100 }, ref) => {
     // ... resto del componente+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [fontLoaded, setFontLoaded] = useState(false);
 
     const speedRef = useRef(0);
     const startTimeRef = useRef<number>(0);
+    const beforeStart = useRef<number>(0.5);
     const requestRef = useRef<number>(0);
 
+    const ctxCanvasRef = useRef<CanvasRenderingContext2D | null>(null);
+
+    const metronomeRef = useRef<ReturnType<typeof createMetronome> | null>(
+      null,
+    );
+
     // Constants for drawing
-    const BEAT_WIDTH = 60;
+    const BEAT_WIDTH = 100;
     const HEIGHT = 120;
-    const pixels = 30;
+    const pixels = 50;
+
+    const MY_SCORE = [
+      { glyph: G.barline, beats: 0 },
+      { glyph: G.quarterRest, beats: 1 },
+      { glyph: G.quarterRest, beats: 1 },
+      { glyph: G.quarterRest, beats: 1 },
+      { glyph: G.quarterRest, beats: 1 },
+      ...createScore(24),
+    ];
+
+    let xi = 0;
+
+    MY_SCORE.forEach((item) => {
+      item.xi = xi; // position BEFORE drawing
+
+      xi += item.beats > 0 ? (item.beats * BEAT_WIDTH) ** 0.9 : 15;
+    });
+
+    const SECONDS_PER_BEAT = 60 / BPM;
+    let acc = 0;
+
+    const TIME_LINE = MY_SCORE.filter((ele) => ele.beats !== 0) // Only rhythmic elements
+      .reduce((list, ele) => {
+        list.push(acc); // Push the current start time
+        acc += ele.beats * SECONDS_PER_BEAT;
+        return list;
+      }, []);
+
+    TIME_LINE.push(acc); // Push the final duration/end point
+
+    // 2. LENGTH_LINE: The xi positions, omitting all barlines except the last one
+    const LENGTH_LINE = MY_SCORE.filter((item, index) => {
+      const isBarline = item.glyph === G.barline;
+      const isLast = index === MY_SCORE.length - 1;
+      return !isBarline || isLast;
+    }).map((item) => item.xi);
+
+    console.log(LENGTH_LINE);
 
     // 1. The core drawing logic (reusable for static and animated frames)
     const draw = (
@@ -95,7 +136,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       // Staff line
       ctx.beginPath();
       ctx.moveTo(25, midY);
-      ctx.lineTo(10000, midY);
+      ctx.lineTo(MY_SCORE[MY_SCORE.length - 1].xi + 25, midY);
       ctx.strokeStyle = "#222";
       ctx.lineWidth = 1;
       ctx.stroke();
@@ -109,11 +150,17 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       ctx.fillText(G.time4, cursorX, midY - 10);
       cursorX += 25;
 
+      // MY_SCORE.forEach((item) => {
+      //   const y = item.glyph === G.barline ? midY + pixels / 2 : midY;
+      //   ctx.fillText(item.glyph, cursorX, y);
+      //   cursorX += item.beats > 0 ? (item.beats * BEAT_WIDTH) ** 0.9 : 15;
+      // });
+
       MY_SCORE.forEach((item) => {
         const y = item.glyph === G.barline ? midY + pixels / 2 : midY;
-        ctx.fillText(item.glyph, cursorX, y);
-        cursorX += item.beats > 0 ? item.beats * BEAT_WIDTH : 15;
+        ctx.fillText(item.glyph, item.xi + 25, y);
       });
+
       ctx.restore();
 
       // Playhead (Static)
@@ -132,17 +179,22 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       ctx.fillRect(x - 1 + 20, top + size, 2, lineHeight);
     };
 
+    let posIndex = 0;
+    let scrollX = 0;
     // 2. Animation loop
     const animate = (time: number) => {
-      if (!canvasRef.current) return;
-      const ctx = canvasRef.current.getContext("2d");
+      const ctx = ctxCanvasRef.current;
       if (!ctx) return;
 
-      if (!startTimeRef.current) startTimeRef.current = time;
-      const elapsed = (time - startTimeRef.current) / 1000;
-      const scrollX = elapsed * speedRef.current;
+      const timecurrent = getCtx().currentTime;
+
+      if (timecurrent > startTimeRef.current + TIME_LINE[posIndex]) {
+        scrollX = LENGTH_LINE[posIndex];
+        posIndex++;
+      }
 
       draw(ctx, scrollX, window.innerWidth);
+
       requestRef.current = requestAnimationFrame(animate);
     };
 
@@ -158,24 +210,22 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     //
     //
 
-    const metronomeRef = useRef<ReturnType<typeof createMetronome> | null>(
-      null,
-    );
-
     useImperativeHandle(ref, () => ({
       handleStart: () => {
-        if (speedRef.current === 0) {
-          // 1. Iniciar Metrónomo (ejemplo a 100 BPM)
-          if (!metronomeRef.current) {
-            metronomeRef.current = createMetronome(bpm);
-          }
-          metronomeRef.current.start();
+        const canvas = canvasRef.current;
+        if (!canvas) return;
 
-          // 2. Iniciar Animación
-          speedRef.current = 50;
-          startTimeRef.current = performance.now();
-          requestAnimationFrame(animate);
+        ctxCanvasRef.current = canvas.getContext("2d");
+        // 1. Iniciar Metrónomo (ejemplo a 100 BPM)
+        if (!metronomeRef.current) {
+          metronomeRef.current = createMetronome(BPM);
         }
+
+        // 2. Iniciar Animación
+        speedRef.current = 0;
+        startTimeRef.current = getCtx().currentTime + beforeStart.current;
+        metronomeRef.current.start(startTimeRef.current);
+        requestAnimationFrame(animate);
       },
     }));
 

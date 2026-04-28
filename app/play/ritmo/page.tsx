@@ -55,7 +55,7 @@ export default function RitmoGame() {
         <div className="w-full max-w-[95%] bg-white rounded-[2.5rem] h-48 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden">
           {/* Your component does all the heavy lifting here */}
           {/* <MusicLine ref={musicRef} bpm={80} /> */}
-          <SimpleMovingScore ref={musicRef} />
+          <SimpleMovingScore ref={musicRef} bpm={80} />
         </div>
 
         {/* The Big Simple Tap Zone */}

@@ -1,7 +1,7 @@
 // metronome.ts
 let audioCtx: AudioContext | null = null;
 
-const getCtx = () => {
+export const getCtx = () => {
   if (!audioCtx) {
     audioCtx = new (
       window.AudioContext || (window as any).webkitAudioContext
@@ -39,7 +39,7 @@ export function createMetronome(bpm: number) {
     const ctx = getCtx();
     const interval = 60 / bpm;
 
-    while (nextClickTime < ctx.currentTime + SCHEDULE_AHEAD) {
+    if (nextClickTime < ctx.currentTime + SCHEDULE_AHEAD) {
       scheduleClick(nextClickTime);
       nextClickTime += interval;
     }
