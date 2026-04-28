@@ -56,10 +56,9 @@ const createScore = (measures: number) => {
 export interface MusicRef {
   handleStart: () => void;
 }
-
 interface SimpleMovingScoreProps {
   BPM?: number;
-  onComplete?: () => void; // New callback
+  onComplete?: (data: number[]) => void;
 }
 
 const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
@@ -228,7 +227,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
             }, [])
             .map((ele) => ele + beforeStart.current);
 
-          onComplete(data);
+          onComplete?.(data);
         }
         return;
       }

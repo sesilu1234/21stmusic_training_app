@@ -14,7 +14,7 @@ export default function RitmoGame() {
   const tapsRef = useRef<{ id: number; time: number }[]>([]);
   const musicRef = useRef<{ handleStart: () => void }>(null);
 
-  const onGameEnd = useCallback((data) => {
+  const onGameEnd = useCallback((data: number[]) => {
     setIsPlaying(false);
 
     fetch("/api/save", {
