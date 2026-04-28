@@ -120,8 +120,6 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       return !isBarline || isLast;
     }).map((item) => item.xi);
 
-    console.log(LENGTH_LINE);
-
     // 1. The core drawing logic (reusable for static and animated frames)
     const draw = (
       ctx: CanvasRenderingContext2D,
@@ -220,7 +218,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           let acc = 0;
 
           const data = MY_SCORE.filter((ele) => ele.beats !== 0)
-            .reduce((list, ele) => {
+            .reduce<number[]>((list, ele) => {
               if (ele.glyph === G.eighth) {
                 list.push(acc);
               }
