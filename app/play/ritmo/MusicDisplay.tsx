@@ -58,11 +58,12 @@ export interface MusicRef {
 }
 
 interface SimpleMovingScoreProps {
-  BPM?: number; // El signo ? lo hace opcional
+  BPM?: number;
+  onComplete?: () => void; // New callback
 }
 
 const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
-  ({ BPM = 100 }, ref) => {
+  ({ BPM = 100, onComplete }, ref) => {
     // ... resto del componente+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [fontLoaded, setFontLoaded] = useState(false);
@@ -89,7 +90,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       { glyph: G.quarterRest, beats: 1 },
       { glyph: G.quarterRest, beats: 1 },
       { glyph: G.quarterRest, beats: 1 },
-      ...createScore(24),
+      ...createScore(4),
     ];
 
     let xi = 0;
@@ -200,22 +201,41 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     //   requestRef.current = requestAnimationFrame(animate);
     // };
 
-    const animate = (time: number) => {
+    const animate = () => {
       const ctx = ctxCanvasRef.current;
       if (!ctx) return;
 
       const timecurrent = getCtx().currentTime;
 
       if (posIndex >= TIME_LINE.length) {
-        scrollX = LENGTH_LINE[LENGTH_LINE.length - 1]; // final position
+        scrollX = LENGTH_LINE[LENGTH_LINE.length - 1];
         draw(ctx, scrollX, window.innerWidth);
 
         speedRef.current = 0;
         cancelAnimationFrame(requestRef.current);
         if (metronomeRef.current) metronomeRef.current.stop();
+
+        // TRIGER THE CALLBACK HERE
+        if (onComplete) {
+          let acc = 0;
+
+          const data = MY_SCORE.filter((ele) => ele.beats !== 0)
+            .reduce((list, ele) => {
+              if (ele.glyph === G.eighth) {
+                list.push(acc);
+              }
+
+              acc += ele.beats * SECONDS_PER_BEAT;
+              return list;
+            }, [])
+            .map((ele) => ele + beforeStart.current);
+
+          onComplete(data);
+        }
         return;
       }
 
+      // ... rest of your animation logic ...
       if (timecurrent > startTimeRef.current + TIME_LINE[posIndex]) {
         scrollXBase = scrollX;
         timeBase = timecurrent;
@@ -225,11 +245,8 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           (LENGTH_LINE[posIndex] - scrollXBase) /
           (startTimeRef.current + TIME_LINE[posIndex] - timeBase);
       }
-
       scrollX = scrollXBase + speedRef.current * (timecurrent - timeBase);
-
       draw(ctx, scrollX, window.innerWidth);
-
       requestRef.current = requestAnimationFrame(animate);
     };
 
@@ -247,6 +264,10 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
     useImperativeHandle(ref, () => ({
       handleStart: () => {
+        posIndex = 0; // Reset local variables so it can play again
+        scrollX = 0;
+        scrollXBase = 0;
+        timeBase = 0;
         const canvas = canvasRef.current;
         if (!canvas) return;
 
