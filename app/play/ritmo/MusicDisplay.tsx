@@ -10,8 +10,7 @@ import React, {
 
 import { createMetronome, getCtx } from "./metronome"; //
 
-const BRAVURA_URL =
-  "https://cdn.jsdelivr.net/npm/@vexflow-fonts/bravura/bravura.woff2";
+const BRAVURA_URL = "/assets/bravura.woff2";
 
 const G = {
   whole: "\uE1D2",
