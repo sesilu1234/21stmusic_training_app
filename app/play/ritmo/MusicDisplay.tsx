@@ -280,7 +280,6 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         speedRef.current = 0;
         startTimeRef.current = getCtx().currentTime + beforeStart.current;
         metronomeRef.current.start(startTimeRef.current);
-        (window as any).audioCtx = getCtx();
         requestAnimationFrame(animate);
       },
     }));
