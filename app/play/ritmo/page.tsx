@@ -50,9 +50,7 @@ export default function RitmoGame() {
         handleTap();
       }
     };
-    window.addEventListener("keydown", () => {
-      console.log(getCtx().currentTime);
-    });
+    window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleTap]);
   // Global Spacebar Listener
@@ -85,7 +83,7 @@ export default function RitmoGame() {
 
         {/* The Music Display */}
         <div className="w-full max-w-[95%] bg-white rounded-[2.5rem] h-48 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden">
-          <SimpleMovingScore ref={musicRef} BPM={60} onComplete={onGameEnd} />
+          <SimpleMovingScore ref={musicRef} BPM={120} onComplete={onGameEnd} />
         </div>
 
         {/* The Tap Zone */}
