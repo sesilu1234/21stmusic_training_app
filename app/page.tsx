@@ -1,6 +1,6 @@
 "use client";
 
-import { Music2, ArrowLeft } from "lucide-react";
+import { Music2, ArrowLeft, Sun, Moon } from "lucide-react"; // Añadidos Sun y Moon
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -14,7 +14,7 @@ import {
   Activity,
   Music,
   Layers,
-  BookOpen, // Nuevo icono para modos
+  BookOpen,
 } from "lucide-react";
 
 interface Juego {
@@ -121,6 +121,7 @@ const historialTabla = [
 export default function Home() {
   const [view, setView] = useState<"juegos" | "progreso" | "notas">("juegos");
   const [showAcordesMenu, setShowAcordesMenu] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false); // Estado para el tema
   const [notas, setNotas] = useState<Nota[]>([
     {
       id: 1,
@@ -142,7 +143,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 relative overflow-hidden font-sans text-white">
+    <div className="min-h-screen relative overflow-hidden font-sans text-white">
       {/* BACKGROUND */}
       <div
         className="fixed inset-0 bg-cover bg-center transition-transform duration-1000 ease-out z-0"
@@ -151,7 +152,12 @@ export default function Home() {
           transform: showAcordesMenu ? "scale(1.1)" : "scale(1)",
         }}
       >
-        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]" />
+        {/* LÓGICA DE CAPA DE TEMA */}
+        {isDarkMode ? (
+          <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-[2px] transition-all duration-500" />
+        ) : (
+          <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-[0px] transition-all duration-500" />
+        )}
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col">
@@ -165,16 +171,24 @@ export default function Home() {
                 alt="logo"
               />
               <div className="flex flex-col min-w-0">
-                <span className="text-white italic font-black tracking-tighter text-sm md:text-xl lg:text-2xl leading-tight truncate">
+                <span className="text-white italic font-black tracking-tighter text-sm md:text-xl lg:text-2xl leading-tight ">
                   21st Century Music
                 </span>
                 <span className="font-light tracking-widest text-[6px] md:text-[8px] uppercase text-amber-400">
-                  Music Academy
+                  ESCUELA DE MÚSICA MODERNA
                 </span>
               </div>
             </div>
 
-            <div className="flex gap-3 md:gap-8 flex-shrink-0">
+            <div className="flex items-center gap-3 md:gap-8 flex-shrink-0">
+              {/* BOTÓN DE TEMA */}
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors text-amber-400"
+              >
+                {!isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+
               {[
                 { key: "juegos", label: "Juegos", Icon: Gamepad2 },
                 { key: "progreso", label: "Progreso", Icon: History },
@@ -198,7 +212,7 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* MAIN */}
+        {/* MAIN (Resto del contenido se mantiene igual) */}
         <main className="flex-1 flex flex-col">
           {view === "juegos" && !showAcordesMenu && (
             <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
@@ -308,7 +322,6 @@ export default function Home() {
                 <h2 className="text-2xl md:text-4xl italic font-black text-white mb-6 md:mb-8 uppercase tracking-tighter">
                   Tu <span className="text-amber-400">P</span>rogreso
                 </h2>
-                {/* Mobile Cards */}
                 <div className="block md:hidden space-y-4">
                   {historialTabla.map((fila, i) => (
                     <div
@@ -333,7 +346,6 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                {/* Desktop Table */}
                 <div className="hidden md:block overflow-x-auto bg-black/20 rounded-3xl p-6 border border-white/5">
                   <table className="w-full text-left">
                     <thead>
