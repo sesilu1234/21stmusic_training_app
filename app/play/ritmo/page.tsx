@@ -72,10 +72,11 @@ export default function RitmoGame() {
     const gain = ctx.createGain();
 
     osc.type = "sine";
-    osc.frequency.value = 1200;
+    osc.frequency.value = 1800;
 
-    gain.gain.setValueAtTime(0.5, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+    // más ataque percibido
+    gain.gain.setValueAtTime(1.2, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.025);
 
     osc.connect(gain);
     gain.connect(ctx.destination);

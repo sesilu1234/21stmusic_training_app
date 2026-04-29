@@ -155,6 +155,9 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
       MY_SCORE.forEach((item) => {
         const y = item.glyph === G.barline ? midY + pixels / 2 : midY;
+
+        ctx.fillStyle = item.glyph === G.eighth ? "#c23d3d" : "#111";
+
         ctx.fillText(item.glyph, item.xi + 25, y);
       });
 
