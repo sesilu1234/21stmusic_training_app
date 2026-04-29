@@ -30,17 +30,27 @@ export default function RitmoGame() {
   }, []);
 
   const handleTap = useCallback(() => {
+    const ctx = getCtx();
+
     if (!isPlaying) {
       setIsPlaying(true);
       tapsRef.current = [];
       musicRef.current?.handleStart();
-    } else {
-      const tapTime = getCtx().currentTime;
-      tapsRef.current.push({ id: tapsRef.current.length + 1, time: tapTime });
-
-      setFlash(true);
-      setTimeout(() => setFlash(false), 70);
+      return;
     }
+
+    const tapTime = ctx.currentTime;
+
+    tapsRef.current.push({
+      id: tapsRef.current.length + 1,
+      time: tapTime,
+    });
+
+    // 🔊 sonido inmediato sincronizado con audio clock
+    playTapSound(tapTime);
+
+    setFlash(true);
+    setTimeout(() => setFlash(false), 70);
   }, [isPlaying]);
 
   useEffect(() => {
@@ -55,6 +65,24 @@ export default function RitmoGame() {
   }, [handleTap]);
   // Global Spacebar Listener
 
+  const playTapSound = (time: number) => {
+    const ctx = getCtx();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.value = 1200;
+
+    gain.gain.setValueAtTime(0.5, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(time);
+    osc.stop(time + 0.03);
+  };
   return (
     <div
       className="min-h-screen flex flex-col bg-slate-900 bg-cover bg-center text-white font-sans"
