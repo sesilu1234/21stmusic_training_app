@@ -237,6 +237,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
           onComplete?.(data, dateTimeBase, startTimeRef.current);
         }
+        //
         return;
       }
 
