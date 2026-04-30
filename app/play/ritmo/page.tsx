@@ -11,28 +11,23 @@ export default function RitmoGame() {
   const [flash, setFlash] = useState(false);
 
   // High-performance storage for your taps
-  const tapsRef = useRef<{ id: number; time: number; dateTime: number }[]>([]);
+  const tapsRef = useRef<{ id: number; time: number }[]>([]);
   const musicRef = useRef<{ handleStart: () => void }>(null);
 
-  const onGameEnd = useCallback(
-    (data: number[], dateTimeBase: number, startTimeRef: number) => {
-      setIsPlaying(false);
+  const onGameEnd = useCallback((data: number[]) => {
+    setIsPlaying(false);
 
-      fetch("/api/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          timeline: data,
-          taps: tapsRef.current,
-          dateTimeBase: dateTimeBase,
-          startTimeRef: startTimeRef,
-        }),
-      });
-    },
-    [],
-  );
+    fetch("/api/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        timeline: data,
+        taps: tapsRef.current,
+      }),
+    });
+  }, []);
 
   const handleTap = useCallback(() => {
     const ctx = getCtx();
@@ -45,12 +40,10 @@ export default function RitmoGame() {
     }
 
     const tapTime = ctx.currentTime;
-    const tapTimeDateTime = Date.now();
 
     tapsRef.current.push({
       id: tapsRef.current.length + 1,
       time: tapTime,
-      dateTime: tapTimeDateTime,
     });
 
     // 🔊 sonido inmediato sincronizado con audio clock
