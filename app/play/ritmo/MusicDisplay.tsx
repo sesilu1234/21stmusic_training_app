@@ -53,7 +53,7 @@ const createScore = (measures: number) => {
 };
 
 export interface MusicRef {
-  handleStart: () => void;
+  handleStart: (isPlaying: boolean) => void;
 }
 interface SimpleMovingScoreProps {
   BPM?: number;
