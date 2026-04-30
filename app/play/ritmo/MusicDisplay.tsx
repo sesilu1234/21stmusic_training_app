@@ -236,12 +236,12 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
       const timecurrent = getCtx().currentTime;
 
-      if (posIndex.current >= TIME_LINE.length) {
+      if (posIndex.current >= TIME_LINE.length - 0) {
         scrollX.current = LENGTH_LINE[LENGTH_LINE.length - 1];
-        draw(ctx, scrollX.current, window.innerWidth);
 
-        speedRef.current = 0;
+        speedRef.current = 70;
         cancelAnimationFrame(requestRef.current);
+        draw(ctx, scrollX.current, window.innerWidth);
         metronomeRef.current?.stop();
 
         if (onComplete) {
@@ -303,6 +303,8 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           scrollX.current = 0;
           scrollXBase.current = 0;
           timeBase.current = 0;
+
+          TAP_RUN_TIMES.current = [];
 
           const canvas = canvasRef.current;
           if (!canvas) return;
@@ -377,9 +379,71 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       };
     }, [fontLoaded]);
 
+    //
+
+    //
+
+    //
+
+    const isDragging = useRef(false);
+    const lastMouseX = useRef(0);
+
+    const updateByMouse = (clientX: number) => {
+      const dx = clientX - lastMouseX.current;
+
+      scrollX.current -= dx;
+      lastMouseX.current = clientX;
+
+      const ctx = canvasRef.current.getContext("2d");
+      console.log("4553terret");
+      if (!ctx) return;
+      console.log("354tt");
+
+      if (scrollX.current < 0) {
+        scrollX.current = 0;
+      }
+
+      draw(ctx, scrollX.current, window.innerWidth);
+    };
+
+    useEffect(() => {
+      if (!fontLoaded) return;
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      console.log("3eiei");
+
+      const onDown = (e: MouseEvent) => {
+        isDragging.current = true;
+        lastMouseX.current = e.clientX;
+      };
+
+      const onMove = (e: MouseEvent) => {
+        if (!isDragging.current) return;
+        updateByMouse(e.clientX);
+      };
+
+      const onUp = () => {
+        isDragging.current = false;
+      };
+
+      canvas.addEventListener("mousedown", onDown);
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+
+      return () => {
+        canvas.removeEventListener("mousedown", onDown);
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      };
+    }, [fontLoaded]);
+
     return (
       <div style={{ background: "transparent", width: "100%" }}>
-        {!fontLoaded ? null : <canvas ref={canvasRef} />}
+        {!fontLoaded ? null : (
+          <canvas ref={canvasRef} className="cursor-pointer" />
+        )}
       </div>
     );
   },
