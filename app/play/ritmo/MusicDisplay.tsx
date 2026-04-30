@@ -59,7 +59,7 @@ interface SimpleMovingScoreProps {
   BPM?: number;
   onComplete?: (
     data: number[],
-    dateTimeBase: Date,
+    dateTimeBase: number,
     startTimeRef: number,
   ) => void;
 }
