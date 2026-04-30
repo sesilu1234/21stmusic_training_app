@@ -12,7 +12,7 @@ export default function RitmoGame() {
 
   // High-performance storage for your taps
   const tapsRef = useRef<{ id: number; time: number }[]>([]);
-  const musicRef = useRef<{ handleStart: () => void }>(null);
+  const musicRef = useRef<{ handleStart: (isPlaying: boolean) => void }>(null);
 
   const onGameEnd = useCallback((data: number[]) => {
     setIsPlaying(false);
