@@ -57,7 +57,11 @@ export interface MusicRef {
 }
 interface SimpleMovingScoreProps {
   BPM?: number;
-  onComplete?: (data: number[]) => void;
+  onComplete?: (
+    data: number[],
+    dateTimeBase: Date,
+    startTimeRef: number,
+  ) => void;
 }
 
 const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
