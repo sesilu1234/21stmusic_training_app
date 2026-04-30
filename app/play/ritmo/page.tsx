@@ -35,10 +35,10 @@ export default function RitmoGame() {
     if (!isPlaying) {
       setIsPlaying(true);
       tapsRef.current = [];
-      musicRef.current?.handleStart();
+      musicRef.current?.handleStart(isPlaying);
       return;
     }
-
+    musicRef.current?.handleStart(isPlaying);
     const tapTime = ctx.currentTime;
 
     tapsRef.current.push({

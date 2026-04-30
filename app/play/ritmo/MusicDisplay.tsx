@@ -77,6 +77,8 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       null,
     );
 
+    const TAP_RUN_TIMES = useRef<number[]>([]);
+
     // Constants for drawing
     const BEAT_WIDTH = 100;
     const HEIGHT = 120;
@@ -126,7 +128,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     ) => {
       ctx.clearRect(0, 0, width * 2, HEIGHT * 2); // Multiplied by 2 for DPR safety
       ctx.save();
-      ctx.translate(-scrollX + 70, 0);
+      ctx.translate(-scrollX + 270, 0);
 
       const midY = HEIGHT / 2;
 
@@ -154,35 +156,63 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       // });
 
       MY_SCORE.forEach((item) => {
-        const y = item.glyph === G.barline ? midY + pixels / 2 : midY;
+        let y = item.glyph === G.barline ? midY + pixels / 2 : midY;
+        let x = item.xi + 25;
 
-        ctx.fillStyle = item.glyph === G.eighth ? "#c23d3d" : "#111";
+        ctx.fillText(item.glyph, x, y);
 
-        ctx.fillText(item.glyph, item.xi + 25, y);
+        if (item.glyph === G.eighth) {
+          //
+
+          //
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 2;
+          x += 17;
+          y -= 55;
+          ctx.beginPath();
+          // Draw a small 'X' over the note head
+          ctx.moveTo(x - 5, y - 5);
+          ctx.lineTo(x + 5, y + 5);
+          ctx.moveTo(x + 5, y - 5);
+          ctx.lineTo(x - 5, y + 5);
+          ctx.stroke();
+
+          //OR
+        }
+      });
+
+      TAP_RUN_TIMES.current.forEach((x) => {
+        //OR
+
+        ctx.beginPath();
+        // Dibujamos un círculo pequeño (indicador) justo bajo la nota
+        ctx.arc(x, midY + 30, 4, 0, Math.PI * 2);
+        ctx.fillStyle = "#7a6e33";
+        ctx.fill();
       });
 
       ctx.restore();
 
       // Playhead (Static)
-      const x = 75;
+      const x = 296;
       const top = 10;
       const size = 7;
       const lineHeight = HEIGHT - 50;
 
       ctx.beginPath();
-      ctx.moveTo(x + 20, top);
-      ctx.lineTo(x - 4 + 20, top + size);
-      ctx.lineTo(x + 4 + 20, top + size);
+      ctx.moveTo(x, top);
+      ctx.lineTo(x - 4, top + size);
+      ctx.lineTo(x + 4, top + size);
       ctx.closePath();
       ctx.fillStyle = "#239c4f";
       ctx.fill();
-      ctx.fillRect(x - 1 + 20, top + size, 2, lineHeight);
+      ctx.fillRect(x - 1, top + size, 2, lineHeight);
     };
 
-    let posIndex = 0;
-    let scrollX = 0;
-    let scrollXBase = 0;
-    let timeBase = 0;
+    const scrollX = useRef(0);
+    const scrollXBase = useRef(0);
+    const timeBase = useRef(0);
+    const posIndex = useRef(0);
     // 2. Animation loop
     // const animate = (time: number) => {
     //   const ctx = ctxCanvasRef.current;
@@ -206,15 +236,14 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
       const timecurrent = getCtx().currentTime;
 
-      if (posIndex >= TIME_LINE.length) {
-        scrollX = LENGTH_LINE[LENGTH_LINE.length - 1];
-        draw(ctx, scrollX, window.innerWidth);
+      if (posIndex.current >= TIME_LINE.length) {
+        scrollX.current = LENGTH_LINE[LENGTH_LINE.length - 1];
+        draw(ctx, scrollX.current, window.innerWidth);
 
         speedRef.current = 0;
         cancelAnimationFrame(requestRef.current);
-        if (metronomeRef.current) metronomeRef.current.stop();
+        metronomeRef.current?.stop();
 
-        // TRIGER THE CALLBACK HERE
         if (onComplete) {
           let acc = 0;
 
@@ -223,29 +252,35 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
               if (ele.glyph === G.eighth) {
                 list.push(acc);
               }
-
               acc += ele.beats * SECONDS_PER_BEAT;
               return list;
             }, [])
             .map((ele) => ele + startTimeRef.current);
 
-          onComplete?.(data);
+          onComplete(data);
         }
         return;
       }
 
-      // ... rest of your animation logic ...
-      if (timecurrent > startTimeRef.current + TIME_LINE[posIndex]) {
-        scrollXBase = scrollX;
-        timeBase = timecurrent;
-        posIndex++;
+      if (timecurrent > startTimeRef.current + TIME_LINE[posIndex.current]) {
+        scrollXBase.current = scrollX.current;
+        timeBase.current = timecurrent;
+
+        posIndex.current++;
 
         speedRef.current =
-          (LENGTH_LINE[posIndex] - scrollXBase) /
-          (startTimeRef.current + TIME_LINE[posIndex] - timeBase);
+          (LENGTH_LINE[posIndex.current] - scrollXBase.current) /
+          (startTimeRef.current +
+            TIME_LINE[posIndex.current] -
+            timeBase.current);
       }
-      scrollX = scrollXBase + speedRef.current * (timecurrent - timeBase);
-      draw(ctx, scrollX, window.innerWidth);
+
+      scrollX.current =
+        scrollXBase.current +
+        speedRef.current * (timecurrent - timeBase.current);
+
+      draw(ctx, scrollX.current, window.innerWidth);
+
       requestRef.current = requestAnimationFrame(animate);
     };
 
@@ -262,28 +297,32 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     //
 
     useImperativeHandle(ref, () => ({
-      handleStart: () => {
-        posIndex = 0; // Reset local variables so it can play again
-        scrollX = 0;
-        scrollXBase = 0;
-        timeBase = 0;
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+      handleStart: (isPlaying: boolean) => {
+        if (!isPlaying) {
+          posIndex.current = 0;
+          scrollX.current = 0;
+          scrollXBase.current = 0;
+          timeBase.current = 0;
 
-        ctxCanvasRef.current = canvas.getContext("2d");
-        // 1. Iniciar Metrónomo (ejemplo a 100 BPM)
-        if (!metronomeRef.current) {
-          metronomeRef.current = createMetronome(BPM);
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+
+          ctxCanvasRef.current = canvas.getContext("2d");
+
+          if (!metronomeRef.current) {
+            metronomeRef.current = createMetronome(BPM);
+          }
+
+          speedRef.current = 0;
+          startTimeRef.current = getCtx().currentTime + beforeStart.current;
+
+          metronomeRef.current.start(startTimeRef.current);
+          requestAnimationFrame(animate);
+        } else {
+          TAP_RUN_TIMES.current.push(scrollX.current + 25);
         }
-
-        // 2. Iniciar Animación
-        speedRef.current = 0;
-        startTimeRef.current = getCtx().currentTime + beforeStart.current;
-        metronomeRef.current.start(startTimeRef.current);
-        requestAnimationFrame(animate);
       },
     }));
-
     // No olvides limpiar el metrónomo cuando el componente se desmonte
     useEffect(() => {
       return () => {
