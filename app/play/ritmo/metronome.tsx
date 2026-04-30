@@ -17,6 +17,9 @@ export function createMetronome(bpm: number) {
   const SCHEDULE_AHEAD = 0.1;
   const INTERVAL_MS = 25;
 
+  // const SCHEDULE_AHEAD = 0.45;
+  // const INTERVAL_MS = 400;
+
   const scheduleClick = (time: number) => {
     const ctx = getCtx();
     const osc = ctx.createOscillator();

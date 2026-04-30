@@ -183,6 +183,8 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     let scrollX = 0;
     let scrollXBase = 0;
     let timeBase = 0;
+    //
+    let dateTimeBase = Date.now();
     // 2. Animation loop
     // const animate = (time: number) => {
     //   const ctx = ctxCanvasRef.current;
@@ -229,13 +231,25 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
             }, [])
             .map((ele) => ele + startTimeRef.current);
 
-          onComplete?.(data);
+          onComplete?.(data, dateTimeBase, startTimeRef.current);
         }
         return;
       }
 
       // ... rest of your animation logic ...
       if (timecurrent > startTimeRef.current + TIME_LINE[posIndex]) {
+        // console.log("dateTime function time: ", Date.now() - dateTimeBase);
+        // console.log(
+        //   "AudioCtx time: ",
+        //   getCtx().currentTime - startTimeRef.current + 0.5,
+        // );
+        // console.log(
+        //   "difference: ",
+        //   getCtx().currentTime -
+        //     startTimeRef.current +
+        //     0.5 -
+        //     (Date.now() - dateTimeBase) / 1000,
+        // );
         scrollXBase = scrollX;
         timeBase = timecurrent;
         posIndex++;
@@ -279,6 +293,13 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         // 2. Iniciar Animación
         speedRef.current = 0;
         startTimeRef.current = getCtx().currentTime + beforeStart.current;
+        dateTimeBase = Date.now();
+        // console.log("dateTime function time: ", Date.now() - dateTimeBase);
+        // console.log(
+        //   "AudioCtx time: ",
+        //   getCtx().currentTime - startTimeRef.current + 0.5,
+        // );
+
         metronomeRef.current.start(startTimeRef.current);
         requestAnimationFrame(animate);
       },
