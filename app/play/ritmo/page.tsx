@@ -11,7 +11,7 @@ export default function RitmoGame() {
   const [flash, setFlash] = useState(false);
 
   // High-performance storage for your taps
-  const tapsRef = useRef<{ id: number; time: number; dateTime: Date }[]>([]);
+  const tapsRef = useRef<{ id: number; time: number; dateTime: number }[]>([]);
   const musicRef = useRef<{ handleStart: () => void }>(null);
 
   const onGameEnd = useCallback(
