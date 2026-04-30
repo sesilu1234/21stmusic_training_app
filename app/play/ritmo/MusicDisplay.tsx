@@ -388,7 +388,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     const isDragging = useRef(false);
     const lastMouseX = useRef(0);
 
-    const updateByMouse = (clientX: number) => {
+    const updateByPointer = (clientX: number) => {
       const dx = clientX - lastMouseX.current;
 
       scrollX.current -= dx;
@@ -413,37 +413,43 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      console.log("3eiei");
-
-      const onDown = (e: MouseEvent) => {
+      const onPointerDown = (e: PointerEvent) => {
         isDragging.current = true;
         lastMouseX.current = e.clientX;
+
+        canvas.setPointerCapture(e.pointerId);
       };
 
-      const onMove = (e: MouseEvent) => {
+      const onPointerMove = (e: PointerEvent) => {
         if (!isDragging.current) return;
-        updateByMouse(e.clientX);
+        updateByPointer(e.clientX);
       };
 
-      const onUp = () => {
+      const onPointerUp = () => {
         isDragging.current = false;
       };
 
-      canvas.addEventListener("mousedown", onDown);
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("mouseup", onUp);
+      canvas.addEventListener("pointerdown", onPointerDown);
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+      window.addEventListener("pointercancel", onPointerUp);
 
       return () => {
-        canvas.removeEventListener("mousedown", onDown);
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
+        canvas.removeEventListener("pointerdown", onPointerDown);
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+        window.removeEventListener("pointercancel", onPointerUp);
       };
     }, [fontLoaded]);
 
     return (
       <div style={{ background: "transparent", width: "100%" }}>
         {!fontLoaded ? null : (
-          <canvas ref={canvasRef} className="cursor-pointer" />
+          <canvas
+            ref={canvasRef}
+            className="cursor-pointer"
+            style={{ touchAction: "none" }}
+          />
         )}
       </div>
     );
