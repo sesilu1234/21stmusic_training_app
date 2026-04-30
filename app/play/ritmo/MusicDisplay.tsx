@@ -394,10 +394,11 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       scrollX.current -= dx;
       lastMouseX.current = clientX;
 
-      const ctx = canvasRef.current.getContext("2d");
-      console.log("4553terret");
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      console.log("354tt");
 
       if (scrollX.current < 0) {
         scrollX.current = 0;
