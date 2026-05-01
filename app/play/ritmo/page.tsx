@@ -2,35 +2,31 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { getCtx } from "./metronome"; // To sync with the same clock
+import { getCtx } from "./metronome";
 import SimpleMovingScore from "./MusicDisplay";
 
 export default function RitmoGame() {
   const router = useRouter();
   const [isPlaying, setIsPlaying] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [showScore, setShowScore] = useState(false);
 
-  // High-performance storage for your taps
+  const [bpm, setBpm] = useState(120);
+  const [measures] = useState(24);
+  const [currentTick, setCurrentTick] = useState(1);
+  const [localBpm, setLocalBpm] = useState(120);
+
   const tapsRef = useRef<{ id: number; time: number }[]>([]);
   const musicRef = useRef<{ handleStart: (isPlaying: boolean) => void }>(null);
 
   const onGameEnd = useCallback((data: number[]) => {
     setIsPlaying(false);
-
-    // fetch("/api/save", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({
-    //     timeline: data,
-    //     taps: tapsRef.current,
-    //   }),
-    // });
+    setShowScore(true);
   }, []);
 
   const handleTap = useCallback(() => {
     const ctx = getCtx();
+    if (showScore) return;
 
     if (!isPlaying) {
       setIsPlaying(true);
@@ -40,18 +36,11 @@ export default function RitmoGame() {
     }
     musicRef.current?.handleStart(isPlaying);
     const tapTime = ctx.currentTime;
-
-    tapsRef.current.push({
-      id: tapsRef.current.length + 1,
-      time: tapTime,
-    });
-
-    // 🔊 sonido inmediato sincronizado con audio clock
+    tapsRef.current.push({ id: tapsRef.current.length + 1, time: tapTime });
     playTapSound(tapTime);
-
     setFlash(true);
-    setTimeout(() => setFlash(false), 70);
-  }, [isPlaying]);
+    setTimeout(() => setFlash(false), 100);
+  }, [isPlaying, showScore]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -63,90 +52,160 @@ export default function RitmoGame() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleTap]);
-  // Global Spacebar Listener
 
   const playTapSound = (time: number) => {
     const ctx = getCtx();
-
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-
     osc.type = "sine";
     osc.frequency.value = 1800;
-
-    // más ataque percibido
     gain.gain.setValueAtTime(1.2, time);
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.025);
-
     osc.connect(gain);
     gain.connect(ctx.destination);
-
     osc.start(time);
     osc.stop(time + 0.03);
   };
+
   return (
     <div
-      className="min-h-screen flex flex-col bg-slate-900 bg-cover bg-center text-white font-sans"
+      className="min-h-screen flex flex-col bg-slate-900 bg-cover bg-center text-white font-sans relative"
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
+      {/* Pop-up de Marcador Minimalista */}
+      {showScore && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-300">
+          <div className="relative bg-zinc-900/90 border border-white/10 p-10 rounded-[2.5rem] shadow-2xl flex flex-col items-center max-w-[280px] w-full">
+            {/* Botón Cerrar (X) */}
+            <button
+              onClick={() => setShowScore(false)}
+              className="absolute top-5 right-6 text-zinc-500 hover:text-white transition-colors text-xl font-light"
+            >
+              ✕
+            </button>
+
+            <div className="flex flex-col items-center">
+              <span className="text-[9px] tracking-[0.4em] opacity-40 uppercase font-black mb-1">
+                Accuracy
+              </span>
+
+              <div className="flex items-baseline gap-1">
+                <span className="text-6xl font-black italic tracking-tighter text-white">
+                  85
+                </span>
+                <span className="text-xl font-bold text-amber-500">%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="pt-6 px-6 flex justify-between items-center z-10">
+      <div className="pt-4 px-4 md:pt-6 md:px-6 flex justify-between items-center z-10">
         <button
           onClick={() => router.push("/")}
-          className="bg-black/40 px-4 p-2 rounded-full border border-white/10 text-[10px] font-bold hover:bg-white/20 transition-colors"
+          className="bg-black/40 px-3 p-1.5 md:px-4 md:p-2 rounded-full border border-white/10 text-[9px] md:text-[10px] font-bold hover:bg-white/20 transition-colors"
         >
           ← MENU
         </button>
         <img
           src="/assets/logo21stCM_no_white_1.png"
-          className="h-12 md:h-20"
+          className="h-10 md:h-20"
           alt="logo"
         />
       </div>
 
-      <main className="mt-8 flex flex-col items-center justify-center py-4 gap-8">
-        <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">
-          Pulsa al{" "}
-          <span className="bg-white text-black px-2 rounded">RITMO</span>
-        </h2>
+      <main className="flex flex-col items-center py-2 md:py-4 gap-4 md:gap-8">
+        <div className="w-full max-w-[95%] px-2 md:px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4 w-full md:w-auto justify-center md:justify-start">
+              <div className="flex flex-col items-center">
+                <span className="text-[8px] md:text-[10px] tracking-[0.25em] text-black/60 font-semibold uppercase">
+                  Beat
+                </span>
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white text-black flex items-center justify-center text-xl md:text-2xl font-black italic shadow-md">
+                  {currentTick}
+                </div>
+              </div>
+              <h2 className="text-xl md:text-2xl font-black italic uppercase tracking-tight text-white mt-3">
+                Pulsa al{" "}
+                <span className="bg-white text-black px-2 py-[1px] rounded">
+                  ritmo
+                </span>
+              </h2>
+            </div>
 
-        {/* The Music Display */}
-        <div className="w-full max-w-[95%] bg-white rounded-[2.5rem] h-48 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden">
+            <div className="w-full md:max-w-xs lg:max-w-sm bg-black/60 backdrop-blur-xl p-4 rounded-3xl border border-white/5">
+              <div className="flex flex-col gap-2 w-full">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[9px] tracking-[0.3em] opacity-40 uppercase font-black text-white">
+                    Tempo
+                  </span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl md:text-3xl font-black italic text-amber-400 tracking-tighter">
+                      {localBpm}
+                    </span>
+                    <span className="text-[9px] font-bold opacity-30 text-white">
+                      BPM
+                    </span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  min="40"
+                  max="140"
+                  value={localBpm}
+                  disabled={isPlaying}
+                  onChange={(e) => setLocalBpm(Number(e.target.value))}
+                  onMouseUp={() => setBpm(localBpm)}
+                  onTouchEnd={() => setBpm(localBpm)}
+                  className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-white"
+                />
+                <div className="flex justify-between text-[7px] font-bold opacity-20 tracking-widest uppercase">
+                  <span>Largo</span>
+                  <span>Andante</span>
+                  <span>Allegro</span>
+                  <span>Presto</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full max-w-[95%] bg-white rounded-[2rem] md:rounded-[2.5rem] h-40 md:h-48 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden">
           <SimpleMovingScore ref={musicRef} BPM={120} onComplete={onGameEnd} />
         </div>
 
-        {/* The Tap Zone */}
         <div
           onPointerDown={(e) => {
-            e.preventDefault(); // Prevents double-firing on mobile (touch + click)
+            e.preventDefault();
             handleTap();
           }}
-          className={`
-            w-full max-w-[65%] h-40 rounded-[2rem] border-2 flex flex-col items-center justify-center cursor-pointer transition-all active:scale-[0.95] select-none
-            ${flash ? "bg-amber-400 border-white shadow-lg scale-[1.02]" : "bg-black/40 border-white/20 backdrop-blur-md"}
-          `}
+          className={`w-full max-w-[85%] md:max-w-[65%] h-32 md:h-40 rounded-[2rem] border flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-100 ease-out
+            ${flash ? "bg-black/60 border-white/30 scale-[0.98]" : "bg-black/40 border-white/10 backdrop-blur-md scale-100 shadow-xl"}`}
         >
           {!isPlaying ? (
             <div className="text-center">
-              <span className="font-black tracking-[0.2em] animate-pulse block">
+              <span className="font-black tracking-[0.2em] text-sm md:text-base animate-pulse block">
                 TAP TO START
               </span>
-              <span className="text-[10px] opacity-50 mt-2 block">
+              <span className="text-[9px] md:text-[10px] opacity-50 mt-1 block">
                 (OR PRESS SPACE)
               </span>
             </div>
           ) : (
-            <div className="flex flex-col items-center">
-              <span className="text-4xl font-black">
-                {tapsRef.current.length}
-              </span>
-              <div className="w-12 h-12 rounded-full border-4 border-amber-400 animate-ping opacity-20 absolute" />
+            <div
+              className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center transition-all ${flash ? "border-amber-400 scale-90" : "border-white/20"}`}
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${flash ? "bg-amber-400" : "bg-white opacity-40"}`}
+              />
             </div>
           )}
         </div>
       </main>
 
-      <footer className="pb-8 text-center text-slate-500 text-[8px] tracking-[0.5em] uppercase mt-auto">
+      <footer className="pb-4 md:pb-8 text-center text-slate-500 text-[7px] md:text-[8px] tracking-[0.4em] uppercase mt-auto">
         © 2026 21st Century Music
       </footer>
     </div>

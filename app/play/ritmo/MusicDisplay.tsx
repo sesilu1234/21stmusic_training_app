@@ -121,7 +121,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         { glyph: G.quarterRest, beats: 1 },
         { glyph: G.quarterRest, beats: 1 },
         { glyph: G.quarterRest, beats: 1 },
-        ...createScore(24),
+        ...createScore(4),
       ];
 
       let xi = 0;
