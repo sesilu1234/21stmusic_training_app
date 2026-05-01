@@ -6,6 +6,7 @@ import React, {
   useState,
   forwardRef,
   useImperativeHandle,
+  useMemo,
 } from "react";
 
 import { createMetronome, getCtx } from "./metronome"; //
@@ -84,22 +85,31 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     const HEIGHT = 120;
     const pixels = 50;
 
-    const MY_SCORE = [
-      { glyph: G.barline, beats: 0 },
-      { glyph: G.quarterRest, beats: 1 },
-      { glyph: G.quarterRest, beats: 1 },
-      { glyph: G.quarterRest, beats: 1 },
-      { glyph: G.quarterRest, beats: 1 },
-      ...createScore(4),
-    ];
+    const STATE = {
+      CORRECT: 0,
+      FAILED: 1,
+      TO_COME: 2,
+    } as const;
 
-    let xi = 0;
+    const MY_SCORE = useMemo(() => {
+      const score = [
+        { glyph: G.barline, beats: 0 },
+        { glyph: G.quarterRest, beats: 1 },
+        { glyph: G.quarterRest, beats: 1 },
+        { glyph: G.quarterRest, beats: 1 },
+        { glyph: G.quarterRest, beats: 1 },
+        ...createScore(4),
+      ];
 
-    MY_SCORE.forEach((item) => {
-      item.xi = xi; // position BEFORE drawing
+      let xi = 0;
+      score.forEach((item) => {
+        item.xi = xi;
+        item.status = 2; // Initialize status here
+        xi += item.beats > 0 ? (item.beats * BEAT_WIDTH) ** 0.9 : 15;
+      });
 
-      xi += item.beats > 0 ? (item.beats * BEAT_WIDTH) ** 0.9 : 15;
-    });
+      return score;
+    }, []); // Empty array means "do this once on mount"
 
     const SECONDS_PER_BEAT = 60 / BPM;
     let acc = 0;
@@ -120,6 +130,24 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       return !isBarline || isLast;
     }).map((item) => item.xi);
 
+    TIME_LINE.push(acc); // Push the final duration/end point
+
+    acc = 0;
+
+    const TIME_LINE_NOTES = MY_SCORE.map((item, i) => {
+      const currentTime = acc;
+
+      if (item.beats !== 0) {
+        acc += item.beats * SECONDS_PER_BEAT;
+      }
+
+      if (VALUES.some((v) => v.note === item.glyph)) {
+        return { index: i, time: currentTime };
+      }
+
+      return null;
+    }).filter(Boolean) as { index: number; time: number }[];
+
     // 1. The core drawing logic (reusable for static and animated frames)
     const draw = (
       ctx: CanvasRenderingContext2D,
@@ -128,7 +156,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     ) => {
       ctx.clearRect(0, 0, width * 2, HEIGHT * 2); // Multiplied by 2 for DPR safety
       ctx.save();
-      ctx.translate(-scrollX + 270, 0);
+      ctx.translate(-scrollX + 470, 0);
 
       const midY = HEIGHT / 2;
 
@@ -155,7 +183,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       //   cursorX += item.beats > 0 ? (item.beats * BEAT_WIDTH) ** 0.9 : 15;
       // });
 
-      MY_SCORE.forEach((item) => {
+      MY_SCORE.forEach((item, j) => {
         let y = item.glyph === G.barline ? midY + pixels / 2 : midY;
         let x = item.xi + 25;
 
@@ -163,19 +191,32 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
         if (item.glyph === G.eighth) {
           //
+          if (item.status == 0) {
+            //
+            ctx.strokeStyle = "green";
+            ctx.lineWidth = 2;
+            x += 17;
+            y -= 55;
 
-          //
-          ctx.strokeStyle = "red";
-          ctx.lineWidth = 2;
-          x += 17;
-          y -= 55;
-          ctx.beginPath();
-          // Draw a small 'X' over the note head
-          ctx.moveTo(x - 5, y - 5);
-          ctx.lineTo(x + 5, y + 5);
-          ctx.moveTo(x + 5, y - 5);
-          ctx.lineTo(x - 5, y + 5);
-          ctx.stroke();
+            ctx.beginPath();
+            // check ✓
+            ctx.moveTo(x - 6, y);
+            ctx.lineTo(x - 1, y + 5);
+            ctx.lineTo(x + 6, y - 5);
+            ctx.stroke();
+          } else if (item.status == 1) {
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            x += 17;
+            y -= 55;
+            ctx.beginPath();
+            // Draw a small 'X' over the note head
+            ctx.moveTo(x - 5, y - 5);
+            ctx.lineTo(x + 5, y + 5);
+            ctx.moveTo(x + 5, y - 5);
+            ctx.lineTo(x - 5, y + 5);
+            ctx.stroke();
+          }
 
           //OR
         }
@@ -194,7 +235,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       ctx.restore();
 
       // Playhead (Static)
-      const x = 296;
+      const x = 496;
       const top = 10;
       const size = 7;
       const lineHeight = HEIGHT - 50;
@@ -213,6 +254,17 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     const scrollXBase = useRef(0);
     const timeBase = useRef(0);
     const posIndex = useRef(0);
+
+    //
+    //
+    const currentNoteIndex = useRef(0);
+    const prevAppearanceNote = useRef(0);
+    const nextAppearanceNote = useRef(0);
+    const FAIL_MARGIN_UPPER = 0.15;
+    const FAIL_MARGIN_LOWER = 0.01;
+
+    //
+    //
     // 2. Animation loop
     // const animate = (time: number) => {
     //   const ctx = ctxCanvasRef.current;
@@ -236,6 +288,17 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
       const timecurrent = getCtx().currentTime;
 
+      if (
+        currentNoteIndex.current < TIME_LINE_NOTES.length &&
+        timecurrent >
+          startTimeRef.current +
+            TIME_LINE_NOTES[currentNoteIndex.current].time +
+            FAIL_MARGIN_UPPER //timeline no considera los baarlines entonces no encaja con el indice . una opcion es en notesArrayIndexes poner su time tambien
+      ) {
+        MY_SCORE[TIME_LINE_NOTES[currentNoteIndex.current].index].status = 1;
+        currentNoteIndex.current++;
+      }
+
       if (posIndex.current >= TIME_LINE.length - 0) {
         scrollX.current = LENGTH_LINE[LENGTH_LINE.length - 1];
 
@@ -243,6 +306,8 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         cancelAnimationFrame(requestRef.current);
         draw(ctx, scrollX.current, window.innerWidth);
         metronomeRef.current?.stop();
+        setShowReset(false);
+        setShowDrag(true);
 
         if (onComplete) {
           let acc = 0;
@@ -319,13 +384,26 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           startTimeRef.current = getCtx().currentTime + beforeStart.current;
 
           metronomeRef.current.start(startTimeRef.current);
+          setShowReset(true);
+          setShowDrag(false);
           requestAnimationFrame(animate);
         } else {
+          const currentTapTime = getCtx().currentTime - beforeStart.current;
+          const note = TIME_LINE_NOTES[currentNoteIndex.current];
+
+          if (
+            currentTapTime >= note.time + FAIL_MARGIN_LOWER &&
+            currentTapTime <= note.time + FAIL_MARGIN_UPPER
+          ) {
+            MY_SCORE[note.index].status = 0;
+            currentNoteIndex.current++;
+          }
+
           TAP_RUN_TIMES.current.push(scrollX.current + 25);
         }
       },
     }));
-    // No olvides limpiar el metrónomo cuando el componente se desmonte
+    // No olvides limpiar el metrónomo cuando el componente se desmonteconsoc
     useEffect(() => {
       return () => {
         metronomeRef.current?.stop();
@@ -417,7 +495,8 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         isDragging.current = true;
         lastMouseX.current = e.clientX;
 
-        canvas.setPointerCapture(e.pointerId);
+        canvasRef.current.style.cursor = "move";
+        canvasRef.current!.style.cursor = 'url("/assets/grabi.cur"), grabbing';
       };
 
       const onPointerMove = (e: PointerEvent) => {
@@ -427,6 +506,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
       const onPointerUp = () => {
         isDragging.current = false;
+        canvasRef.current.style.cursor = "pointer";
       };
 
       canvas.addEventListener("pointerdown", onPointerDown);
@@ -442,14 +522,68 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       };
     }, [fontLoaded]);
 
+    const [showDrag, setShowDrag] = useState(false);
+    const [showReset, setShowReset] = useState(false);
+
+    const handleReset = () => {
+      // stop animation
+      cancelAnimationFrame(requestRef.current);
+
+      // stop audio
+      metronomeRef.current?.stop();
+
+      // reset refs
+      posIndex.current = 0;
+      scrollX.current = 0;
+      scrollXBase.current = 0;
+      timeBase.current = 0;
+      speedRef.current = 0;
+
+      TAP_RUN_TIMES.current = [];
+
+      // reset timing
+      startTimeRef.current = 0;
+
+      onComplete();
+
+      // redraw limpio
+      const ctx = ctxCanvasRef.current;
+      if (ctx) {
+        draw(ctx, 0, window.innerWidth);
+      }
+
+      // UI
+      setShowReset(false);
+    };
+
     return (
       <div style={{ background: "transparent", width: "100%" }}>
         {!fontLoaded ? null : (
-          <canvas
-            ref={canvasRef}
-            className="cursor-pointer"
-            style={{ touchAction: "none" }}
-          />
+          <div className="relative group">
+            <canvas
+              ref={canvasRef}
+              className="cursor-pointer"
+              style={{ touchAction: "none" }}
+            />
+
+            {showDrag && (
+              <div className="absolute -top-5 right-5 flex items-center justify-center pointer-events-none animate-pulse">
+                <div className="bg-black/35 px-2 py-1 rounded-lg text-white text-xs backdrop-blur-sm">
+                  Drag for review
+                </div>
+              </div>
+            )}
+            {showReset && (
+              <div
+                className="absolute -top-5 right-5 flex items-center justify-center cursor-pointer"
+                onClick={handleReset}
+              >
+                <div className="bg-black/40 px-2 py-1 rounded-lg text-white text-xs backdrop-blur-sm hover:bg-black/60">
+                  Reset
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     );
