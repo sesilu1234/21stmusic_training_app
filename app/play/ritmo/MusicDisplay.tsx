@@ -584,7 +584,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       // reset timing
       startTimeRef.current = 0;
 
-      onComplete();
+      onComplete?.();
 
       // redraw limpio
       const ctx = ctxCanvasRef.current;
