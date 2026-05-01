@@ -395,7 +395,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       handleStart: (isPlaying: boolean) => {
         if (!isPlaying) {
           if (!fontLoaded) {
-            onComplete([]);
+            onComplete?.([]);
             return;
           }
 
