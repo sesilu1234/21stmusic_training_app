@@ -103,6 +103,11 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     const HEIGHT = 120;
     const pixels = 50;
 
+    const w = typeof window !== "undefined" ? window.innerWidth : 0;
+
+    const translatedRef = useRef(
+      w < 710 ? 0 : w < 1070 ? 100 : w < 1400 ? 250 : 470,
+    );
     const STATE = {
       CORRECT: 0,
       FAILED: 1,
@@ -189,7 +194,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     ) => {
       ctx.clearRect(0, 0, width * 2, HEIGHT * 2); // Multiplied by 2 for DPR safety
       ctx.save();
-      ctx.translate(-scrollX + 470, 0);
+      ctx.translate(-scrollX + translatedRef.current, 0);
 
       const midY = HEIGHT / 2;
 
@@ -271,7 +276,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       ctx.restore();
 
       // Playhead (Static)
-      const x = 496;
+      const x = 26 + translatedRef.current;
       const top = 10;
       const size = 7;
       const lineHeight = HEIGHT - 50;
