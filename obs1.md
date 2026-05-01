@@ -39,24 +39,12 @@ y si me paso un intervalo sin haberle dado, se pone a rojo
 
 ---
 
-pulsar la barra antes da error : condition para que no haga nada hasta que cargue font, o canvas
-que no clickee cuano llegas al final
-al pulsar barra de nuevo : se genera una nueva score random ( no lo esta haciendo), y se dejan de pintar los taps y cross o checks rojos y verdes
-
-ocurre si tapeas al final despues de la ultima nota
-
-MusicDisplay.tsx:395 Uncaught TypeError: Cannot read properties of undefined (reading 'time')
-at SimpleMovingScore.useImperativeHandle [as handleStart] (MusicDisplay.tsx:395:36)
-at RitmoGame.useCallback[handleTap] (page.tsx:41:23)
-at RitmoGame.useEffect.handleKeyDown (page.tsx:60:9)
-
-aademas, al reiniciar con pulsar barra reitinalize todo, tambien la currentNoteIndex
-ademas, al reinicar con pulsar barra ya no puedes tapear, ya no hace nada
-
-al pulsar reset , basicamente lo mismo, ya esta roto
-
 mejorar tiempos : printear cuanddo pulso
 
 poner que cuano acabe de muestre el marcador
 
 poner que si golpeas cuando no hay ninguna nota, tambien pongaa una X o algo mosstrando mal
+
+---
+
+counter de tiempos, cuadradito

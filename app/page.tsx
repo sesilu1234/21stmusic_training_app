@@ -171,7 +171,7 @@ export default function Home() {
                 alt="logo"
               />
               <div className="flex flex-col min-w-0">
-                <span className="text-white italic font-black tracking-tighter text-sm md:text-xl lg:text-2xl leading-tight ">
+                <span className="text-white italic font-black tracking-tighter text-sm md:text-xl lg:text-5xl leading-tight ">
                   21st Century Music
                 </span>
                 <span className="font-light tracking-widest text-[6px] md:text-[8px] uppercase text-amber-400">
@@ -217,8 +217,8 @@ export default function Home() {
           {view === "juegos" && !showAcordesMenu && (
             <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
               <header className="mb-6 md:mb-10 text-center px-2">
-                <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl italic font-black tracking-tighter text-white leading-none uppercase">
-                  Elige tu <span className="text-amber-400">D</span>esafío
+                <h1 className="text-lg sm:text-5xl md:text-7xl lg:text-5xl italic  tracking-tighter text-white leading-none">
+                  escuelademusicamoderna.com
                 </h1>
               </header>
 

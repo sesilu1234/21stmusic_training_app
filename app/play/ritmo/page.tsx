@@ -17,16 +17,16 @@ export default function RitmoGame() {
   const onGameEnd = useCallback((data: number[]) => {
     setIsPlaying(false);
 
-    fetch("/api/save", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        timeline: data,
-        taps: tapsRef.current,
-      }),
-    });
+    // fetch("/api/save", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({
+    //     timeline: data,
+    //     taps: tapsRef.current,
+    //   }),
+    // });
   }, []);
 
   const handleTap = useCallback(() => {

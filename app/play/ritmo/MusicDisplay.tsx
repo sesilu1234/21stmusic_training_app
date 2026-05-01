@@ -78,7 +78,25 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       null,
     );
 
+    const gameRef = useRef<ReturnType<typeof createGameState> | null>(null);
+
     const TAP_RUN_TIMES = useRef<number[]>([]);
+
+    const notFirstTime = useRef<boolean>(false);
+
+    //
+
+    const scrollX = useRef(0);
+    const scrollXBase = useRef(0);
+    const timeBase = useRef(0);
+    const posIndex = useRef(0);
+
+    //
+    //
+    const currentNoteIndex = useRef(0);
+
+    const FAIL_MARGIN_UPPER = 0.15;
+    const FAIL_MARGIN_LOWER = 0.01;
 
     // Constants for drawing
     const BEAT_WIDTH = 100;
@@ -91,62 +109,77 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       TO_COME: 2,
     } as const;
 
-    const MY_SCORE = useMemo(() => {
+    function createGameState(BPM: number) {
       const score = [
         { glyph: G.barline, beats: 0 },
         { glyph: G.quarterRest, beats: 1 },
         { glyph: G.quarterRest, beats: 1 },
         { glyph: G.quarterRest, beats: 1 },
         { glyph: G.quarterRest, beats: 1 },
-        ...createScore(4),
+        ...createScore(24),
       ];
 
       let xi = 0;
       score.forEach((item) => {
         item.xi = xi;
-        item.status = 2; // Initialize status here
+        item.status = 2;
         xi += item.beats > 0 ? (item.beats * BEAT_WIDTH) ** 0.9 : 15;
       });
 
-      return score;
-    }, []); // Empty array means "do this once on mount"
+      const SECONDS_PER_BEAT = 60 / BPM;
 
-    const SECONDS_PER_BEAT = 60 / BPM;
-    let acc = 0;
+      let acc = 0;
+      const TIME_LINE = score
+        .filter((ele) => ele.beats !== 0)
+        .map((ele) => {
+          const t = acc;
+          acc += ele.beats * SECONDS_PER_BEAT;
+          return t;
+        });
 
-    const TIME_LINE = MY_SCORE.filter((ele) => ele.beats !== 0) // Only rhythmic elements
-      .reduce((list, ele) => {
-        list.push(acc); // Push the current start time
-        acc += ele.beats * SECONDS_PER_BEAT;
-        return list;
-      }, []);
+      TIME_LINE.push(acc);
 
-    TIME_LINE.push(acc); // Push the final duration/end point
+      acc = 0;
+      const TIME_LINE_NOTES = score
+        .map((item, i) => {
+          const t = acc;
+          if (item.beats !== 0) acc += item.beats * SECONDS_PER_BEAT;
+          if (VALUES.some((v) => v.note === item.glyph)) {
+            return { index: i, time: t };
+          }
+          return null;
+        })
+        .filter(Boolean);
 
-    // 2. LENGTH_LINE: The xi positions, omitting all barlines except the last one
-    const LENGTH_LINE = MY_SCORE.filter((item, index) => {
-      const isBarline = item.glyph === G.barline;
-      const isLast = index === MY_SCORE.length - 1;
-      return !isBarline || isLast;
-    }).map((item) => item.xi);
+      const LENGTH_LINE = score
+        .filter((item, index) => {
+          const isBarline = item.glyph === G.barline;
+          const isLast = index === score.length - 1;
+          return !isBarline || isLast;
+        })
+        .map((item) => item.xi);
 
-    TIME_LINE.push(acc); // Push the final duration/end point
+      return { score, TIME_LINE, LENGTH_LINE, TIME_LINE_NOTES };
+    }
 
-    acc = 0;
+    function initGame() {
+      console.log("ewwe");
+      gameRef.current = createGameState(BPM);
 
-    const TIME_LINE_NOTES = MY_SCORE.map((item, i) => {
-      const currentTime = acc;
+      currentNoteIndex.current = 0;
+      posIndex.current = 0;
 
-      if (item.beats !== 0) {
-        acc += item.beats * SECONDS_PER_BEAT;
-      }
+      scrollX.current = 0;
+      scrollXBase.current = 0;
+      timeBase.current = 0;
+      speedRef.current = 0;
 
-      if (VALUES.some((v) => v.note === item.glyph)) {
-        return { index: i, time: currentTime };
-      }
+      TAP_RUN_TIMES.current = [];
+    }
 
-      return null;
-    }).filter(Boolean) as { index: number; time: number }[];
+    if (!gameRef.current) {
+      initGame();
+    }
 
     // 1. The core drawing logic (reusable for static and animated frames)
     const draw = (
@@ -163,7 +196,10 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       // Staff line
       ctx.beginPath();
       ctx.moveTo(25, midY);
-      ctx.lineTo(MY_SCORE[MY_SCORE.length - 1].xi + 25, midY);
+      ctx.lineTo(
+        gameRef.current!.score[gameRef.current!.score.length - 1].xi + 25,
+        midY,
+      );
       ctx.strokeStyle = "#222";
       ctx.lineWidth = 1;
       ctx.stroke();
@@ -183,7 +219,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       //   cursorX += item.beats > 0 ? (item.beats * BEAT_WIDTH) ** 0.9 : 15;
       // });
 
-      MY_SCORE.forEach((item, j) => {
+      gameRef.current!.score.forEach((item, j) => {
         let y = item.glyph === G.barline ? midY + pixels / 2 : midY;
         let x = item.xi + 25;
 
@@ -250,19 +286,6 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       ctx.fillRect(x - 1, top + size, 2, lineHeight);
     };
 
-    const scrollX = useRef(0);
-    const scrollXBase = useRef(0);
-    const timeBase = useRef(0);
-    const posIndex = useRef(0);
-
-    //
-    //
-    const currentNoteIndex = useRef(0);
-    const prevAppearanceNote = useRef(0);
-    const nextAppearanceNote = useRef(0);
-    const FAIL_MARGIN_UPPER = 0.15;
-    const FAIL_MARGIN_LOWER = 0.01;
-
     //
     //
     // 2. Animation loop
@@ -286,6 +309,12 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       const ctx = ctxCanvasRef.current;
       if (!ctx) return;
 
+      const game = gameRef.current!;
+      const score = game.score;
+      const TIME_LINE = game.TIME_LINE;
+      const TIME_LINE_NOTES = game.TIME_LINE_NOTES;
+      const LENGTH_LINE = game.LENGTH_LINE;
+
       const timecurrent = getCtx().currentTime;
 
       if (
@@ -293,38 +322,10 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         timecurrent >
           startTimeRef.current +
             TIME_LINE_NOTES[currentNoteIndex.current].time +
-            FAIL_MARGIN_UPPER //timeline no considera los baarlines entonces no encaja con el indice . una opcion es en notesArrayIndexes poner su time tambien
+            FAIL_MARGIN_UPPER
       ) {
-        MY_SCORE[TIME_LINE_NOTES[currentNoteIndex.current].index].status = 1;
+        score[TIME_LINE_NOTES[currentNoteIndex.current].index].status = 1;
         currentNoteIndex.current++;
-      }
-
-      if (posIndex.current >= TIME_LINE.length - 0) {
-        scrollX.current = LENGTH_LINE[LENGTH_LINE.length - 1];
-
-        speedRef.current = 70;
-        cancelAnimationFrame(requestRef.current);
-        draw(ctx, scrollX.current, window.innerWidth);
-        metronomeRef.current?.stop();
-        setShowReset(false);
-        setShowDrag(true);
-
-        if (onComplete) {
-          let acc = 0;
-
-          const data = MY_SCORE.filter((ele) => ele.beats !== 0)
-            .reduce<number[]>((list, ele) => {
-              if (ele.glyph === G.eighth) {
-                list.push(acc);
-              }
-              acc += ele.beats * SECONDS_PER_BEAT;
-              return list;
-            }, [])
-            .map((ele) => ele + startTimeRef.current);
-
-          onComplete(data);
-        }
-        return;
       }
 
       if (timecurrent > startTimeRef.current + TIME_LINE[posIndex.current]) {
@@ -333,11 +334,40 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
         posIndex.current++;
 
-        speedRef.current =
-          (LENGTH_LINE[posIndex.current] - scrollXBase.current) /
-          (startTimeRef.current +
-            TIME_LINE[posIndex.current] -
-            timeBase.current);
+        if (posIndex.current >= TIME_LINE.length) {
+          scrollX.current = LENGTH_LINE[LENGTH_LINE.length - 1];
+
+          cancelAnimationFrame(requestRef.current);
+          draw(ctx, scrollX.current, window.innerWidth);
+          metronomeRef.current?.stop();
+          setShowReset(false);
+          setShowDrag(true);
+
+          if (onComplete) {
+            let acc = 0;
+
+            const data = score
+              .filter((ele) => ele.beats !== 0)
+              .reduce<number[]>((list, ele) => {
+                if (ele.glyph === G.eighth) {
+                  list.push(acc);
+                }
+                acc += ele.beats * (60 / BPM);
+                return list;
+              }, [])
+              .map((ele) => ele + startTimeRef.current);
+
+            onComplete(data);
+          }
+
+          return;
+        } else {
+          speedRef.current =
+            (LENGTH_LINE[posIndex.current] - scrollXBase.current) /
+            (startTimeRef.current +
+              TIME_LINE[posIndex.current] -
+              timeBase.current);
+        }
       }
 
       scrollX.current =
@@ -364,12 +394,16 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     useImperativeHandle(ref, () => ({
       handleStart: (isPlaying: boolean) => {
         if (!isPlaying) {
-          posIndex.current = 0;
-          scrollX.current = 0;
-          scrollXBase.current = 0;
-          timeBase.current = 0;
+          if (!fontLoaded) {
+            onComplete([]);
+            return;
+          }
 
-          TAP_RUN_TIMES.current = [];
+          if (notFirstTime.current) {
+            initGame();
+          }
+
+          notFirstTime.current = true;
 
           const canvas = canvasRef.current;
           if (!canvas) return;
@@ -386,16 +420,22 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           metronomeRef.current.start(startTimeRef.current);
           setShowReset(true);
           setShowDrag(false);
+
           requestAnimationFrame(animate);
         } else {
-          const currentTapTime = getCtx().currentTime - beforeStart.current;
+          const game = gameRef.current!;
+          const TIME_LINE_NOTES = game.TIME_LINE_NOTES;
+          const score = game.score;
+
+          const currentTapTime = getCtx().currentTime - startTimeRef.current;
           const note = TIME_LINE_NOTES[currentNoteIndex.current];
 
           if (
+            note &&
             currentTapTime >= note.time + FAIL_MARGIN_LOWER &&
             currentTapTime <= note.time + FAIL_MARGIN_UPPER
           ) {
-            MY_SCORE[note.index].status = 0;
+            score[note.index].status = 0;
             currentNoteIndex.current++;
           }
 
@@ -526,20 +566,20 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     const [showReset, setShowReset] = useState(false);
 
     const handleReset = () => {
+      //
+
+      //
+      initGame();
+
+      //
+
+      notFirstTime.current = false;
+
       // stop animation
       cancelAnimationFrame(requestRef.current);
 
       // stop audio
       metronomeRef.current?.stop();
-
-      // reset refs
-      posIndex.current = 0;
-      scrollX.current = 0;
-      scrollXBase.current = 0;
-      timeBase.current = 0;
-      speedRef.current = 0;
-
-      TAP_RUN_TIMES.current = [];
 
       // reset timing
       startTimeRef.current = 0;
@@ -591,4 +631,4 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 );
 
 SimpleMovingScore.displayName = "SimpleMovingScore";
-export default SimpleMovingScore;
+export default React.memo(SimpleMovingScore);
