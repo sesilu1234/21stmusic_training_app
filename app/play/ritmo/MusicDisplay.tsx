@@ -321,7 +321,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         currentNoteIndex.current < TIME_LINE_NOTES.length &&
         timecurrent >
           startTimeRef.current +
-            TIME_LINE_NOTES[currentNoteIndex.current].time +
+            TIME_LINE_NOTES[currentNoteIndex.current]!.time +
             FAIL_MARGIN_UPPER
       ) {
         score[TIME_LINE_NOTES[currentNoteIndex.current].index].status = 1;
