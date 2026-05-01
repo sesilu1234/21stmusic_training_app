@@ -546,7 +546,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
       const onPointerUp = () => {
         isDragging.current = false;
-        canvasRef.current.style.cursor = "pointer";
+        canvasRef.current!.style.cursor = "pointer";
       };
 
       canvas.addEventListener("pointerdown", onPointerDown);
