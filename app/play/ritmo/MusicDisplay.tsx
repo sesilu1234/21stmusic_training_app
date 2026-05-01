@@ -535,7 +535,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         isDragging.current = true;
         lastMouseX.current = e.clientX;
 
-        canvasRef.current.style.cursor = "move";
+        canvasRef.current!.style.cursor = "move";
         canvasRef.current!.style.cursor = 'url("/assets/grabi.cur"), grabbing';
       };
 
