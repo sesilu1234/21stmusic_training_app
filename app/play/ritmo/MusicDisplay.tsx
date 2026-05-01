@@ -106,7 +106,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     const w = typeof window !== "undefined" ? window.innerWidth : 0;
 
     const translatedRef = useRef(
-      w < 710 ? 0 : w < 1070 ? 100 : w < 1400 ? 250 : 470,
+      w < 710 ? 30 : w < 1070 ? 100 : w < 1400 ? 250 : 470,
     );
     const STATE = {
       CORRECT: 0,
