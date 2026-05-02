@@ -58,7 +58,7 @@ export interface MusicRef {
 }
 interface SimpleMovingScoreProps {
   BPM?: number;
-  onComplete?: (data: number[]) => void;
+  onComplete?: (endType: string, data: number[]) => void;
 }
 
 const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
@@ -349,20 +349,20 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           setShowDrag(true);
 
           if (onComplete) {
-            let acc = 0;
+            // let acc = 0;
 
-            const data = score
-              .filter((ele) => ele.beats !== 0)
-              .reduce<number[]>((list, ele) => {
-                if (ele.glyph === G.eighth) {
-                  list.push(acc);
-                }
-                acc += ele.beats * (60 / BPM);
-                return list;
-              }, [])
-              .map((ele) => ele + startTimeRef.current);
+            // const data = score
+            //   .filter((ele) => ele.beats !== 0)
+            //   .reduce<number[]>((list, ele) => {
+            //     if (ele.glyph === G.eighth) {
+            //       list.push(acc);
+            //     }
+            //     acc += ele.beats * (60 / BPM);
+            //     return list;
+            //   }, [])
+            //   .map((ele) => ele + startTimeRef.current);
 
-            onComplete(data);
+            onComplete("end", score);
           }
 
           return;
@@ -400,7 +400,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       handleStart: (isPlaying: boolean) => {
         if (!isPlaying) {
           if (!fontLoaded) {
-            onComplete?.([]);
+            onComplete?.("reset", []);
             return;
           }
 
@@ -589,7 +589,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       // reset timing
       startTimeRef.current = 0;
 
-      onComplete?.([]);
+      onComplete?.("reset", []);
 
       // redraw limpio
       const ctx = ctxCanvasRef.current;

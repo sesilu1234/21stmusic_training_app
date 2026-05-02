@@ -11,6 +11,12 @@ export default function RitmoGame() {
   const [flash, setFlash] = useState(false);
   const [showScore, setShowScore] = useState(false);
 
+  const [scoreData, setScoreData] = useState({
+    hits: 0,
+    misses: 0,
+    percentage: 0,
+  });
+
   const [bpm, setBpm] = useState(120);
   const [measures] = useState(24);
   const [currentTick, setCurrentTick] = useState(1);
@@ -19,8 +25,19 @@ export default function RitmoGame() {
   const tapsRef = useRef<{ id: number; time: number }[]>([]);
   const musicRef = useRef<{ handleStart: (isPlaying: boolean) => void }>(null);
 
-  const onGameEnd = useCallback((data: number[]) => {
+  const onGameEnd = useCallback((endType: any, data: any[] = []) => {
     setIsPlaying(false);
+
+    if (endType == "reset") return;
+    const totalMeasures = 24;
+    const randomHits = Math.floor(Math.random() * 6) + 18;
+
+    setScoreData({
+      hits: randomHits,
+      misses: totalMeasures - randomHits,
+      percentage: Math.round((randomHits / totalMeasures) * 100),
+    });
+
     setShowScore(true);
   }, []);
 
@@ -72,30 +89,50 @@ export default function RitmoGame() {
       className="min-h-screen flex flex-col bg-slate-900 bg-cover bg-center text-white font-sans relative"
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
-      {/* Pop-up de Marcador Minimalista */}
+      {/* Pop-up de Marcador */}
       {showScore && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-300">
-          <div className="relative bg-zinc-900/90 border border-white/10 p-10 rounded-[2.5rem] shadow-2xl flex flex-col items-center max-w-[280px] w-full">
-            {/* Botón Cerrar (X) */}
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="relative bg-zinc-950 border border-white/10 p-10 rounded-[2.5rem] shadow-2xl flex flex-col items-center max-w-[280px] w-full border-t-white/20">
             <button
               onClick={() => setShowScore(false)}
-              className="absolute top-5 right-6 text-zinc-500 hover:text-white transition-colors text-xl font-light"
+              className="absolute top-6 right-8 text-zinc-600 hover:text-white transition-colors text-xl font-light"
             >
               ✕
             </button>
 
-            <div className="flex flex-col items-center">
-              <span className="text-[9px] tracking-[0.4em] opacity-40 uppercase font-black mb-1">
-                Accuracy
+            <div className="flex flex-col items-center mb-8">
+              <span className="text-[9px] tracking-[0.4em] text-zinc-500 uppercase font-bold mb-3">
+                Performance
               </span>
-
               <div className="flex items-baseline gap-1">
                 <span className="text-6xl font-black italic tracking-tighter text-white">
-                  85
+                  {scoreData.percentage}
                 </span>
-                <span className="text-xl font-bold text-amber-500">%</span>
+                <span className="text-xl font-bold text-amber-500/80">%</span>
               </div>
             </div>
+
+            <div className="w-full space-y-4">
+              <div className="flex items-center justify-between px-5 py-3 bg-white/[0.03] rounded-2xl border border-white/[0.05]">
+                <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-medium">
+                  Measures OK
+                </span>
+                <span className="text-xl font-black text-emerald-500 italic">
+                  {scoreData.hits}
+                </span>
+              </div>
+              <div className="flex items-center justify-between px-5 py-3 bg-white/[0.03] rounded-2xl border border-white/[0.05]">
+                <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-medium">
+                  Wrong ones
+                </span>
+                <span className="text-xl font-black text-rose-500 italic">
+                  {scoreData.misses}
+                </span>
+              </div>
+            </div>
+            <p className="mt-8 text-[8px] tracking-[0.2em] text-zinc-600 uppercase font-bold">
+              Tap 'X' to restart
+            </p>
           </div>
         </div>
       )}
@@ -120,14 +157,14 @@ export default function RitmoGame() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4 w-full md:w-auto justify-center md:justify-start">
               <div className="flex flex-col items-center">
-                <span className="text-[8px] md:text-[10px] tracking-[0.25em] text-black/60 font-semibold uppercase">
+                <span className="text-[8px] md:text-[10px] tracking-[0.25em] text-black/40 font-semibold uppercase">
                   Beat
                 </span>
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white text-black flex items-center justify-center text-xl md:text-2xl font-black italic shadow-md">
                   {currentTick}
                 </div>
               </div>
-              <h2 className="text-xl md:text-2xl font-black italic uppercase tracking-tight text-white mt-3">
+              <h2 className="text-xl md:text-2xl font-black italic uppercase tracking-tight text-white mt-4">
                 Pulsa al{" "}
                 <span className="bg-white text-black px-2 py-[1px] rounded">
                   ritmo
@@ -135,37 +172,47 @@ export default function RitmoGame() {
               </h2>
             </div>
 
-            <div className="w-full md:max-w-xs lg:max-w-sm bg-black/60 backdrop-blur-xl p-4 rounded-3xl border border-white/5">
-              <div className="flex flex-col gap-2 w-full">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[9px] tracking-[0.3em] opacity-40 uppercase font-black text-white">
-                    Tempo
-                  </span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl md:text-3xl font-black italic text-amber-400 tracking-tighter">
-                      {localBpm}
+            {/* Widget de Configuración */}
+            <div className="w-full md:max-w-xs lg:max-w-sm">
+              {/* Información de Sesión (BPM . MEASURES) */}
+              <div className="flex justify-end gap-2 mb-2 px-4 opacity-80 text-[9px] font-bold tracking-[0.2em] uppercase italic">
+                <span>{localBpm} BPM</span>
+                <span className="text-black opacity-60">·</span>
+                <span>{measures} Measures</span>
+              </div>
+
+              <div className="bg-black/60 backdrop-blur-xl p-4 rounded-3xl border border-white/5">
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-[9px] tracking-[0.3em] opacity-40 uppercase font-black text-white">
+                      Tempo
                     </span>
-                    <span className="text-[9px] font-bold opacity-30 text-white">
-                      BPM
-                    </span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl md:text-3xl font-black italic text-amber-400 tracking-tighter">
+                        {localBpm}
+                      </span>
+                      <span className="text-[9px] font-bold opacity-30 text-white">
+                        BPM
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <input
-                  type="range"
-                  min="40"
-                  max="140"
-                  value={localBpm}
-                  disabled={isPlaying}
-                  onChange={(e) => setLocalBpm(Number(e.target.value))}
-                  onMouseUp={() => setBpm(localBpm)}
-                  onTouchEnd={() => setBpm(localBpm)}
-                  className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-white"
-                />
-                <div className="flex justify-between text-[7px] font-bold opacity-20 tracking-widest uppercase">
-                  <span>Largo</span>
-                  <span>Andante</span>
-                  <span>Allegro</span>
-                  <span>Presto</span>
+                  <input
+                    type="range"
+                    min="40"
+                    max="140"
+                    value={localBpm}
+                    disabled={isPlaying}
+                    onChange={(e) => setLocalBpm(Number(e.target.value))}
+                    onMouseUp={() => setBpm(localBpm)}
+                    onTouchEnd={() => setBpm(localBpm)}
+                    className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-white"
+                  />
+                  <div className="flex justify-between text-[7px] font-bold opacity-20 tracking-widest uppercase">
+                    <span>Largo</span>
+                    <span>Andante</span>
+                    <span>Allegro</span>
+                    <span>Presto</span>
+                  </div>
                 </div>
               </div>
             </div>
