@@ -25,17 +25,24 @@ export default function RitmoGame() {
   const tapsRef = useRef<{ id: number; time: number }[]>([]);
   const musicRef = useRef<{ handleStart: (isPlaying: boolean) => void }>(null);
 
-  const onGameEnd = useCallback((endType: any, data: any[] = []) => {
+  const onGameEnd = useCallback((endType: any, data: any = {}) => {
     setIsPlaying(false);
 
     if (endType == "reset") return;
-    const totalMeasures = 24;
-    const randomHits = Math.floor(Math.random() * 6) + 18;
+
+    console.log(data);
 
     setScoreData({
-      hits: randomHits,
-      misses: totalMeasures - randomHits,
-      percentage: Math.round((randomHits / totalMeasures) * 100),
+      hits: data.correct_measures,
+      misses: data.failed_measures,
+      percentage: Math.round(
+        ((data.correct_notes / (data.correct_notes + data.failed_notes)) *
+          100) /
+          Math.max(
+            1,
+            tapsRef.current.length / (data.correct_notes + data.failed_notes),
+          ),
+      ),
     });
 
     setShowScore(true);
@@ -160,8 +167,12 @@ export default function RitmoGame() {
                 <span className="text-[8px] md:text-[10px] tracking-[0.25em] text-black/40 font-semibold uppercase">
                   Beat
                 </span>
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white text-black flex items-center justify-center text-xl md:text-2xl font-black italic shadow-md">
-                  {currentTick}
+
+                <div
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white text-black flex items-center justify-center text-xl md:text-2xl font-black italic
+  shadow-[4px_4px_0px_#000] border-2 border-black"
+                >
+                  {currentTick === 0 ? 1 : currentTick}
                 </div>
               </div>
               <h2 className="text-xl md:text-2xl font-black italic uppercase tracking-tight text-white mt-4">
@@ -220,7 +231,12 @@ export default function RitmoGame() {
         </div>
 
         <div className="w-full max-w-[95%] bg-white rounded-[2rem] md:rounded-[2.5rem] h-40 md:h-48 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden">
-          <SimpleMovingScore ref={musicRef} BPM={120} onComplete={onGameEnd} />
+          <SimpleMovingScore
+            ref={musicRef}
+            BPM={120}
+            onComplete={onGameEnd}
+            setBeat={setCurrentTick}
+          />
         </div>
 
         <div

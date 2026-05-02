@@ -58,11 +58,12 @@ export interface MusicRef {
 }
 interface SimpleMovingScoreProps {
   BPM?: number;
-  onComplete?: (endType: string, data: number[]) => void;
+  onComplete?: (endType: string, data: any) => void;
+  setBeat?: (beat: number) => void;
 }
 
 const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
-  ({ BPM = 100, onComplete }, ref) => {
+  ({ BPM = 100, onComplete, setBeat }, ref) => {
     // ... resto del componente+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [fontLoaded, setFontLoaded] = useState(false);
@@ -322,6 +323,13 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
       const timecurrent = getCtx().currentTime;
 
+      const secondsPerBeat = 60 / BPM;
+      const beatFloat = (timecurrent - startTimeRef.current) / secondsPerBeat;
+
+      const beat = Math.floor(beatFloat) % 4;
+
+      setBeat?.(beat + 1);
+
       if (
         currentNoteIndex.current < TIME_LINE_NOTES.length &&
         timecurrent >
@@ -349,22 +357,54 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           setShowDrag(true);
 
           if (onComplete) {
-            // let acc = 0;
+            let bag: any[][] = [];
+            let bag_aux: any[] = [];
 
-            // const data = score
-            //   .filter((ele) => ele.beats !== 0)
-            //   .reduce<number[]>((list, ele) => {
-            //     if (ele.glyph === G.eighth) {
-            //       list.push(acc);
-            //     }
-            //     acc += ele.beats * (60 / BPM);
-            //     return list;
-            //   }, [])
-            //   .map((ele) => ele + startTimeRef.current);
+            let correct_notes = 0;
+            let failed_notes = 0;
 
-            onComplete("end", score);
+            for (const ele of score) {
+              if (ele.status === 0) correct_notes++;
+              if (ele.status === 1) failed_notes++;
+
+              if (ele.glyph === G.barline) {
+                bag.push([...bag_aux]);
+                bag_aux = [];
+              } else {
+                if (VALUES.some((v) => v.note === ele.glyph)) {
+                  bag_aux.push(ele);
+                }
+              }
+            }
+
+            if (bag_aux.length > 0) {
+              bag.push(bag_aux);
+            }
+
+            const measures_scores = bag.filter((group) => group.length > 0);
+
+            let correct_measures = 0;
+            let failed_measures = 0;
+
+            for (const measure of measures_scores) {
+              const allCorrect = measure.every((item) => item.status === 0);
+
+              if (allCorrect) {
+                correct_measures++;
+              } else {
+                failed_measures++;
+              }
+            }
+
+            const data = {
+              correct_notes,
+              failed_notes,
+              correct_measures,
+              failed_measures,
+            };
+
+            onComplete("end", data);
           }
-
           return;
         } else {
           speedRef.current =
@@ -590,6 +630,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       startTimeRef.current = 0;
 
       onComplete?.("reset", []);
+      setBeat?.(1);
 
       // redraw limpio
       const ctx = ctxCanvasRef.current;
