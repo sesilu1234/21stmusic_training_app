@@ -57,7 +57,7 @@ export interface MusicRef {
   handleStart: (isPlaying: boolean) => void;
 }
 interface SimpleMovingScoreProps {
-  BPM?: React.MutableRefObject<number>;
+  BPM: React.MutableRefObject<number>;
   onComplete?: (endType: string, data: any) => void;
   setBeat?: (beat: number) => void;
 }
