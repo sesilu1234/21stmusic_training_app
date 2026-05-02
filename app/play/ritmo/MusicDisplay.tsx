@@ -57,13 +57,13 @@ export interface MusicRef {
   handleStart: (isPlaying: boolean) => void;
 }
 interface SimpleMovingScoreProps {
-  BPM?: number;
+  BPM?: React.MutableRefObject<number>;
   onComplete?: (endType: string, data: any) => void;
   setBeat?: (beat: number) => void;
 }
 
 const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
-  ({ BPM = 100, onComplete, setBeat }, ref) => {
+  ({ BPM, onComplete, setBeat }, ref) => {
     // ... resto del componente+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [fontLoaded, setFontLoaded] = useState(false);
@@ -168,9 +168,39 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       return { score, TIME_LINE, LENGTH_LINE, TIME_LINE_NOTES };
     }
 
+    function computeTimeline(score: any[], BPM: number) {
+      const SECONDS_PER_BEAT = 60 / BPM;
+
+      let acc = 0;
+      const TIME_LINE = score
+        .filter((ele) => ele.beats !== 0)
+        .map((ele) => {
+          const t = acc;
+          acc += ele.beats * SECONDS_PER_BEAT;
+          return t;
+        });
+
+      TIME_LINE.push(acc);
+
+      acc = 0;
+      const TIME_LINE_NOTES = score
+        .map((item, i) => {
+          const t = acc;
+          if (item.beats !== 0) acc += item.beats * SECONDS_PER_BEAT;
+
+          if (VALUES.some((v) => v.note === item.glyph)) {
+            return { index: i, time: t };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      return { TIME_LINE, TIME_LINE_NOTES };
+    }
+
     function initGame() {
       console.log("ewwe");
-      gameRef.current = createGameState(BPM);
+      gameRef.current = createGameState(BPM.current);
 
       currentNoteIndex.current = 0;
       posIndex.current = 0;
@@ -323,7 +353,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
       const timecurrent = getCtx().currentTime;
 
-      const secondsPerBeat = 60 / BPM;
+      const secondsPerBeat = 60 / BPM.current;
       const beatFloat = (timecurrent - startTimeRef.current) / secondsPerBeat;
 
       const beat = Math.floor(beatFloat) % 4;
@@ -456,7 +486,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           ctxCanvasRef.current = canvas.getContext("2d");
 
           if (!metronomeRef.current) {
-            metronomeRef.current = createMetronome(BPM);
+            metronomeRef.current = createMetronome(BPM.current);
           }
 
           speedRef.current = 0;
@@ -486,6 +516,20 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
           TAP_RUN_TIMES.current.push(scrollX.current + 25);
         }
+      },
+      handleBPMChange: (bpm: number) => {
+        // stop old
+        metronomeRef.current?.stop();
+
+        // create new with updated BPM
+        metronomeRef.current = createMetronome(bpm);
+
+        // update timeline
+        const game = gameRef.current!;
+        const { TIME_LINE, TIME_LINE_NOTES } = computeTimeline(game.score, bpm);
+
+        game.TIME_LINE = TIME_LINE;
+        game.TIME_LINE_NOTES = TIME_LINE_NOTES;
       },
     }));
     // No olvides limpiar el metrónomo cuando el componente se desmonteconsoc
@@ -653,7 +697,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
             />
 
             {showDrag && (
-              <div className="absolute -top-5 right-5 flex items-center justify-center pointer-events-none animate-pulse">
+              <div className="absolute lg:-top-5 right-5 flex items-center justify-center pointer-events-none animate-pulse">
                 <div className="bg-black/35 px-2 py-1 rounded-lg text-white text-xs backdrop-blur-sm">
                   Drag for review
                 </div>

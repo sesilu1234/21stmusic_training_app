@@ -23,7 +23,12 @@ export default function RitmoGame() {
   const [localBpm, setLocalBpm] = useState(120);
 
   const tapsRef = useRef<{ id: number; time: number }[]>([]);
-  const musicRef = useRef<{ handleStart: (isPlaying: boolean) => void }>(null);
+  const musicRef = useRef<{
+    handleStart: (isPlaying: boolean) => void;
+    handleBPMChange: (bpm: number) => void;
+  }>(null);
+
+  const bpmRef = useRef<number>(120);
 
   const onGameEnd = useCallback((endType: any, data: any = {}) => {
     setIsPlaying(false);
@@ -90,6 +95,11 @@ export default function RitmoGame() {
     osc.start(time);
     osc.stop(time + 0.03);
   };
+
+  useEffect(() => {
+    bpmRef.current = bpm;
+    musicRef.current?.handleBPMChange(bpm);
+  }, [bpm]);
 
   return (
     <div
@@ -172,7 +182,7 @@ export default function RitmoGame() {
                   className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white text-black flex items-center justify-center text-xl md:text-2xl font-black italic
   shadow-[4px_4px_0px_#000] border-2 border-black"
                 >
-                  {currentTick === 0 ? 1 : currentTick}
+                  {currentTick < 1 ? 1 : currentTick}
                 </div>
               </div>
               <h2 className="text-xl md:text-2xl font-black italic uppercase tracking-tight text-white mt-4">
@@ -230,10 +240,10 @@ export default function RitmoGame() {
           </div>
         </div>
 
-        <div className="w-full max-w-[95%] bg-white rounded-[2rem] md:rounded-[2.5rem] h-40 md:h-48 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden">
+        <div className="w-full max-w-[95%] bg-white rounded-[2rem] md:rounded-[2.5rem] h-48 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden">
           <SimpleMovingScore
             ref={musicRef}
-            BPM={120}
+            BPM={bpmRef}
             onComplete={onGameEnd}
             setBeat={setCurrentTick}
           />
