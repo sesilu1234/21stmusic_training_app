@@ -96,8 +96,8 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     //
     const currentNoteIndex = useRef(0);
 
-    const FAIL_MARGIN_UPPER = 0.15;
-    const FAIL_MARGIN_LOWER = 0.01;
+    const FAIL_MARGIN_UPPER = 0.13;
+    const FAIL_MARGIN_LOWER = 0.025;
 
     // Constants for drawing
     const BEAT_WIDTH = 100;
@@ -503,6 +503,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           const score = game.score;
 
           const currentTapTime = getCtx().currentTime - startTimeRef.current;
+          console.log(currentTapTime);
           const note = TIME_LINE_NOTES[currentNoteIndex.current];
 
           if (
