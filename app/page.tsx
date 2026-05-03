@@ -1,6 +1,6 @@
 "use client";
 
-import { Music2, ArrowLeft, Sun, Moon } from "lucide-react"; // Añadidos Sun y Moon
+import { Music2, ArrowLeft, Sun, Moon } from "lucide-react";
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -80,6 +80,7 @@ const juegos: Juego[] = [
     bg: "bg-fuchsia-500/20",
     accent: "text-fuchsia-400",
     slug: "/play/intervalos",
+    hasSubmenu: true, // Habilitado submenú
   },
   {
     id: 6,
@@ -121,7 +122,8 @@ const historialTabla = [
 export default function Home() {
   const [view, setView] = useState<"juegos" | "progreso" | "notas">("juegos");
   const [showAcordesMenu, setShowAcordesMenu] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false); // Estado para el tema
+  const [showIntervalosMenu, setShowIntervalosMenu] = useState(false); // Estado para Intervalos
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [notas, setNotas] = useState<Nota[]>([
     {
       id: 1,
@@ -149,10 +151,10 @@ export default function Home() {
         className="fixed inset-0 bg-cover bg-center transition-transform duration-1000 ease-out z-0"
         style={{
           backgroundImage: "url('/assets/background.jpeg')",
-          transform: showAcordesMenu ? "scale(1.1)" : "scale(1)",
+          transform:
+            showAcordesMenu || showIntervalosMenu ? "scale(1.1)" : "scale(1)",
         }}
       >
-        {/* LÓGICA DE CAPA DE TEMA */}
         {isDarkMode ? (
           <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-[2px] transition-all duration-500" />
         ) : (
@@ -181,7 +183,6 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-3 md:gap-8 flex-shrink-0">
-              {/* BOTÓN DE TEMA */}
               <button
                 onClick={() => setIsDarkMode(!isDarkMode)}
                 className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors text-amber-400"
@@ -199,6 +200,7 @@ export default function Home() {
                   onClick={() => {
                     setView(key as any);
                     setShowAcordesMenu(false);
+                    setShowIntervalosMenu(false);
                   }}
                   className={`pb-0.5 flex flex-col md:flex-row items-center gap-1 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] transition-colors
                     ${view === key ? "text-white border-b border-amber-400" : "text-slate-400 hover:text-white"}`}
@@ -212,9 +214,9 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* MAIN (Resto del contenido se mantiene igual) */}
+        {/* MAIN */}
         <main className="flex-1 flex flex-col">
-          {view === "juegos" && !showAcordesMenu && (
+          {view === "juegos" && !showAcordesMenu && !showIntervalosMenu && (
             <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
               <header className="mb-6 md:mb-10 text-center px-2">
                 <h1 className="text-lg sm:text-5xl md:text-7xl lg:text-5xl italic  tracking-tighter text-white leading-none">
@@ -226,11 +228,12 @@ export default function Home() {
                 {juegos.map((j) => (
                   <button
                     key={j.id}
-                    onClick={() =>
-                      j.hasSubmenu
-                        ? setShowAcordesMenu(true)
-                        : (window.location.href = j.slug)
-                    }
+                    onClick={() => {
+                      if (j.titulo === "Acordes") setShowAcordesMenu(true);
+                      else if (j.titulo === "Intervalos")
+                        setShowIntervalosMenu(true);
+                      else window.location.href = j.slug;
+                    }}
                     className="group flex items-center md:flex-col md:items-start gap-4 md:gap-0 p-4 md:p-8 rounded-2xl md:rounded-3xl border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-[1.02] md:hover:scale-105 backdrop-blur-md transition-all text-left shadow-xl"
                   >
                     <div
@@ -305,6 +308,66 @@ export default function Home() {
                           </h3>
                           <p className="text-white/40 text-xs md:text-base font-light">
                             Acordes de 4 notas. Color y tensión.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* INTERVALOS SUBMENU */}
+          {view === "juegos" && showIntervalosMenu && (
+            <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
+              <div className="w-full max-w-4xl">
+                <button
+                  onClick={() => setShowIntervalosMenu(false)}
+                  className="group mb-6 md:mb-8 text-white/40 hover:text-fuchsia-400 text-[10px] uppercase tracking-[0.3em] transition-colors flex items-center gap-2"
+                >
+                  <ArrowLeft
+                    size={12}
+                    className="group-hover:-translate-x-1 transition-transform"
+                  />
+                  Volver
+                </button>
+                <h2 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl italic font-black text-white mb-8 md:mb-12 leading-tight uppercase">
+                  Modo de{" "}
+                  <span className="text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,0.3)]">
+                    Intervalos
+                  </span>
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10">
+                  <Link href="/play/intervalos/pentagrama" className="group">
+                    <div className="relative overflow-hidden bg-slate-900/60 p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] border border-white/10 transition-all duration-500 hover:border-fuchsia-500/50 hover:bg-slate-800/80 hover:-translate-y-1 shadow-xl">
+                      <div className="flex items-center md:flex-col md:items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 flex items-center justify-center text-fuchsia-400">
+                          <BookOpen size={24} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl md:text-3xl font-bold text-white mb-1 uppercase italic">
+                            Pentagrama
+                          </h3>
+                          <p className="text-white/40 text-xs md:text-base font-light">
+                            Identifica intervalos visualmente en partitura.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                  <Link href="/play/intervalos/diapason" className="group">
+                    <div className="relative overflow-hidden bg-slate-900/60 p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] border border-white/10 transition-all duration-500 hover:border-fuchsia-500/50 hover:bg-slate-800/80 hover:-translate-y-1 shadow-xl">
+                      <div className="flex items-center md:flex-col md:items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 flex items-center justify-center text-fuchsia-400">
+                          <Target size={24} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl md:text-3xl font-bold text-white mb-1 uppercase italic">
+                            Diapasón
+                          </h3>
+                          <p className="text-white/40 text-xs md:text-base font-light">
+                            Ubica y mide distancias sobre el mástil.
                           </p>
                         </div>
                       </div>

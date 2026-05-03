@@ -15,10 +15,8 @@ export default function IntervalosGame() {
     "b3",
     "3",
     "4",
-    "#4",
     "b5",
     "5",
-    "#5",
     "b6",
     "6",
     "b7",
@@ -133,11 +131,6 @@ export default function IntervalosGame() {
           <img
             src="/assets/logo21stCM_no_white_1.png"
             className="h-12 md:h-24 w-auto drop-shadow-2xl"
-            alt="logo"
-          />
-          <img
-            src="/assets/logo21stCM_no_white_1.png"
-            className="hidden sm:block h-12 md:h-24 w-auto drop-shadow-2xl"
             alt="logo"
           />
         </div>
