@@ -508,7 +508,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
           if (
             note &&
-            currentTapTime >= note.time + FAIL_MARGIN_LOWER &&
+            currentTapTime >= note.time - FAIL_MARGIN_LOWER &&
             currentTapTime <= note.time + FAIL_MARGIN_UPPER
           ) {
             score[note.index].status = 0;
