@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { getCtx } from "./metronome";
 import SimpleMovingScore from "./MusicDisplay";
 
+const MEASURE_OPTIONS = [4, 8, 12, 24];
+
 export default function RitmoGame() {
   const router = useRouter();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -18,7 +20,7 @@ export default function RitmoGame() {
   });
 
   const [bpm, setBpm] = useState(120);
-  const [measures] = useState(24);
+  const [measures, setMeasures] = useState(24);
   const [currentTick, setCurrentTick] = useState(1);
   const [localBpm, setLocalBpm] = useState(120);
 
@@ -26,16 +28,16 @@ export default function RitmoGame() {
   const musicRef = useRef<{
     handleStart: (isPlaying: boolean) => void;
     handleBPMChange: (bpm: number) => void;
+    handleMeasuresChange: () => void;
   }>(null);
 
   const bpmRef = useRef<number>(120);
+  const measuresRef = useRef<number>(124);
 
   const onGameEnd = useCallback((endType: any, data: any = {}) => {
     setIsPlaying(false);
 
     if (endType == "reset") return;
-
-    console.log(data);
 
     setScoreData({
       hits: data.correct_measures,
@@ -100,6 +102,13 @@ export default function RitmoGame() {
     bpmRef.current = bpm;
     musicRef.current?.handleBPMChange(bpm);
   }, [bpm]);
+
+  useEffect(() => {
+    measuresRef.current = measures;
+    musicRef.current?.handleMeasuresChange();
+  }, [measures]);
+
+  const [openMeasures, setOpenMeasures] = useState(false);
 
   return (
     <div
@@ -177,11 +186,7 @@ export default function RitmoGame() {
                 <span className="text-[8px] md:text-[10px] tracking-[0.25em] text-black/40 font-semibold uppercase">
                   Beat
                 </span>
-
-                <div
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white text-black flex items-center justify-center text-xl md:text-2xl font-black italic
-  shadow-[4px_4px_0px_#000] border-2 border-black"
-                >
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white text-black flex items-center justify-center text-xl md:text-2xl font-black italic shadow-[4px_4px_0px_#000] border-2 border-black">
                   {currentTick < 1 ? 1 : currentTick}
                 </div>
               </div>
@@ -194,45 +199,91 @@ export default function RitmoGame() {
             </div>
 
             {/* Widget de Configuración */}
-            <div className="w-full md:max-w-xs lg:max-w-sm">
-              {/* Información de Sesión (BPM . MEASURES) */}
+            <div className="w-full max-w-md md:max-w-xs lg:max-w-sm">
+              {/* Session info */}
               <div className="flex justify-end gap-2 mb-2 px-4 opacity-80 text-[9px] font-bold tracking-[0.2em] uppercase italic">
                 <span>{localBpm} BPM</span>
                 <span className="text-black opacity-60">·</span>
                 <span>{measures} Measures</span>
               </div>
 
-              <div className="bg-black/60 backdrop-blur-xl p-4 rounded-3xl border border-white/5">
-                <div className="flex flex-col gap-2 w-full">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-[9px] tracking-[0.3em] opacity-40 uppercase font-black text-white">
-                      Tempo
-                    </span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl md:text-3xl font-black italic text-amber-400 tracking-tighter">
-                        {localBpm}
+              <div className="bg-black/60 backdrop-blur-xl px-4 py-3 rounded-3xl border border-white/5">
+                <div className="flex items-center gap-3">
+                  {/* ── Tempo (left, grows) ── */}
+                  <div className="flex flex-col gap-4 flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[8px] tracking-[0.25em] opacity-40 uppercase font-black text-white">
+                        Tempo
                       </span>
-                      <span className="text-[9px] font-bold opacity-30 text-white">
-                        BPM
-                      </span>
+                      <div className="flex items-baseline gap-0.5">
+                        <span className="text-lg pr-1 font-black italic text-amber-400 tracking-tighter leading-none">
+                          {localBpm}
+                        </span>
+                        <span className="text-[8px] font-bold opacity-30 text-white">
+                          BPM
+                        </span>
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      min="40"
+                      max="140"
+                      value={localBpm}
+                      disabled={isPlaying}
+                      onChange={(e) => setLocalBpm(Number(e.target.value))}
+                      onMouseUp={() => setBpm(localBpm)}
+                      onTouchEnd={() => setBpm(localBpm)}
+                      className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-white disabled:opacity-40 disabled:cursor-not-allowed"
+                    />
+                    <div className="flex justify-between text-[6px] font-bold opacity-20 tracking-widest uppercase">
+                      <span>Largo</span>
+                      <span>Andante</span>
+                      <span>Allegro</span>
+                      <span>Presto</span>
                     </div>
                   </div>
-                  <input
-                    type="range"
-                    min="40"
-                    max="140"
-                    value={localBpm}
-                    disabled={isPlaying}
-                    onChange={(e) => setLocalBpm(Number(e.target.value))}
-                    onMouseUp={() => setBpm(localBpm)}
-                    onTouchEnd={() => setBpm(localBpm)}
-                    className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-white"
-                  />
-                  <div className="flex justify-between text-[7px] font-bold opacity-20 tracking-widest uppercase">
-                    <span>Largo</span>
-                    <span>Andante</span>
-                    <span>Allegro</span>
-                    <span>Presto</span>
+
+                  {/* ── Divider ── */}
+                  <div className="w-px self-stretch bg-white/8 shrink-0" />
+
+                  {/* ── Measures (right, fixed width) ── */}
+                  <div className="flex flex-col items-center gap-1.5 w-18 shrink-0 z-80">
+                    <span className="text-[8px] tracking-[0.25em] opacity-40 uppercase font-black text-white">
+                      Measures
+                    </span>
+                    <div className="relative w-16 z-80">
+                      <button
+                        disabled={isPlaying}
+                        onClick={() => setOpenMeasures((prev) => !prev)}
+                        className="w-full bg-white/5 border border-white/10 text-white text-sm font-black italic text-amber-400
+      rounded-xl px-2 py-1.5 flex items-center justify-center gap-1
+      disabled:opacity-40 disabled:cursor-not-allowed
+      hover:bg-white/10 transition-colors cursor-pointer z-80"
+                      >
+                        {measures}
+                      </button>
+
+                      {openMeasures && !isPlaying && (
+                        <div className="z-80 px-1 py-1 absolute top-full flex flex-col gap-1 mt-1 w-full bg-black/60  border border-white/10 rounded-xl shadow-xl overflow-hidden  animate-in fade-in zoom-in-95">
+                          {MEASURE_OPTIONS.map((opt) => (
+                            <div
+                              key={opt}
+                              onClick={() => {
+                                setMeasures(opt);
+                                setOpenMeasures(false);
+                              }}
+                              className={` py-1 rounded-lg text-center text-sm font-bold cursor-pointer z-80
+            hover:bg-white/10 transition-colors
+            ${measures === opt ? "text-amber-400" : "text-white"}`}
+                            >
+                              {opt}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {/* invisible spacer to match the label-row height of tempo */}
+                    <div className="h-[10px]" />
                   </div>
                 </div>
               </div>
@@ -240,10 +291,14 @@ export default function RitmoGame() {
           </div>
         </div>
 
-        <div className="w-full max-w-[95%] bg-white rounded-[2rem] md:rounded-[2.5rem] h-48 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden">
+        <div
+          className="w-full max-w-[95%] bg-white rounded-[2rem] md:rounded-[2.5rem] h-48 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden"
+          style={{ pointerEvents: openMeasures ? "none" : "auto" }}
+        >
           <SimpleMovingScore
             ref={musicRef}
             BPM={bpmRef}
+            measures={measuresRef}
             onComplete={onGameEnd}
             setBeat={setCurrentTick}
           />

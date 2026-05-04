@@ -58,12 +58,13 @@ export interface MusicRef {
 }
 interface SimpleMovingScoreProps {
   BPM: React.MutableRefObject<number>;
+  measures: React.MutableRefObject<number>;
   onComplete?: (endType: string, data: any) => void;
   setBeat?: (beat: number) => void;
 }
 
 const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
-  ({ BPM, onComplete, setBeat }, ref) => {
+  ({ BPM, measures, onComplete, setBeat }, ref) => {
     // ... resto del componente+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [fontLoaded, setFontLoaded] = useState(false);
@@ -122,7 +123,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         { glyph: G.quarterRest, beats: 1 },
         { glyph: G.quarterRest, beats: 1 },
         { glyph: G.quarterRest, beats: 1 },
-        ...createScore(4),
+        ...createScore(measures.current),
       ];
 
       let xi = 0;
@@ -199,7 +200,6 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     }
 
     function initGame() {
-      console.log("ewwe");
       gameRef.current = createGameState(BPM.current);
 
       currentNoteIndex.current = 0;
@@ -503,7 +503,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           const score = game.score;
 
           const currentTapTime = getCtx().currentTime - startTimeRef.current;
-          console.log(currentTapTime);
+
           const note = TIME_LINE_NOTES[currentNoteIndex.current];
 
           if (
@@ -531,6 +531,9 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
         game.TIME_LINE = TIME_LINE;
         game.TIME_LINE_NOTES = TIME_LINE_NOTES;
+      },
+      handleMeasuresChange: () => {
+        initGame();
       },
     }));
     // No olvides limpiar el metrónomo cuando el componente se desmonteconsoc
