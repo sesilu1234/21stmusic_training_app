@@ -197,7 +197,7 @@ export default function ChordsGame() {
               key={currentQuestion.image}
               src={`/assets/diapason_septimas/${currentQuestion.image}`}
               alt="Acorde"
-              className={`max-h-full max-w-full object-contain transition-all duration-300 rotate-90 ${isImageLoading ? "opacity-0" : "opacity-100"}`}
+              className={`max-h-full max-w-full object-contain transition-all duration-300  ${isImageLoading ? "opacity-0" : "opacity-100"}`}
             />
           </div>
 
