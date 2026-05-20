@@ -159,7 +159,7 @@ export default function DiapasonGame() {
 
         <div className="relative flex flex-col items-center w-full max-w-sm md:max-w-md mb-6 md:mb-10">
           <div
-            className={`bg-white p-4 md:p-8 rounded-[2rem] md:rounded-[3.5rem] shadow-2xl w-full h-40 md:h-56 flex items-center justify-center border-4 relative overflow-hidden transition-all duration-150 ${
+            className={`bg-none p-0 md:p-0 rounded-[2rem] md:rounded-[3.5rem]  w-full h-40 md:h-56 flex items-center justify-center border-0 relative overflow-hidden transition-all duration-150 ${
               showFeedback === "correct"
                 ? "border-green-500 scale-[1.02]"
                 : showFeedback === "wrong"
