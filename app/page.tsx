@@ -100,6 +100,15 @@ const juegos: Juego[] = [
     accent: "text-orange-400",
     slug: "/play/ritmo",
   },
+  {
+    id: 8,
+    titulo: "Melodías",
+    desc: "Crea, transporta y entrena tu oído con tus propias melodías.",
+    icon: Music2,
+    bg: "bg-teal-500/20",
+    accent: "text-teal-400",
+    slug: "/play/melodias",
+  },
 ];
 
 const historialTabla = [

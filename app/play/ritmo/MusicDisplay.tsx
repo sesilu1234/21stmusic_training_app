@@ -367,9 +367,16 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
             TIME_LINE_NOTES[currentNoteIndex.current]!.time +
             FAIL_MARGIN_UPPER
       ) {
-        score[TIME_LINE_NOTES[currentNoteIndex.current]!.index].status = 1;
+        const missedNote = TIME_LINE_NOTES[currentNoteIndex.current]!;
+        const relTime = timecurrent - startTimeRef.current;
+        console.log(
+          `[MISS AUTOMÁTICO] Nota index: ${missedNote.index}, Tiempo Nota: ${missedNote.time.toFixed(4)}s ` +
+          `marcada como FALLADA en ${relTime.toFixed(4)}s porque pasó el límite de +${(FAIL_MARGIN_UPPER * 1000).toFixed(0)}ms.`
+        );
+        score[missedNote.index].status = 1;
         currentNoteIndex.current++;
       }
+
 
       if (timecurrent > startTimeRef.current + TIME_LINE[posIndex.current]) {
         scrollXBase.current = scrollX.current;
@@ -505,6 +512,21 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           const currentTapTime = getCtx().currentTime - startTimeRef.current;
 
           const note = TIME_LINE_NOTES[currentNoteIndex.current];
+
+          if (note) {
+            const diff = currentTapTime - note.time;
+            const diffMs = diff * 1000;
+            const isHit = currentTapTime >= note.time - FAIL_MARGIN_LOWER && currentTapTime <= note.time + FAIL_MARGIN_UPPER;
+            
+            console.log(
+              `[TAP] Nota actual index: ${note.index}, Tiempo Nota: ${note.time.toFixed(4)}s, ` +
+              `Tiempo Tap: ${currentTapTime.toFixed(4)}s, Diferencia: ${diffMs > 0 ? "+" : ""}${diffMs.toFixed(1)}ms ` +
+              `[Margen: -${(FAIL_MARGIN_LOWER * 1000).toFixed(0)}ms a +${(FAIL_MARGIN_UPPER * 1000).toFixed(0)}ms] -> ` +
+              `${isHit ? "✅ HIT" : diffMs < 0 ? "❌ DEMASIADO PRONTO" : "❌ DEMASIADO TARDE"}`
+            );
+          } else {
+            console.log(`[TAP] Tap en ${currentTapTime.toFixed(4)}s, pero no hay notas activas pendientes.`);
+          }
 
           if (
             note &&
