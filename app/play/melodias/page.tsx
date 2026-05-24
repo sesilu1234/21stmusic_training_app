@@ -393,6 +393,10 @@ export default function ConstructorMelodias() {
   const modoLibreRef = useRef(false);
   const hoveredStepRef = useRef<number | null>(null);
   const handleKeyRef = useRef<(nota: string, octava: number) => void>(() => {});
+  const handlePianoKeyUpRef = useRef<(nota: string, octava: number) => void>(
+    () => {},
+  );
+  const noteFnsRef = useRef<Map<string, () => void>>(new Map());
 
   // Sync state → refs
   useEffect(() => {
@@ -660,6 +664,175 @@ export default function ConstructorMelodias() {
     }
   };
 
+  // Returns a stop function; call it on key/pointer release for sustain.
+  const startNote = (nota: string, octava: number, trans = 0): (() => void) => {
+    try {
+      initAudio();
+      const ctx = audioContextRef.current!;
+      const index = notasBase.indexOf(nota) + (octava - 4) * 12 + trans;
+      const freq = 440 * Math.pow(2, (index - 9) / 12);
+      const vol = volumeRef.current;
+      const preset = sonidoPresetRef.current;
+      const masterGain = ctx.createGain();
+      const oscs: OscillatorNode[] = [];
+
+      const connectDest = (
+        node: AudioNode,
+        wetRatio = 0,
+        reverbBuf?: AudioBuffer | null,
+      ) => {
+        if (wetRatio > 0 && reverbBuf) {
+          const dryG = ctx.createGain();
+          dryG.gain.value = 1 - wetRatio;
+          const wetG = ctx.createGain();
+          wetG.gain.value = wetRatio;
+          const conv = ctx.createConvolver();
+          conv.buffer = reverbBuf;
+          node.connect(dryG);
+          dryG.connect(ctx.destination);
+          node.connect(conv);
+          conv.connect(wetG);
+          wetG.connect(ctx.destination);
+        } else {
+          node.connect(ctx.destination);
+        }
+      };
+
+      if (preset === "warm" || preset === "sala" || preset === "hall") {
+        const oscS = ctx.createOscillator();
+        oscS.type = "sine";
+        oscS.frequency.value = freq;
+        const oscT = ctx.createOscillator();
+        oscT.type = "triangle";
+        oscT.frequency.value = freq;
+        const filt = ctx.createBiquadFilter();
+        filt.type = "lowpass";
+        filt.frequency.value = 900;
+        filt.Q.value = 1;
+        const gS = ctx.createGain();
+        gS.gain.value = 0.7;
+        const gT = ctx.createGain();
+        gT.gain.value = 0.3;
+        oscS.connect(gS);
+        oscT.connect(gT);
+        gS.connect(filt);
+        gT.connect(filt);
+        filt.connect(masterGain);
+        masterGain.gain.setValueAtTime(0, ctx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(
+          vol * 0.45,
+          ctx.currentTime + 0.04,
+        );
+        oscS.start();
+        oscT.start();
+        oscs.push(oscS, oscT);
+        const wet = preset === "sala" ? 0.3 : preset === "hall" ? 0.5 : 0;
+        if (wet > 0) {
+          if (preset === "sala" && !reverbRoomRef.current)
+            reverbRoomRef.current = createReverbImpulse(ctx, 0.8, 3);
+          if (preset === "hall" && !reverbHallRef.current)
+            reverbHallRef.current = createReverbImpulse(ctx, 2.2, 2);
+          connectDest(
+            masterGain,
+            wet,
+            preset === "sala" ? reverbRoomRef.current : reverbHallRef.current,
+          );
+        } else {
+          masterGain.connect(ctx.destination);
+        }
+      } else if (preset === "bright") {
+        const oscSaw = ctx.createOscillator();
+        oscSaw.type = "sawtooth";
+        oscSaw.frequency.value = freq;
+        const oscSine = ctx.createOscillator();
+        oscSine.type = "sine";
+        oscSine.frequency.value = freq;
+        const filt = ctx.createBiquadFilter();
+        filt.type = "lowpass";
+        filt.frequency.value = 3200;
+        filt.Q.value = 1.2;
+        const gSaw = ctx.createGain();
+        gSaw.gain.value = 0.4;
+        const gSin = ctx.createGain();
+        gSin.gain.value = 0.6;
+        oscSaw.connect(gSaw);
+        oscSine.connect(gSin);
+        gSaw.connect(filt);
+        gSin.connect(filt);
+        filt.connect(masterGain);
+        masterGain.gain.setValueAtTime(0, ctx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(
+          vol * 0.35,
+          ctx.currentTime + 0.015,
+        );
+        oscSaw.start();
+        oscSine.start();
+        oscs.push(oscSaw, oscSine);
+        masterGain.connect(ctx.destination);
+      } else if (preset === "dark") {
+        const oscS = ctx.createOscillator();
+        oscS.type = "sine";
+        oscS.frequency.value = freq;
+        const oscT = ctx.createOscillator();
+        oscT.type = "triangle";
+        oscT.frequency.value = freq;
+        const filt = ctx.createBiquadFilter();
+        filt.type = "lowpass";
+        filt.frequency.value = 450;
+        filt.Q.value = 0.8;
+        const gS = ctx.createGain();
+        gS.gain.value = 0.85;
+        const gT = ctx.createGain();
+        gT.gain.value = 0.15;
+        oscS.connect(gS);
+        oscT.connect(gT);
+        gS.connect(filt);
+        gT.connect(filt);
+        filt.connect(masterGain);
+        masterGain.gain.setValueAtTime(0, ctx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(
+          vol * 0.5,
+          ctx.currentTime + 0.065,
+        );
+        oscS.start();
+        oscT.start();
+        oscs.push(oscS, oscT);
+        masterGain.connect(ctx.destination);
+      } else {
+        // classic synth
+        const osc = ctx.createOscillator();
+        osc.type = "triangle";
+        osc.frequency.value = freq;
+        osc.connect(masterGain);
+        masterGain.connect(ctx.destination);
+        masterGain.gain.setValueAtTime(0, ctx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(
+          vol * 0.4,
+          ctx.currentTime + 0.02,
+        );
+        osc.start();
+        oscs.push(osc);
+      }
+
+      return () => {
+        try {
+          const t = ctx.currentTime;
+          masterGain.gain.cancelScheduledValues(t);
+          masterGain.gain.setValueAtTime(masterGain.gain.value, t);
+          masterGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+          oscs.forEach((o) => {
+            try {
+              o.stop(t + 0.2);
+            } catch {}
+          });
+        } catch {}
+      };
+    } catch (e) {
+      console.error("Audio error:", e);
+      return () => {};
+    }
+  };
+
   // ── Key highlight helpers ──────────────────────────────────────────────────
   const getTransposed = (nota: string, octava: number, trans: number) => {
     const idx = notasBase.indexOf(nota) + (octava - 4) * 12 + trans;
@@ -769,9 +942,11 @@ export default function ConstructorMelodias() {
   };
 
   // ── Piano interaction ─────────────────────────────────────────────────────
-  const handlePianoKeyClick = (nota: string, octava: number) => {
-    playNote(nota, octava, 0);
-    highlightKey(nota, octava, 0, 300);
+  const handlePianoKeyDown = (nota: string, octava: number) => {
+    const id = `${nota}${octava}`;
+    noteFnsRef.current.get(id)?.();
+    noteFnsRef.current.set(id, startNote(nota, octava, 0));
+    setActiveNotes((p) => ({ ...p, [id]: true }));
     if (modoLibreRef.current) return;
     if (modoAcordeRef.current) {
       setCurrentChord((prev) => {
@@ -788,9 +963,17 @@ export default function ConstructorMelodias() {
     }
   };
 
-  // Keep ref in sync for use inside event listener
+  const handlePianoKeyUp = (nota: string, octava: number) => {
+    const id = `${nota}${octava}`;
+    noteFnsRef.current.get(id)?.();
+    noteFnsRef.current.delete(id);
+    setActiveNotes((p) => ({ ...p, [id]: false }));
+  };
+
+  // Keep refs in sync for use inside event listeners
   useEffect(() => {
-    handleKeyRef.current = handlePianoKeyClick;
+    handleKeyRef.current = handlePianoKeyDown;
+    handlePianoKeyUpRef.current = handlePianoKeyUp;
   });
 
   // ── PC Keyboard event listeners ───────────────────────────────────────────
@@ -828,6 +1011,10 @@ export default function ConstructorMelodias() {
     const onUp = (e: KeyboardEvent) => {
       const key = e.key === ";" ? ";" : e.key.toLowerCase();
       pressed.delete(key);
+      if (KEY_TO_NOTE[key]) {
+        const { nota, octava } = KEY_TO_NOTE[key];
+        handlePianoKeyUpRef.current(nota, octava);
+      }
     };
     document.addEventListener("keydown", onDown);
     document.addEventListener("keyup", onUp);
@@ -1524,7 +1711,12 @@ export default function ConstructorMelodias() {
                       return (
                         <button
                           key={keyId}
-                          onMouseDown={() => handlePianoKeyClick(nota, octava)}
+                          onPointerDown={(e) => {
+                            e.currentTarget.setPointerCapture(e.pointerId);
+                            handlePianoKeyDown(nota, octava);
+                          }}
+                          onPointerUp={() => handlePianoKeyUp(nota, octava)}
+                          onPointerCancel={() => handlePianoKeyUp(nota, octava)}
                           className={`relative w-7 h-36 bg-slate-900 border border-slate-800 rounded-b-md text-white flex flex-col items-center justify-end pb-1.5 text-[7px] font-medium cursor-pointer transition-all duration-75 select-none active:scale-[0.97] z-25 -mx-3.5 hover:shadow-lg ${
                             isSounding
                               ? "bg-sky-400 text-slate-950 border-sky-200 scale-[1.03] shadow-[0_0_18px_rgba(56,189,248,0.85)] z-30"
@@ -1550,7 +1742,12 @@ export default function ConstructorMelodias() {
                     return (
                       <button
                         key={keyId}
-                        onMouseDown={() => handlePianoKeyClick(nota, octava)}
+                        onPointerDown={(e) => {
+                          e.currentTarget.setPointerCapture(e.pointerId);
+                          handlePianoKeyDown(nota, octava);
+                        }}
+                        onPointerUp={() => handlePianoKeyUp(nota, octava)}
+                        onPointerCancel={() => handlePianoKeyUp(nota, octava)}
                         className={`relative w-11 h-52 bg-white border border-slate-300 rounded-b-lg text-slate-800 flex flex-col items-center justify-end pb-2 text-[9px] font-bold cursor-pointer transition-all duration-75 select-none active:scale-[0.97] z-10 hover:bg-slate-100 hover:shadow-inner ${
                           isSounding
                             ? "bg-sky-400 text-slate-950 border-sky-200 scale-[1.02] shadow-[0_0_16px_rgba(56,189,248,0.8)] z-30"
