@@ -3,6 +3,7 @@
 import { Music2, ArrowLeft, Sun, Moon } from "lucide-react";
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Hash,
   Target,
@@ -21,12 +22,14 @@ interface Juego {
   id: number;
   titulo: string;
   desc: string;
-  icon: any;
+  icon: React.ElementType<{ size?: number; className?: string }>;
   bg: string;
   accent: string;
   slug: string;
   hasSubmenu?: boolean;
 }
+
+type HomeView = "juegos" | "progreso" | "notas";
 
 interface Nota {
   id: number;
@@ -129,7 +132,8 @@ const historialTabla = [
 ];
 
 export default function Home() {
-  const [view, setView] = useState<"juegos" | "progreso" | "notas">("juegos");
+  const router = useRouter();
+  const [view, setView] = useState<HomeView>("juegos");
   const [showAcordesMenu, setShowAcordesMenu] = useState(false);
   const [showIntervalosMenu, setShowIntervalosMenu] = useState(false); // Estado para Intervalos
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -199,15 +203,15 @@ export default function Home() {
                 {!isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
-              {[
+              {([
                 { key: "juegos", label: "Juegos", Icon: Gamepad2 },
                 { key: "progreso", label: "Progreso", Icon: History },
                 { key: "notas", label: "Notas", Icon: StickyNote },
-              ].map(({ key, label, Icon }) => (
+              ] as const).map(({ key, label, Icon }) => (
                 <button
                   key={key}
                   onClick={() => {
-                    setView(key as any);
+                    setView(key);
                     setShowAcordesMenu(false);
                     setShowIntervalosMenu(false);
                   }}
@@ -241,7 +245,7 @@ export default function Home() {
                       if (j.titulo === "Acordes") setShowAcordesMenu(true);
                       else if (j.titulo === "Intervalos")
                         setShowIntervalosMenu(true);
-                      else window.location.href = j.slug;
+                      else router.push(j.slug);
                     }}
                     className="group flex items-center md:flex-col md:items-start gap-4 md:gap-0 p-4 md:p-8 rounded-2xl md:rounded-3xl border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-[1.02] md:hover:scale-105 backdrop-blur-md transition-all text-left shadow-xl"
                   >
