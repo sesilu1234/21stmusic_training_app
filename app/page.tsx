@@ -102,6 +102,7 @@ const juegos: Juego[] = [
     bg: "bg-orange-500/20",
     accent: "text-orange-400",
     slug: "/play/ritmo",
+    hasSubmenu: true,
   },
   {
     id: 8,
@@ -135,7 +136,8 @@ export default function Home() {
   const router = useRouter();
   const [view, setView] = useState<HomeView>("juegos");
   const [showAcordesMenu, setShowAcordesMenu] = useState(false);
-  const [showIntervalosMenu, setShowIntervalosMenu] = useState(false); // Estado para Intervalos
+  const [showIntervalosMenu, setShowIntervalosMenu] = useState(false);
+  const [showRitmoMenu, setShowRitmoMenu] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notas, setNotas] = useState<Nota[]>([
     {
@@ -165,7 +167,7 @@ export default function Home() {
         style={{
           backgroundImage: "url('/assets/background.jpeg')",
           transform:
-            showAcordesMenu || showIntervalosMenu ? "scale(1.1)" : "scale(1)",
+            showAcordesMenu || showIntervalosMenu || showRitmoMenu ? "scale(1.1)" : "scale(1)",
         }}
       >
         {isDarkMode ? (
@@ -214,6 +216,7 @@ export default function Home() {
                     setView(key);
                     setShowAcordesMenu(false);
                     setShowIntervalosMenu(false);
+                    setShowRitmoMenu(false);
                   }}
                   className={`pb-0.5 flex flex-col md:flex-row items-center gap-1 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] transition-colors
                     ${view === key ? "text-white border-b border-amber-400" : "text-slate-400 hover:text-white"}`}
@@ -229,7 +232,7 @@ export default function Home() {
 
         {/* MAIN */}
         <main className="flex-1 flex flex-col">
-          {view === "juegos" && !showAcordesMenu && !showIntervalosMenu && (
+          {view === "juegos" && !showAcordesMenu && !showIntervalosMenu && !showRitmoMenu && (
             <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
               <header className="mb-6 md:mb-10 text-center px-2">
                 <h1 className="text-lg sm:text-5xl md:text-7xl lg:text-5xl italic  tracking-tighter text-white leading-none">
@@ -245,6 +248,7 @@ export default function Home() {
                       if (j.titulo === "Acordes") setShowAcordesMenu(true);
                       else if (j.titulo === "Intervalos")
                         setShowIntervalosMenu(true);
+                      else if (j.titulo === "Ritmo") setShowRitmoMenu(true);
                       else router.push(j.slug);
                     }}
                     className="group flex items-center md:flex-col md:items-start gap-4 md:gap-0 p-4 md:p-8 rounded-2xl md:rounded-3xl border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-[1.02] md:hover:scale-105 backdrop-blur-md transition-all text-left shadow-xl"
@@ -381,6 +385,66 @@ export default function Home() {
                           </h3>
                           <p className="text-white/40 text-xs md:text-base font-light">
                             Ubica y mide distancias sobre el mástil.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* RITMO SUBMENU */}
+          {view === "juegos" && showRitmoMenu && (
+            <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
+              <div className="w-full max-w-4xl">
+                <button
+                  onClick={() => setShowRitmoMenu(false)}
+                  className="group mb-6 md:mb-8 text-white/40 hover:text-orange-400 text-[10px] uppercase tracking-[0.3em] transition-colors flex items-center gap-2"
+                >
+                  <ArrowLeft
+                    size={12}
+                    className="group-hover:-translate-x-1 transition-transform"
+                  />
+                  Volver
+                </button>
+                <h2 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl italic font-black text-white mb-8 md:mb-12 leading-tight uppercase">
+                  Modo de{" "}
+                  <span className="text-orange-400 drop-shadow-[0_0_15px_rgba(251,146,60,0.3)]">
+                    Ritmo
+                  </span>
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10">
+                  <Link href="/play/ritmo/modulo1" className="group">
+                    <div className="relative overflow-hidden bg-slate-900/60 p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] border border-white/10 transition-all duration-500 hover:border-orange-500/50 hover:bg-slate-800/80 hover:-translate-y-1 shadow-xl">
+                      <div className="flex items-center md:flex-col md:items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+                          <BookOpen size={24} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl md:text-3xl font-bold text-white mb-1 uppercase italic">
+                            Módulo 1
+                          </h3>
+                          <p className="text-white/40 text-xs md:text-base font-light">
+                            Primeros patrones rítmicos.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                  <Link href="/play/ritmo/modulo2" className="group">
+                    <div className="relative overflow-hidden bg-slate-900/60 p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] border border-white/10 transition-all duration-500 hover:border-orange-500/50 hover:bg-slate-800/80 hover:-translate-y-1 shadow-xl">
+                      <div className="flex items-center md:flex-col md:items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+                          <Layers size={24} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl md:text-3xl font-bold text-white mb-1 uppercase italic">
+                            Módulo 2
+                          </h3>
+                          <p className="text-white/40 text-xs md:text-base font-light">
+                            Ritmos avanzados y síncopas.
                           </p>
                         </div>
                       </div>
