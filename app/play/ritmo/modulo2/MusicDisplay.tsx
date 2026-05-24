@@ -47,7 +47,6 @@ const createScore = (measures: number) => {
       score.push({ glyph, beats: chosen.beats });
       remaining -= chosen.beats;
     }
-    score.push({ glyph: G.halfRest, beats: 2 });
   }
   score.push({ glyph: G.barline, beats: 0 });
   return score;

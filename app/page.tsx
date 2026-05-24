@@ -167,7 +167,9 @@ export default function Home() {
         style={{
           backgroundImage: "url('/assets/background.jpeg')",
           transform:
-            showAcordesMenu || showIntervalosMenu || showRitmoMenu ? "scale(1.1)" : "scale(1)",
+            showAcordesMenu || showIntervalosMenu || showRitmoMenu
+              ? "scale(1.1)"
+              : "scale(1)",
         }}
       >
         {isDarkMode ? (
@@ -205,11 +207,13 @@ export default function Home() {
                 {!isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
-              {([
-                { key: "juegos", label: "Juegos", Icon: Gamepad2 },
-                { key: "progreso", label: "Progreso", Icon: History },
-                { key: "notas", label: "Notas", Icon: StickyNote },
-              ] as const).map(({ key, label, Icon }) => (
+              {(
+                [
+                  { key: "juegos", label: "Juegos", Icon: Gamepad2 },
+                  { key: "progreso", label: "Progreso", Icon: History },
+                  { key: "notas", label: "Notas", Icon: StickyNote },
+                ] as const
+              ).map(({ key, label, Icon }) => (
                 <button
                   key={key}
                   onClick={() => {
@@ -232,45 +236,48 @@ export default function Home() {
 
         {/* MAIN */}
         <main className="flex-1 flex flex-col">
-          {view === "juegos" && !showAcordesMenu && !showIntervalosMenu && !showRitmoMenu && (
-            <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
-              <header className="mb-6 md:mb-10 text-center px-2">
-                <h1 className="text-lg sm:text-5xl md:text-7xl lg:text-5xl italic  tracking-tighter text-white leading-none">
-                  escuelademusicamoderna.com
-                </h1>
-              </header>
+          {view === "juegos" &&
+            !showAcordesMenu &&
+            !showIntervalosMenu &&
+            !showRitmoMenu && (
+              <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
+                <header className="mb-6 md:mb-10 text-center px-2">
+                  <h1 className="text-lg sm:text-5xl md:text-7xl lg:text-5xl italic  tracking-tighter text-white leading-none">
+                    escuelademusicamoderna.com
+                  </h1>
+                </header>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 max-w-6xl w-full">
-                {juegos.map((j) => (
-                  <button
-                    key={j.id}
-                    onClick={() => {
-                      if (j.titulo === "Acordes") setShowAcordesMenu(true);
-                      else if (j.titulo === "Intervalos")
-                        setShowIntervalosMenu(true);
-                      else if (j.titulo === "Ritmo") setShowRitmoMenu(true);
-                      else router.push(j.slug);
-                    }}
-                    className="group flex items-center md:flex-col md:items-start gap-4 md:gap-0 p-4 md:p-8 rounded-2xl md:rounded-3xl border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-[1.02] md:hover:scale-105 backdrop-blur-md transition-all text-left shadow-xl"
-                  >
-                    <div
-                      className={`w-11 h-11 md:w-14 md:h-14 flex-shrink-0 rounded-xl md:rounded-2xl flex items-center justify-center md:mb-6 ${j.bg}`}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 max-w-6xl w-full">
+                  {juegos.map((j) => (
+                    <button
+                      key={j.id}
+                      onClick={() => {
+                        if (j.titulo === "Acordes") setShowAcordesMenu(true);
+                        else if (j.titulo === "Intervalos")
+                          setShowIntervalosMenu(true);
+                        else if (j.titulo === "Ritmo") setShowRitmoMenu(true);
+                        else router.push(j.slug);
+                      }}
+                      className="group flex items-center md:flex-col md:items-start gap-4 md:gap-0 p-4 md:p-8 rounded-2xl md:rounded-3xl border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-[1.02] md:hover:scale-105 backdrop-blur-md transition-all text-left shadow-xl"
                     >
-                      <j.icon size={22} className={j.accent} />
-                    </div>
-                    <div>
-                      <h2 className="text-sm md:text-xl italic font-black text-white group-hover:text-amber-400 transition-colors uppercase">
-                        {j.titulo}
-                      </h2>
-                      <p className="text-[10px] md:text-xs text-slate-400 leading-relaxed font-light">
-                        {j.desc}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+                      <div
+                        className={`w-11 h-11 md:w-14 md:h-14 flex-shrink-0 rounded-xl md:rounded-2xl flex items-center justify-center md:mb-6 ${j.bg}`}
+                      >
+                        <j.icon size={22} className={j.accent} />
+                      </div>
+                      <div>
+                        <h2 className="text-sm md:text-xl italic font-black text-white group-hover:text-amber-400 transition-colors uppercase">
+                          {j.titulo}
+                        </h2>
+                        <p className="text-[10px] md:text-xs text-slate-400 leading-relaxed font-light">
+                          {j.desc}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* ACORDES SUBMENU */}
           {view === "juegos" && showAcordesMenu && (
@@ -419,32 +426,41 @@ export default function Home() {
                   <Link href="/play/ritmo/modulo1" className="group">
                     <div className="relative overflow-hidden bg-slate-900/60 p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] border border-white/10 transition-all duration-500 hover:border-orange-500/50 hover:bg-slate-800/80 hover:-translate-y-1 shadow-xl">
                       <div className="flex items-center md:flex-col md:items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+                        <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-400 transition-colors duration-300 group-hover:bg-orange-500/20">
                           <BookOpen size={24} />
                         </div>
                         <div>
-                          <h3 className="text-xl md:text-3xl font-bold text-white mb-1 uppercase italic">
+                          <h3 className="text-xl md:text-3xl font-bold text-white mb-1 uppercase italic tracking-wider transition-colors duration-300 group-hover:text-orange-400">
                             Módulo 1
                           </h3>
-                          <p className="text-white/40 text-xs md:text-base font-light">
-                            Primeros patrones rítmicos.
+                          <p className="text-white/70 group-hover:text-white text-xs md:text-sm font-light tracking-wide leading-relaxed mt-0.5 transition-colors duration-300">
+                            Corcheas en 1
+                            <sup className="text-[10px] md:text-xs ml-0.5">
+                              er
+                            </sup>{" "}
+                            y 2
+                            <sup className="text-[10px] md:text-xs ml-0.5">
+                              do
+                            </sup>{" "}
+                            tiempo.
                           </p>
                         </div>
                       </div>
                     </div>
                   </Link>
+
                   <Link href="/play/ritmo/modulo2" className="group">
                     <div className="relative overflow-hidden bg-slate-900/60 p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] border border-white/10 transition-all duration-500 hover:border-orange-500/50 hover:bg-slate-800/80 hover:-translate-y-1 shadow-xl">
                       <div className="flex items-center md:flex-col md:items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+                        <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-400 transition-colors duration-300 group-hover:bg-orange-500/20">
                           <Layers size={24} />
                         </div>
                         <div>
-                          <h3 className="text-xl md:text-3xl font-bold text-white mb-1 uppercase italic">
+                          <h3 className="text-xl md:text-3xl font-bold text-white mb-1 uppercase italic tracking-wider transition-colors duration-300 group-hover:text-orange-400">
                             Módulo 2
                           </h3>
-                          <p className="text-white/40 text-xs md:text-base font-light">
-                            Ritmos avanzados y síncopas.
+                          <p className="text-white/70 group-hover:text-white text-xs md:text-sm font-light tracking-wide leading-relaxed mt-0.5 transition-colors duration-300">
+                            Corcheas sobre los 4 tiempos.
                           </p>
                         </div>
                       </div>

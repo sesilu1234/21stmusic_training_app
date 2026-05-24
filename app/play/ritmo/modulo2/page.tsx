@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getCtx } from "./metronome";
 import SimpleMovingScore from "./MusicDisplay";
 
-const MEASURE_OPTIONS = [4, 8, 12, 24];
+const MEASURE_OPTIONS = [4, 8, 12, 24, 36, 42];
 
 export default function RitmoGame() {
   const router = useRouter();
