@@ -48,9 +48,9 @@ const KEY_TO_NOTE: Record<string,Nota> = {
 };
 
 const KEY_TO_REST: Record<string,RestDuracion> = {
-  q:"corchea",
-  r:"negra",
-  i:"blanca",
+  v:"corchea",
+  b:"negra",
+  n:"blanca",
   m:"redonda",
 };
 
@@ -185,6 +185,8 @@ export default function ConstructorMelodias() {
   const [chainStartSemitones,setChainStartSemitones]=useState(0);
   const [chainSemitones,   setChainSemitones]   = useState(5);
   const [currentPlayingStep,setCurrentPlayingStep]=useState<number|null>(null);
+  const [predefinedOpen,    setPredefinedOpen]    = useState(true);
+  const [userSlotsOpen,     setUserSlotsOpen]     = useState(true);
 
   // Playback refs (avoid stale closures)
   const isPlayingRef      = useRef(false);
@@ -687,8 +689,8 @@ export default function ConstructorMelodias() {
             </div>
           </div>
 
-          {/* Action toolbar */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 mb-4">
+          {/* Action toolbar — fila 1: reproducción */}
+          <div className="grid grid-cols-3 gap-2 mb-2">
             <div className="relative group">
               <button onClick={()=>isPlaying ? stopPlayback() : playMelody(listenReps)} disabled={!isPlaying && melodia.length===0}
                 className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 shadow-md ${
@@ -715,6 +717,8 @@ export default function ConstructorMelodias() {
                   isPlaying?"bg-slate-800 text-slate-400 border border-white/5 cursor-not-allowed":"bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white"}`}>
                 <Sparkles size={12}/><span>Encadenamiento</span>
               </button>
+              {/* bridge invisible que cubre el hueco entre botón y panel para que el hover no se pierda */}
+              <div className="absolute top-full left-0 right-0 h-[6px]" aria-hidden="true" />
               <div className={`absolute left-1/2 top-full z-40 ${chainSettingsOpen ? "flex" : "hidden group-hover:flex"} -translate-x-1/2 mt-1.5 min-w-[240px] flex-col gap-3 rounded-xl bg-slate-950/95 border border-white/10 p-3 shadow-2xl backdrop-blur-md animate-fadeIn`}>
                 <button onClick={()=>setChainSettingsOpen(false)}
                   className="absolute right-2 top-2 w-5 h-5 rounded-md bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center"
@@ -753,7 +757,10 @@ export default function ConstructorMelodias() {
                 Suena más de una nota a la vez
               </div>
             </div>
+          </div>
 
+          {/* Action toolbar — fila 2: modos · fila 3: acciones */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
             <div className="relative group">
               <button onClick={()=>{ setModoLibre(p=>!p); setCurrentChord([]); }}
                 className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 border ${
@@ -777,10 +784,6 @@ export default function ConstructorMelodias() {
               </div>
             </div>
 
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 mb-4">
-            <div className="hidden xl:block xl:col-span-4"/>
             <button onClick={clearMelody} disabled={melodia.length===0}
               className="w-full h-10 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest bg-slate-500/15 hover:bg-slate-500/25 text-slate-300 border border-slate-400/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
               <Trash2 size={12}/><span>Borrar</span>
@@ -870,7 +873,7 @@ export default function ConstructorMelodias() {
             <div className="mb-3 bg-violet-500/10 border border-violet-500/30 rounded-xl px-3 py-2 flex items-center gap-2 animate-fadeIn">
               <Keyboard size={13} className="text-violet-400 shrink-0"/>
               <span className="text-[9px] text-violet-300 font-bold uppercase tracking-wide">Teclado activo:</span>
-              <span className="text-[9px] text-slate-400 font-mono">A=Do · W=Do# · S=Re · E=Re# · D=Mi · F=Fa · T=Fa# · G=Sol · Y=Sol# · H=La · U=La# · J=Si · K=Do' · L=Re' · O=Do#' · P=Re#' · Ñ=Mi' · Q/R/I/M=Silencios</span>
+              <span className="text-[9px] text-slate-400 font-mono">A=Do · W=Do# · S=Re · E=Re# · D=Mi · F=Fa · T=Fa# · G=Sol · Y=Sol# · H=La · U=La# · J=Si · K=Do' · L=Re' · O=Do#' · P=Re#' · Ñ=Mi' · V/B/N/M=Silencios</span>
             </div>
           )}
 
@@ -953,50 +956,117 @@ export default function ConstructorMelodias() {
         </section>
 
         {/* ── Right: slots ── */}
-        <aside className="w-full xl:w-[300px] flex flex-col bg-slate-900/40 border border-white/10 rounded-3xl p-4 md:p-6 backdrop-blur-md shadow-2xl">
+        <aside className="w-full xl:w-[420px] flex flex-col bg-slate-900/40 border border-white/10 rounded-3xl p-4 md:p-6 backdrop-blur-md shadow-2xl">
           <div className="mb-4">
             <h2 className="text-white text-md font-black italic tracking-tighter uppercase flex items-center gap-2">
               <BookOpen size={15} className="text-teal-400"/>
-              <span>📌 Mis 24 Slots</span>
+              <span>📌 Mis Slots</span>
             </h2>
             <p className="text-[10px] text-slate-500 mt-0.5">Clic para cargar · Doble-clic para renombrar</p>
           </div>
 
-          <div className="flex-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-1 gap-2 overflow-y-auto max-h-[500px] xl:max-h-[640px] pr-0.5">
-            {melodiasGuardadas.map((slot,i)=>{
-              const active = i===melodiaActivaIndex;
-              if (slot) return (
-                <div key={i} onClick={()=>loadMelody(i)} onDoubleClick={()=>renameMelody(i)}
-                  className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all border ${
-                    active?"bg-teal-500 border-teal-400 text-slate-950 shadow-[0_0_14px_rgba(20,184,166,0.3)] scale-[1.01]":"bg-white/5 border-white/5 hover:bg-white/10 text-white"}`}>
-                  <div className="min-w-0 flex-1">
-                    <span className={`text-[8px] font-bold uppercase tracking-wider block ${active?"text-slate-950/70":"text-teal-400"}`}>Slot {i+1}</span>
-                    <h3 className="text-xs font-black truncate max-w-[130px] leading-tight mt-0.5">{slot.nombre}</h3>
-                    <span className={`text-[9px] block ${active?"text-slate-950/60":"text-slate-400"}`}>{slot.notas.length} pasos</span>
-                  </div>
-                  <button onClick={e=>clearSlot(i,e)}
-                    className={`w-5 h-5 rounded-lg flex items-center justify-center cursor-pointer select-none transition-all shrink-0 ${
-                      active?"bg-slate-950/20 text-slate-950 hover:bg-rose-600 hover:text-white":"bg-black/30 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"}`}>
-                    <Trash2 size={10}/>
-                  </button>
+          <div className="flex-1 flex flex-col gap-3 overflow-y-auto slots-scroll pr-1 max-h-[500px] xl:max-h-[700px]">
+
+            {/* Grupo 1: Predefinidos */}
+            <div>
+              <button onClick={()=>setPredefinedOpen(p=>!p)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-300 hover:bg-teal-500/18 transition-all mb-2 cursor-pointer select-none">
+                <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                  <BookOpen size={11}/> Ejercicios para Cantantes
+                </span>
+                {predefinedOpen ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
+              </button>
+              {predefinedOpen && (
+                <div className="flex flex-col gap-1.5 pl-1">
+                  {melodiasGuardadas.slice(0,8).map((slot,rawI)=>{
+                    const i = rawI;
+                    const active = i===melodiaActivaIndex;
+                    if (slot) return (
+                      <div key={i} onClick={()=>loadMelody(i)} onDoubleClick={()=>renameMelody(i)}
+                        className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all border ${
+                          active?"bg-teal-500 border-teal-400 text-slate-950 shadow-[0_0_14px_rgba(20,184,166,0.3)] scale-[1.01]":"bg-white/5 border-white/5 hover:bg-white/10 text-white"}`}>
+                        <div className="min-w-0 flex-1">
+                          <span className={`text-[8px] font-bold uppercase tracking-wider block ${active?"text-slate-950/70":"text-teal-400"}`}>Slot {i+1}</span>
+                          <h3 className="text-xs font-black truncate leading-tight mt-0.5">{slot.nombre}</h3>
+                          <span className={`text-[9px] block ${active?"text-slate-950/60":"text-slate-400"}`}>{slot.notas.length} pasos</span>
+                        </div>
+                        <button onClick={e=>clearSlot(i,e)}
+                          className={`w-5 h-5 rounded-lg flex items-center justify-center cursor-pointer select-none transition-all shrink-0 ${
+                            active?"bg-slate-950/20 text-slate-950 hover:bg-rose-600 hover:text-white":"bg-black/30 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"}`}>
+                          <Trash2 size={10}/>
+                        </button>
+                      </div>
+                    );
+                    return (
+                      <div key={i} onClick={()=>loadMelody(i)}
+                        className={`group flex items-center justify-between p-2.5 rounded-xl border border-dashed border-white/10 hover:border-teal-500/30 transition-all select-none ${
+                          melodia.length>0?"cursor-pointer bg-teal-500/5 hover:bg-teal-500/10":"bg-white/[0.01] hover:bg-white/[0.03]"}`}>
+                        <div>
+                          <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest block">Slot {i+1}</span>
+                          <span className="text-xs text-slate-500 italic font-light select-none block mt-0.5">vacío</span>
+                        </div>
+                        {melodia.length>0 && (
+                          <span className="text-[8px] text-teal-400/0 group-hover:text-teal-400 font-bold transition-all uppercase tracking-wider flex items-center gap-0.5 select-none">
+                            <Plus size={8}/>Guardar
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-              return (
-                <div key={i} onClick={()=>loadMelody(i)}
-                  className={`group flex items-center justify-between p-2.5 rounded-xl border border-dashed border-white/10 hover:border-teal-500/30 transition-all select-none ${
-                    melodia.length>0?"cursor-pointer bg-teal-500/5 hover:bg-teal-500/10":"bg-white/[0.01] hover:bg-white/[0.03]"}`}>
-                  <div>
-                    <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest block">Slot {i+1}</span>
-                    <span className="text-xs text-slate-500 italic font-light select-none block mt-0.5">vacío</span>
-                  </div>
-                  {melodia.length>0 && (
-                    <span className="text-[8px] text-teal-400/0 group-hover:text-teal-400 font-bold transition-all uppercase tracking-wider flex items-center gap-0.5 select-none">
-                      <Plus size={8}/>Guardar
-                    </span>
-                  )}
+              )}
+            </div>
+
+            {/* Grupo 2: Mis Grabaciones */}
+            <div>
+              <button onClick={()=>setUserSlotsOpen(p=>!p)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 hover:bg-violet-500/18 transition-all mb-2 cursor-pointer select-none">
+                <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                  <Save size={11}/> Mis Grabaciones
+                </span>
+                {userSlotsOpen ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
+              </button>
+              {userSlotsOpen && (
+                <div className="flex flex-col gap-1.5 pl-1">
+                  {melodiasGuardadas.slice(8).map((slot,rawI)=>{
+                    const i = rawI+8;
+                    const active = i===melodiaActivaIndex;
+                    if (slot) return (
+                      <div key={i} onClick={()=>loadMelody(i)} onDoubleClick={()=>renameMelody(i)}
+                        className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all border ${
+                          active?"bg-teal-500 border-teal-400 text-slate-950 shadow-[0_0_14px_rgba(20,184,166,0.3)] scale-[1.01]":"bg-white/5 border-white/5 hover:bg-white/10 text-white"}`}>
+                        <div className="min-w-0 flex-1">
+                          <span className={`text-[8px] font-bold uppercase tracking-wider block ${active?"text-slate-950/70":"text-violet-400"}`}>Slot {i+1}</span>
+                          <h3 className="text-xs font-black truncate leading-tight mt-0.5">{slot.nombre}</h3>
+                          <span className={`text-[9px] block ${active?"text-slate-950/60":"text-slate-400"}`}>{slot.notas.length} pasos</span>
+                        </div>
+                        <button onClick={e=>clearSlot(i,e)}
+                          className={`w-5 h-5 rounded-lg flex items-center justify-center cursor-pointer select-none transition-all shrink-0 ${
+                            active?"bg-slate-950/20 text-slate-950 hover:bg-rose-600 hover:text-white":"bg-black/30 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"}`}>
+                          <Trash2 size={10}/>
+                        </button>
+                      </div>
+                    );
+                    return (
+                      <div key={i} onClick={()=>loadMelody(i)}
+                        className={`group flex items-center justify-between p-2.5 rounded-xl border border-dashed border-white/10 hover:border-violet-500/30 transition-all select-none ${
+                          melodia.length>0?"cursor-pointer bg-violet-500/5 hover:bg-violet-500/10":"bg-white/[0.01] hover:bg-white/[0.03]"}`}>
+                        <div>
+                          <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest block">Slot {i+1}</span>
+                          <span className="text-xs text-slate-500 italic font-light select-none block mt-0.5">vacío</span>
+                        </div>
+                        {melodia.length>0 && (
+                          <span className="text-[8px] text-violet-400/0 group-hover:text-violet-400 font-bold transition-all uppercase tracking-wider flex items-center gap-0.5 select-none">
+                            <Plus size={8}/>Guardar
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              )}
+            </div>
+
           </div>
         </aside>
 
@@ -1012,6 +1082,10 @@ export default function ConstructorMelodias() {
           to   { opacity:1; transform:translateY(0)   scale(1);    }
         }
         .animate-fadeIn { animation: fadeIn 0.2s ease-out forwards; }
+        .slots-scroll::-webkit-scrollbar { width: 3px; }
+        .slots-scroll::-webkit-scrollbar-track { background: transparent; }
+        .slots-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+        .slots-scroll::-webkit-scrollbar-thumb:hover { background: rgba(20,184,166,0.4); }
       `}</style>
     </div>
   );

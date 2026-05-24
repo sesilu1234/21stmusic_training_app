@@ -184,7 +184,7 @@ export default function DiapasonGame() {
             {currentQuestion && (
               <img
                 key={currentQuestion.image}
-                src={encodeURI(currentQuestion.image)}
+                src={encodeURI("sasdasd.jpeg")}
                 alt="Nota"
                 onLoad={() => setIsImageLoading(false)}
                 className={`max-h-full max-w-full object-contain transition-opacity duration-100 ${isImageLoading ? "opacity-0" : "opacity-100"}`}

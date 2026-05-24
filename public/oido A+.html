@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Constructor de Melodías - Entrenamiento Auditivo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: white;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+    .main-container { max-width: 920px; }
+    h1 { color: #4CAF50; text-align: center; }
+
+    #piano {
+      display: flex;
+      justify-content: center;
+      margin: 30px auto;
+      width: 920px;
+      background: #111;
+      padding: 20px;
+      border-radius: 16px;
+    }
+    .key {
+      width: 48px; height: 220px; background: white; border: 1px solid #333;
+      color: black; display: flex; align-items: flex-end; justify-content: center;
+      font-size: 13px; cursor: pointer; transition: all 0.1s;
+    }
+    .black {
+      width: 30px; height: 140px; background: #111; color: white;
+      margin: 0 -15px; z-index: 2;
+    }
+    .key:active, .key.active, .black:active, .black.active {
+      background: #4CAF50 !important; color: black !important;
+      box-shadow: 0 0 20px #4CAF50; transform: scale(1.08);
+    }
+
+    .controls {
+      margin: 15px auto; padding: 15px; background: rgba(42,42,42,0.9);
+      border-radius: 12px; max-width: 920px;
+    }
+    button { margin: 5px; padding: 10px 16px; font-size: 16px; }
+
+    .slots-panel {
+      width: 300px; background: #252525; padding: 15px; border-radius: 12px;
+      height: fit-content;
+    }
+    .slot {
+      padding: 12px; background: #333; border-radius: 8px; margin-bottom: 8px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .slot:hover { background: #444; }
+    .slot.active { background: #4CAF50; color: black; }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    <h1>🎹 Constructor de Melodías</h1>
+
+    <div class="controls">
+      <strong>🔊 Volumen: <span id="volValue">80</span>%</strong><br>
+      <input type="range" id="volSlider" min="0" max="100" value="80" oninput="actualizarVolumen()">
+    </div>
+
+    <div class="controls">
+      <strong>⏱️ Tempo: <span id="bpmValue">120</span> BPM</strong><br>
+      <input type="range" id="tempoSlider" min="40" max="200" value="120" oninput="actualizarTempo()">
+    </div>
+
+    <div class="controls">
+      <strong>🔀 Transposición: <span id="transValue">0</span> semitonos</strong><br>
+      <button onclick="transponer(-1)">−1</button>
+      <button onclick="transponer(1)">+1</button>
+      <input type="range" id="transSlider" min="-12" max="12" value="0" oninput="transponerSlider()">
+      <button onclick="resetTransposicion()">Reset</button>
+    </div>
+
+    <div class="controls">
+      <button onclick="modoEntrenamiento()">🎯 Escucha y Repite</button>
+      <button onclick="reproducirMelodia(4)">▶️ Reproducir (4 veces)</button>
+      <button onclick="iniciarEncadenamiento()">🔗 Encadenamiento</button>
+      <button onclick="detenerReproduccion()" style="background:#d32f2f;">⏹️ Parar</button>
+      <button onclick="borrarMelodia()">🗑️ Borrar</button>
+      <button onclick="guardarMelodia()">💾 Guardar Melodía</button>
+    </div>
+
+    <div class="controls">
+      <strong>Melodía actual:</strong><br><br>
+      <span id="lista-notas">Haz clic en las teclas...</span>
+    </div>
+
+    <div id="piano"></div>
+  </div>
+
+  <!-- Panel de Slots -->
+  <div class="slots-panel">
+    <strong>📌 Mis 12 Slots</strong><br><br>
+    <div id="slots-grid"></div>
+  </div>
+
+  <script>
+    let audioContext;
+    let melodiaOriginal = [];
+    let bpm = 120;
+    let volumen = 0.8;
+    let transposicion = 0;
+    let melodiasGuardadas = [];
+    let teclasMap = {};
+    let isPlaying = false;
+    let melodiaActivaIndex = -1;
+
+    const notasBase = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+    function initAudio() {
+      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function getNotaTranspuesta(nota, octava, trans) {
+      let index = notasBase.indexOf(nota) + (octava - 4) * 12 + trans;
+      let nuevaOctava = 4 + Math.floor(index / 12);
+      let nuevaNota = notasBase[index % 12];
+      return { nota: nuevaNota, octava: nuevaOctava };
+    }
+
+    function tocarNota(nota, octava, trans = 0) {
+      initAudio();
+      let index = notasBase.indexOf(nota) + (octava - 4) * 12 + trans;
+      const freq = 440 * Math.pow(2, (index - 9) / 12);
+
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.value = volumen * 0.4;
+
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.start();
+
+      setTimeout(() => {
+        gain.gain.linearRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+        osc.stop(audioContext.currentTime + 0.6);
+      }, 350);
+    }
+
+    function resaltarTecla(nota, octava, trans = 0, duracion = 400) {
+      const nt = getNotaTranspuesta(nota, octava, trans);
+      const tecla = teclasMap[`${nt.nota}${nt.octava}`];
+      if (tecla) {
+        tecla.classList.add('active');
+        setTimeout(() => tecla.classList.remove('active'), duracion);
+      }
+    }
+
+    function actualizarVolumen() {
+      volumen = document.getElementById('volSlider').value / 100;
+      document.getElementById('volValue').textContent = document.getElementById('volSlider').value;
+    }
+
+    // ==================== TEMPO CORREGIDO ====================
+    function actualizarTempo() {
+      bpm = parseInt(document.getElementById('tempoSlider').value);
+      document.getElementById('bpmValue').textContent = bpm;
+    }
+
+    function transponer(cambio) {
+      transposicion = Math.max(-12, Math.min(12, transposicion + cambio));
+      document.getElementById('transSlider').value = transposicion;
+      document.getElementById('transValue').textContent = transposicion;
+    }
+
+    function transponerSlider() {
+      transposicion = parseInt(document.getElementById('transSlider').value);
+      document.getElementById('transValue').textContent = transposicion;
+    }
+
+    function resetTransposicion() {
+      transposicion = 0;
+      document.getElementById('transSlider').value = 0;
+      document.getElementById('transValue').textContent = 0;
+    }
+
+    function crearPiano() {
+      const piano = document.getElementById('piano');
+      piano.innerHTML = "";
+      teclasMap = {};
+
+      for (let oct = 4; oct <= 5; oct++) {
+        notasBase.forEach(nota => {
+          const tecla = document.createElement("div");
+          tecla.className = nota.includes("#") ? "key black" : "key";
+          tecla.textContent = nota + oct;
+          
+          tecla.addEventListener('mousedown', () => {
+            tocarNota(nota, oct);
+            resaltarTecla(nota, oct, 0, 300);
+            melodiaOriginal.push({nota: nota, octava: oct});
+            actualizarListaNotas();
+          });
+
+          teclasMap[`${nota}${oct}`] = tecla;
+          piano.appendChild(tecla);
+        });
+      }
+    }
+
+    function actualizarListaNotas() {
+      const cont = document.getElementById('lista-notas');
+      cont.innerHTML = melodiaOriginal.map(n => 
+        `<span style="background:#4CAF50; color:white; padding:6px 12px; margin:3px; border-radius:20px;">${n.nota}${n.octava}</span>`
+      ).join('');
+    }
+
+    async function reproducirMelodia(repetir = 4, trans = 0) {
+      if (melodiaOriginal.length === 0 || !isPlaying) return;
+
+      for (let i = 0; i < repetir && isPlaying; i++) {
+        for (let nota of melodiaOriginal) {
+          if (!isPlaying) return;
+          tocarNota(nota.nota, nota.octava, trans);
+          resaltarTecla(nota.nota, nota.octava, trans);
+          await new Promise(r => setTimeout(r, 60000 / bpm));
+        }
+        if (isPlaying) await new Promise(r => setTimeout(r, 600));
+      }
+    }
+
+    async function iniciarEncadenamiento() {
+      if (melodiaOriginal.length === 0) return alert("Primero crea o carga una melodía");
+      isPlaying = true;
+      const originalTrans = transposicion;
+
+      for (let trans = 0; trans <= 5 && isPlaying; trans++) {
+        document.getElementById('transValue').textContent = `+${trans}`;
+        await reproducirMelodia(1, trans);
+      }
+      for (let trans = 4; trans >= 0 && isPlaying; trans--) {
+        document.getElementById('transValue').textContent = `+${trans}`;
+        await reproducirMelodia(1, trans);
+      }
+
+      document.getElementById('transValue').textContent = originalTrans;
+      isPlaying = false;
+    }
+
+    function detenerReproduccion() { isPlaying = false; }
+
+    function modoEntrenamiento() {
+      if (melodiaOriginal.length === 0) return alert("Primero crea o carga una melodía");
+      isPlaying = true;
+      reproducirMelodia(4, transposicion);
+    }
+
+    function guardarMelodia() {
+      if (melodiaOriginal.length === 0) return alert("No hay melodía para guardar");
+      const nombre = prompt("Nombre para esta melodía:", "Melodía " + (melodiasGuardadas.length + 1));
+      if (!nombre) return;
+
+      melodiasGuardadas.push({
+        nombre: nombre,
+        notas: JSON.parse(JSON.stringify(melodiaOriginal))
+      });
+
+      localStorage.setItem("melodiasGuardadas", JSON.stringify(melodiasGuardadas));
+      actualizarSlots();
+      alert("✅ Melodía guardada");
+    }
+
+    // ==================== CAMBIAR NOMBRE ====================
+    function renombrarMelodia(i) {
+      if (!melodiasGuardadas[i]) return;
+      const nuevoNombre = prompt("Nuevo nombre para la melodía:", melodiasGuardadas[i].nombre);
+      if (nuevoNombre && nuevoNombre.trim() !== "") {
+        melodiasGuardadas[i].nombre = nuevoNombre.trim();
+        localStorage.setItem("melodiasGuardadas", JSON.stringify(melodiasGuardadas));
+        actualizarSlots();
+      }
+    }
+
+    function actualizarSlots() {
+      const grid = document.getElementById('slots-grid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < 12; i++) {
+        const mel = melodiasGuardadas[i];
+        const slot = document.createElement('div');
+        slot.className = `slot ${i === melodiaActivaIndex ? 'active' : ''}`;
+        
+        if (mel) {
+          slot.innerHTML = `<strong>${i+1}.</strong> ${mel.nombre} <small>(${mel.notas.length})</small>`;
+          slot.onclick = () => cargarMelodia(i);
+          slot.ondblclick = () => renombrarMelodia(i);   // Doble clic para renombrar
+        } else {
+          slot.innerHTML = `<strong>${i+1}.</strong> <em style="opacity:0.5">vacío</em>`;
+        }
+        grid.appendChild(slot);
+      }
+    }
+
+    function cargarMelodia(i) {
+      if (!melodiasGuardadas[i]) return;
+      melodiaActivaIndex = i;
+      melodiaOriginal = JSON.parse(JSON.stringify(melodiasGuardadas[i].notas));
+      actualizarListaNotas();
+      actualizarSlots();
+      isPlaying = true;
+      reproducirMelodia(1, transposicion);
+    }
+
+    function borrarMelodia() {
+      melodiaOriginal = [];
+      actualizarListaNotas();
+    }
+
+    window.onload = () => {
+      crearPiano();
+      actualizarVolumen();
+      actualizarTempo();
+      
+      const data = localStorage.getItem("melodiasGuardadas");
+      if (data) melodiasGuardadas = JSON.parse(data);
+      
+      actualizarSlots();
+    };
+  </script>
+</body>
+</html>
