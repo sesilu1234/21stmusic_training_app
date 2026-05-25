@@ -26,28 +26,84 @@ const G = {
   time4: "\uE084",
 };
 
-const VALUES = [
-  // { note: G.whole, rest: G.wholeRest, beats: 4 },
-  // { note: G.half, rest: G.halfRest, beats: 2 },
-  // { note: G.quarter, rest: G.quarterRest, beats: 1 },
-  { note: G.eighth, rest: G.eighthRest, beats: 0.5 },
-];
+// const VALUES = [
+//   // { note: G.whole, rest: G.wholeRest, beats: 4 },
+//   // { note: G.half, rest: G.halfRest, beats: 2 },
+//   // { note: G.quarter, rest: G.quarterRest, beats: 1 },
+//   { note: G.eighth, rest: G.eighthRest, beats: 0.5 },
+// ];
 
-const rand = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+const VALUES = [{ note: G.eighth, rest: G.eighthRest, beats: 0.5 }];
+
+const REST_GLYPHS = new Set([
+  G.wholeRest,
+  G.halfRest,
+  G.quarterRest,
+  G.eighthRest,
+]);
+const isRest = (g: any) => REST_GLYPHS.has(g);
+
+const rand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
 const createScore = (measures: number) => {
-  const score: any[] = [];
+  const score: { glyph: any; beats: number }[] = [];
+
   for (let m = 0; m < measures; m++) {
-    let remaining = 4;
     score.push({ glyph: G.barline, beats: 0 });
+
+    // 1) Generar el compás como antes (corcheas y silencios de corchea)
+    const measure: { glyph: any; beats: number }[] = [];
+    let remaining = 4;
     while (remaining > 0) {
       const options = VALUES.filter((v) => v.beats <= remaining);
       const chosen = rand(options);
       const glyph = Math.random() < 0.5 ? chosen.note : chosen.rest;
-      score.push({ glyph, beats: chosen.beats });
+      measure.push({ glyph, beats: chosen.beats });
       remaining -= chosen.beats;
     }
+
+    // 2) Consolidar silencios consecutivos en el valor más largo posible
+    //    según la posición dentro del compás.
+    let pos = 0;
+    let i = 0;
+    while (i < measure.length) {
+      if (!isRest(measure[i].glyph)) {
+        score.push(measure[i]);
+        pos += measure[i].beats;
+        i++;
+        continue;
+      }
+
+      // juntar la racha de silencios
+      let restBeats = 0;
+      while (i < measure.length && isRest(measure[i].glyph)) {
+        restBeats += measure[i].beats;
+        i++;
+      }
+
+      // emitir el silencio más largo que entre y que esté alineado
+      while (restBeats > 0) {
+        if (restBeats >= 4) {
+          score.push({ glyph: G.wholeRest, beats: 4 });
+          pos += 4;
+          restBeats -= 4;
+        } else if (restBeats >= 2) {
+          score.push({ glyph: G.halfRest, beats: 2 });
+          pos += 2;
+          restBeats -= 2;
+        } else if (restBeats >= 1) {
+          score.push({ glyph: G.quarterRest, beats: 1 });
+          pos += 1;
+          restBeats -= 1;
+        } else {
+          score.push({ glyph: G.eighthRest, beats: 0.5 });
+          pos += 0.5;
+          restBeats -= 0.5;
+        }
+      }
+    }
   }
+
   score.push({ glyph: G.barline, beats: 0 });
   return score;
 };
