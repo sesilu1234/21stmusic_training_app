@@ -91,31 +91,38 @@ const REST_NAMES: Record<RestDuracion, string> = {
 
 // Computer keyboard → piano note mapping (QWERTY layout)
 const KEY_TO_NOTE: Record<string, Nota> = {
-  a: { nota: "C", octava: 4 },
-  w: { nota: "C#", octava: 4 },
-  s: { nota: "D", octava: 4 },
-  e: { nota: "D#", octava: 4 },
-  d: { nota: "E", octava: 4 },
-  f: { nota: "F", octava: 4 },
-  t: { nota: "F#", octava: 4 },
-  g: { nota: "G", octava: 4 },
-  y: { nota: "G#", octava: 4 },
-  h: { nota: "A", octava: 4 },
-  u: { nota: "A#", octava: 4 },
-  j: { nota: "B", octava: 4 },
-  k: { nota: "C", octava: 5 },
-  o: { nota: "C#", octava: 5 },
-  l: { nota: "D", octava: 5 },
-  p: { nota: "D#", octava: 5 },
-  ñ: { nota: "E", octava: 5 },
+  // Primera octava (y un par de la siguiente)
+  q: { nota: "C", octava: 4 },
+  "2": { nota: "C#", octava: 4 },
+  w: { nota: "D", octava: 4 },
+  "3": { nota: "D#", octava: 4 },
+  e: { nota: "E", octava: 4 },
+  r: { nota: "F", octava: 4 },
+  "5": { nota: "F#", octava: 4 },
+  t: { nota: "G", octava: 4 },
+  "6": { nota: "G#", octava: 4 },
+  y: { nota: "A", octava: 4 },
+  "7": { nota: "A#", octava: 4 },
+  u: { nota: "B", octava: 4 },
+  "8": { nota: "C", octava: 5 },
+  i: { nota: "C#", octava: 5 },
+
+  // Segunda octava
+  z: { nota: "C", octava: 5 },
+  s: { nota: "C#", octava: 5 },
+  x: { nota: "D", octava: 5 },
+  d: { nota: "D#", octava: 5 },
+  c: { nota: "E", octava: 5 },
+  v: { nota: "F", octava: 5 },
+  g: { nota: "F#", octava: 5 },
+  b: { nota: "G", octava: 5 },
+  h: { nota: "G#", octava: 5 },
+  n: { nota: "A", octava: 5 },
+  j: { nota: "A#", octava: 5 },
+  m: { nota: "B", octava: 5 },
 };
 
-const KEY_TO_REST: Record<string, RestDuracion> = {
-  v: "corchea",
-  b: "negra",
-  n: "blanca",
-  m: "redonda",
-};
+const KEY_TO_REST: Record<string, RestDuracion> = {};
 
 // Reverse map: "C4" → "A", "C#4" → "W", etc.
 const NOTE_TO_KEY: Record<string, string> = Object.fromEntries(
@@ -392,9 +399,9 @@ export default function ConstructorMelodias() {
   const modoAcordeRef = useRef(false);
   const modoLibreRef = useRef(false);
   const hoveredStepRef = useRef<number | null>(null);
-  const handleKeyRef = useRef<(nota: string, octava: number) => void>(() => {});
+  const handleKeyRef = useRef<(nota: string, octava: number) => void>(() => { });
   const handlePianoKeyUpRef = useRef<(nota: string, octava: number) => void>(
-    () => {},
+    () => { },
   );
   const noteFnsRef = useRef<Map<string, () => void>>(new Map());
 
@@ -823,13 +830,13 @@ export default function ConstructorMelodias() {
           oscs.forEach((o) => {
             try {
               o.stop(t + 0.2);
-            } catch {}
+            } catch { }
           });
-        } catch {}
+        } catch { }
       };
     } catch (e) {
       console.error("Audio error:", e);
-      return () => {};
+      return () => { };
     }
   };
 
@@ -991,13 +998,30 @@ export default function ConstructorMelodias() {
         return;
       }
       if (!modoTecladoRef.current) return;
-      if (KEY_TO_REST[key]) {
+      if (key === "enter") {
         if (pressed.has(key)) return;
         pressed.add(key);
-        setMelodia((prev) => [
-          ...prev,
-          { rest: true, duracion: KEY_TO_REST[key] },
-        ]);
+        setMelodia((prev) => {
+          const arr: MelodiaStep[] = [...prev, { rest: true as const, duracion: "corchea" as RestDuracion }];
+          const DUR_TO_VAL: Record<RestDuracion, number> = { corchea: 1, negra: 2, blanca: 4, redonda: 8 };
+          const VAL_TO_DUR: Record<number, RestDuracion> = { 1: "corchea", 2: "negra", 4: "blanca", 8: "redonda" };
+          
+          while (arr.length >= 2) {
+             const last1 = arr[arr.length - 1];
+             const last2 = arr[arr.length - 2];
+             if (last1 && 'rest' in last1 && last1.rest && last2 && 'rest' in last2 && last2.rest) {
+                if (last1.duracion === last2.duracion && last1.duracion !== "redonda") {
+                   const val = DUR_TO_VAL[last1.duracion] * 2;
+                   arr.pop();
+                   arr.pop();
+                   arr.push({ rest: true as const, duracion: VAL_TO_DUR[val] });
+                   continue;
+                }
+             }
+             break;
+          }
+          return arr;
+        });
         setMelodiaActivaIndex(-1);
         e.preventDefault();
         return;
@@ -1255,11 +1279,10 @@ export default function ConstructorMelodias() {
                   <button
                     key={p.id}
                     onClick={() => setSonidoPreset(p.id)}
-                    className={`py-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer leading-tight ${
-                      sonidoPreset === p.id
-                        ? "bg-teal-500 text-slate-950 shadow-md"
-                        : "text-slate-400 hover:text-white"
-                    }`}
+                    className={`py-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer leading-tight ${sonidoPreset === p.id
+                      ? "bg-teal-500 text-slate-950 shadow-md"
+                      : "text-slate-400 hover:text-white"
+                      }`}
                     title={p.label}
                   >
                     {p.icon}
@@ -1323,11 +1346,10 @@ export default function ConstructorMelodias() {
                   isPlaying ? stopPlayback() : playMelody(listenReps)
                 }
                 disabled={!isPlaying && melodia.length === 0}
-                className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 shadow-md ${
-                  isPlaying
-                    ? "bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-300/30"
-                    : "bg-teal-500 hover:bg-teal-400 text-slate-950"
-                }`}
+                className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 shadow-md ${isPlaying
+                  ? "bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-300/30"
+                  : "bg-teal-500 hover:bg-teal-400 text-slate-950"
+                  }`}
               >
                 {isPlaying ? (
                   <Square size={12} className="fill-current" />
@@ -1370,11 +1392,10 @@ export default function ConstructorMelodias() {
                   startChaining();
                 }}
                 disabled={melodia.length === 0 || isPlaying}
-                className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 shadow-md ${
-                  isPlaying
-                    ? "bg-slate-800 text-slate-400 border border-white/5 cursor-not-allowed"
-                    : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white"
-                }`}
+                className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 shadow-md ${isPlaying
+                  ? "bg-slate-800 text-slate-400 border border-white/5 cursor-not-allowed"
+                  : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white"
+                  }`}
               >
                 <Sparkles size={12} />
                 <span>Encadenamiento</span>
@@ -1464,11 +1485,10 @@ export default function ConstructorMelodias() {
                   if (modoAcorde) setCurrentChord([]);
                   setModoAcorde((p) => !p);
                 }}
-                className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 border ${
-                  modoAcorde
-                    ? "bg-amber-500/25 text-amber-200 border-amber-500/60 shadow-[0_0_12px_rgba(245,158,11,0.2)]"
-                    : "bg-amber-500/10 hover:bg-amber-500/15 text-amber-300 border-amber-500/25"
-                }`}
+                className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 border ${modoAcorde
+                  ? "bg-amber-500/25 text-amber-200 border-amber-500/60 shadow-[0_0_12px_rgba(245,158,11,0.2)]"
+                  : "bg-amber-500/10 hover:bg-amber-500/15 text-amber-300 border-amber-500/25"
+                  }`}
               >
                 <span>🎹 Acorde {modoAcorde ? "ON" : "OFF"}</span>
               </button>
@@ -1486,11 +1506,10 @@ export default function ConstructorMelodias() {
                   setModoLibre((p) => !p);
                   setCurrentChord([]);
                 }}
-                className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 border ${
-                  modoLibre
-                    ? "bg-sky-500/25 text-sky-200 border-sky-500/60 shadow-[0_0_12px_rgba(14,165,233,0.2)]"
-                    : "bg-sky-500/10 hover:bg-sky-500/15 text-sky-300 border-sky-500/25"
-                }`}
+                className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 border ${modoLibre
+                  ? "bg-sky-500/25 text-sky-200 border-sky-500/60 shadow-[0_0_12px_rgba(14,165,233,0.2)]"
+                  : "bg-sky-500/10 hover:bg-sky-500/15 text-sky-300 border-sky-500/25"
+                  }`}
               >
                 <span>🖐 Libre {modoLibre ? "ON" : "OFF"}</span>
               </button>
@@ -1503,11 +1522,10 @@ export default function ConstructorMelodias() {
             <div className="relative group">
               <button
                 onClick={() => setModoTeclado((p) => !p)}
-                className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 border ${
-                  modoTeclado
-                    ? "bg-violet-500/25 text-violet-200 border-violet-500/60 shadow-[0_0_12px_rgba(139,92,246,0.2)]"
-                    : "bg-violet-500/10 hover:bg-violet-500/15 text-violet-300 border-violet-500/25"
-                }`}
+                className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 border ${modoTeclado
+                  ? "bg-violet-500/25 text-violet-200 border-violet-500/60 shadow-[0_0_12px_rgba(139,92,246,0.2)]"
+                  : "bg-violet-500/10 hover:bg-violet-500/15 text-violet-300 border-violet-500/25"
+                  }`}
               >
                 <Keyboard size={12} />
                 <span>PC {modoTeclado ? "ON" : "OFF"}</span>
@@ -1625,26 +1643,23 @@ export default function ConstructorMelodias() {
                           if (hoveredStepRef.current === i)
                             hoveredStepRef.current = null;
                         }}
-                        className={`group flex items-center gap-1.5 select-none border transition-all animate-fadeIn shrink-0 ${
-                          active
-                            ? "ring-2 ring-amber-400 scale-105 shadow-[0_0_14px_rgba(251,191,36,0.5)]"
-                            : ""
-                        } ${
-                          rest
+                        className={`group flex items-center gap-1.5 select-none border transition-all animate-fadeIn shrink-0 ${active
+                          ? "ring-2 ring-amber-400 scale-105 shadow-[0_0_14px_rgba(251,191,36,0.5)]"
+                          : ""
+                          } ${rest
                             ? "bg-slate-700/40 border-slate-500/40 rounded-xl pl-2.5 pr-1 py-1 hover:border-slate-400"
                             : chord
                               ? "bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30 rounded-xl pl-2.5 pr-1 py-1 hover:border-amber-400"
                               : "bg-gradient-to-br from-teal-500/10 to-emerald-500/10 border-teal-500/30 rounded-full pl-2.5 pr-1 py-0.5 hover:border-teal-400"
-                        }`}
+                          }`}
                       >
                         <span
-                          className={`text-xs font-black uppercase tracking-tighter whitespace-nowrap ${
-                            rest
-                              ? "text-slate-400"
-                              : chord
-                                ? "text-amber-400"
-                                : "text-teal-300"
-                          }`}
+                          className={`text-xs font-black uppercase tracking-tighter whitespace-nowrap ${rest
+                            ? "text-slate-400"
+                            : chord
+                              ? "text-amber-400"
+                              : "text-teal-300"
+                            }`}
                         >
                           {formatStepLabel(step)}
                         </span>
@@ -1670,9 +1685,7 @@ export default function ConstructorMelodias() {
                 Teclado activo:
               </span>
               <span className="text-[9px] text-slate-400 font-mono">
-                A=Do · W=Do# · S=Re · E=Re# · D=Mi · F=Fa · T=Fa# · G=Sol ·
-                Y=Sol# · H=La · U=La# · J=Si · K=Do' · L=Re' · O=Do#' · P=Re#' ·
-                Ñ=Mi' · V/B/N/M=Silencios
+                Q2W3ER5T6Y7U8I=Octava 1 · ZSXDCVGBHNJM=Octava 2 · ENTER=Añadir/Sumar Silencio
               </span>
             </div>
           )}
@@ -1717,13 +1730,12 @@ export default function ConstructorMelodias() {
                           }}
                           onPointerUp={() => handlePianoKeyUp(nota, octava)}
                           onPointerCancel={() => handlePianoKeyUp(nota, octava)}
-                          className={`relative w-7 h-36 bg-slate-900 border border-slate-800 rounded-b-md text-white flex flex-col items-center justify-end pb-1.5 text-[7px] font-medium cursor-pointer transition-all duration-75 select-none active:scale-[0.97] z-25 -mx-3.5 hover:shadow-lg ${
-                            isSounding
-                              ? "bg-sky-400 text-slate-950 border-sky-200 scale-[1.03] shadow-[0_0_18px_rgba(56,189,248,0.85)] z-30"
-                              : isChordActive
-                                ? "bg-amber-400 text-black border-amber-300 scale-[1.03] shadow-[0_0_15px_rgba(251,191,36,0.8)] z-30"
-                                : "hover:border-slate-600"
-                          }`}
+                          className={`relative w-7 h-36 bg-slate-900 border border-slate-800 rounded-b-md text-white flex flex-col items-center justify-end pb-1.5 text-[7px] font-medium cursor-pointer transition-all duration-75 select-none active:scale-[0.97] z-25 -mx-3.5 hover:shadow-lg ${isSounding
+                            ? "bg-sky-400 text-slate-950 border-sky-200 scale-[1.03] shadow-[0_0_18px_rgba(56,189,248,0.85)] z-30"
+                            : isChordActive
+                              ? "bg-amber-400 text-black border-amber-300 scale-[1.03] shadow-[0_0_15px_rgba(251,191,36,0.8)] z-30"
+                              : "hover:border-slate-600"
+                            }`}
                         >
                           {modoTeclado && pcKey && (
                             <span
@@ -1748,13 +1760,12 @@ export default function ConstructorMelodias() {
                         }}
                         onPointerUp={() => handlePianoKeyUp(nota, octava)}
                         onPointerCancel={() => handlePianoKeyUp(nota, octava)}
-                        className={`relative w-11 h-52 bg-white border border-slate-300 rounded-b-lg text-slate-800 flex flex-col items-center justify-end pb-2 text-[9px] font-bold cursor-pointer transition-all duration-75 select-none active:scale-[0.97] z-10 hover:bg-slate-100 hover:shadow-inner ${
-                          isSounding
-                            ? "bg-sky-400 text-slate-950 border-sky-200 scale-[1.02] shadow-[0_0_16px_rgba(56,189,248,0.8)] z-30"
-                            : isChordActive
-                              ? "bg-amber-400 text-black border-amber-300 scale-[1.02] shadow-[0_0_12px_rgba(251,191,36,0.7)] z-30"
-                              : ""
-                        }`}
+                        className={`relative w-11 h-52 bg-white border border-slate-300 rounded-b-lg text-slate-800 flex flex-col items-center justify-end pb-2 text-[9px] font-bold cursor-pointer transition-all duration-75 select-none active:scale-[0.97] z-10 hover:bg-slate-100 hover:shadow-inner ${isSounding
+                          ? "bg-sky-400 text-slate-950 border-sky-200 scale-[1.02] shadow-[0_0_16px_rgba(56,189,248,0.8)] z-30"
+                          : isChordActive
+                            ? "bg-amber-400 text-black border-amber-300 scale-[1.02] shadow-[0_0_12px_rgba(251,191,36,0.7)] z-30"
+                            : ""
+                          }`}
                       >
                         {modoTeclado && pcKey && (
                           <span
@@ -1785,11 +1796,10 @@ export default function ConstructorMelodias() {
                     <button
                       key={d}
                       onClick={() => addRest(d)}
-                      className={`min-h-12 bg-slate-800/60 hover:bg-slate-700/80 text-[9px] font-black uppercase tracking-wider text-slate-300 hover:text-white transition-all cursor-pointer active:scale-95 flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-1 lg:gap-2 px-2 lg:px-3 ${
-                        i < 3
-                          ? "border-r lg:border-r-0 lg:border-b border-white/5"
-                          : ""
-                      }`}
+                      className={`min-h-12 bg-slate-800/60 hover:bg-slate-700/80 text-[9px] font-black uppercase tracking-wider text-slate-300 hover:text-white transition-all cursor-pointer active:scale-95 flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-1 lg:gap-2 px-2 lg:px-3 ${i < 3
+                        ? "border-r lg:border-r-0 lg:border-b border-white/5"
+                        : ""
+                        }`}
                     >
                       <span className="flex flex-col lg:flex-row items-center gap-1 lg:gap-2 min-w-0">
                         <span className="text-lg leading-none text-slate-200">
@@ -1851,11 +1861,10 @@ export default function ConstructorMelodias() {
                           key={i}
                           onClick={() => loadMelody(i)}
                           onDoubleClick={() => renameMelody(i)}
-                          className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all border ${
-                            active
-                              ? "bg-teal-500 border-teal-400 text-slate-950 shadow-[0_0_14px_rgba(20,184,166,0.3)] scale-[1.01]"
-                              : "bg-white/5 border-white/5 hover:bg-white/10 text-white"
-                          }`}
+                          className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all border ${active
+                            ? "bg-teal-500 border-teal-400 text-slate-950 shadow-[0_0_14px_rgba(20,184,166,0.3)] scale-[1.01]"
+                            : "bg-white/5 border-white/5 hover:bg-white/10 text-white"
+                            }`}
                         >
                           <div className="min-w-0 flex-1">
                             <span
@@ -1874,11 +1883,10 @@ export default function ConstructorMelodias() {
                           </div>
                           <button
                             onClick={(e) => clearSlot(i, e)}
-                            className={`w-5 h-5 rounded-lg flex items-center justify-center cursor-pointer select-none transition-all shrink-0 ${
-                              active
-                                ? "bg-slate-950/20 text-slate-950 hover:bg-rose-600 hover:text-white"
-                                : "bg-black/30 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
-                            }`}
+                            className={`w-5 h-5 rounded-lg flex items-center justify-center cursor-pointer select-none transition-all shrink-0 ${active
+                              ? "bg-slate-950/20 text-slate-950 hover:bg-rose-600 hover:text-white"
+                              : "bg-black/30 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
+                              }`}
                           >
                             <Trash2 size={10} />
                           </button>
@@ -1888,11 +1896,10 @@ export default function ConstructorMelodias() {
                       <div
                         key={i}
                         onClick={() => loadMelody(i)}
-                        className={`group flex items-center justify-between p-2.5 rounded-xl border border-dashed border-white/10 hover:border-teal-500/30 transition-all select-none ${
-                          melodia.length > 0
-                            ? "cursor-pointer bg-teal-500/5 hover:bg-teal-500/10"
-                            : "bg-white/[0.01] hover:bg-white/[0.03]"
-                        }`}
+                        className={`group flex items-center justify-between p-2.5 rounded-xl border border-dashed border-white/10 hover:border-teal-500/30 transition-all select-none ${melodia.length > 0
+                          ? "cursor-pointer bg-teal-500/5 hover:bg-teal-500/10"
+                          : "bg-white/[0.01] hover:bg-white/[0.03]"
+                          }`}
                       >
                         <div>
                           <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest block">
@@ -1941,11 +1948,10 @@ export default function ConstructorMelodias() {
                           key={i}
                           onClick={() => loadMelody(i)}
                           onDoubleClick={() => renameMelody(i)}
-                          className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all border ${
-                            active
-                              ? "bg-teal-500 border-teal-400 text-slate-950 shadow-[0_0_14px_rgba(20,184,166,0.3)] scale-[1.01]"
-                              : "bg-white/5 border-white/5 hover:bg-white/10 text-white"
-                          }`}
+                          className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all border ${active
+                            ? "bg-teal-500 border-teal-400 text-slate-950 shadow-[0_0_14px_rgba(20,184,166,0.3)] scale-[1.01]"
+                            : "bg-white/5 border-white/5 hover:bg-white/10 text-white"
+                            }`}
                         >
                           <div className="min-w-0 flex-1">
                             <span
@@ -1964,11 +1970,10 @@ export default function ConstructorMelodias() {
                           </div>
                           <button
                             onClick={(e) => clearSlot(i, e)}
-                            className={`w-5 h-5 rounded-lg flex items-center justify-center cursor-pointer select-none transition-all shrink-0 ${
-                              active
-                                ? "bg-slate-950/20 text-slate-950 hover:bg-rose-600 hover:text-white"
-                                : "bg-black/30 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
-                            }`}
+                            className={`w-5 h-5 rounded-lg flex items-center justify-center cursor-pointer select-none transition-all shrink-0 ${active
+                              ? "bg-slate-950/20 text-slate-950 hover:bg-rose-600 hover:text-white"
+                              : "bg-black/30 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
+                              }`}
                           >
                             <Trash2 size={10} />
                           </button>
@@ -1978,11 +1983,10 @@ export default function ConstructorMelodias() {
                       <div
                         key={i}
                         onClick={() => loadMelody(i)}
-                        className={`group flex items-center justify-between p-2.5 rounded-xl border border-dashed border-white/10 hover:border-violet-500/30 transition-all select-none ${
-                          melodia.length > 0
-                            ? "cursor-pointer bg-violet-500/5 hover:bg-violet-500/10"
-                            : "bg-white/[0.01] hover:bg-white/[0.03]"
-                        }`}
+                        className={`group flex items-center justify-between p-2.5 rounded-xl border border-dashed border-white/10 hover:border-violet-500/30 transition-all select-none ${melodia.length > 0
+                          ? "cursor-pointer bg-violet-500/5 hover:bg-violet-500/10"
+                          : "bg-white/[0.01] hover:bg-white/[0.03]"
+                          }`}
                       >
                         <div>
                           <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest block">
@@ -2040,6 +2044,6 @@ export default function ConstructorMelodias() {
           background: rgba(20, 184, 166, 0.4);
         }
       `}</style>
-    </div>
+    </div >
   );
 }

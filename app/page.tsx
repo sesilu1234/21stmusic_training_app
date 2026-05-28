@@ -1,6 +1,6 @@
 "use client";
 
-import { Music2, ArrowLeft, Sun, Moon } from "lucide-react";
+import { Music2, ArrowLeft, Sun, Moon, Award } from "lucide-react";
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,15 +66,15 @@ const juegos: Juego[] = [
     slug: "/play/diapason_acordes",
     hasSubmenu: true,
   },
-  {
-    id: 4,
-    titulo: "Modos Griegos",
+    {
+      id: 4,
+      titulo: "Modos E. Mayor",
     desc: "Identifica escalas y modos en el pentagrama.",
     icon: Music2,
     bg: "bg-indigo-500/20",
     accent: "text-indigo-400",
     slug: "/play/modos",
-  },
+    },
   {
     id: 5,
     titulo: "Intervalos",
@@ -94,25 +94,25 @@ const juegos: Juego[] = [
     accent: "text-red-400",
     slug: "/play/trivia",
   },
-  {
-    id: 7,
-    titulo: "Ritmo",
+    {
+      id: 7,
+      titulo: "Lectura Rítmica",
     desc: "Pulsa al ritmo exacto de la partitura.",
     icon: Activity,
     bg: "bg-orange-500/20",
     accent: "text-orange-400",
     slug: "/play/ritmo",
     hasSubmenu: true,
-  },
-  {
-    id: 8,
-    titulo: "Melodías",
+    },
+    {
+      id: 8,
+      titulo: "Ej. Canto/ E. del oído",
     desc: "Crea, transporta y entrena tu oído con tus propias melodías.",
     icon: Music2,
     bg: "bg-teal-500/20",
     accent: "text-teal-400",
     slug: "/play/melodias",
-  },
+    },
 ];
 
 const historialTabla = [
@@ -138,7 +138,8 @@ export default function Home() {
   const [showAcordesMenu, setShowAcordesMenu] = useState(false);
   const [showIntervalosMenu, setShowIntervalosMenu] = useState(false);
   const [showRitmoMenu, setShowRitmoMenu] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [earnedMedals, setEarnedMedals] = useState(0);
   const [notas, setNotas] = useState<Nota[]>([
     {
       id: 1,
@@ -190,30 +191,29 @@ export default function Home() {
                 alt="logo"
               />
               <div className="flex flex-col min-w-0">
-                <span className="text-white italic font-black tracking-tighter text-sm md:text-xl lg:text-5xl leading-tight ">
+                <span className="text-white italic font-black tracking-tighter text-sm md:text-xl lg:text-5xl leading-tight " style={{ fontFamily: "'Chaney', sans-serif", fontWeight: "bold", fontStyle: "italic" }}>
                   21st Century Music
                 </span>
                 <span className="font-light tracking-widest text-[6px] md:text-[8px] uppercase text-amber-400">
                   ESCUELA DE MÚSICA MODERNA
                 </span>
-              </div>
+            </div>
             </div>
 
             <div className="flex items-center gap-3 md:gap-8 flex-shrink-0">
-              <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors text-amber-400"
-              >
-                {!isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-
-              {(
-                [
-                  { key: "juegos", label: "Juegos", Icon: Gamepad2 },
-                  { key: "progreso", label: "Progreso", Icon: History },
-                  { key: "notas", label: "Notas", Icon: StickyNote },
-                ] as const
-              ).map(({ key, label, Icon }) => (
+                 <button
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors text-amber-400"
+        >
+          {!isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+                {(
+                  [
+                    { key: "juegos", label: "Juegos", Icon: Gamepad2 },
+                    { key: "progreso", label: "Progreso", Icon: History },
+                    { key: "notas", label: "Notas", Icon: StickyNote },
+                  ] as const
+                ).map(({ key, label, Icon }) => (
                 <button
                   key={key}
                   onClick={() => {
@@ -242,9 +242,9 @@ export default function Home() {
             !showRitmoMenu && (
               <div className="flex-1 flex flex-col justify-center items-center px-3 md:px-6 py-6 md:py-10 animate-fadeIn">
                 <header className="mb-6 md:mb-10 text-center px-2">
-                  <h1 className="text-lg sm:text-5xl md:text-7xl lg:text-5xl italic  tracking-tighter text-white leading-none">
-                    escuelademusicamoderna.com
-                  </h1>
+                    <h1 className="text-2xl sm:text-6xl md:text-8xl italic tracking-tighter text-white leading-none text-center">
+                      <a href="https://escuelademusicamoderna.com/" target="_blank" rel="noopener noreferrer" className="underline text-4xl md:text-6xl block w-full text-center">escuelademusicamoderna.com</a>
+                    </h1>
                 </header>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 max-w-6xl w-full">
@@ -252,11 +252,11 @@ export default function Home() {
                     <button
                       key={j.id}
                       onClick={() => {
-                        if (j.titulo === "Acordes") setShowAcordesMenu(true);
-                        else if (j.titulo === "Intervalos")
-                          setShowIntervalosMenu(true);
-                        else if (j.titulo === "Ritmo") setShowRitmoMenu(true);
-                        else router.push(j.slug);
+                          if (j.titulo === "Acordes") setShowAcordesMenu(true);
+                          else if (j.titulo === "Intervalos")
+                            setShowIntervalosMenu(true);
+                          else if (j.titulo === "Lectura Rítmica") setShowRitmoMenu(true);
+                          else router.push(j.slug);
                       }}
                       className="group flex items-center md:flex-col md:items-start gap-4 md:gap-0 p-4 md:p-8 rounded-2xl md:rounded-3xl border bg-black/40 border-white/10 hover:bg-black/60 hover:scale-[1.02] md:hover:scale-105 backdrop-blur-md transition-all text-left shadow-xl"
                     >
@@ -419,7 +419,7 @@ export default function Home() {
                 <h2 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl italic font-black text-white mb-8 md:mb-12 leading-tight uppercase">
                   Modo de{" "}
                   <span className="text-orange-400 drop-shadow-[0_0_15px_rgba(251,146,60,0.3)]">
-                    Ritmo
+                    Lectura Rítmica
                   </span>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10">

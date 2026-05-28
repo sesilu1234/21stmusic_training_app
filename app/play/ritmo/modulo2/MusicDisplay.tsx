@@ -172,7 +172,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     } as const;
 
     function createGameState(BPM: number) {
-      const score = [
+      const score: any[] = [
         { glyph: G.barline, beats: 0 },
         { glyph: G.quarterRest, beats: 1 },
         { glyph: G.quarterRest, beats: 1 },
