@@ -20,12 +20,14 @@ import {
   Keyboard,
   ChevronUp,
   ChevronDown,
+  Check,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Nota {
   nota: string;
   octava: number;
+  duracion?: number;
 }
 type RestDuracion = "corchea" | "negra" | "blanca" | "redonda";
 interface RestStep {
@@ -89,6 +91,39 @@ const REST_NAMES: Record<RestDuracion, string> = {
   redonda: "Redonda",
 };
 
+const durationLabel = (units = 1) => {
+  const parts: string[] = [];
+  let remaining = Math.max(1, units);
+  const values = [
+    { value: 8, label: "Redonda" },
+    { value: 4, label: "Blanca" },
+    { value: 2, label: "Negra" },
+    { value: 1, label: "Corchea" },
+  ];
+  for (const { value, label } of values) {
+    while (remaining >= value) {
+      parts.push(label);
+      remaining -= value;
+    }
+  }
+  return parts.join(" + ");
+};
+
+const splitDurationUnits = (units = 1) => {
+  const parts: number[] = [];
+  let remaining = Math.max(1, units);
+  for (const value of [8, 4, 2, 1]) {
+    while (remaining >= value) {
+      parts.push(value);
+      remaining -= value;
+    }
+  }
+  return parts;
+};
+
+const durationShortLabel = (units: number) =>
+  ({ 1: "1/8", 2: "1/4", 4: "1/2", 8: "1" })[units] || `${units}/8`;
+
 // Computer keyboard → piano note mapping (QWERTY layout)
 const KEY_TO_NOTE: Record<string, Nota> = {
   // Primera octava (y un par de la siguiente)
@@ -137,9 +172,9 @@ const REST_TO_KEY: Record<RestDuracion, string> = Object.fromEntries(
 ) as Record<RestDuracion, string>;
 
 const SOUND_PRESETS: { id: SonidoPreset; label: string; icon: string }[] = [
-  { id: "warm", label: "Cálido", icon: "🎹" },
+  { id: "dark", label: "Piano", icon: "🎹" },
   { id: "bright", label: "Brillante", icon: "✨" },
-  { id: "dark", label: "Oscuro", icon: "🌑" },
+  { id: "warm", label: "Cálido", icon: "🔥" },
   { id: "classic", label: "Synth", icon: "📐" },
   { id: "sala", label: "Sala", icon: "🏛️" },
   { id: "hall", label: "Hall", icon: "🌊" },
@@ -164,14 +199,21 @@ const sanitizeMelody = (notas: any): MelodiaStep[] => {
       const f = step.filter(
         (n: any) =>
           n && typeof n.nota === "string" && typeof n.octava === "number",
-      );
+      ).map((n: any) => ({
+        nota: n.nota,
+        octava: n.octava,
+        duracion:
+          typeof n.duracion === "number" && n.duracion > 0
+            ? n.duracion
+            : 1,
+      }));
       if (f.length > 0) result.push(f as Nota[]);
     } else if (
       step &&
       typeof step.nota === "string" &&
       typeof step.octava === "number"
     ) {
-      result.push([step] as Nota[]);
+      result.push([{ ...step, duracion: step.duracion || 1 }] as Nota[]);
     }
   }
   return result;
@@ -181,7 +223,12 @@ const formatStepLabel = (step: MelodiaStep): string => {
   if (isRestStep(step))
     return `${REST_ICONS[step.duracion]} ${REST_NAMES[step.duracion]}`;
   return (step as Nota[])
-    .map((n) => `${noteNamesEs[n.nota] || n.nota}${n.octava}`)
+    .map(
+      (n) =>
+        `${noteNamesEs[n.nota] || n.nota}${n.octava} (${durationLabel(
+          n.duracion,
+        )})`,
+    )
     .join(" + ");
 };
 
@@ -360,7 +407,7 @@ export default function ConstructorMelodias() {
   const [bpm, setBpm] = useState(120);
   const [volume, setVolume] = useState(0.8);
   const [transposicion, setTransposicion] = useState(0);
-  const [sonidoPreset, setSonidoPreset] = useState<SonidoPreset>("warm");
+  const [sonidoPreset, setSonidoPreset] = useState<SonidoPreset>("dark");
   const [melodiasGuardadas, setMelodiasGuardadas] = useState<
     (MelodiaGuardada | null)[]
   >(Array(24).fill(null));
@@ -373,22 +420,34 @@ export default function ConstructorMelodias() {
   const [currentChord, setCurrentChord] = useState<Nota[]>([]);
   const [modoLibre, setModoLibre] = useState(false);
   const [modoTeclado, setModoTeclado] = useState(false);
-  const [listenReps, setListenReps] = useState(4);
+  const [listenReps, setListenReps] = useState(1);
+  const [listenSettingsOpen, setListenSettingsOpen] = useState(false);
   const [chainSettingsOpen, setChainSettingsOpen] = useState(false);
-  const [chainStartSemitones, setChainStartSemitones] = useState(0);
-  const [chainSemitones, setChainSemitones] = useState(5);
+  const [chainSemitones, setChainSemitones] = useState(1);
+  const [chainReverseMelody, setChainReverseMelody] = useState(false);
+  const [chainReturnToRoot, setChainReturnToRoot] = useState(false);
+  const [chainRepeatReverseTurnaround, setChainRepeatReverseTurnaround] =
+    useState(false);
+  const [chainRepeatReturnTurnaround, setChainRepeatReturnTurnaround] =
+    useState(false);
+  const [chainPauseReverseTurnaround, setChainPauseReverseTurnaround] =
+    useState(true);
+  const [chainPauseReturnTurnaround, setChainPauseReturnTurnaround] =
+    useState(true);
   const [currentPlayingStep, setCurrentPlayingStep] = useState<number | null>(
     null,
   );
   const [predefinedOpen, setPredefinedOpen] = useState(true);
   const [userSlotsOpen, setUserSlotsOpen] = useState(true);
+  const [nextNoteArmed, setNextNoteArmed] = useState(false);
 
   // Playback refs (avoid stale closures)
   const isPlayingRef = useRef(false);
+  const playbackRunIdRef = useRef(0);
   const bpmRef = useRef(120);
   const volumeRef = useRef(0.8);
   const transposicionRef = useRef(0);
-  const sonidoPresetRef = useRef<SonidoPreset>("warm");
+  const sonidoPresetRef = useRef<SonidoPreset>("dark");
   const melodiaRef = useRef<MelodiaStep[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const reverbRoomRef = useRef<AudioBuffer | null>(null);
@@ -399,6 +458,7 @@ export default function ConstructorMelodias() {
   const modoAcordeRef = useRef(false);
   const modoLibreRef = useRef(false);
   const hoveredStepRef = useRef<number | null>(null);
+  const forceNextNoteRef = useRef(false);
   const handleKeyRef = useRef<(nota: string, octava: number) => void>(() => { });
   const handlePianoKeyUpRef = useRef<(nota: string, octava: number) => void>(
     () => { },
@@ -615,15 +675,15 @@ export default function ConstructorMelodias() {
         oscS.frequency.value = freq;
         const oscT = ctx.createOscillator();
         oscT.type = "triangle";
-        oscT.frequency.value = freq;
+        oscT.frequency.value = freq * 2;
         const filt = ctx.createBiquadFilter();
         filt.type = "lowpass";
-        filt.frequency.value = 450;
-        filt.Q.value = 0.8;
+        filt.frequency.value = 2400;
+        filt.Q.value = 0.7;
         const gS = ctx.createGain();
-        gS.gain.value = 0.85;
+        gS.gain.value = 0.75;
         const gT = ctx.createGain();
-        gT.gain.value = 0.15;
+        gT.gain.value = 0.25;
         oscS.connect(gS);
         oscT.connect(gT);
         gS.connect(filt);
@@ -631,13 +691,17 @@ export default function ConstructorMelodias() {
         filt.connect(masterGain);
         masterGain.gain.setValueAtTime(0, ctx.currentTime);
         masterGain.gain.linearRampToValueAtTime(
-          vol * 0.5,
-          ctx.currentTime + 0.065,
+          vol * 0.48,
+          ctx.currentTime + 0.008,
         );
         oscS.start();
         oscT.start();
-        const dur = 0.6;
-        masterGain.gain.setValueAtTime(vol * 0.5, ctx.currentTime + dur - 0.2);
+        const dur = 0.75;
+        masterGain.gain.exponentialRampToValueAtTime(
+          vol * 0.18,
+          ctx.currentTime + 0.22,
+        );
+        masterGain.gain.setValueAtTime(vol * 0.18, ctx.currentTime + dur - 0.12);
         masterGain.gain.exponentialRampToValueAtTime(
           0.0001,
           ctx.currentTime + dur,
@@ -782,15 +846,15 @@ export default function ConstructorMelodias() {
         oscS.frequency.value = freq;
         const oscT = ctx.createOscillator();
         oscT.type = "triangle";
-        oscT.frequency.value = freq;
+        oscT.frequency.value = freq * 2;
         const filt = ctx.createBiquadFilter();
         filt.type = "lowpass";
-        filt.frequency.value = 450;
-        filt.Q.value = 0.8;
+        filt.frequency.value = 2400;
+        filt.Q.value = 0.7;
         const gS = ctx.createGain();
-        gS.gain.value = 0.85;
+        gS.gain.value = 0.75;
         const gT = ctx.createGain();
-        gT.gain.value = 0.15;
+        gT.gain.value = 0.25;
         oscS.connect(gS);
         oscT.connect(gT);
         gS.connect(filt);
@@ -798,8 +862,12 @@ export default function ConstructorMelodias() {
         filt.connect(masterGain);
         masterGain.gain.setValueAtTime(0, ctx.currentTime);
         masterGain.gain.linearRampToValueAtTime(
-          vol * 0.5,
-          ctx.currentTime + 0.065,
+          vol * 0.48,
+          ctx.currentTime + 0.008,
+        );
+        masterGain.gain.exponentialRampToValueAtTime(
+          vol * 0.2,
+          ctx.currentTime + 0.24,
         );
         oscS.start();
         oscT.start();
@@ -861,52 +929,80 @@ export default function ConstructorMelodias() {
 
   // ── Playback ──────────────────────────────────────────────────────────────
   const stopPlayback = () => {
+    playbackRunIdRef.current += 1;
     isPlayingRef.current = false;
     setIsPlaying(false);
     setActiveNotes({});
     setCurrentPlayingStep(null);
   };
 
-  const runWithPlayingState = async (fn: () => Promise<void>) => {
+  const runWithPlayingState = async (fn: (runId: number) => Promise<void>) => {
     stopPlayback();
+    const runId = playbackRunIdRef.current + 1;
+    playbackRunIdRef.current = runId;
     await new Promise((r) => setTimeout(r, 60));
+    if (playbackRunIdRef.current !== runId) return;
     isPlayingRef.current = true;
     setIsPlaying(true);
     try {
-      await fn();
+      await fn(runId);
     } catch (e) {
       console.error(e);
     } finally {
-      setIsPlaying(false);
-      isPlayingRef.current = false;
-      setActiveNotes({});
-      setCurrentPlayingStep(null);
+      if (playbackRunIdRef.current === runId) {
+        setIsPlaying(false);
+        isPlayingRef.current = false;
+        setActiveNotes({});
+        setCurrentPlayingStep(null);
+      }
     }
   };
 
-  const playMelodyLoop = async (repetir: number, trans: number) => {
-    for (let rep = 0; rep < repetir; rep++) {
-      for (let si = 0; si < melodiaRef.current.length; si++) {
-        if (!isPlayingRef.current) return;
-        const step = melodiaRef.current[si];
-        setCurrentPlayingStep(si);
+  const isCurrentPlaybackRun = (runId: number) =>
+    isPlayingRef.current && playbackRunIdRef.current === runId;
 
-        if (isRestStep(step)) {
-          const beat = 60000 / bpmRef.current;
-          await new Promise((r) =>
-            setTimeout(r, beat * REST_MULTIPLIERS[step.duracion]),
-          );
-        } else {
-          const notes = step as Nota[];
-          notes.forEach((n) => playNote(n.nota, n.octava, trans));
-          const beat = 60000 / bpmRef.current;
-          notes.forEach((n) =>
-            highlightKey(n.nota, n.octava, trans, Math.min(beat * 0.85, 450)),
-          );
-          await new Promise((r) => setTimeout(r, beat));
-        }
+  const playMelodyOnce = async (
+    trans: number,
+    runId: number,
+    reverse = false,
+    repeatTurnaround = false,
+  ) => {
+    const sequence = melodiaRef.current.map((step, index) => ({ step, index }));
+    if (reverse) {
+      sequence.reverse();
+      if (!repeatTurnaround) sequence.shift();
+    }
+
+    for (const { step, index } of sequence) {
+      if (!isCurrentPlaybackRun(runId)) return;
+      setCurrentPlayingStep(index);
+
+      if (isRestStep(step)) {
+        const beat = 60000 / bpmRef.current;
+        await new Promise((r) =>
+          setTimeout(r, beat * REST_MULTIPLIERS[step.duracion]),
+        );
+      } else {
+        const notes = step as Nota[];
+        notes.forEach((n) => playNote(n.nota, n.octava, trans));
+        const beat = 60000 / bpmRef.current;
+        const duration = beat * ((notes[0]?.duracion || 1) / 2);
+        notes.forEach((n) =>
+          highlightKey(n.nota, n.octava, trans, Math.min(duration * 0.85, 450)),
+        );
+        await new Promise((r) => setTimeout(r, duration));
       }
-      if (!isPlayingRef.current) return;
+    }
+  };
+
+  const playMelodyLoop = async (
+    repetir: number,
+    trans: number,
+    runId: number,
+  ) => {
+    for (let rep = 0; rep < repetir; rep++) {
+      await playMelodyOnce(trans, runId);
+      if (!isCurrentPlaybackRun(runId)) return;
       if (rep < repetir - 1) {
         setCurrentPlayingStep(null);
         await new Promise((r) => setTimeout(r, 500));
@@ -916,32 +1012,60 @@ export default function ConstructorMelodias() {
 
   const playMelody = (reps = 4) => {
     if (melodia.length === 0) return;
-    runWithPlayingState(async () => {
-      await playMelodyLoop(reps, transposicionRef.current);
+    runWithPlayingState(async (runId) => {
+      await playMelodyLoop(reps, transposicionRef.current, runId);
     });
   };
 
-  const startChaining = () => {
+  const playChainedMelody = () => {
     if (melodia.length === 0) return;
     const orig = transposicionRef.current;
-    const startT = chainStartSemitones;
-    const maxT = chainSemitones;
-    runWithPlayingState(async () => {
-      for (let t = startT; t <= maxT; t++) {
-        if (!isPlayingRef.current) return;
-        setTransposicion(t);
-        transposicionRef.current = t;
-        await playMelodyLoop(1, t);
-        if (!isPlayingRef.current) return;
-        await new Promise((r) => setTimeout(r, 250));
+    const upOffsets = Array.from(
+      { length: Math.max(1, chainSemitones) },
+      (_, i) => i,
+    );
+    const downStart = chainRepeatReturnTurnaround
+      ? chainSemitones - 1
+      : chainSemitones - 2;
+    const downOffsets = chainReturnToRoot && downStart >= 0
+      ? Array.from({ length: downStart + 1 }, (_, i) => downStart - i)
+      : [];
+
+    const playChainStep = async (offset: number, runId: number) => {
+      if (!isCurrentPlaybackRun(runId)) return;
+      const nextTransposition = orig + offset;
+      setTransposicion(nextTransposition);
+      transposicionRef.current = nextTransposition;
+      await playMelodyOnce(nextTransposition, runId);
+      if (chainReverseMelody) {
+        setCurrentPlayingStep(null);
+        if (chainPauseReverseTurnaround) {
+          await new Promise((r) => setTimeout(r, 250));
+        }
+        await playMelodyOnce(
+          nextTransposition,
+          runId,
+          true,
+          chainRepeatReverseTurnaround,
+        );
       }
-      for (let t = maxT - 1; t >= startT; t--) {
-        if (!isPlayingRef.current) return;
-        setTransposicion(t);
-        transposicionRef.current = t;
-        await playMelodyLoop(1, t);
-        if (!isPlayingRef.current) return;
-        await new Promise((r) => setTimeout(r, 250));
+    };
+
+    runWithPlayingState(async (runId) => {
+      for (let i = 0; i < upOffsets.length; i++) {
+        await playChainStep(upOffsets[i], runId);
+        if (!isCurrentPlaybackRun(runId)) return;
+        const isLastUp = i === upOffsets.length - 1;
+        if (!isLastUp || (downOffsets.length > 0 && chainPauseReturnTurnaround)) {
+          await new Promise((r) => setTimeout(r, 250));
+        }
+      }
+      for (let i = 0; i < downOffsets.length; i++) {
+        await playChainStep(downOffsets[i], runId);
+        if (!isCurrentPlaybackRun(runId)) return;
+        if (i < downOffsets.length - 1) {
+          await new Promise((r) => setTimeout(r, 250));
+        }
       }
       setTransposicion(orig);
       transposicionRef.current = orig;
@@ -965,9 +1089,32 @@ export default function ConstructorMelodias() {
           : [...prev, { nota, octava }];
       });
     } else {
-      setMelodia((prev) => [...prev, [{ nota, octava }]]);
+      setMelodia((prev) => {
+        const last = prev[prev.length - 1];
+        if (
+          !forceNextNoteRef.current &&
+          Array.isArray(last) &&
+          last.length === 1 &&
+          last[0].nota === nota &&
+          last[0].octava === octava
+        ) {
+          const next = [...prev];
+          next[next.length - 1] = [
+            { ...last[0], duracion: (last[0].duracion || 1) + 1 },
+          ];
+          return next;
+        }
+        forceNextNoteRef.current = false;
+        setNextNoteArmed(false);
+        return [...prev, [{ nota, octava, duracion: 1 }]];
+      });
       setMelodiaActivaIndex(-1);
     }
+  };
+
+  const markNextNote = () => {
+    forceNextNoteRef.current = true;
+    setNextNoteArmed(true);
   };
 
   const handlePianoKeyUp = (nota: string, octava: number) => {
@@ -994,6 +1141,14 @@ export default function ConstructorMelodias() {
         const indexToDelete = hoveredStepRef.current;
         hoveredStepRef.current = null;
         setMelodia((prev) => prev.filter((_, i) => i !== indexToDelete));
+        e.preventDefault();
+        return;
+      }
+      if (key === " ") {
+        if (pressed.has(key)) return;
+        pressed.add(key);
+        forceNextNoteRef.current = true;
+        setNextNoteArmed(true);
         e.preventDefault();
         return;
       }
@@ -1121,8 +1276,8 @@ export default function ConstructorMelodias() {
     setMelodiaActivaIndex(i);
     setMelodia(mel.notas);
     melodiaRef.current = mel.notas;
-    runWithPlayingState(async () => {
-      await playMelodyLoop(1, transposicionRef.current);
+    runWithPlayingState(async (runId) => {
+      await playMelodyLoop(1, transposicionRef.current, runId);
     });
   };
 
@@ -1196,8 +1351,121 @@ export default function ConstructorMelodias() {
       </header>
 
       {/* Main */}
-      <main className="relative flex-1 flex flex-col xl:flex-row items-stretch justify-center gap-6 p-4 md:p-8 z-10 w-full max-w-7xl mx-auto">
-        {/* ── Left: workspace ── */}
+      <main className="relative flex-1 flex flex-col 2xl:flex-row items-stretch justify-center gap-6 p-4 md:p-8 z-10 w-full max-w-[96rem] mx-auto">
+        <div className="w-full 2xl:w-[280px] shrink-0 flex flex-col gap-4">
+          <aside className="bg-slate-900/55 border border-white/10 rounded-3xl p-4 backdrop-blur-xl shadow-2xl">
+            <h2 className="text-white text-sm font-black italic uppercase tracking-tight mb-3">
+              Funciones
+            </h2>
+            <div className="space-y-4 text-[10px] leading-snug text-slate-300">
+              <div>
+                <h3 className="text-teal-300 font-black uppercase tracking-widest mb-1">
+                  Escucha
+                </h3>
+                <p>
+                  Es el único botón que reproduce. Si no hay encadenamiento,
+                  repite la melodía las veces elegidas en su cuadro.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-amber-300 font-black uppercase tracking-widest mb-1">
+                  Encadenamiento
+                </h3>
+                <p>
+                  No reproduce al pulsarlo: solo abre los parámetros. El número
+                  indica cuántas pasadas sonarán en total, subiendo un semitono en
+                  cada pasada.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-amber-300 font-black uppercase tracking-widest mb-1">
+                  Ida/Vuelta
+                </h3>
+                <p>
+                  En cada tono toca las notas guardadas hacia delante y luego
+                  hacia atrás. Su casilla de repetición decide si se repite la
+                  última nota antes de volver.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-amber-300 font-black uppercase tracking-widest mb-1">
+                  Subir/Bajar
+                </h3>
+                <p>
+                  Después de subir por semitonos, baja hasta el tono original. Su
+                  casilla de repetición decide si se repite la última subida antes
+                  de empezar a bajar.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sky-300 font-black uppercase tracking-widest mb-1">
+                  Parón
+                </h3>
+                <p>
+                  Cada modo tiene su parón propio. ON deja una pausa en el giro;
+                  OFF encadena sin pausa.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-violet-300 font-black uppercase tracking-widest mb-1">
+                  Modos
+                </h3>
+                <p>
+                  Acorde agrupa notas simultáneas, Libre toca sin grabar, y PC
+                  permite introducir notas con el teclado del ordenador.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-emerald-300 font-black uppercase tracking-widest mb-1">
+                  Duración
+                </h3>
+                <p>
+                  Una nota nueva entra como corchea. Si pulsas la misma nota otra
+                  vez seguida, suma duración: dos pulsaciones hacen negra, tres
+                  negra + corchea, cuatro blanca. Para repetir la misma nota como
+                  nota separada, pulsa Siguiente nota o la barra espaciadora antes
+                  de tocarla de nuevo.
+                </p>
+              </div>
+            </div>
+          </aside>
+          <aside className="bg-slate-900/55 border border-white/10 rounded-3xl p-4 backdrop-blur-xl shadow-2xl">
+            <div className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center justify-between">
+              <span>Silencios</span>
+              {modoTeclado && <span className="text-violet-300">PC</span>}
+            </div>
+            <div className="grid grid-cols-2 2xl:grid-cols-1 overflow-hidden rounded-xl border border-white/5">
+              {(["corchea", "negra", "blanca", "redonda"] as RestDuracion[]).map(
+                (d, i) => (
+                  <button
+                    key={d}
+                    onClick={() => addRest(d)}
+                    className={`min-h-12 bg-slate-800/60 hover:bg-slate-700/80 text-[9px] font-black uppercase tracking-wider text-slate-300 hover:text-white transition-all cursor-pointer active:scale-95 flex items-center justify-between gap-2 px-3 ${i < 3
+                      ? "border-r 2xl:border-r-0 2xl:border-b border-white/5"
+                      : ""
+                      } ${i === 1 ? "border-r-0" : ""}`}
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="text-lg leading-none text-slate-200">
+                        {REST_ICONS[d]}
+                      </span>
+                      <span className="truncate text-[8px]">
+                        {REST_NAMES[d]}
+                      </span>
+                    </span>
+                    {modoTeclado && (
+                      <span className="rounded-md bg-violet-500/20 border border-violet-400/30 px-1.5 py-0.5 text-[8px] text-violet-200">
+                        {REST_TO_KEY[d]}
+                      </span>
+                    )}
+                  </button>
+                ),
+              )}
+            </div>
+          </aside>
+        </div>
+
+        {/* ── Center: workspace ── */}
         <section className="flex-1 flex flex-col bg-slate-900/60 border border-white/10 rounded-3xl p-4 md:p-6 backdrop-blur-xl shadow-2xl">
           {/* Title */}
           <div className="mb-4">
@@ -1340,11 +1608,30 @@ export default function ConstructorMelodias() {
 
           {/* Action toolbar — fila 1: reproducción */}
           <div className="grid grid-cols-3 gap-2 mb-2">
-            <div className="relative group">
+            <div
+              className="relative group"
+              onMouseEnter={() => {
+                if (!isPlaying) setListenSettingsOpen(true);
+              }}
+              onMouseLeave={() => setListenSettingsOpen(false)}
+            >
               <button
-                onClick={() =>
-                  isPlaying ? stopPlayback() : playMelody(listenReps)
-                }
+                onClick={() => {
+                  if (isPlaying) {
+                    stopPlayback();
+                    return;
+                  }
+                  setListenSettingsOpen(false);
+                  if (
+                    chainSemitones > 0 ||
+                    chainReverseMelody ||
+                    chainReturnToRoot
+                  ) {
+                    playChainedMelody();
+                  } else {
+                    playMelody(listenReps);
+                  }
+                }}
                 disabled={!isPlaying && melodia.length === 0}
                 className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 shadow-md ${isPlaying
                   ? "bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-300/30"
@@ -1356,11 +1643,22 @@ export default function ConstructorMelodias() {
                 ) : (
                   <Play size={12} className="fill-current" />
                 )}
-                <span>{isPlaying ? "Parar" : `Escucha (${listenReps}x)`}</span>
+                <span>{isPlaying ? "Parar" : "Escucha"}</span>
               </button>
               <div
-                className={`absolute left-1/2 top-full z-40 ${isPlaying ? "hidden" : "hidden group-hover:flex"} -translate-x-1/2 mt-1.5 min-w-[190px] flex-col gap-2 rounded-xl bg-slate-950/95 border border-white/10 p-3 shadow-2xl backdrop-blur-md animate-fadeIn`}
+                className="absolute top-full left-0 right-0 h-[6px]"
+                aria-hidden="true"
+              />
+              <div
+                className={`absolute left-1/2 top-full z-40 ${!isPlaying && listenSettingsOpen ? "flex" : !isPlaying ? "hidden group-hover:flex" : "hidden"} -translate-x-1/2 mt-1.5 min-w-[190px] flex-col gap-2 rounded-xl bg-slate-950/95 border border-white/10 p-3 shadow-2xl backdrop-blur-md animate-fadeIn`}
               >
+                <button
+                  onClick={() => setListenSettingsOpen(false)}
+                  className="absolute right-2 top-2 w-5 h-5 rounded-md bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-[10px] flex items-center justify-center"
+                  title="Cerrar ajustes de escucha"
+                >
+                  ×
+                </button>
                 <span className="text-[9px] font-black uppercase tracking-widest text-teal-300 text-center">
                   ¿Cuántas veces quieres escuchar?
                 </span>
@@ -1385,13 +1683,19 @@ export default function ConstructorMelodias() {
             </div>
 
             {/* Encadenar + hover semitone control */}
-            <div className="relative group">
+            <div
+              className="relative group"
+              onMouseEnter={() => {
+                if (!isPlaying) setChainSettingsOpen(true);
+              }}
+              onMouseLeave={() => setChainSettingsOpen(false)}
+            >
               <button
                 onClick={() => {
-                  setChainSettingsOpen(true);
-                  startChaining();
+                  setListenSettingsOpen(false);
+                  if (!isPlaying) setChainSettingsOpen(true);
                 }}
-                disabled={melodia.length === 0 || isPlaying}
+                disabled={isPlaying}
                 className={`w-full h-12 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 shadow-md ${isPlaying
                   ? "bg-slate-800 text-slate-400 border border-white/5 cursor-not-allowed"
                   : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white"
@@ -1406,7 +1710,7 @@ export default function ConstructorMelodias() {
                 aria-hidden="true"
               />
               <div
-                className={`absolute left-1/2 top-full z-40 ${chainSettingsOpen ? "flex" : "hidden group-hover:flex"} -translate-x-1/2 mt-1.5 min-w-[240px] flex-col gap-3 rounded-xl bg-slate-950/95 border border-white/10 p-3 shadow-2xl backdrop-blur-md animate-fadeIn`}
+                className={`absolute left-1/2 top-full z-40 ${!isPlaying && chainSettingsOpen ? "flex" : "hidden"} -translate-x-1/2 mt-1.5 min-w-[300px] flex-col gap-3 rounded-xl bg-slate-950/95 border border-white/10 p-3 shadow-2xl backdrop-blur-md animate-fadeIn`}
               >
                 <button
                   onClick={() => setChainSettingsOpen(false)}
@@ -1417,44 +1721,12 @@ export default function ConstructorMelodias() {
                 </button>
                 <div className="space-y-1.5">
                   <span className="block text-[9px] font-black uppercase tracking-widest text-amber-300 text-center">
-                    ¿Desde qué semitono empieza?
-                  </span>
-                  <div className="flex items-center justify-center gap-2">
-                    <button
-                      onClick={() =>
-                        setChainStartSemitones((p) => Math.max(-12, p - 1))
-                      }
-                      className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white cursor-pointer select-none transition-colors flex items-center justify-center active:scale-95"
-                    >
-                      <ChevronDown size={14} />
-                    </button>
-                    <span className="text-sm font-black text-sky-300 w-10 text-center">
-                      {chainStartSemitones > 0
-                        ? `+${chainStartSemitones}`
-                        : chainStartSemitones}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setChainStartSemitones((p) =>
-                          Math.min(chainSemitones, p + 1),
-                        )
-                      }
-                      className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white cursor-pointer select-none transition-colors flex items-center justify-center active:scale-95"
-                    >
-                      <ChevronUp size={14} />
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <span className="block text-[9px] font-black uppercase tracking-widest text-amber-300 text-center">
                     ¿Cuántos semitonos quieres encadenar?
                   </span>
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() =>
-                        setChainSemitones((p) =>
-                          Math.max(chainStartSemitones, p - 1),
-                        )
+                        setChainSemitones((p) => Math.max(0, p - 1))
                       }
                       className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white cursor-pointer select-none transition-colors flex items-center justify-center active:scale-95"
                     >
@@ -1472,6 +1744,80 @@ export default function ConstructorMelodias() {
                       className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white cursor-pointer select-none transition-colors flex items-center justify-center active:scale-95"
                     >
                       <ChevronUp size={14} />
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <button
+                      onClick={() => setChainReverseMelody((p) => !p)}
+                      className={`h-8 w-full rounded-lg border text-[9px] font-black uppercase tracking-widest transition-colors ${chainReverseMelody
+                        ? "bg-amber-400 text-slate-950 border-amber-200"
+                        : "bg-white/5 hover:bg-white/10 text-slate-300 border-white/10"
+                        }`}
+                    >
+                      Ida/Vuelta
+                    </button>
+                    <span className="block text-[9px] font-black uppercase tracking-widest text-emerald-300 text-center">
+                      Repetición:
+                    </span>
+                    <label className="h-8 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 cursor-pointer select-none transition-colors flex items-center justify-center text-[9px] font-black uppercase tracking-widest">
+                      <input
+                        type="checkbox"
+                        checked={chainRepeatReverseTurnaround}
+                        onChange={(e) =>
+                          setChainRepeatReverseTurnaround(e.target.checked)
+                        }
+                        className="peer sr-only"
+                      />
+                      <span className="w-4 h-4 rounded border border-white/20 bg-slate-950/60 text-emerald-300 flex items-center justify-center">
+                        {chainRepeatReverseTurnaround && <Check size={12} />}
+                      </span>
+                    </label>
+                    <button
+                      onClick={() => setChainPauseReverseTurnaround((p) => !p)}
+                      className={`h-8 w-full rounded-lg border text-[9px] font-black uppercase tracking-widest transition-colors ${chainPauseReverseTurnaround
+                        ? "bg-sky-400 text-slate-950 border-sky-200"
+                        : "bg-white/5 hover:bg-white/10 text-slate-300 border-white/10"
+                        }`}
+                    >
+                      Parón {chainPauseReverseTurnaround ? "ON" : "OFF"}
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    <button
+                      onClick={() => setChainReturnToRoot((p) => !p)}
+                      className={`h-8 w-full rounded-lg border text-[9px] font-black uppercase tracking-widest transition-colors ${chainReturnToRoot
+                        ? "bg-amber-400 text-slate-950 border-amber-200"
+                        : "bg-white/5 hover:bg-white/10 text-slate-300 border-white/10"
+                        }`}
+                    >
+                      Subir/Bajar
+                    </button>
+                    <span className="block text-[9px] font-black uppercase tracking-widest text-emerald-300 text-center">
+                      Repetición:
+                    </span>
+                    <label className="h-8 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 cursor-pointer select-none transition-colors flex items-center justify-center text-[9px] font-black uppercase tracking-widest">
+                      <input
+                        type="checkbox"
+                        checked={chainRepeatReturnTurnaround}
+                        onChange={(e) =>
+                          setChainRepeatReturnTurnaround(e.target.checked)
+                        }
+                        className="peer sr-only"
+                      />
+                      <span className="w-4 h-4 rounded border border-white/20 bg-slate-950/60 text-emerald-300 flex items-center justify-center">
+                        {chainRepeatReturnTurnaround && <Check size={12} />}
+                      </span>
+                    </label>
+                    <button
+                      onClick={() => setChainPauseReturnTurnaround((p) => !p)}
+                      className={`h-8 w-full rounded-lg border text-[9px] font-black uppercase tracking-widest transition-colors ${chainPauseReturnTurnaround
+                        ? "bg-sky-400 text-slate-950 border-sky-200"
+                        : "bg-white/5 hover:bg-white/10 text-slate-300 border-white/10"
+                        }`}
+                    >
+                      Parón {chainPauseReturnTurnaround ? "ON" : "OFF"}
                     </button>
                   </div>
                 </div>
@@ -1542,6 +1888,17 @@ export default function ConstructorMelodias() {
             >
               <Trash2 size={12} />
               <span>Borrar</span>
+            </button>
+            <button
+              onClick={markNextNote}
+              disabled={modoLibre}
+              className={`w-full h-10 px-3 rounded-xl font-bold text-[10px] uppercase tracking-widest border flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none active:scale-95 disabled:opacity-30 disabled:pointer-events-none ${nextNoteArmed
+                ? "bg-teal-400 text-slate-950 border-teal-200 shadow-[0_0_14px_rgba(45,212,191,0.35)]"
+                : "bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border-teal-500/30"
+                }`}
+            >
+              <Plus size={12} />
+              <span>{nextNoteArmed ? "Separador activo" : "Siguiente nota"}</span>
             </button>
             <button
               onClick={saveMelody}
@@ -1677,6 +2034,97 @@ export default function ConstructorMelodias() {
             </div>
           </div>
 
+          <div className="bg-white border border-slate-200 rounded-2xl p-3 mb-4 shadow-sm">
+            <div className="text-[10px] uppercase font-bold tracking-widest text-slate-600 mb-3 flex items-center gap-2">
+              <Music size={12} />
+              <span>Pentagrama</span>
+            </div>
+            <div className="relative h-28 overflow-x-auto rounded-xl bg-white border border-slate-200">
+              <div className="absolute left-0 right-0 top-6 h-px bg-slate-700" />
+              <div className="absolute left-0 right-0 top-10 h-px bg-slate-700" />
+              <div className="absolute left-0 right-0 top-14 h-px bg-slate-700" />
+              <div className="absolute left-0 right-0 top-18 h-px bg-slate-700" />
+              <div className="absolute left-0 right-0 top-22 h-px bg-slate-700" />
+              <div
+                className="relative h-full flex items-center gap-4 px-5"
+                style={{ minWidth: `${Math.max(360, melodia.length * 54)}px` }}
+              >
+                {melodia.length === 0 ? (
+                  <span className="text-xs text-slate-500 italic">
+                    Las notas aparecerán aquí al construir la melodía.
+                  </span>
+                ) : (
+                  melodia.map((step, index) => {
+                    const active = index === currentPlayingStep;
+                    if (isRestStep(step)) {
+                      return (
+                        <div
+                          key={index}
+                          className={`absolute text-slate-700 text-lg font-black ${active ? "text-amber-500 scale-125" : ""}`}
+                          style={{ left: 20 + index * 54, top: 40 }}
+                        >
+                          {REST_ICONS[step.duracion]}
+                        </div>
+                      );
+                    }
+                    const note = (step as Nota[])[0];
+                    const pitchIndex =
+                      notasBase.indexOf(note.nota) + (note.octava - 4) * 12;
+                    const top = Math.max(12, Math.min(82, 82 - pitchIndex * 2.3));
+                    const durationParts = splitDurationUnits(note.duracion);
+                    return (
+                      <div
+                        key={index}
+                        className={`absolute flex items-start gap-1 ${active ? "scale-110" : ""}`}
+                        style={{ left: 20 + index * 54, top }}
+                      >
+                        {durationParts.map((part, partIndex) => {
+                          const isFilled = part <= 2;
+                          const hasStem = part <= 4;
+                          const hasFlag = part === 1;
+                          return (
+                            <div
+                              key={`${index}-${partIndex}`}
+                              className="relative flex flex-col items-center"
+                            >
+                              <div
+                                className={`relative w-7 h-5 rounded-[50%] border-2 -rotate-12 ${active
+                                  ? "border-amber-600"
+                                  : "border-slate-950"
+                                  } ${isFilled
+                                    ? active
+                                      ? "bg-amber-400"
+                                      : "bg-slate-900"
+                                    : "bg-white"
+                                  }`}
+                              >
+                                {hasStem && (
+                                  <span
+                                    className={`absolute -right-1 bottom-2 w-0.5 h-8 ${active ? "bg-amber-600" : "bg-slate-950"}`}
+                                  />
+                                )}
+                                {hasFlag && (
+                                  <span
+                                    className={`absolute right-[-9px] -top-7 w-3 h-5 border-r-2 border-t-2 rounded-tr-full ${active ? "border-amber-600" : "border-slate-950"}`}
+                                  />
+                                )}
+                              </div>
+                              <span className="mt-8 text-[8px] font-black text-slate-700 whitespace-nowrap">
+                                {partIndex === 0
+                                  ? noteNamesEs[note.nota]
+                                  : durationShortLabel(part)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* PC keyboard hint */}
           {modoTeclado && (
             <div className="mb-3 bg-violet-500/10 border border-violet-500/30 rounded-xl px-3 py-2 flex items-center gap-2 animate-fadeIn">
@@ -1707,9 +2155,8 @@ export default function ConstructorMelodias() {
 
           {/* Piano keyboard */}
           <div className="bg-slate-950/80 border border-white/10 rounded-2xl p-4 overflow-hidden select-none">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1 overflow-x-auto">
-                <div className="min-w-[840px] flex relative py-4 px-2 justify-center">
+            <div className="overflow-x-auto flex justify-center">
+              <div className="min-w-[840px] flex relative py-4 px-2 justify-center mx-auto">
                   {keys.map(({ nota, octava }) => {
                     const isBlack = nota.includes("#");
                     const keyId = `${nota}${octava}`;
@@ -1781,42 +2228,6 @@ export default function ConstructorMelodias() {
                       </button>
                     );
                   })}
-                </div>
-              </div>
-
-              <div className="w-full lg:w-40 shrink-0 bg-black/25 border border-white/10 rounded-2xl p-3">
-                <div className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center justify-between">
-                  <span>Silencios</span>
-                  {modoTeclado && <span className="text-violet-300">PC</span>}
-                </div>
-                <div className="grid grid-cols-4 lg:grid-cols-1 overflow-hidden rounded-xl border border-white/5">
-                  {(
-                    ["corchea", "negra", "blanca", "redonda"] as RestDuracion[]
-                  ).map((d, i) => (
-                    <button
-                      key={d}
-                      onClick={() => addRest(d)}
-                      className={`min-h-12 bg-slate-800/60 hover:bg-slate-700/80 text-[9px] font-black uppercase tracking-wider text-slate-300 hover:text-white transition-all cursor-pointer active:scale-95 flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-1 lg:gap-2 px-2 lg:px-3 ${i < 3
-                        ? "border-r lg:border-r-0 lg:border-b border-white/5"
-                        : ""
-                        }`}
-                    >
-                      <span className="flex flex-col lg:flex-row items-center gap-1 lg:gap-2 min-w-0">
-                        <span className="text-lg leading-none text-slate-200">
-                          {REST_ICONS[d]}
-                        </span>
-                        <span className="truncate text-[8px] lg:text-[9px]">
-                          {REST_NAMES[d]}
-                        </span>
-                      </span>
-                      {modoTeclado && (
-                        <span className="rounded-md bg-violet-500/20 border border-violet-400/30 px-1.5 py-0.5 text-[8px] text-violet-200">
-                          {REST_TO_KEY[d]}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
