@@ -113,6 +113,15 @@ const juegos: Juego[] = [
     accent: "text-teal-400",
     slug: "/play/melodias",
     },
+    {
+      id: 9,
+      titulo: "Ej. Rockschool",
+    desc: "Practica escalas, arpegios e intervalos con ejercicios fijos.",
+    icon: BookOpen,
+    bg: "bg-lime-500/20",
+    accent: "text-lime-400",
+    slug: "/play/rockschool",
+    },
 ];
 
 const historialTabla = [
