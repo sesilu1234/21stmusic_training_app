@@ -1,15 +1,33 @@
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import {
+  displayNameFromEmail,
+  getAllowedStudentEmails,
+  normalizeEmail,
+} from "@/lib/studentAuthShared";
 
-const allowedEmails = new Set(
-  (process.env.ALLOWED_STUDENT_EMAILS || "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean),
-);
+const allowedEmails = new Set(getAllowedStudentEmails());
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
+    Credentials({
+      credentials: {
+        email: { label: "Correo", type: "email" },
+        password: { label: "Contraseña", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = normalizeEmail(credentials?.email);
+        const password = String(credentials?.password || "");
+        const { verifyStudentPassword } = await import("@/lib/studentAuth");
+        if (!(await verifyStudentPassword(email, password))) return null;
+        return {
+          id: email,
+          email,
+          name: displayNameFromEmail(email),
+        };
+      },
+    }),
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,

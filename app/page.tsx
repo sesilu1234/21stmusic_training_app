@@ -20,10 +20,12 @@ import {
   User,
   Lock,
   Unlock,
+  LogOut,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   DEFAULT_GAME_TOTAL,
   defaultGameScores,
@@ -44,6 +46,16 @@ interface Juego {
 }
 
 type HomeView = "juegos" | "progreso" | "notas" | "ranking" | "perfil";
+
+const homeTabs = [
+  { key: "juegos", label: "Juegos", Icon: Gamepad2 },
+  { key: "progreso", label: "Progreso", Icon: History },
+  { key: "notas", label: "Notas", Icon: StickyNote },
+  { key: "ranking", label: "Ranking", Icon: Trophy },
+  { key: "perfil", label: "Perfil", Icon: User },
+] as const;
+
+const homeViewOrder = homeTabs.map((tab) => tab.key);
 
 interface Nota {
   id: number;
@@ -91,6 +103,7 @@ const defaultProfileFromEmail = (email: string): StudentProfile => ({
   gameHistory: [],
   gameScores: defaultGameScores(),
   privateFields: {
+    email: true,
     descripcion: false,
     instrumentos: false,
     academyRanges: false,
@@ -226,6 +239,17 @@ const getGameTotalCorrect = (profile: StudentProfile, game: string) =>
 const getGameAttempts = (profile: StudentProfile, game: string) =>
   profile.gameScores?.[game]?.attempts || 0;
 
+const hasRealProfileActivity = (profile: StudentProfile) =>
+  Boolean(
+    profile.photoUrl ||
+      profile.descripcion ||
+      profile.instrumentos ||
+      profile.medalsHistory.length ||
+      profile.gameHistory.length ||
+      profile.academyRanges.some((range) => range.desde || (range.hasta && range.hasta !== "Actual")) ||
+      Object.values(profile.gameScores || {}).some((score) => score.attempts > 0 || score.totalCorrect > 0),
+  );
+
 const lockButtonClass =
   "w-9 h-9 rounded-xl border flex items-center justify-center transition-colors";
 const lockButtonState = (isLocked: boolean) =>
@@ -255,12 +279,13 @@ const juegos: Juego[] = [
 export default function Home() {
   const router = useRouter();
   const [view, setView] = useState<HomeView>("juegos");
+  const swipeLockedRef = useRef(false);
   const [isDarkMode, setIsDarkMode] = useStoredThemeMode();
   const [email, setEmail] = useState("");
   const [notas, setNotas] = useState<Nota[]>([]);
   const [nuevaNota, setNuevaNota] = useState("");
   const [profile, setProfile] = useState<StudentProfile | null>(null);
-  const [progressInput, setProgressInput] = useState("");
+  const [sharedProfiles, setSharedProfiles] = useState<Record<string, Partial<StudentProfile>>>({});
   const [photoLoadError, setPhotoLoadError] = useState(false);
   const [selectedTopProfile, setSelectedTopProfile] = useState<StudentProfile | null>(null);
 
@@ -281,6 +306,12 @@ export default function Home() {
         userEmail,
       );
       setProfile(loadedProfile);
+      fetch("/api/profiles")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.profiles) setSharedProfiles(data.profiles);
+        })
+        .catch(() => {});
       const all = JSON.parse(localStorage.getItem("student_profiles_index") || "{}");
       all[userEmail] = loadedProfile;
       localStorage.setItem("student_profiles_index", JSON.stringify(all));
@@ -299,6 +330,12 @@ export default function Home() {
     const all = JSON.parse(localStorage.getItem("student_profiles_index") || "{}");
     all[email] = profile;
     localStorage.setItem("student_profiles_index", JSON.stringify(all));
+    setSharedProfiles((currentProfiles) => ({ ...currentProfiles, [email]: profile }));
+    fetch("/api/profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile }),
+    }).catch(() => {});
   }, [profile, email]);
 
   const agregarNota = () => {
@@ -312,13 +349,30 @@ export default function Home() {
   const allProfiles: StudentProfile[] = useMemo(() => {
     if (typeof window === "undefined") return [];
     const raw = JSON.parse(localStorage.getItem("student_profiles_index") || "{}");
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith("profile:")) continue;
+      const storedEmail = key.slice("profile:".length);
+      const storedProfile = localStorage.getItem(key);
+      if (!storedEmail || !storedProfile) continue;
+      try {
+        raw[storedEmail] = JSON.parse(storedProfile);
+      } catch {
+        // Keep any valid profiles already present in the index.
+      }
+    }
     if (email && profile) {
       raw[email] = profile;
     }
-    return Object.entries(raw).map(([storedEmail, storedProfile]) =>
-      normalizeProfile(storedProfile as Partial<StudentProfile>, storedEmail),
-    );
-  }, [profile, email]);
+    Object.entries(sharedProfiles).forEach(([storedEmail, storedProfile]) => {
+      raw[storedEmail] = storedProfile;
+    });
+    return Object.entries(raw)
+      .map(([storedEmail, storedProfile]) =>
+        normalizeProfile(storedProfile as Partial<StudentProfile>, storedEmail),
+      )
+      .filter((storedProfile) => storedProfile.email === email || hasRealProfileActivity(storedProfile));
+  }, [profile, email, sharedProfiles]);
   const gameNames = useMemo(() => Object.keys(defaultProfileFromEmail("x@x.com").gameScores), []);
   const getRankingRows = (game: string) => {
     const rankedProfiles = [...allProfiles]
@@ -336,10 +390,57 @@ export default function Home() {
       return;
     }
     setSelectedTopProfile(rankingUser);
+    setView("perfil");
+  };
+  const goToAdjacentView = (direction: 1 | -1) => {
+    setSelectedTopProfile(null);
+    setView((currentView) => {
+      const currentIndex = homeViewOrder.indexOf(currentView);
+      const nextIndex = Math.min(
+        homeViewOrder.length - 1,
+        Math.max(0, currentIndex + direction),
+      );
+      return homeViewOrder[nextIndex];
+    });
+  };
+
+  useEffect(() => {
+    const handleTrackpadSwipe = (event: WheelEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (Math.abs(event.deltaX) < 35 || Math.abs(event.deltaX) < Math.abs(event.deltaY) * 1.25) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (swipeLockedRef.current) return;
+      swipeLockedRef.current = true;
+      goToAdjacentView(event.deltaX > 0 ? 1 : -1);
+      window.setTimeout(() => {
+        swipeLockedRef.current = false;
+      }, 450);
+    };
+
+    window.addEventListener("wheel", handleTrackpadSwipe, { passive: false, capture: true });
+    return () => window.removeEventListener("wheel", handleTrackpadSwipe, { capture: true });
+  }, []);
+
+  const activeTabClass = isDarkMode
+    ? "bg-amber-300 text-slate-950 shadow-[0_0_18px_rgba(252,211,77,0.35)]"
+    : "bg-slate-950 text-amber-200 shadow-[0_0_18px_rgba(15,23,42,0.18)]";
+  const inactiveTabClass = isDarkMode
+    ? "text-slate-400 hover:text-white hover:bg-white/10"
+    : "text-slate-800 hover:text-slate-950 hover:bg-white/55";
+  const navTabClass = (key: HomeView) =>
+    `rounded-full px-2.5 py-2 flex items-center gap-1 text-[10px] font-black uppercase transition-colors ${
+      view === key ? activeTabClass : inactiveTabClass
+    }`;
+
+  const goToView = (nextView: HomeView) => {
+    setSelectedTopProfile(null);
+    setView(nextView);
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden font-sans text-white">
+    <div className="min-h-screen relative overflow-hidden overscroll-x-none font-sans text-white">
       <div className="fixed inset-0 bg-cover bg-center z-0" style={{ backgroundImage: "url('/assets/background.jpeg')" }}>
         {isDarkMode ? <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-[2px]" /> : <div className="absolute inset-0 bg-slate-900/30" />}
       </div>
@@ -361,13 +462,13 @@ export default function Home() {
               <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-amber-400">
                 {!isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
-              {([{ key: "juegos", label: "Juegos", Icon: Gamepad2 }, { key: "progreso", label: "Progreso", Icon: History }, { key: "notas", label: "Notas", Icon: StickyNote }, { key: "ranking", label: "Ranking", Icon: Trophy }] as const).map(({ key, label, Icon }) => (
-                <button key={key} onClick={() => setView(key)} className={`pb-0.5 flex items-center gap-1 text-[10px] font-bold uppercase ${view === key ? (isDarkMode ? "text-white border-b border-amber-400" : "text-slate-950 border-b border-amber-500") : (isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-800 hover:text-slate-950")}`}>
+              {homeTabs.filter((tab) => tab.key !== "perfil").map(({ key, label, Icon }) => (
+                <button key={key} onClick={() => goToView(key)} className={navTabClass(key)}>
                   <Icon size={14} />
                   <span className="hidden md:inline">{label}</span>
                 </button>
               ))}
-              <button onClick={() => setView("perfil")} className={`pb-0.5 flex items-center gap-2 text-[10px] font-bold uppercase ${view === "perfil" ? (isDarkMode ? "text-amber-300 border-b border-amber-400" : "text-slate-950 border-b border-amber-500") : (isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-800 hover:text-slate-950")}`}>
+              <button onClick={() => goToView("perfil")} className={`rounded-2xl px-2 py-1 flex items-center gap-2 text-[10px] font-black uppercase transition-colors ${view === "perfil" ? activeTabClass : inactiveTabClass}`}>
                 <div className="w-9 h-9 rounded-2xl bg-black/40 border border-amber-300/30 flex items-center justify-center overflow-hidden">
                   {profile?.photoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -385,20 +486,29 @@ export default function Home() {
                   </div>
                 </div>
               </button>
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className={`rounded-full p-2 transition-colors ${inactiveTabClass}`}
+                title="Cerrar sesión"
+                aria-label="Cerrar sesión"
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           </nav>
         </div>
 
-        <main className="flex-1 px-3 md:px-6 py-6 md:py-10">
+        <main className="flex-1 px-3 md:px-6 py-5 md:py-8">
           {view === "juegos" && (
-            <div className="max-w-6xl mx-auto">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+            <div className="max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-7">
                 {juegos.map((j) => (
-                  <button key={j.id} onClick={() => router.push(j.slug)} className="flex items-center gap-4 p-4 md:p-8 rounded-2xl border bg-black/40 border-white/10 hover:bg-black/60 text-left shadow-xl">
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${j.bg}`}><j.icon size={22} className={j.accent} /></div>
+                  <button key={j.id} onClick={() => router.push(j.slug)} className="flex items-center gap-4 p-5 md:p-9 rounded-2xl border bg-black/40 border-white/10 hover:bg-black/60 text-left shadow-xl">
+                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center ${j.bg}`}><j.icon size={26} className={j.accent} /></div>
                     <div>
-                      <h2 className="text-sm md:text-xl italic font-black text-white uppercase">{j.titulo}</h2>
-                      <p className="text-[10px] md:text-xs text-slate-400">{j.desc}</p>
+                      <h2 className="text-base md:text-2xl italic font-black text-white uppercase">{j.titulo}</h2>
+                      <p className="text-[11px] md:text-sm text-slate-400">{j.desc}</p>
                     </div>
                   </button>
                 ))}
@@ -529,6 +639,14 @@ export default function Home() {
 
                   <div className="grid md:grid-cols-2 gap-3 mb-4">
                     <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">Email asociado</div>
+                      <div className="text-sm text-slate-200">
+                        {canViewPrivateField(email, rankingProfile, "email")
+                          ? rankingProfile.email
+                          : "Campo privado"}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
                       <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">Descripción</div>
                       <div className="text-sm text-slate-200">
                         {canViewPrivateField(email, rankingProfile, "descripcion")
@@ -536,7 +654,7 @@ export default function Home() {
                           : "Campo privado"}
                       </div>
                     </div>
-                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 md:col-span-2">
                       <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">Instrumentos</div>
                       <div className="text-sm text-slate-200">
                         {canViewPrivateField(email, rankingProfile, "instrumentos")
@@ -582,25 +700,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="mb-4 rounded-2xl bg-white/5 border border-white/10 p-4">
-                    <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">Historial de progreso</div>
-                    {canViewPrivateField(email, rankingProfile, "progressHistory") ? (
-                      <div className="max-h-32 overflow-y-auto space-y-2">
-                        {rankingProfile.progressHistory.length ? (
-                          rankingProfile.progressHistory.map((entry) => (
-                            <div key={entry.id} className="text-sm text-slate-200">
-                              <span className="text-amber-200/80">{entry.fecha}</span> · {entry.texto}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-sm text-slate-400">Sin entradas</div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-sm text-slate-400">Campo privado</div>
-                    )}
-                  </div>
-
                   {canViewPrivateField(email, rankingProfile, "gameScores") ? (
                     <div className="grid md:grid-cols-2 gap-2">
                       {gameNames.map((game) => (
@@ -640,7 +739,131 @@ export default function Home() {
             </div>
           )}
 
-          {view === "perfil" && profile && (
+          {view === "perfil" && profile && selectedTopProfile && selectedTopProfile.email !== email && (
+            <div className="max-w-4xl mx-auto space-y-5">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-2xl md:text-4xl italic font-black text-amber-200">
+                  Perfil de {selectedTopProfile.displayName}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedTopProfile(null);
+                    setView("ranking");
+                  }}
+                  className="rounded-xl border border-white/10 bg-black/35 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-slate-300 hover:text-white"
+                >
+                  Volver al ranking
+                </button>
+              </div>
+
+              <div className="bg-slate-950/70 border border-amber-300/30 rounded-3xl p-5 shadow-[0_18px_54px_rgba(0,0,0,0.35)]">
+                <div className="flex items-start gap-4 mb-5">
+                  <div className="w-20 h-20 rounded-2xl bg-slate-800 border border-amber-300/20 overflow-hidden flex items-center justify-center flex-shrink-0">
+                    {selectedTopProfile.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={selectedTopProfile.photoUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
+                    ) : (
+                      <User size={32} className="text-slate-500" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-black text-2xl text-amber-200 truncate">{selectedTopProfile.displayName}</div>
+                    <div className="text-xs text-slate-400">
+                      {getTotalCorrect(selectedTopProfile)}/{getTotalQuestions(selectedTopProfile)} total · {selectedTopProfile.gameHistory.length} partidas
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-3 mb-4">
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">Email asociado</div>
+                    <div className="text-sm text-slate-200">
+                      {canViewPrivateField(email, selectedTopProfile, "email")
+                        ? selectedTopProfile.email
+                        : "Campo privado"}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">Descripción</div>
+                    <div className="text-sm text-slate-200">
+                      {canViewPrivateField(email, selectedTopProfile, "descripcion")
+                        ? selectedTopProfile.descripcion || "Sin descripcion"
+                        : "Campo privado"}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-4 md:col-span-2">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">Instrumentos</div>
+                    <div className="text-sm text-slate-200">
+                      {canViewPrivateField(email, selectedTopProfile, "instrumentos")
+                        ? selectedTopProfile.instrumentos || "Sin instrumentos"
+                        : "Campo privado"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-3 mb-4">
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">Tiempo en la academia</div>
+                    {canViewPrivateField(email, selectedTopProfile, "academyRanges") ? (
+                      <div className="space-y-1">
+                        {selectedTopProfile.academyRanges.map((range) => (
+                          <div key={range.id} className="text-sm text-slate-200">
+                            {range.desde || "Sin fecha"} - {range.hasta || "Actual"}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-slate-400">Campo privado</div>
+                    )}
+                  </div>
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">Medallas</div>
+                    {canViewPrivateField(email, selectedTopProfile, "medalsHistory") ? (
+                      <div className="max-h-28 overflow-y-auto space-y-1">
+                        {selectedTopProfile.medalsHistory.length ? (
+                          selectedTopProfile.medalsHistory.map((medal, index) => (
+                            <div key={`${medal}-${index}`} className="text-sm text-slate-200 flex items-center gap-2">
+                              <Award size={14} className="text-amber-400" />
+                              {medal}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-slate-400">Sin medallas</div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-slate-400">Campo privado</div>
+                    )}
+                  </div>
+                </div>
+
+                {canViewPrivateField(email, selectedTopProfile, "gameScores") ? (
+                  <div className="grid md:grid-cols-2 gap-2">
+                    {gameNames.map((game) => (
+                      <div key={game} className="bg-white/5 rounded-lg px-2 py-1 text-xs flex justify-between">
+                        <span className="text-slate-300">{game}</span>
+                        <span className="text-right">
+                          <span className="block text-amber-300 font-bold">
+                            {formatScore(selectedTopProfile.gameScores?.[game])}
+                          </span>
+                          <span className="block text-[10px] text-slate-400">
+                            Total {getGameTotalCorrect(selectedTopProfile, game)} · {getGameAttempts(selectedTopProfile, game)} partidas
+                          </span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-slate-400">
+                    Puntuaciones privadas
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {view === "perfil" && profile && (!selectedTopProfile || selectedTopProfile.email === email) && (
             <div className="max-w-4xl mx-auto space-y-5">
               <h2 className="text-2xl md:text-4xl italic font-black text-amber-200">Tu Perfil</h2>
               <div className="bg-slate-900/85 text-slate-100 border border-amber-300/25 rounded-3xl p-6 space-y-6 shadow-[0_24px_70px_rgba(2,6,23,0.55)] backdrop-blur-xl">
@@ -659,16 +882,6 @@ export default function Home() {
                         <User size={54} className="text-slate-500" />
                       )}
                     </div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-amber-200/80">Foto (URL)</label>
-                    <input
-                      value={profile.photoUrl}
-                      onChange={(e) => {
-                        setPhotoLoadError(false);
-                        setProfile({ ...profile, photoUrl: e.target.value.trim() });
-                      }}
-                      placeholder="https://... (enlace directo a imagen)"
-                      className="w-full bg-slate-950/70 text-slate-100 rounded-xl p-3 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35"
-                    />
                     <label className="w-full cursor-pointer bg-amber-400 text-slate-900 rounded-xl p-2 text-center font-bold text-sm mb-2">
                       Subir foto desde ordenador
                       <input
@@ -687,11 +900,6 @@ export default function Home() {
                         }}
                       />
                     </label>
-                    {photoLoadError && (
-                      <p className="text-[11px] text-rose-300">
-                        Esa URL no carga imagen directa. Prueba una URL que termine en .jpg, .jpeg, .png o .webp.
-                      </p>
-                    )}
                     <div className="h-px bg-amber-300/20 my-2" />
                     <div className="flex items-center justify-between">
                       <label className="block text-[11px] font-semibold uppercase tracking-wider text-amber-200/80">Instrumentos</label>
@@ -717,6 +925,27 @@ export default function Home() {
                     <label className="block text-[11px] font-semibold uppercase tracking-wider text-amber-200/80">Nombre visible</label>
                     <input value={profile.displayName} onChange={(e) => setProfile({ ...profile, displayName: e.target.value })} className="w-full bg-slate-950/70 text-slate-100 rounded-xl p-3 border border-amber-300/20 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300/35" />
                     <div className="flex items-center justify-between">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-amber-200/80">Email asociado</label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setProfile({
+                            ...profile,
+                            privateFields: {
+                              ...profile.privateFields,
+                              email: !profile.privateFields.email,
+                            },
+                          })
+                        }
+                        className={lockButtonState(profile.privateFields.email)}
+                      >
+                        {profile.privateFields.email ? <Lock size={18} /> : <Unlock size={18} />}
+                      </button>
+                    </div>
+                    <div className="w-full bg-slate-950/45 text-slate-300 rounded-xl p-3 border border-amber-300/10 text-sm">
+                      {profile.email}
+                    </div>
+                    <div className="flex items-center justify-between">
                       <label className="block text-[11px] font-semibold uppercase tracking-wider text-amber-200/80">Descripción</label>
                       <button
                         type="button"
@@ -737,70 +966,39 @@ export default function Home() {
                     <textarea value={profile.descripcion} onChange={(e) => setProfile({ ...profile, descripcion: e.target.value })} className="w-full bg-slate-950/70 text-slate-100 rounded-xl p-3 h-28 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35" placeholder="Escribe aquí una pequeña descripción..." />
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-slate-900/85 text-slate-100 border border-amber-300/25 rounded-3xl p-5 shadow-[0_16px_44px_rgba(2,6,23,0.5)] backdrop-blur-xl">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-amber-200">Tiempo en la academia</h3>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setProfile({
-                        ...profile,
-                        privateFields: {
-                          ...profile.privateFields,
-                          academyRanges: !profile.privateFields.academyRanges,
-                        },
-                      })
-                    }
-                    className={lockButtonState(profile.privateFields.academyRanges)}
-                  >
-                    {profile.privateFields.academyRanges ? <Lock size={18} /> : <Unlock size={18} />}
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {profile.academyRanges.map((r) => (
-                    <div key={r.id} className="grid grid-cols-2 gap-2">
-                      <input value={r.desde} onChange={(e) => setProfile({ ...profile, academyRanges: profile.academyRanges.map((x) => (x.id === r.id ? { ...x, desde: e.target.value } : x)) })} placeholder="Enero 2024" className="bg-slate-950/70 text-slate-100 rounded-xl p-2 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35" />
-                      <input value={r.hasta} onChange={(e) => setProfile({ ...profile, academyRanges: profile.academyRanges.map((x) => (x.id === r.id ? { ...x, hasta: e.target.value } : x)) })} placeholder="Actual" className="bg-slate-950/70 text-slate-100 rounded-xl p-2 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35" />
+                <div className="mt-6 grid md:grid-cols-2 gap-4">
+                  <div className="rounded-3xl bg-slate-950/45 border border-amber-300/20 p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-bold text-amber-200">Tiempo en la academia</h3>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setProfile({
+                            ...profile,
+                            privateFields: {
+                              ...profile.privateFields,
+                              academyRanges: !profile.privateFields.academyRanges,
+                            },
+                          })
+                        }
+                        className={lockButtonState(profile.privateFields.academyRanges)}
+                      >
+                        {profile.privateFields.academyRanges ? <Lock size={18} /> : <Unlock size={18} />}
+                      </button>
                     </div>
-                  ))}
-                </div>
-                <button onClick={() => setProfile({ ...profile, academyRanges: [...profile.academyRanges, { id: Date.now(), desde: "", hasta: "Actual" }] })} className="mt-3 text-xs bg-amber-400 text-slate-900 rounded-lg px-3 py-2 font-bold">Añadir rango</button>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-slate-900/85 text-slate-100 border border-amber-300/25 rounded-3xl p-5 shadow-[0_16px_44px_rgba(2,6,23,0.5)] backdrop-blur-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-amber-200">Historial de progreso</h3>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setProfile({
-                          ...profile,
-                          privateFields: {
-                            ...profile.privateFields,
-                            progressHistory: !profile.privateFields.progressHistory,
-                          },
-                        })
-                      }
-                      className={lockButtonState(profile.privateFields.progressHistory)}
-                    >
-                      {profile.privateFields.progressHistory ? <Lock size={18} /> : <Unlock size={18} />}
-                    </button>
+                    <div className="space-y-2">
+                      {profile.academyRanges.map((r) => (
+                        <div key={r.id} className="grid grid-cols-2 gap-2">
+                          <input value={r.desde} onChange={(e) => setProfile({ ...profile, academyRanges: profile.academyRanges.map((x) => (x.id === r.id ? { ...x, desde: e.target.value } : x)) })} placeholder="Enero 2024" className="bg-slate-950/70 text-slate-100 rounded-xl p-2 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35" />
+                          <input value={r.hasta} onChange={(e) => setProfile({ ...profile, academyRanges: profile.academyRanges.map((x) => (x.id === r.id ? { ...x, hasta: e.target.value } : x)) })} placeholder="Actual" className="bg-slate-950/70 text-slate-100 rounded-xl p-2 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35" />
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={() => setProfile({ ...profile, academyRanges: [...profile.academyRanges, { id: Date.now(), desde: "", hasta: "Actual" }] })} className="mt-3 text-xs bg-amber-400 text-slate-900 rounded-lg px-3 py-2 font-bold">Añadir rango</button>
                   </div>
-                  <div className="flex gap-2 mb-3">
-                    <input value={progressInput} onChange={(e) => setProgressInput(e.target.value)} className="flex-1 bg-slate-950/70 text-slate-100 rounded-xl p-2 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35" placeholder="Ej: Mejoró en intervalos" />
-                    <button onClick={() => {
-                      if (!progressInput.trim()) return;
-                      setProfile({ ...profile, progressHistory: [{ id: Date.now(), fecha: new Date().toLocaleDateString("es-ES"), texto: progressInput.trim() }, ...profile.progressHistory] });
-                      setProgressInput("");
-                    }} className="bg-amber-400 text-black rounded-xl px-3">+</button>
-                  </div>
-                  <div className="space-y-2">{profile.progressHistory.map((p) => <div key={p.id} className="text-sm bg-slate-950/55 rounded-xl p-3 border border-amber-300/15"><div className="text-[10px] text-amber-100/70">{p.fecha}</div>{p.texto}</div>)}</div>
-                </div>
 
-                <div className="bg-slate-900/85 text-slate-100 border border-amber-300/25 rounded-3xl p-5 shadow-[0_16px_44px_rgba(2,6,23,0.5)] backdrop-blur-xl">
+                  <div className="rounded-3xl bg-slate-950/45 border border-amber-300/20 p-5">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-bold text-amber-200">Medallas de honor</h3>
                     <button
@@ -835,6 +1033,7 @@ export default function Home() {
                       </div>
                     </div>
                   </details>
+                  </div>
                 </div>
               </div>
               <div className="bg-slate-900/85 text-slate-100 border border-amber-300/25 rounded-3xl p-5 shadow-[0_16px_44px_rgba(2,6,23,0.5)] backdrop-blur-xl">

@@ -164,4 +164,10 @@ export const saveGameScore = async (
   const index = safeParse(localStorage.getItem("student_profiles_index")) || {};
   index[email] = nextProfile;
   localStorage.setItem("student_profiles_index", JSON.stringify(index));
+
+  await fetch("/api/profiles", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profile: nextProfile }),
+  }).catch(() => {});
 };

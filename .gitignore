@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+/data/student-passwords.json
+/data/student-profiles.json
 
 # debug
 npm-debug.log*

@@ -938,6 +938,31 @@ export default function ConstructorMelodias() {
     setCurrentPlayingStep(null);
   };
 
+  const stopAllSound = () => {
+    stopPlayback();
+    noteFnsRef.current.forEach((stopNote) => stopNote());
+    noteFnsRef.current.clear();
+    void audioContextRef.current?.suspend().catch(() => {});
+  };
+
+  useEffect(() => {
+    const handleExit = () => stopAllSound();
+    const handleVisibilityChange = () => {
+      if (document.hidden) stopAllSound();
+    };
+
+    window.addEventListener("pagehide", handleExit);
+    window.addEventListener("beforeunload", handleExit);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      handleExit();
+      window.removeEventListener("pagehide", handleExit);
+      window.removeEventListener("beforeunload", handleExit);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   const runWithPlayingState = async (fn: (runId: number) => Promise<void>) => {
     stopPlayback();
     const runId = playbackRunIdRef.current + 1;
