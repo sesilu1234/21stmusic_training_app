@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, XCircle, Home } from "lucide-react";
+import { saveGameScore } from "@/lib/studentScores";
 interface Pregunta {
   pregunta: string;
   opciones: string[];
@@ -37,6 +38,18 @@ export default function TrivialGuitarra() {
     const firstEmpty = userAnswers.indexOf(null);
     return firstEmpty === -1 ? quizList.length : firstEmpty;
   }, [userAnswers, quizList]);
+  const correctCount = useMemo(
+    () => results.filter((r) => r === "correct").length,
+    [results],
+  );
+  const totalQuestions = quizList.length || 24;
+  const scoreSavedRef = useRef(false);
+
+  useEffect(() => {
+    if (!gameOver || scoreSavedRef.current) return;
+    scoreSavedRef.current = true;
+    saveGameScore("Trivial", correctCount, totalQuestions);
+  }, [gameOver, correctCount, totalQuestions]);
 
   if (!isMounted || quizList.length === 0) return null;
 
@@ -258,9 +271,13 @@ export default function TrivialGuitarra() {
               className="text-5xl font-black text-amber-400 my-8 italic"
               style={{ fontFamily: "Chaney, sans-serif" }}
             >
-              {results.filter((r) => r === "correct").length}
-              <span className="text-white/20 text-2xl mx-2">/</span>24
+              {correctCount}
+              <span className="text-white/20 text-2xl mx-2">/</span>
+              {totalQuestions}
             </div>
+            <p className="mb-6 text-xs font-bold uppercase tracking-[0.25em] text-amber-100/80">
+              Enhorabuena, has conseguido +{correctCount} puntos
+            </p>
             <button
               onClick={() => window.location.reload()}
               className="w-full py-4 bg-amber-500 text-black font-black rounded-2xl text-xs uppercase hover:scale-105 transition-all"
