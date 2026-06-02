@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, XCircle, Home } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 import { saveGameScore } from "@/lib/studentScores";
 interface Pregunta {
   pregunta: string;
@@ -104,9 +104,10 @@ export default function TrivialGuitarra() {
       <div className="relative z-20 w-full px-4 pt-5 md:px-12 flex justify-between items-center">
         <button
           onClick={() => router.push("/")}
-          className="text-white/50 hover:text-white bg-black/40 p-2.5 rounded-full border border-white/10 transition-all hover:bg-black/60"
+          className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-4 py-2 rounded-full border border-white/10 transition-all hover:bg-black/60 flex items-center gap-2"
         >
-          <Home size={16} />
+          <ArrowLeft size={12} />
+          <span>Menú Principal</span>
         </button>
         <img
           src="/assets/logo21stCM_no_white_1.png"
@@ -115,7 +116,7 @@ export default function TrivialGuitarra() {
         />
       </div>
 
-      <div className="min-h-screen  flex flex-col items-center justify-center px-4 py-8 md:p-6 z-10">
+      <div className="flex-1 flex flex-col items-center justify-start px-4 pt-8 pb-8 md:p-6 md:pt-12 z-10">
         {/* TÍTULO */}
         <div className="mb-6 text-center px-2">
           <h2

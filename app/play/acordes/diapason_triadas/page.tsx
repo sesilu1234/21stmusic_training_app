@@ -197,7 +197,7 @@ export default function TriadsGame() {
             style={{ fontFamily: "Chaney, sans-serif" }}
           >
             ¿Qué tipo de{" "}
-            <span className="text-black bg-white/90 px-2 rounded drop-shadow-sm">
+            <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
               ACORDE
             </span>{" "}
             es?

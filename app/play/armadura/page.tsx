@@ -196,7 +196,7 @@ export default function ArmadurasGame() {
             style={{ fontFamily: "Chaney, sans-serif" }}
           >
             ¿Qué tonalidad
-            <span className="text-black mx-2 px-1 bg-white/90 rounded drop-shadow-sm uppercase">
+            <span className="text-black mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
               {esPreguntaMayor ? "MAYOR" : "MENOR"}
             </span>
             es?

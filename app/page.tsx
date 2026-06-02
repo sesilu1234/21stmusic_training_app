@@ -17,7 +17,6 @@ import {
   Activity,
   Music,
   Layers,
-  BookOpen,
   User,
   Lock,
   Unlock,
@@ -28,9 +27,11 @@ import { useRouter } from "next/navigation";
 import {
   DEFAULT_GAME_TOTAL,
   defaultGameScores,
+  GameAttempt,
   GameScore,
   normalizeGameScores,
 } from "@/lib/studentScores";
+import { useStoredThemeMode } from "@/lib/themeMode";
 
 interface Juego {
   id: number;
@@ -72,14 +73,10 @@ interface StudentProfile {
   medalsCount: number;
   medalsHistory: string[];
   progressHistory: ProgressEntry[];
+  gameHistory: GameAttempt[];
   gameScores: Record<string, GameScore>;
   privateFields: Record<string, boolean>;
 }
-
-const defaultHistorialTabla = [
-  { fecha: "Hoy", armaduras: "24/24", diapason: "20/24", acordes: "18/24", intervalos: "21/24" },
-  { fecha: "Ayer", armaduras: "22/24", diapason: "15/24", acordes: "24/24", intervalos: "19/24" },
-];
 
 const defaultProfileFromEmail = (email: string): StudentProfile => ({
   email,
@@ -91,6 +88,7 @@ const defaultProfileFromEmail = (email: string): StudentProfile => ({
   medalsCount: 0,
   medalsHistory: [],
   progressHistory: [],
+  gameHistory: [],
   gameScores: defaultGameScores(),
   privateFields: {
     descripcion: false,
@@ -98,6 +96,7 @@ const defaultProfileFromEmail = (email: string): StudentProfile => ({
     academyRanges: false,
     progressHistory: false,
     medalsHistory: false,
+    gameScores: false,
   },
 });
 
@@ -118,12 +117,60 @@ const addMissingPerfectMedals = (
   return nextHistory;
 };
 
+const normalizeGameHistory = (
+  history: unknown,
+  scores: Record<string, GameScore>,
+) => {
+  if (Array.isArray(history) && history.length > 0) {
+    return history
+      .map((entry) => {
+        const attempt = entry as Partial<GameAttempt>;
+        const total = Math.max(1, Number(attempt.total) || DEFAULT_GAME_TOTAL);
+        return {
+          id: Number(attempt.id) || Date.now(),
+          fecha: String(attempt.fecha || new Date().toLocaleDateString("es-ES")),
+          game: String(attempt.game || ""),
+          correct: Math.max(0, Math.min(total, Number(attempt.correct) || 0)),
+          total,
+        };
+      })
+      .filter((entry) => entry.game);
+  }
+
+  return Object.entries(scores).flatMap(([game, score]) => {
+    if (!score.attempts) return [];
+    const today = new Date().toLocaleDateString("es-ES");
+    if (score.attempts === 1) {
+      return [{ id: Date.now() + game.length, fecha: today, game, correct: score.correct, total: score.total }];
+    }
+
+    const previousAttempts = score.attempts - 1;
+    const previousCorrect = Math.max(0, score.totalCorrect - score.correct);
+    const basePreviousCorrect = Math.floor(previousCorrect / previousAttempts);
+    const extraPreviousCorrect = previousCorrect % previousAttempts;
+    return [
+      { id: Date.now() + game.length, fecha: today, game, correct: score.correct, total: score.total },
+      ...Array.from({ length: previousAttempts }, (_, index) => ({
+        id: Date.now() + game.length + 1000 + index,
+        fecha: today,
+        game,
+        correct: basePreviousCorrect + (index < extraPreviousCorrect ? 1 : 0),
+        total: score.total,
+      })),
+    ];
+  });
+};
+
 const normalizeProfile = (
   profile: Partial<StudentProfile> | null | undefined,
   email: string,
 ): StudentProfile => {
   const fallback = defaultProfileFromEmail(email);
   const gameScores = normalizeGameScores(profile?.gameScores);
+  const gameHistory = normalizeGameHistory(
+    (profile as Partial<StudentProfile> & { gameHistory?: unknown })?.gameHistory,
+    gameScores,
+  );
   const medalsHistory = addMissingPerfectMedals(
     gameScores,
     profile?.medalsHistory || [],
@@ -142,6 +189,7 @@ const normalizeProfile = (
     medalsCount: Math.max(profile?.medalsCount ?? 0, medalsHistory.length),
     medalsHistory,
     progressHistory: profile?.progressHistory || [],
+    gameHistory,
     gameScores,
     privateFields: {
       ...fallback.privateFields,
@@ -178,6 +226,21 @@ const getGameTotalCorrect = (profile: StudentProfile, game: string) =>
 const getGameAttempts = (profile: StudentProfile, game: string) =>
   profile.gameScores?.[game]?.attempts || 0;
 
+const lockButtonClass =
+  "w-9 h-9 rounded-xl border flex items-center justify-center transition-colors";
+const lockButtonState = (isLocked: boolean) =>
+  `${lockButtonClass} ${
+    isLocked
+      ? "border-amber-300 bg-amber-400 text-slate-950 shadow-[0_0_18px_rgba(251,191,36,0.35)]"
+      : "border-amber-300/30 bg-slate-950/60 text-amber-300 hover:text-amber-100 hover:border-amber-200"
+  }`;
+
+const canViewPrivateField = (
+  viewerEmail: string,
+  viewedProfile: StudentProfile,
+  field: string,
+) => viewerEmail === viewedProfile.email || !viewedProfile.privateFields?.[field];
+
 const juegos: Juego[] = [
   { id: 1, titulo: "Armaduras", desc: "Identifica tonalidades y alteraciones.", icon: Hash, bg: "bg-amber-500/20", accent: "text-amber-400", slug: "/play/armadura" },
   { id: 2, titulo: "Diapasón", desc: "Ubica notas en el mástil rápidamente.", icon: Target, bg: "bg-sky-500/20", accent: "text-sky-400", slug: "/play/diapason" },
@@ -186,14 +249,13 @@ const juegos: Juego[] = [
   { id: 5, titulo: "Intervalos", desc: "Mide la distancia entre dos notas.", icon: Activity, bg: "bg-fuchsia-500/20", accent: "text-fuchsia-400", slug: "/play/intervalos" },
   { id: 6, titulo: "Trivial", desc: "Cultura general de guitarra y artistas.", icon: Music, bg: "bg-red-500/20", accent: "text-red-400", slug: "/play/trivia" },
   { id: 7, titulo: "Lectura Rítmica", desc: "Pulsa al ritmo exacto de la partitura.", icon: Activity, bg: "bg-orange-500/20", accent: "text-orange-400", slug: "/play/ritmo" },
-  { id: 8, titulo: "Ej. Canto/ E. del oído", desc: "Crea, transporta y entrena tu oído con tus propias melodías.", icon: Music2, bg: "bg-teal-500/20", accent: "text-teal-400", slug: "/play/melodias" },
-  { id: 9, titulo: "Ej. Rockschool", desc: "Practica escalas, arpegios e intervalos con ejercicios fijos.", icon: BookOpen, bg: "bg-lime-500/20", accent: "text-lime-400", slug: "/play/rockschool" },
+  { id: 8, titulo: "Ej. Canto/ E. del oído", desc: "Entra para elegir Constructor de melodías o Ej. Rockschool.", icon: Music2, bg: "bg-teal-500/20", accent: "text-teal-400", slug: "/play/melodias" },
 ];
 
 export default function Home() {
   const router = useRouter();
   const [view, setView] = useState<HomeView>("juegos");
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useStoredThemeMode();
   const [email, setEmail] = useState("");
   const [notas, setNotas] = useState<Nota[]>([]);
   const [nuevaNota, setNuevaNota] = useState("");
@@ -250,11 +312,31 @@ export default function Home() {
   const allProfiles: StudentProfile[] = useMemo(() => {
     if (typeof window === "undefined") return [];
     const raw = JSON.parse(localStorage.getItem("student_profiles_index") || "{}");
+    if (email && profile) {
+      raw[email] = profile;
+    }
     return Object.entries(raw).map(([storedEmail, storedProfile]) =>
       normalizeProfile(storedProfile as Partial<StudentProfile>, storedEmail),
     );
-  }, [profile]);
+  }, [profile, email]);
   const gameNames = useMemo(() => Object.keys(defaultProfileFromEmail("x@x.com").gameScores), []);
+  const getRankingRows = (game: string) => {
+    const rankedProfiles = [...allProfiles]
+      .sort((a, b) => getGameTotalCorrect(b, game) - getGameTotalCorrect(a, game))
+      .slice(0, 10);
+
+    return Array.from({ length: 10 }, (_, index) => rankedProfiles[index] || null);
+  };
+  const rankingProfile =
+    selectedTopProfile?.email === email && profile ? profile : selectedTopProfile;
+  const openRankingProfile = (rankingUser: StudentProfile) => {
+    if (rankingUser.email === email) {
+      setSelectedTopProfile(null);
+      setView("perfil");
+      return;
+    }
+    setSelectedTopProfile(rankingUser);
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden font-sans text-white">
@@ -263,14 +345,14 @@ export default function Home() {
       </div>
       <div className="relative z-10 min-h-screen flex flex-col">
         <div className="pt-3 px-3 md:pt-4 md:px-4">
-          <nav className="max-w-5xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-3 py-2 md:px-4 md:py-3 flex justify-between items-center gap-2 shadow-2xl">
+          <nav className="max-w-6xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-3 py-2 md:px-4 md:py-3 flex justify-between items-center gap-2 shadow-2xl">
             <div className="flex items-center gap-2 md:gap-4 min-w-0">
-              <img src="/assets/logo21stCM_no_white_1.png" className="h-10 md:h-16 lg:h-24 w-auto flex-shrink-0" alt="logo" />
+              <img src="/assets/logo21stCM_no_white_1.png" className="h-9 md:h-12 lg:h-16 w-auto flex-shrink-0" alt="logo" />
               <div className="flex flex-col min-w-0">
-                <span className="text-white italic font-black tracking-tighter text-sm md:text-xl lg:text-5xl leading-tight" style={{ fontFamily: "'Chaney', sans-serif", fontWeight: "bold", fontStyle: "italic" }}>
+                <span className="text-white italic font-black tracking-tighter text-sm md:text-lg lg:text-3xl leading-tight whitespace-nowrap" style={{ fontFamily: "'Chaney', sans-serif", fontWeight: "bold", fontStyle: "italic" }}>
                   21st Century Music
                 </span>
-                <span className="font-light tracking-widest text-[6px] md:text-[8px] uppercase text-amber-400">
+                <span className="font-bold tracking-widest text-[7px] md:text-[8px] uppercase text-amber-400 whitespace-nowrap">
                   ESCUELA DE MÚSICA MODERNA
                 </span>
               </div>
@@ -280,14 +362,19 @@ export default function Home() {
                 {!isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
               {([{ key: "juegos", label: "Juegos", Icon: Gamepad2 }, { key: "progreso", label: "Progreso", Icon: History }, { key: "notas", label: "Notas", Icon: StickyNote }, { key: "ranking", label: "Ranking", Icon: Trophy }] as const).map(({ key, label, Icon }) => (
-                <button key={key} onClick={() => setView(key)} className={`pb-0.5 flex items-center gap-1 text-[10px] font-bold uppercase ${view === key ? "text-white border-b border-amber-400" : "text-slate-400 hover:text-white"}`}>
+                <button key={key} onClick={() => setView(key)} className={`pb-0.5 flex items-center gap-1 text-[10px] font-bold uppercase ${view === key ? (isDarkMode ? "text-white border-b border-amber-400" : "text-slate-950 border-b border-amber-500") : (isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-800 hover:text-slate-950")}`}>
                   <Icon size={14} />
                   <span className="hidden md:inline">{label}</span>
                 </button>
               ))}
-              <button onClick={() => setView("perfil")} className={`pb-0.5 flex items-center gap-2 text-[10px] font-bold uppercase ${view === "perfil" ? "text-amber-300 border-b border-amber-400" : "text-slate-400 hover:text-white"}`}>
-                <div className="w-9 h-9 rounded-2xl bg-black/40 border border-amber-300/30 flex items-center justify-center">
-                  <User size={20} />
+              <button onClick={() => setView("perfil")} className={`pb-0.5 flex items-center gap-2 text-[10px] font-bold uppercase ${view === "perfil" ? (isDarkMode ? "text-amber-300 border-b border-amber-400" : "text-slate-950 border-b border-amber-500") : (isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-800 hover:text-slate-950")}`}>
+                <div className="w-9 h-9 rounded-2xl bg-black/40 border border-amber-300/30 flex items-center justify-center overflow-hidden">
+                  {profile?.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.photoUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={20} />
+                  )}
                 </div>
                 <div className="hidden md:flex flex-col items-start leading-tight">
                   <span>{displayName}</span>
@@ -322,11 +409,41 @@ export default function Home() {
           {view === "progreso" && (
             <div className="max-w-5xl mx-auto">
               <h2 className="text-2xl md:text-4xl italic font-black mb-6">Tu Progreso</h2>
-              <div className="bg-black/20 rounded-3xl p-6 border border-white/5 overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead><tr className="text-[10px] uppercase text-slate-500"><th>Fecha</th><th>Armaduras</th><th>Diapasón</th><th>Acordes</th><th>Intervalos</th></tr></thead>
-                  <tbody>{defaultHistorialTabla.map((f, i) => <tr key={i}><td className="py-3">{f.fecha}</td><td>{f.armaduras}</td><td>{f.diapason}</td><td>{f.acordes}</td><td>{f.intervalos}</td></tr>)}</tbody>
-                </table>
+              <div className="bg-black/30 rounded-3xl p-5 border border-white/10">
+                <div className="grid md:grid-cols-3 gap-3 mb-5">
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Partidas</div>
+                    <div className="text-2xl font-black text-white">{profile?.gameHistory.length || 0}</div>
+                  </div>
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Puntos</div>
+                    <div className="text-2xl font-black text-amber-300">{profile ? getTotalCorrect(profile) : 0}</div>
+                  </div>
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Medallas</div>
+                    <div className="text-2xl font-black text-amber-300">{profile?.medalsCount || 0}</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {profile?.gameHistory.length ? (
+                    profile.gameHistory.map((attempt) => (
+                      <div key={attempt.id} className="grid grid-cols-[1fr_auto] gap-3 rounded-2xl bg-slate-950/45 border border-amber-300/15 p-3">
+                        <div>
+                          <div className="text-sm font-bold text-white">{attempt.game}</div>
+                          <div className="text-[10px] uppercase tracking-[0.16em] text-slate-500">{attempt.fecha}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-black text-amber-300">{attempt.correct}/{attempt.total}</div>
+                          <div className="text-[10px] text-slate-400">+{attempt.correct} puntos</div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl bg-white/5 border border-white/10 p-5 text-sm text-slate-400">
+                      Todavía no hay partidas registradas en este perfil.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -336,65 +453,175 @@ export default function Home() {
               <h2 className="text-2xl md:text-4xl italic font-black mb-6">Ranking por juego</h2>
               <div className="grid lg:grid-cols-2 gap-4">
                 {gameNames.map((game) => (
-                  <div key={game} className="bg-black/40 rounded-2xl border border-amber-300/20 p-4">
+                  <div key={game} className="bg-black/40 rounded-2xl border border-amber-300/20 p-4 overflow-hidden">
                     <div className="font-bold text-amber-300 mb-3 flex items-center gap-2">
                       <Trophy size={16} />
                       Top 10 - {game}
                     </div>
-                    <div className="space-y-2">
-                      {[...allProfiles]
-                        .sort((a, b) => getGameTotalCorrect(b, game) - getGameTotalCorrect(a, game))
-                        .slice(0, 10)
-                        .map((p, i) => (
-                          <button
-                            key={`${game}-${p.email}`}
-                            onClick={() => setSelectedTopProfile(p)}
-                            className="w-full text-left text-sm bg-white/5 rounded-xl px-3 py-2 hover:bg-white/10 grid grid-cols-[1fr_auto] gap-3"
-                          >
-                            <span className="min-w-0">
-                              <span className="block truncate">{i + 1}. {p.displayName}</span>
-                            </span>
-                            <span className="text-right text-[11px] leading-tight">
-                              <span className="block text-amber-300 font-bold">
-                                Total: {getGameTotalCorrect(p, game)}
-                              </span>
-                              <span className="block text-slate-400">
-                                {getGameAttempts(p, game)} partidas
-                              </span>
-                            </span>
-                          </button>
-                        ))}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-white/10 text-[9px] uppercase tracking-[0.16em] text-slate-500">
+                            <th className="py-2 pr-2 w-10">Pos.</th>
+                            <th className="py-2 px-2">Alumno</th>
+                            <th className="py-2 px-2 text-right">Total</th>
+                            <th className="py-2 pl-2 text-right">Partidas</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getRankingRows(game).map((p, i) => (
+                            <tr key={`${game}-${i}-${p?.email || "empty"}`} className="border-b border-white/5 last:border-b-0">
+                              <td className="py-2 pr-2 text-slate-400">{i + 1}</td>
+                              <td className="py-2 px-2">
+                                {p ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openRankingProfile(p)}
+                                    className="max-w-40 truncate text-left text-white hover:text-amber-200"
+                                  >
+                                    {p.displayName}
+                                  </button>
+                                ) : (
+                                  <span className="text-slate-600">-</span>
+                                )}
+                              </td>
+                              <td className="py-2 px-2 text-right font-bold text-amber-300">
+                                {p ? getGameTotalCorrect(p, game) : "-"}
+                              </td>
+                              <td className="py-2 pl-2 text-right text-slate-400">
+                                {p ? getGameAttempts(p, game) : "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 ))}
               </div>
-              {selectedTopProfile && (
-                <div className="mt-5 bg-black/50 border border-amber-300/30 rounded-2xl p-4">
-                  <div className="font-bold text-amber-200 flex items-center justify-between gap-3">
-                    <span>{selectedTopProfile.displayName}</span>
-                    <span>{getTotalCorrect(selectedTopProfile)}/{getTotalQuestions(selectedTopProfile)} total</span>
-                  </div>
-                  <div className="text-sm text-slate-300">
-                    {selectedTopProfile.privateFields?.descripcion ? "Descripcion privada" : selectedTopProfile.descripcion || "Sin descripcion"}
-                  </div>
-                  <div className="text-xs text-slate-400 mt-1">
-                    {selectedTopProfile.privateFields?.instrumentos ? "Instrumentos privados" : selectedTopProfile.instrumentos || "Sin instrumentos"}
-                  </div>
-                  <div className="mt-3 grid md:grid-cols-2 gap-2">
-                    {gameNames.map((game) => (
-                      <div key={game} className="bg-white/5 rounded-lg px-2 py-1 text-xs flex justify-between">
-                        <span className="text-slate-300">{game}</span>
-                        <span className="text-right">
-                          <span className="block text-amber-300 font-bold">
-                            {formatScore(selectedTopProfile.gameScores?.[game])}
-                          </span>
-                          <span className="block text-[10px] text-slate-400">
-                            Total {getGameTotalCorrect(selectedTopProfile, game)} · {getGameAttempts(selectedTopProfile, game)} partidas
-                          </span>
-                        </span>
+              {rankingProfile && (
+                <div className="mt-5 bg-slate-950/70 border border-amber-300/30 rounded-3xl p-5 shadow-[0_18px_54px_rgba(0,0,0,0.35)]">
+                  <div className="flex items-start justify-between gap-3 mb-5">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-amber-300/20 overflow-hidden flex items-center justify-center flex-shrink-0">
+                        {rankingProfile.photoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={rankingProfile.photoUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={28} className="text-slate-500" />
+                        )}
                       </div>
-                    ))}
+                      <div className="min-w-0">
+                        <div className="font-black text-xl text-amber-200 truncate">{rankingProfile.displayName}</div>
+                        <div className="text-xs text-slate-400">
+                          {getTotalCorrect(rankingProfile)}/{getTotalQuestions(rankingProfile)} total · {rankingProfile.gameHistory.length} partidas
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTopProfile(null)}
+                      className="text-xs uppercase tracking-[0.16em] text-slate-400 hover:text-white"
+                    >
+                      Cerrar
+                    </button>
                   </div>
+
+                  <div className="grid md:grid-cols-2 gap-3 mb-4">
+                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">Descripción</div>
+                      <div className="text-sm text-slate-200">
+                        {canViewPrivateField(email, rankingProfile, "descripcion")
+                          ? rankingProfile.descripcion || "Sin descripcion"
+                          : "Campo privado"}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">Instrumentos</div>
+                      <div className="text-sm text-slate-200">
+                        {canViewPrivateField(email, rankingProfile, "instrumentos")
+                          ? rankingProfile.instrumentos || "Sin instrumentos"
+                          : "Campo privado"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-3 mb-4">
+                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">Tiempo en la academia</div>
+                      {canViewPrivateField(email, rankingProfile, "academyRanges") ? (
+                        <div className="space-y-1">
+                          {rankingProfile.academyRanges.map((range) => (
+                            <div key={range.id} className="text-sm text-slate-200">
+                              {range.desde || "Sin fecha"} - {range.hasta || "Actual"}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-slate-400">Campo privado</div>
+                      )}
+                    </div>
+                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">Medallas</div>
+                      {canViewPrivateField(email, rankingProfile, "medalsHistory") ? (
+                        <div className="max-h-28 overflow-y-auto space-y-1">
+                          {rankingProfile.medalsHistory.length ? (
+                            rankingProfile.medalsHistory.map((medal, index) => (
+                              <div key={`${medal}-${index}`} className="text-sm text-slate-200 flex items-center gap-2">
+                                <Award size={14} className="text-amber-400" />
+                                {medal}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-sm text-slate-400">Sin medallas</div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-slate-400">Campo privado</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mb-4 rounded-2xl bg-white/5 border border-white/10 p-4">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">Historial de progreso</div>
+                    {canViewPrivateField(email, rankingProfile, "progressHistory") ? (
+                      <div className="max-h-32 overflow-y-auto space-y-2">
+                        {rankingProfile.progressHistory.length ? (
+                          rankingProfile.progressHistory.map((entry) => (
+                            <div key={entry.id} className="text-sm text-slate-200">
+                              <span className="text-amber-200/80">{entry.fecha}</span> · {entry.texto}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-slate-400">Sin entradas</div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-slate-400">Campo privado</div>
+                    )}
+                  </div>
+
+                  {canViewPrivateField(email, rankingProfile, "gameScores") ? (
+                    <div className="grid md:grid-cols-2 gap-2">
+                      {gameNames.map((game) => (
+                        <div key={game} className="bg-white/5 rounded-lg px-2 py-1 text-xs flex justify-between">
+                          <span className="text-slate-300">{game}</span>
+                          <span className="text-right">
+                            <span className="block text-amber-300 font-bold">
+                              {formatScore(rankingProfile.gameScores?.[game])}
+                            </span>
+                            <span className="block text-[10px] text-slate-400">
+                              Total {getGameTotalCorrect(rankingProfile, game)} · {getGameAttempts(rankingProfile, game)} partidas
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-slate-400">
+                      Puntuaciones privadas
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -479,9 +706,9 @@ export default function Home() {
                             },
                           })
                         }
-                        className="text-amber-300 hover:text-amber-200"
+                        className={lockButtonState(profile.privateFields.instrumentos)}
                       >
-                        {profile.privateFields.instrumentos ? <Lock size={14} /> : <Unlock size={14} />}
+                        {profile.privateFields.instrumentos ? <Lock size={18} /> : <Unlock size={18} />}
                       </button>
                     </div>
                     <input value={profile.instrumentos} onChange={(e) => setProfile({ ...profile, instrumentos: e.target.value })} placeholder="Guitarra, piano..." className="w-full bg-slate-950/70 text-slate-100 rounded-xl p-3 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35" />
@@ -502,9 +729,9 @@ export default function Home() {
                             },
                           })
                         }
-                        className="text-amber-300 hover:text-amber-200"
+                        className={lockButtonState(profile.privateFields.descripcion)}
                       >
-                        {profile.privateFields.descripcion ? <Lock size={14} /> : <Unlock size={14} />}
+                        {profile.privateFields.descripcion ? <Lock size={18} /> : <Unlock size={18} />}
                       </button>
                     </div>
                     <textarea value={profile.descripcion} onChange={(e) => setProfile({ ...profile, descripcion: e.target.value })} className="w-full bg-slate-950/70 text-slate-100 rounded-xl p-3 h-28 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35" placeholder="Escribe aquí una pequeña descripción..." />
@@ -526,9 +753,9 @@ export default function Home() {
                         },
                       })
                     }
-                    className="text-amber-300 hover:text-amber-200"
+                    className={lockButtonState(profile.privateFields.academyRanges)}
                   >
-                    {profile.privateFields.academyRanges ? <Lock size={14} /> : <Unlock size={14} />}
+                    {profile.privateFields.academyRanges ? <Lock size={18} /> : <Unlock size={18} />}
                   </button>
                 </div>
                 <div className="space-y-2">
@@ -557,9 +784,9 @@ export default function Home() {
                           },
                         })
                       }
-                      className="text-amber-300 hover:text-amber-200"
+                      className={lockButtonState(profile.privateFields.progressHistory)}
                     >
-                      {profile.privateFields.progressHistory ? <Lock size={14} /> : <Unlock size={14} />}
+                      {profile.privateFields.progressHistory ? <Lock size={18} /> : <Unlock size={18} />}
                     </button>
                   </div>
                   <div className="flex gap-2 mb-3">
@@ -587,9 +814,9 @@ export default function Home() {
                           },
                         })
                       }
-                      className="text-amber-300 hover:text-amber-200"
+                      className={lockButtonState(profile.privateFields.medalsHistory)}
                     >
-                      {profile.privateFields.medalsHistory ? <Lock size={14} /> : <Unlock size={14} />}
+                      {profile.privateFields.medalsHistory ? <Lock size={18} /> : <Unlock size={18} />}
                     </button>
                   </div>
                   <div className="text-sm mb-2">Total: <span className="text-amber-400 font-black">{profile.medalsCount}</span></div>
@@ -611,7 +838,24 @@ export default function Home() {
                 </div>
               </div>
               <div className="bg-slate-900/85 text-slate-100 border border-amber-300/25 rounded-3xl p-5 shadow-[0_16px_44px_rgba(2,6,23,0.5)] backdrop-blur-xl">
-                <h3 className="font-bold mb-3 text-amber-200">Última puntuación por juego</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-amber-200">Última puntuación por juego</h3>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setProfile({
+                        ...profile,
+                        privateFields: {
+                          ...profile.privateFields,
+                          gameScores: !profile.privateFields.gameScores,
+                        },
+                      })
+                    }
+                    className={lockButtonState(profile.privateFields.gameScores)}
+                  >
+                    {profile.privateFields.gameScores ? <Lock size={18} /> : <Unlock size={18} />}
+                  </button>
+                </div>
                 <div className="grid md:grid-cols-2 gap-3">
                   {gameNames.map((g) => (
                     <div key={g} className="flex items-center justify-between gap-2 bg-slate-950/55 rounded-xl p-3 border border-amber-300/15">

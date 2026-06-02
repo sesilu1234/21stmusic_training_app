@@ -157,7 +157,7 @@ export default function IntervalosGame() {
             style={{ fontFamily: "Chaney, sans-serif" }}
           >
             ¿Qué{" "}
-            <span className="text-black bg-white/90 px-2 rounded-sm drop-shadow-sm">
+            <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
               INTERVALO
             </span>{" "}
             es?

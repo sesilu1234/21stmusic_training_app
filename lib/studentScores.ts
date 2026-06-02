@@ -7,6 +7,14 @@ export interface GameScore {
   totalCorrect: number;
 }
 
+export interface GameAttempt {
+  id: number;
+  fecha: string;
+  game: string;
+  correct: number;
+  total: number;
+}
+
 export const DEFAULT_GAME_TOTAL = 24;
 
 export const defaultGameScores = (): Record<string, GameScore> => ({
@@ -68,6 +76,23 @@ const safeParse = (value: string | null) => {
 const displayNameFromEmail = (email: string) => email.split("@")[0] || "Alumno";
 const perfectMedalText = (gameName: string) => `100% en ${gameName}`;
 
+const normalizeGameHistory = (history: unknown): GameAttempt[] =>
+  Array.isArray(history)
+    ? history
+        .map((entry) => {
+          const attempt = entry as Partial<GameAttempt>;
+          const total = Math.max(1, Number(attempt.total) || DEFAULT_GAME_TOTAL);
+          return {
+            id: Number(attempt.id) || Date.now(),
+            fecha: String(attempt.fecha || new Date().toLocaleDateString("es-ES")),
+            game: String(attempt.game || ""),
+            correct: Math.max(0, Math.min(total, Number(attempt.correct) || 0)),
+            total,
+          };
+        })
+        .filter((entry) => entry.game)
+    : [];
+
 export const saveGameScore = async (
   gameName: string,
   correct: number,
@@ -104,6 +129,14 @@ export const saveGameScore = async (
   const newMedalText = perfectMedalText(gameName);
   const shouldAddPerfectMedal =
     earnedPerfectMedal && !currentMedalsHistory.includes(newMedalText);
+  const currentGameHistory = normalizeGameHistory(rawProfile?.gameHistory);
+  const gameHistoryEntry: GameAttempt = {
+    id: Date.now(),
+    fecha: new Date().toLocaleDateString("es-ES"),
+    game: gameName,
+    correct: safeCorrect,
+    total: safeTotal,
+  };
   const nextProfile = {
     ...(rawProfile || {}),
     email,
@@ -114,6 +147,7 @@ export const saveGameScore = async (
     medalsHistory: shouldAddPerfectMedal
       ? [newMedalText, ...currentMedalsHistory]
       : currentMedalsHistory,
+    gameHistory: [gameHistoryEntry, ...currentGameHistory],
     gameScores: {
       ...currentScores,
       [gameName]: {
