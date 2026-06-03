@@ -67,6 +67,7 @@ interface AcademyRange {
   id: number;
   desde: string;
   hasta: string;
+  instrumento: string;
 }
 
 interface ProgressEntry {
@@ -96,7 +97,7 @@ const defaultProfileFromEmail = (email: string): StudentProfile => ({
   descripcion: "",
   photoUrl: "",
   instrumentos: "",
-  academyRanges: [{ id: Date.now(), desde: "", hasta: "Actual" }],
+  academyRanges: [{ id: Date.now(), desde: "", hasta: "Actual", instrumento: "" }],
   medalsCount: 0,
   medalsHistory: [],
   progressHistory: [],
@@ -197,7 +198,12 @@ const normalizeProfile = (
     photoUrl: profile?.photoUrl || "",
     instrumentos: profile?.instrumentos || "",
     academyRanges: profile?.academyRanges?.length
-      ? profile.academyRanges
+      ? profile.academyRanges.map((range) => ({
+          id: range.id,
+          desde: range.desde || "",
+          hasta: range.hasta || "Actual",
+          instrumento: range.instrumento || "",
+        }))
       : fallback.academyRanges,
     medalsCount: Math.max(profile?.medalsCount ?? 0, medalsHistory.length),
     medalsHistory,
@@ -673,6 +679,9 @@ export default function Home() {
                           {rankingProfile.academyRanges.map((range) => (
                             <div key={range.id} className="text-sm text-slate-200">
                               {range.desde || "Sin fecha"} - {range.hasta || "Actual"}
+                              {range.instrumento ? (
+                                <span className="block text-xs text-amber-200/80">{range.instrumento}</span>
+                              ) : null}
                             </div>
                           ))}
                         </div>
@@ -811,6 +820,9 @@ export default function Home() {
                         {selectedTopProfile.academyRanges.map((range) => (
                           <div key={range.id} className="text-sm text-slate-200">
                             {range.desde || "Sin fecha"} - {range.hasta || "Actual"}
+                            {range.instrumento ? (
+                              <span className="block text-xs text-amber-200/80">{range.instrumento}</span>
+                            ) : null}
                           </div>
                         ))}
                       </div>
@@ -990,13 +1002,14 @@ export default function Home() {
                     </div>
                     <div className="space-y-2">
                       {profile.academyRanges.map((r) => (
-                        <div key={r.id} className="grid grid-cols-2 gap-2">
+                        <div key={r.id} className="grid md:grid-cols-3 gap-2">
                           <input value={r.desde} onChange={(e) => setProfile({ ...profile, academyRanges: profile.academyRanges.map((x) => (x.id === r.id ? { ...x, desde: e.target.value } : x)) })} placeholder="Enero 2024" className="bg-slate-950/70 text-slate-100 rounded-xl p-2 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35" />
                           <input value={r.hasta} onChange={(e) => setProfile({ ...profile, academyRanges: profile.academyRanges.map((x) => (x.id === r.id ? { ...x, hasta: e.target.value } : x)) })} placeholder="Actual" className="bg-slate-950/70 text-slate-100 rounded-xl p-2 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35" />
+                          <input value={r.instrumento} onChange={(e) => setProfile({ ...profile, academyRanges: profile.academyRanges.map((x) => (x.id === r.id ? { ...x, instrumento: e.target.value } : x)) })} placeholder="Instrumento" className="bg-slate-950/70 text-slate-100 rounded-xl p-2 border border-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35 md:col-span-1 col-span-2" />
                         </div>
                       ))}
                     </div>
-                    <button onClick={() => setProfile({ ...profile, academyRanges: [...profile.academyRanges, { id: Date.now(), desde: "", hasta: "Actual" }] })} className="mt-3 text-xs bg-amber-400 text-slate-900 rounded-lg px-3 py-2 font-bold">Añadir rango</button>
+                    <button onClick={() => setProfile({ ...profile, academyRanges: [...profile.academyRanges, { id: Date.now(), desde: "", hasta: "Actual", instrumento: "" }] })} className="mt-3 text-xs bg-amber-400 text-slate-900 rounded-lg px-3 py-2 font-bold">Añadir rango</button>
                   </div>
 
                   <div className="rounded-3xl bg-slate-950/45 border border-amber-300/20 p-5">

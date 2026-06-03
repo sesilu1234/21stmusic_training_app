@@ -3,8 +3,10 @@ import {
   getRecoveryAttempts,
   hasStudentPassword,
   registerFailedRecoveryAttempt,
+  requestPasswordRecoveryCode,
   resetRecoveryAttempts,
   setStudentPassword,
+  verifyPasswordRecoveryCode,
 } from "@/lib/studentAuth";
 import { isAllowedStudentEmail, normalizeEmail } from "@/lib/studentAuthShared";
 import Image from "next/image";
@@ -26,8 +28,6 @@ import {
 } from "lucide-react";
 import { redirect } from "next/navigation";
 
-const RECOVERY_CODE = "21stCM_98";
-
 const getErrorMessage = (error?: string) => {
   if (error === "AccessDenied") return "Acceso denegado: tu correo no esta en la lista de alumnos autorizados.";
   if (error === "NoAccess") return "Este email no tiene permisos de acceso.";
@@ -35,6 +35,8 @@ const getErrorMessage = (error?: string) => {
   if (error === "Setup") return "No se ha podido crear la contraseña. Debe tener al menos 6 caracteres.";
   if (error === "RecoveryCode") return "Código de recuperación incorrecto.";
   if (error === "RecoveryLocked") return "Has agotado los 3 intentos de recuperación.";
+  if (error === "RecoverySend") return "No se ha podido enviar el código: falta configurar el servicio de envío de correos.";
+  if (error === "RecoveryExpired") return "El código no es válido o ha caducado. Pide uno nuevo.";
   return "";
 };
 
@@ -176,10 +178,16 @@ export default async function LoginPage({
             Contraseña actualizada. Ya puedes entrar.
           </div>
         )}
+        {params.status === "codeSent" && (
+          <div className="mt-4 rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-3 text-sm text-emerald-100">
+            Hemos enviado un código temporal al correo indicado. Caduca en 15 minutos.
+          </div>
+        )}
 
         {mode === "email" && (
           <form
             className="mt-6 space-y-4"
+            autoComplete="off"
             action={async (formData: FormData) => {
               "use server";
               const submittedEmail = normalizeEmail(formData.get("email"));
@@ -211,6 +219,7 @@ export default async function LoginPage({
         {mode === "login" && (
           <form
             className="mt-6 space-y-4"
+            autoComplete="off"
             action={async (formData: FormData) => {
               "use server";
               await signIn("credentials", {
@@ -232,6 +241,7 @@ export default async function LoginPage({
                 name="password"
                 type="password"
                 required
+                autoComplete="current-password"
                 className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
                 placeholder="tu contraseña"
               />
@@ -245,6 +255,7 @@ export default async function LoginPage({
         {mode === "create" && (
           <form
             className="mt-6 space-y-4"
+            autoComplete="off"
             action={async (formData: FormData) => {
               "use server";
               const submittedEmail = normalizeEmail(formData.get("email"));
@@ -253,7 +264,7 @@ export default async function LoginPage({
               }
               const ok = await setStudentPassword(
                 submittedEmail,
-                String(formData.get("password") || ""),
+                String(formData.get("newStudentPassword") || ""),
               );
               if (!ok) redirect(`/login?mode=create&email=${encodeURIComponent(submittedEmail)}&error=Setup`);
               redirect(`/login?mode=login&email=${encodeURIComponent(submittedEmail)}&status=created`);
@@ -268,10 +279,11 @@ export default async function LoginPage({
                 Crear contraseña
               </span>
               <input
-                name="password"
+                name="newStudentPassword"
                 type="password"
                 minLength={6}
                 required
+                autoComplete="new-password"
                 className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
                 placeholder="mínimo 6 caracteres"
               />
@@ -285,6 +297,7 @@ export default async function LoginPage({
         {mode === "recover" && (
           <form
             className="mt-6 space-y-4"
+            autoComplete="off"
             action={async (formData: FormData) => {
               "use server";
               const submittedEmail = normalizeEmail(formData.get("email"));
@@ -293,16 +306,60 @@ export default async function LoginPage({
               }
               const currentAttempts = await getRecoveryAttempts(submittedEmail);
               if (currentAttempts >= 3) redirect("/login?mode=recover&error=RecoveryLocked");
-              if (formData.get("recoveryCode") !== RECOVERY_CODE) {
+              const sent = await requestPasswordRecoveryCode(submittedEmail);
+              if (!sent) redirect(`/login?mode=recover&email=${encodeURIComponent(submittedEmail)}&error=RecoverySend`);
+              redirect(`/login?mode=reset&email=${encodeURIComponent(submittedEmail)}&status=codeSent`);
+            }}
+          >
+            <label className="block">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
+                Correo
+              </span>
+              <input
+                name="email"
+                type="email"
+                defaultValue={email}
+                required
+                autoComplete="off"
+                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
+                placeholder="tu correo autorizado"
+              />
+            </label>
+            <div className="text-xs text-slate-400">
+              Te mandaremos un código de 6 números para poder cambiar la contraseña.
+            </div>
+            <button type="submit" className="w-full rounded-xl bg-amber-300 text-slate-950 font-black py-3 hover:bg-amber-200 transition-colors">
+              Enviar código
+            </button>
+          </form>
+        )}
+
+        {mode === "reset" && (
+          <form
+            className="mt-6 space-y-4"
+            autoComplete="off"
+            action={async (formData: FormData) => {
+              "use server";
+              const submittedEmail = normalizeEmail(formData.get("email"));
+              if (!isAllowedStudentEmail(submittedEmail)) {
+                redirect("/login?mode=recover&error=NoAccess");
+              }
+              const currentAttempts = await getRecoveryAttempts(submittedEmail);
+              if (currentAttempts >= 3) redirect("/login?mode=recover&error=RecoveryLocked");
+              const codeIsValid = await verifyPasswordRecoveryCode(
+                submittedEmail,
+                String(formData.get("recoveryCode") || ""),
+              );
+              if (!codeIsValid) {
                 const nextAttempts = await registerFailedRecoveryAttempt(submittedEmail);
                 if (nextAttempts >= 3) redirect("/login?mode=recover&error=RecoveryLocked");
-                redirect(`/login?mode=recover&email=${encodeURIComponent(submittedEmail)}&attempts=${nextAttempts}&error=RecoveryCode`);
+                redirect(`/login?mode=reset&email=${encodeURIComponent(submittedEmail)}&attempts=${nextAttempts}&error=RecoveryExpired`);
               }
               const ok = await setStudentPassword(
                 submittedEmail,
-                String(formData.get("password") || ""),
+                String(formData.get("newStudentPassword") || ""),
               );
-              if (!ok) redirect(`/login?mode=recover&email=${encodeURIComponent(submittedEmail)}&error=Setup`);
+              if (!ok) redirect(`/login?mode=reset&email=${encodeURIComponent(submittedEmail)}&error=Setup`);
               await resetRecoveryAttempts(submittedEmail);
               redirect(`/login?mode=login&email=${encodeURIComponent(submittedEmail)}&status=recovered`);
             }}
@@ -315,8 +372,10 @@ export default async function LoginPage({
               <input
                 name="email"
                 type="email"
-                defaultValue={email}
+                value={email}
+                readOnly
                 required
+                autoComplete="off"
                 className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
                 placeholder="tu correo autorizado"
               />
@@ -327,10 +386,12 @@ export default async function LoginPage({
               </span>
               <input
                 name="recoveryCode"
-                type="password"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
                 required
                 className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
-                placeholder="código de la academia"
+                placeholder="código de 6 números"
               />
             </label>
             <label className="block">
@@ -338,10 +399,11 @@ export default async function LoginPage({
                 Nueva contraseña
               </span>
               <input
-                name="password"
+                name="newStudentPassword"
                 type="password"
                 minLength={6}
                 required
+                autoComplete="new-password"
                 className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
                 placeholder="mínimo 6 caracteres"
               />
@@ -355,7 +417,7 @@ export default async function LoginPage({
 
         <div className="mt-5 flex justify-between text-xs font-bold text-slate-300">
           {mode !== "email" && <a href="/login" className="hover:text-white">Cambiar correo</a>}
-          {mode !== "recover" && <a href="/login?mode=recover" className="ml-auto hover:text-white">He olvidado mi contraseña</a>}
+          {mode !== "recover" && mode !== "reset" && <a href="/login?mode=recover" className="ml-auto hover:text-white">He olvidado mi contraseña</a>}
         </div>
         </div>
       </section>

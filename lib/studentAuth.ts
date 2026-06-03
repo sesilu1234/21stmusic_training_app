@@ -7,6 +7,9 @@ interface StoredPassword {
   salt: string;
   hash: string;
   recoveryAttempts?: number;
+  recoveryCodeHash?: string;
+  recoveryCodeSalt?: string;
+  recoveryCodeExpiresAt?: number;
 }
 
 type PasswordStore = Record<string, StoredPassword>;
@@ -30,6 +33,37 @@ const hashPassword = (password: string, salt = randomBytes(16).toString("hex")) 
   salt,
   hash: pbkdf2Sync(password, salt, 120000, 64, "sha512").toString("hex"),
 });
+
+const createRecoveryCode = () => {
+  const code = String(Number.parseInt(randomBytes(4).toString("hex"), 16) % 1000000).padStart(6, "0");
+  return code;
+};
+
+const sendRecoveryEmail = async (email: string, code: string) => {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.PASSWORD_RECOVERY_FROM_EMAIL || "21st Century Music <info@escuelademusicamoderna.com>";
+
+  if (!resendApiKey) {
+    console.warn(`[21st Century Music] No se ha enviado el codigo para ${email}: falta RESEND_API_KEY.`);
+    return false;
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: fromEmail,
+      to: email,
+      subject: "Codigo para recuperar tu contraseña",
+      text: `Tu codigo de recuperacion de 21st Century Music es: ${code}. Caduca en 15 minutos.`,
+    }),
+  });
+
+  return response.ok;
+};
 
 export const hasStudentPassword = async (email: string) => {
   const store = await readPasswordStore();
@@ -63,6 +97,39 @@ export const verifyStudentPassword = async (email: string, password: string) => 
   return timingSafeEqual(savedBuffer, candidateBuffer);
 };
 
+export const requestPasswordRecoveryCode = async (email: string) => {
+  const normalizedEmail = normalizeEmail(email);
+  if (!isAllowedStudentEmail(normalizedEmail)) return false;
+
+  const store = await readPasswordStore();
+  const currentPassword = store[normalizedEmail];
+  if (!currentPassword) return false;
+  if ((currentPassword.recoveryAttempts || 0) >= 3) return false;
+
+  const code = createRecoveryCode();
+  const hashedCode = hashPassword(code);
+  currentPassword.recoveryCodeSalt = hashedCode.salt;
+  currentPassword.recoveryCodeHash = hashedCode.hash;
+  currentPassword.recoveryCodeExpiresAt = Date.now() + 15 * 60 * 1000;
+  await writePasswordStore(store);
+
+  return sendRecoveryEmail(normalizedEmail, code);
+};
+
+export const verifyPasswordRecoveryCode = async (email: string, code: string) => {
+  const normalizedEmail = normalizeEmail(email);
+  const store = await readPasswordStore();
+  const currentPassword = store[normalizedEmail];
+  if (!currentPassword?.recoveryCodeHash || !currentPassword.recoveryCodeSalt) return false;
+  if (!currentPassword.recoveryCodeExpiresAt || currentPassword.recoveryCodeExpiresAt < Date.now()) return false;
+
+  const candidate = hashPassword(String(code || "").trim(), currentPassword.recoveryCodeSalt).hash;
+  const savedBuffer = Buffer.from(currentPassword.recoveryCodeHash, "hex");
+  const candidateBuffer = Buffer.from(candidate, "hex");
+  if (savedBuffer.length !== candidateBuffer.length) return false;
+  return timingSafeEqual(savedBuffer, candidateBuffer);
+};
+
 export const getRecoveryAttempts = async (email: string) => {
   const store = await readPasswordStore();
   return store[normalizeEmail(email)]?.recoveryAttempts || 0;
@@ -83,5 +150,8 @@ export const resetRecoveryAttempts = async (email: string) => {
   const store = await readPasswordStore();
   if (!store[normalizedEmail]) return;
   store[normalizedEmail].recoveryAttempts = 0;
+  delete store[normalizedEmail].recoveryCodeHash;
+  delete store[normalizedEmail].recoveryCodeSalt;
+  delete store[normalizedEmail].recoveryCodeExpiresAt;
   await writePasswordStore(store);
 };
