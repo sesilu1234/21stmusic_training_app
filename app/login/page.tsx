@@ -7,7 +7,23 @@ import {
   setStudentPassword,
 } from "@/lib/studentAuth";
 import { isAllowedStudentEmail, normalizeEmail } from "@/lib/studentAuthShared";
-import { Activity, Hash, Headphones, Music, Music2, Target } from "lucide-react";
+import Image from "next/image";
+import {
+  Activity,
+  Award,
+  Gamepad2,
+  Hash,
+  Headphones,
+  History,
+  LogOut,
+  Music,
+  Music2,
+  StickyNote,
+  Sun,
+  Target,
+  Trophy,
+  User,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 
 const RECOVERY_CODE = "21stCM_98";
@@ -58,24 +74,70 @@ export default async function LoginPage({
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-slate-950 text-white">
-      <div className="fixed inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/assets/background.jpeg')" }}>
+    <main className="min-h-screen relative overflow-hidden bg-[#b77a55] text-white">
+      <div className="fixed inset-0 bg-cover bg-center z-0" style={{ backgroundImage: "url('/assets/background.jpeg')" }}>
         <div className="absolute inset-0 bg-slate-900/30" />
       </div>
 
-      <div className="absolute inset-0 z-10 pointer-events-none select-none px-3 py-4 md:px-6 md:py-8 opacity-80">
-        <nav className="max-w-6xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-3 py-2 md:px-4 md:py-3 flex items-center gap-3 shadow-2xl">
-          <img src="/assets/logo21stCM_no_white_1.png" className="h-9 md:h-12 lg:h-16 w-auto flex-shrink-0" alt="21st Century Music" />
-          <div className="flex flex-col min-w-0">
-            <span className="text-white italic font-black tracking-tighter text-sm md:text-lg lg:text-3xl leading-tight whitespace-nowrap">
-              21st Century Music
-            </span>
-            <span className="font-bold tracking-widest text-[7px] md:text-[8px] uppercase text-amber-400 whitespace-nowrap">
-              ESCUELA DE MÚSICA MODERNA
-            </span>
-          </div>
-        </nav>
-        <section className="max-w-7xl mx-auto mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-7">
+      <div className="absolute inset-0 z-10 pointer-events-none select-none opacity-90">
+        <div className="pt-3 px-3 md:pt-4 md:px-4">
+          <nav className="max-w-6xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-3 py-2 md:px-4 md:py-3 flex justify-between items-center gap-2 shadow-2xl">
+            <div className="flex items-center gap-2 md:gap-4 min-w-0">
+              <Image
+                src="/assets/logo21stCM_no_white_1.png"
+                width={1600}
+                height={1600}
+                priority
+                className="h-9 md:h-12 lg:h-16 w-auto flex-shrink-0"
+                alt="21st Century Music"
+              />
+              <div className="flex flex-col min-w-0">
+                <span className="text-white italic font-black tracking-tighter text-sm md:text-lg lg:text-3xl leading-tight whitespace-nowrap">
+                  21st Century Music
+                </span>
+                <span className="font-bold tracking-widest text-[7px] md:text-[8px] uppercase text-amber-400 whitespace-nowrap">
+                  ESCUELA DE MÚSICA MODERNA
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 md:gap-6">
+              <span className="p-2 rounded-full bg-white/5 text-amber-400">
+                <Sun size={18} />
+              </span>
+              <span className="rounded-full px-2.5 py-2 flex items-center gap-1 text-[10px] font-black uppercase bg-black text-amber-200 shadow-[0_0_18px_rgba(15,23,42,0.18)]">
+                <Gamepad2 size={14} />
+                <span className="hidden md:inline">Juegos</span>
+              </span>
+              <span className="hidden md:flex items-center gap-1 text-[10px] font-black uppercase text-slate-800">
+                <History size={14} />
+                Progreso
+              </span>
+              <span className="hidden md:flex items-center gap-1 text-[10px] font-black uppercase text-slate-800">
+                <StickyNote size={14} />
+                Notas
+              </span>
+              <span className="hidden md:flex items-center gap-1 text-[10px] font-black uppercase text-slate-800">
+                <Trophy size={14} />
+                Ranking
+              </span>
+              <span className="rounded-2xl px-2 py-1 flex items-center gap-2 text-[10px] font-black uppercase text-slate-800">
+                <div className="w-9 h-9 rounded-2xl bg-black/40 border border-amber-300/30 flex items-center justify-center overflow-hidden">
+                  <User size={20} />
+                </div>
+                <div className="hidden md:flex flex-col items-start leading-tight">
+                  <span>Perfil</span>
+                  <div className="grid grid-cols-4 gap-1 mt-1">
+                    {Array.from({ length: 8 }, (_, i) => (
+                      <Award key={i} size={13} className="text-slate-400" />
+                    ))}
+                  </div>
+                </div>
+              </span>
+              <LogOut size={16} className="text-slate-800" />
+            </div>
+          </nav>
+        </div>
+        <section className="max-w-7xl mx-auto mt-5 md:mt-8 px-3 md:px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-7">
           {previewGames.map(({ title, text, Icon, bg, accent }) => (
             <div key={title} className="flex items-center gap-4 p-5 md:p-9 rounded-2xl border bg-black/40 border-white/10 text-left shadow-xl">
               <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center ${bg}`}>
@@ -90,10 +152,10 @@ export default async function LoginPage({
         </section>
       </div>
 
-      <div className="absolute inset-0 z-20 bg-slate-950/25 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 z-20 bg-black/5" />
 
       <section className="relative z-30 min-h-screen flex items-center justify-center p-6">
-        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/85 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-black/85 p-8 shadow-2xl backdrop-blur-xl">
         <h1 className="text-2xl font-black tracking-tight">Acceso de alumnos</h1>
         <p className="mt-2 text-sm text-slate-300">
           Entra con tu correo autorizado y tu contraseña personal.
@@ -136,7 +198,7 @@ export default async function LoginPage({
                 name="email"
                 type="email"
                 required
-                className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-amber-300"
+                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
                 placeholder="tu correo autorizado"
               />
             </label>
@@ -170,7 +232,7 @@ export default async function LoginPage({
                 name="password"
                 type="password"
                 required
-                className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-amber-300"
+                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
                 placeholder="tu contraseña"
               />
             </label>
@@ -210,7 +272,7 @@ export default async function LoginPage({
                 type="password"
                 minLength={6}
                 required
-                className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-amber-300"
+                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
                 placeholder="mínimo 6 caracteres"
               />
             </label>
@@ -255,7 +317,7 @@ export default async function LoginPage({
                 type="email"
                 defaultValue={email}
                 required
-                className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-amber-300"
+                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
                 placeholder="tu correo autorizado"
               />
             </label>
@@ -267,7 +329,7 @@ export default async function LoginPage({
                 name="recoveryCode"
                 type="password"
                 required
-                className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-amber-300"
+                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
                 placeholder="código de la academia"
               />
             </label>
@@ -280,7 +342,7 @@ export default async function LoginPage({
                 type="password"
                 minLength={6}
                 required
-                className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-amber-300"
+                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
                 placeholder="mínimo 6 caracteres"
               />
             </label>

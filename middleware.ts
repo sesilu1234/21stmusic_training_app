@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const publicPaths = ["/login"];
-const publicPrefixes = ["/api/auth", "/_next/static", "/_next/image"];
+const publicPrefixes = ["/api/auth", "/_next/static", "/_next/image", "/assets"];
 
 const hasSessionCookie = (request: NextRequest) =>
   request.cookies.has("authjs.session-token") ||
@@ -23,5 +23,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api/auth|_next/static|_next/image|assets|favicon.ico).*)"],
 };

@@ -220,7 +220,7 @@ const getTotalCorrect = (profile: StudentProfile) =>
 const getTotalQuestions = (profile: StudentProfile) =>
   Object.values(profile.gameScores || {}).reduce(
     (sum, score) =>
-      sum + (score?.attempts ? score.attempts * (score.total || DEFAULT_GAME_TOTAL) : score?.total || DEFAULT_GAME_TOTAL),
+      sum + (score?.attempts ? score.attempts * (score.total || DEFAULT_GAME_TOTAL) : 0),
     0,
   );
 
@@ -349,6 +349,7 @@ export default function Home() {
   const allProfiles: StudentProfile[] = useMemo(() => {
     if (typeof window === "undefined") return [];
     const raw = JSON.parse(localStorage.getItem("student_profiles_index") || "{}");
+    const sharedEmails = new Set(Object.keys(sharedProfiles));
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i);
       if (!key?.startsWith("profile:")) continue;
@@ -371,7 +372,7 @@ export default function Home() {
       .map(([storedEmail, storedProfile]) =>
         normalizeProfile(storedProfile as Partial<StudentProfile>, storedEmail),
       )
-      .filter((storedProfile) => storedProfile.email === email || hasRealProfileActivity(storedProfile));
+      .filter((storedProfile) => storedProfile.email === email || sharedEmails.has(storedProfile.email) || hasRealProfileActivity(storedProfile));
   }, [profile, email, sharedProfiles]);
   const gameNames = useMemo(() => Object.keys(defaultProfileFromEmail("x@x.com").gameScores), []);
   const getRankingRows = (game: string) => {
