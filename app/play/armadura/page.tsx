@@ -59,7 +59,7 @@ export default function ArmadurasGame() {
   }, []);
 
   const currentQuestion = quizList[step];
-  const esPreguntaMayor = currentQuestion?.image.includes(" M.png");
+  const esPreguntaMayor = currentQuestion?.image.includes("M.png");
   const respuestaCorrecta = esPreguntaMayor
     ? currentQuestion?.mayor
     : currentQuestion?.menor;
