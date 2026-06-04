@@ -13,14 +13,16 @@ const hasSessionCookie = (request: NextRequest) =>
   request.cookies.has("authjs.session-token") ||
   request.cookies.has("__Secure-authjs.session-token");
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isPublic =
     publicPaths.includes(pathname) ||
     publicPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
     pathname === "/favicon.ico";
+
   if (isPublic) return NextResponse.next();
   if (hasSessionCookie(request)) return NextResponse.next();
+
   const loginUrl = request.nextUrl.clone();
   loginUrl.pathname = "/login";
   return NextResponse.redirect(loginUrl);
