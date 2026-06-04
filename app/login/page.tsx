@@ -1,14 +1,4 @@
 import { auth, signIn } from "@/auth";
-import {
-  getRecoveryAttempts,
-  hasStudentPassword,
-  registerFailedRecoveryAttempt,
-  requestPasswordRecoveryCode,
-  resetRecoveryAttempts,
-  setStudentPassword,
-  verifyPasswordRecoveryCode,
-} from "@/lib/studentAuth";
-import { isAllowedStudentEmail, normalizeEmail } from "@/lib/studentAuthShared";
 import Image from "next/image";
 import {
   Activity,
@@ -30,19 +20,10 @@ import { redirect } from "next/navigation";
 
 const getErrorMessage = (error?: string) => {
   if (error === "AccessDenied") return "Acceso denegado: tu correo no esta en la lista de alumnos autorizados.";
-  if (error === "NoAccess") return "Este email no tiene permisos de acceso.";
-  if (error === "CredentialsSignin") return "Correo o contraseña incorrectos.";
-  if (error === "Setup") return "No se ha podido crear la contraseña. Debe tener al menos 6 caracteres.";
-  if (error === "RecoveryCode") return "Código de recuperación incorrecto.";
-  if (error === "RecoveryLocked") return "Has agotado los 3 intentos de recuperación.";
-  if (error === "RecoverySend") return "No se ha podido enviar el código: falta configurar el servicio de envío de correos.";
-  if (error === "RecoveryProvider") return "Resend no ha aceptado el envío. Revisa que el remitente esté verificado y que la API key sea correcta.";
-  if (error === "RecoveryNotRegistered") return "Este correo todavía no tiene contraseña creada.";
-  if (error === "RecoveryExpired") return "El código no es válido o ha caducado. Pide uno nuevo.";
+  if (error === "OAuthAccountNotLinked") return "Ese correo ya existe con otro método de acceso. Entra con Google usando el mismo correo autorizado.";
+  if (error) return "No se ha podido iniciar sesión con Google. Revisa que el correo esté autorizado.";
   return "";
 };
-
-const cleanEmail = (email?: string) => normalizeEmail(email || "");
 
 const previewGames = [
   { title: "Armaduras", text: "Identifica tonalidades y alteraciones.", Icon: Hash, bg: "bg-amber-500/20", accent: "text-amber-400" },
@@ -59,18 +40,11 @@ export default async function LoginPage({
   searchParams,
 }: {
   searchParams?: Promise<{
-    attempts?: string;
-    email?: string;
     error?: string;
-    mode?: string;
-    status?: string;
   }>;
 }) {
   const session = await auth();
   const params = (await searchParams) || {};
-  const mode = params.mode || "email";
-  const email = cleanEmail(params.email);
-  const attempts = Math.max(0, Number(params.attempts) || 0);
   const errorMessage = getErrorMessage(params.error);
 
   if (session) {
@@ -162,7 +136,7 @@ export default async function LoginPage({
         <div className="w-full max-w-md rounded-2xl border border-white/10 bg-black/85 p-8 shadow-2xl backdrop-blur-xl">
         <h1 className="text-2xl font-black tracking-tight">Acceso de alumnos</h1>
         <p className="mt-2 text-sm text-slate-300">
-          Entra con tu correo autorizado y tu contraseña personal.
+          Entra con Google usando uno de los correos autorizados de la academia.
         </p>
 
         {errorMessage && (
@@ -170,271 +144,27 @@ export default async function LoginPage({
             {errorMessage}
           </div>
         )}
-        {params.status === "created" && (
-          <div className="mt-4 rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-3 text-sm text-emerald-100">
-            Contraseña creada. Ya puedes entrar.
-          </div>
-        )}
-        {params.status === "recovered" && (
-          <div className="mt-4 rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-3 text-sm text-emerald-100">
-            Contraseña actualizada. Ya puedes entrar.
-          </div>
-        )}
-        {params.status === "codeSent" && (
-          <div className="mt-4 rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-3 text-sm text-emerald-100">
-            Hemos enviado un código temporal al correo indicado. Caduca en 15 minutos.
-          </div>
-        )}
-
-        {mode === "email" && (
-          <form
-            className="mt-6 space-y-4"
-            autoComplete="off"
-            action={async (formData: FormData) => {
-              "use server";
-              const submittedEmail = normalizeEmail(formData.get("email"));
-              if (!isAllowedStudentEmail(submittedEmail)) {
-                redirect("/login?error=NoAccess");
-              }
-              const nextMode = (await hasStudentPassword(submittedEmail)) ? "login" : "create";
-              redirect(`/login?mode=${nextMode}&email=${encodeURIComponent(submittedEmail)}`);
-            }}
+        <form
+          className="mt-6"
+          action={async () => {
+            "use server";
+            await signIn("google", { redirectTo: "/" });
+          }}
+        >
+          <button
+            type="submit"
+            className="w-full rounded-xl bg-white text-slate-950 font-black py-3 px-4 hover:bg-slate-100 transition-colors flex items-center justify-center gap-3"
           >
-            <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
-                Correo
-              </span>
-              <input
-                name="email"
-                type="email"
-                required
-                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
-                placeholder="tu correo autorizado"
-              />
-            </label>
-            <button type="submit" className="w-full rounded-xl bg-white text-slate-900 font-bold py-3 hover:bg-slate-100 transition-colors">
-              Continuar
-            </button>
-          </form>
-        )}
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-lg font-black text-blue-600">
+              G
+            </span>
+            Entrar con Google
+          </button>
+        </form>
 
-        {mode === "login" && (
-          <form
-            className="mt-6 space-y-4"
-            autoComplete="off"
-            action={async (formData: FormData) => {
-              "use server";
-              await signIn("credentials", {
-                email: String(formData.get("email") || ""),
-                password: String(formData.get("password") || ""),
-                redirectTo: "/",
-              });
-            }}
-          >
-            <input type="hidden" name="email" value={email} />
-            <div className="rounded-xl border border-amber-300/20 bg-amber-300/10 p-3 text-sm text-amber-100">
-              {email}
-            </div>
-            <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
-                Contraseña
-              </span>
-              <input
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
-                placeholder="tu contraseña"
-              />
-            </label>
-            <button type="submit" className="w-full rounded-xl bg-white text-slate-900 font-bold py-3 hover:bg-slate-100 transition-colors">
-              Entrar
-            </button>
-          </form>
-        )}
-
-        {mode === "create" && (
-          <form
-            className="mt-6 space-y-4"
-            autoComplete="off"
-            action={async (formData: FormData) => {
-              "use server";
-              const submittedEmail = normalizeEmail(formData.get("email"));
-              if (!isAllowedStudentEmail(submittedEmail)) {
-                redirect("/login?error=NoAccess");
-              }
-              const ok = await setStudentPassword(
-                submittedEmail,
-                String(formData.get("newStudentPassword") || ""),
-              );
-              if (!ok) redirect(`/login?mode=create&email=${encodeURIComponent(submittedEmail)}&error=Setup`);
-              redirect(`/login?mode=login&email=${encodeURIComponent(submittedEmail)}&status=created`);
-            }}
-          >
-            <input type="hidden" name="email" value={email} />
-            <div className="rounded-xl border border-amber-300/20 bg-amber-300/10 p-3 text-sm text-amber-100">
-              Primera vez con este correo: <span className="font-bold">{email}</span>
-            </div>
-            <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
-                Crear contraseña
-              </span>
-              <input
-                name="newStudentPassword"
-                type="password"
-                minLength={6}
-                required
-                autoComplete="new-password"
-                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
-                placeholder="mínimo 6 caracteres"
-              />
-            </label>
-            <button type="submit" className="w-full rounded-xl bg-amber-300 text-slate-950 font-black py-3 hover:bg-amber-200 transition-colors">
-              Guardar contraseña
-            </button>
-          </form>
-        )}
-
-        {mode === "recover" && (
-          <form
-            className="mt-6 space-y-4"
-            autoComplete="off"
-            action={async (formData: FormData) => {
-              "use server";
-              const submittedEmail = normalizeEmail(formData.get("email"));
-              if (!isAllowedStudentEmail(submittedEmail)) {
-                redirect("/login?mode=recover&error=NoAccess");
-              }
-              const currentAttempts = await getRecoveryAttempts(submittedEmail);
-              if (currentAttempts >= 3) redirect("/login?mode=recover&error=RecoveryLocked");
-              const recoveryRequest = await requestPasswordRecoveryCode(submittedEmail);
-              if (!recoveryRequest.ok) {
-                if (recoveryRequest.reason === "missing_api_key") {
-                  redirect(`/login?mode=recover&email=${encodeURIComponent(submittedEmail)}&error=RecoverySend`);
-                }
-                if (recoveryRequest.reason === "provider_error") {
-                  redirect(`/login?mode=recover&email=${encodeURIComponent(submittedEmail)}&error=RecoveryProvider`);
-                }
-                if (recoveryRequest.reason === "not_registered") {
-                  redirect(`/login?mode=recover&email=${encodeURIComponent(submittedEmail)}&error=RecoveryNotRegistered`);
-                }
-                if (recoveryRequest.reason === "locked") {
-                  redirect("/login?mode=recover&error=RecoveryLocked");
-                }
-                redirect("/login?mode=recover&error=NoAccess");
-              }
-              redirect(`/login?mode=reset&email=${encodeURIComponent(submittedEmail)}&status=codeSent`);
-            }}
-          >
-            <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
-                Correo
-              </span>
-              <input
-                name="email"
-                type="email"
-                defaultValue={email}
-                required
-                autoComplete="off"
-                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
-                placeholder="tu correo autorizado"
-              />
-            </label>
-            <div className="text-xs text-slate-400">
-              Te mandaremos un código de 6 números para poder cambiar la contraseña.
-            </div>
-            <button type="submit" className="w-full rounded-xl bg-amber-300 text-slate-950 font-black py-3 hover:bg-amber-200 transition-colors">
-              Enviar código
-            </button>
-          </form>
-        )}
-
-        {mode === "reset" && (
-          <form
-            className="mt-6 space-y-4"
-            autoComplete="off"
-            action={async (formData: FormData) => {
-              "use server";
-              const submittedEmail = normalizeEmail(formData.get("email"));
-              if (!isAllowedStudentEmail(submittedEmail)) {
-                redirect("/login?mode=recover&error=NoAccess");
-              }
-              const currentAttempts = await getRecoveryAttempts(submittedEmail);
-              if (currentAttempts >= 3) redirect("/login?mode=recover&error=RecoveryLocked");
-              const codeIsValid = await verifyPasswordRecoveryCode(
-                submittedEmail,
-                String(formData.get("recoveryCode") || ""),
-              );
-              if (!codeIsValid) {
-                const nextAttempts = await registerFailedRecoveryAttempt(submittedEmail);
-                if (nextAttempts >= 3) redirect("/login?mode=recover&error=RecoveryLocked");
-                redirect(`/login?mode=reset&email=${encodeURIComponent(submittedEmail)}&attempts=${nextAttempts}&error=RecoveryExpired`);
-              }
-              const ok = await setStudentPassword(
-                submittedEmail,
-                String(formData.get("newStudentPassword") || ""),
-              );
-              if (!ok) redirect(`/login?mode=reset&email=${encodeURIComponent(submittedEmail)}&error=Setup`);
-              await resetRecoveryAttempts(submittedEmail);
-              redirect(`/login?mode=login&email=${encodeURIComponent(submittedEmail)}&status=recovered`);
-            }}
-          >
-            <input type="hidden" name="attempts" value={attempts} />
-            <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
-                Correo
-              </span>
-              <input
-                name="email"
-                type="email"
-                value={email}
-                readOnly
-                required
-                autoComplete="off"
-                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
-                placeholder="tu correo autorizado"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
-                Código de recuperación
-              </span>
-              <input
-                name="recoveryCode"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                required
-                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
-                placeholder="código de 6 números"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
-                Nueva contraseña
-              </span>
-              <input
-                name="newStudentPassword"
-                type="password"
-                minLength={6}
-                required
-                autoComplete="new-password"
-                className="w-full rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white outline-none focus:border-amber-300"
-                placeholder="mínimo 6 caracteres"
-              />
-            </label>
-            <div className="text-xs text-slate-400">Intentos usados: {attempts}/3</div>
-            <button type="submit" className="w-full rounded-xl bg-amber-300 text-slate-950 font-black py-3 hover:bg-amber-200 transition-colors">
-              Recuperar contraseña
-            </button>
-          </form>
-        )}
-
-        <div className="mt-5 flex justify-between text-xs font-bold text-slate-300">
-          {mode !== "email" && <a href="/login" className="hover:text-white">Cambiar correo</a>}
-          {mode !== "recover" && mode !== "reset" && <a href="/login?mode=recover" className="ml-auto hover:text-white">He olvidado mi contraseña</a>}
-        </div>
+        <p className="mt-4 text-xs text-slate-400">
+          Solo se permitirá el acceso si el correo de Google está en la lista de alumnos autorizados.
+        </p>
         </div>
       </section>
     </main>
