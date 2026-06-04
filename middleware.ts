@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const publicPaths = ["/login"];
 const publicPrefixes = [
   "/api/auth",
+  "/api/access-check",
   "/_next/static",
   "/_next/image",
   "/assets",
