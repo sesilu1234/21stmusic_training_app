@@ -6,9 +6,14 @@ import { displayNameFromEmail, normalizeEmail } from "@/lib/studentAuthShared";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-    }),
+  clientId: process.env.AUTH_GOOGLE_ID,
+  clientSecret: process.env.AUTH_GOOGLE_SECRET,
+  authorization: {
+    params: {
+      prompt: "select_account",
+    },
+  },
+}),
   ],
   pages: {
     signIn: "/login",
