@@ -1,338 +1,338 @@
 export const modes_images = [
   {
-    image: "2 Dorico/do Dorico des_page1.png",
+    image: "2Dorico/doDoricodes_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/do Dorico_page1.png",
+    image: "2Dorico/doDorico_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/Fa Dorico des_page1.png",
+    image: "2Dorico/FaDoricodes_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/Fa Dorico_page1.png",
+    image: "2Dorico/FaDorico_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/La Dorico des_page1.png",
+    image: "2Dorico/LaDoricodes_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/La Dorico_page1.png",
+    image: "2Dorico/LaDorico_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/mi Dorico des_page1.png",
+    image: "2Dorico/miDoricodes_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/mi Dorico_page1.png",
+    image: "2Dorico/miDorico_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/re Dorico des_page1.png",
+    image: "2Dorico/reDoricodes_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/re Dorico_page1.png",
+    image: "2Dorico/reDorico_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/si Dorico des_page1.png",
+    image: "2Dorico/siDoricodes_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/Si Dorico_page1.png",
+    image: "2Dorico/SiDorico_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/sol Dorico des_page1.png",
+    image: "2Dorico/solDoricodes_page1.png",
     answer: "Dorico",
   },
   {
-    image: "2 Dorico/sol Dorico_page1.png",
+    image: "2Dorico/solDorico_page1.png",
     answer: "Dorico",
   },
   {
-    image: "3 Frigio/Do Frigio des_page1.png",
+    image: "3Frigio/DoFrigiodes_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Do Frigio _page1.png",
+    image: "3Frigio/DoFrigio_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Fa Frigio des_page1.png",
+    image: "3Frigio/FaFrigiodes_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Fa Frigio _page1.png",
+    image: "3Frigio/FaFrigio_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/La Frigio des_page1.png",
+    image: "3Frigio/LaFrigiodes_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/La Frigio_page1.png",
+    image: "3Frigio/LaFrigio_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Mi Frigio des_page1.png",
+    image: "3Frigio/MiFrigiodes_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Mi Frigio _page1.png",
+    image: "3Frigio/MiFrigio_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Re Frigio des_page1.png",
+    image: "3Frigio/ReFrigiodes_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Re Frigio_page1.png",
+    image: "3Frigio/ReFrigio_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Si Frigio des_page1.png",
+    image: "3Frigio/SiFrigiodes_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Si Frigio_page1.png",
+    image: "3Frigio/SiFrigio_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Sol Frigio des_page1.png",
+    image: "3Frigio/SolFrigiodes_page1.png",
     answer: "Frigio",
   },
   {
-    image: "3 Frigio/Sol Frigio _page1.png",
+    image: "3Frigio/SolFrigio_page1.png",
     answer: "Frigio",
   },
   {
-    image: "4 Lidio/Do Lidio des_page1.png",
+    image: "4Lidio/DoLidiodes_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Do Lidio _page1.png",
+    image: "4Lidio/DoLidio_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Fa Lidio des_page1.png",
+    image: "4Lidio/FaLidiodes_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Fa Lidio_page1.png",
+    image: "4Lidio/FaLidio_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/La Lidio des_page1.png",
+    image: "4Lidio/LaLidiodes_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/La Lidio_page1.png",
+    image: "4Lidio/LaLidio_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Mi Lidio des_page1.png",
+    image: "4Lidio/MiLidiodes_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Mi Lidio_page1.png",
+    image: "4Lidio/MiLidio_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Re Lidio des_page1.png",
+    image: "4Lidio/ReLidiodes_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Re Lidio _page1.png",
+    image: "4Lidio/ReLidio_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Si Lidio des_page1.png",
+    image: "4Lidio/SiLidiodes_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Si Lidio _page1.png",
+    image: "4Lidio/SiLidio_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Sol Lidio des_page1.png",
+    image: "4Lidio/SolLidiodes_page1.png",
     answer: "Lidio",
   },
   {
-    image: "4 Lidio/Sol Lidio_page1.png",
+    image: "4Lidio/SolLidio_page1.png",
     answer: "Lidio",
   },
   {
-    image: "5 Mixo/Do Mixo des_page1.png",
+    image: "5Mixo/DoMixodes_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Do Mixo_page1.png",
+    image: "5Mixo/DoMixo_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Fa Mixo des_page1.png",
+    image: "5Mixo/FaMixodes_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Fa Mixo_page1.png",
+    image: "5Mixo/FaMixo_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/La Mixo des_page1.png",
+    image: "5Mixo/LaMixodes_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/La Mixo_page1.png",
+    image: "5Mixo/LaMixo_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Mi Mixo des_page1.png",
+    image: "5Mixo/MiMixodes_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Mi Mixo_page1.png",
+    image: "5Mixo/MiMixo_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Re Mixo des_page1.png",
+    image: "5Mixo/ReMixodes_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Re Mixo_page1.png",
+    image: "5Mixo/ReMixo_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Si Mixo des_page1.png",
+    image: "5Mixo/SiMixodes_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Si Mixo_page1.png",
+    image: "5Mixo/SiMixo_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Sol Mixo des_page1.png",
+    image: "5Mixo/SolMixodes_page1.png",
     answer: "Mixo",
   },
   {
-    image: "5 Mixo/Sol Mixo_page1.png",
+    image: "5Mixo/SolMixo_page1.png",
     answer: "Mixo",
   },
   {
-    image: "6 Eolico/Do Eolico des_page1.png",
+    image: "6Eolico/DoEolicodes_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Do Eolico_page1.png",
+    image: "6Eolico/DoEolico_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Fa Eolico des_page1.png",
+    image: "6Eolico/FaEolicodes_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Fa Eolico_page1.png",
+    image: "6Eolico/FaEolico_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/La Eolico des_page1.png",
+    image: "6Eolico/LaEolicodes_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/La Eolico_page1.png",
+    image: "6Eolico/LaEolico_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Mi Eolico des_page1.png",
+    image: "6Eolico/MiEolicodes_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Mi Eolico_page1.png",
+    image: "6Eolico/MiEolico_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Re Eolico des_page1.png",
+    image: "6Eolico/ReEolicodes_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Re Eolico_page1.png",
+    image: "6Eolico/ReEolico_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Si Eolico des_page1.png",
+    image: "6Eolico/SiEolicodes_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Si Eolico_page1.png",
+    image: "6Eolico/SiEolico_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Sol Eolico des_page1.png",
+    image: "6Eolico/SolEolicodes_page1.png",
     answer: "Eolico",
   },
   {
-    image: "6 Eolico/Sol Eolico_page1.png",
+    image: "6Eolico/SolEolico_page1.png",
     answer: "Eolico",
   },
   {
-    image: "7 Locrio/Do Locrio des_page1.png",
+    image: "7Locrio/DoLocriodes_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Do Locrio_page1.png",
+    image: "7Locrio/DoLocrio_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Fa Locrio des_page1.png",
+    image: "7Locrio/FaLocriodes_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Fa Locrio_page1.png",
+    image: "7Locrio/FaLocrio_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/La Locrio des_page1.png",
+    image: "7Locrio/LaLocriodes_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/La Locrio _page1.png",
+    image: "7Locrio/LaLocrio_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Mi Locrio des_page1.png",
+    image: "7Locrio/MiLocriodes_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Mi Locrio_page1.png",
+    image: "7Locrio/MiLocrio_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Re Locrio des_page1.png",
+    image: "7Locrio/ReLocriodes_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Re Locrio_page1.png",
+    image: "7Locrio/ReLocrio_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Si Locrio des_page1.png",
+    image: "7Locrio/SiLocriodes_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Si Locrio_page1.png",
+    image: "7Locrio/SiLocrio_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Sol Locrio des_page1.png",
+    image: "7Locrio/SolLocriodes_page1.png",
     answer: "Locrio",
   },
   {
-    image: "7 Locrio/Sol Locrio_page1.png",
+    image: "7Locrio/SolLocrio_page1.png",
     answer: "Locrio",
   },
 ];

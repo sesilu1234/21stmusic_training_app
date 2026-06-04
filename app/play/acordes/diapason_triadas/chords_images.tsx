@@ -1,300 +1,300 @@
-// Cuerda 1 (E aguda)
+//Cuerda1(Eaguda)
 
 export const chords_images = [
   {
-    image: "aug/aug 1.png",
+    image: "aug/aug1.png",
     answer: "aug",
   },
   {
-    image: "aug/aug 2.png",
+    image: "aug/aug2.png",
     answer: "aug",
   },
   {
-    image: "aug/aug 3.png",
+    image: "aug/aug3.png",
     answer: "aug",
   },
   {
-    image: "aug/aug 4.png",
+    image: "aug/aug4.png",
     answer: "aug",
   },
   {
-    image: "aug/aug 5.png",
+    image: "aug/aug5.png",
     answer: "aug",
   },
   {
-    image: "aug/aug 6.png",
+    image: "aug/aug6.png",
     answer: "aug",
   },
   {
-    image: "aug/aug 7.png",
+    image: "aug/aug7.png",
     answer: "aug",
   },
   {
-    image: "aug/aug 8.png",
+    image: "aug/aug8.png",
     answer: "aug",
   },
   {
-    image: "aug/aug 9.png",
+    image: "aug/aug9.png",
     answer: "aug",
   },
   {
-    image: "dim/dim 1.png",
+    image: "dim/dim1.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 10.png",
+    image: "dim/dim10.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 11.png",
+    image: "dim/dim11.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 12.png",
+    image: "dim/dim12.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 2.png",
+    image: "dim/dim2.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 3.png",
+    image: "dim/dim3.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 4.png",
+    image: "dim/dim4.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 5.png",
+    image: "dim/dim5.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 6.png",
+    image: "dim/dim6.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 7.png",
+    image: "dim/dim7.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 8.png",
+    image: "dim/dim8.png",
     answer: "dim",
   },
   {
-    image: "dim/dim 9.png",
+    image: "dim/dim9.png",
     answer: "dim",
   },
   {
-    image: "Mayores/may 1.png",
+    image: "Mayores/may1.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 10.png",
+    image: "Mayores/may10.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 11.png",
+    image: "Mayores/may11.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 12.png",
+    image: "Mayores/may12.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 13.png",
+    image: "Mayores/may13.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 14.png",
+    image: "Mayores/may14.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 15.png",
+    image: "Mayores/may15.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 16.png",
+    image: "Mayores/may16.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 17.png",
+    image: "Mayores/may17.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 18.png",
+    image: "Mayores/may18.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 19.png",
+    image: "Mayores/may19.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 2.png",
+    image: "Mayores/may2.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 20.png",
+    image: "Mayores/may20.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 21.png",
+    image: "Mayores/may21.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 22.png",
+    image: "Mayores/may22.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 23.png",
+    image: "Mayores/may23.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 24.png",
+    image: "Mayores/may24.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 25.png",
+    image: "Mayores/may25.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 26.png",
+    image: "Mayores/may26.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 27.png",
+    image: "Mayores/may27.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 3.png",
+    image: "Mayores/may3.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 4.png",
+    image: "Mayores/may4.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 5.png",
+    image: "Mayores/may5.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 6.png",
+    image: "Mayores/may6.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 7.png",
+    image: "Mayores/may7.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 8.png",
+    image: "Mayores/may8.png",
     answer: "Mayores",
   },
   {
-    image: "Mayores/may 9.png",
+    image: "Mayores/may9.png",
     answer: "Mayores",
   },
   {
-    image: "Menores/men 1.png",
+    image: "Menores/men1.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 10.png",
+    image: "Menores/men10.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 11.png",
+    image: "Menores/men11.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 12.png",
+    image: "Menores/men12.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 13.png",
+    image: "Menores/men13.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 14.png",
+    image: "Menores/men14.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 15.png",
+    image: "Menores/men15.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 16.png",
+    image: "Menores/men16.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 17.png",
+    image: "Menores/men17.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 18.png",
+    image: "Menores/men18.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 19.png",
+    image: "Menores/men19.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 2.png",
+    image: "Menores/men2.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 20.png",
+    image: "Menores/men20.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 21.png",
+    image: "Menores/men21.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 22.png",
+    image: "Menores/men22.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 23.png",
+    image: "Menores/men23.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 24.png",
+    image: "Menores/men24.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 25.png",
+    image: "Menores/men25.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 26.png",
+    image: "Menores/men26.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 3.png",
+    image: "Menores/men3.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 4.png",
+    image: "Menores/men4.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 5.png",
+    image: "Menores/men5.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 6.png",
+    image: "Menores/men6.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 7.png",
+    image: "Menores/men7.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 8.png",
+    image: "Menores/men8.png",
     answer: "Menores",
   },
   {
-    image: "Menores/men 9.png",
+    image: "Menores/men9.png",
     answer: "Menores",
   },
 ];

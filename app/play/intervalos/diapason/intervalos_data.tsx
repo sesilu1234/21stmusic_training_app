@@ -1,4 +1,4 @@
-// intervalos_data.ts
+//intervalos_data.ts
 export interface IntervaloPregunta {
   image: string;
   answer: string;
@@ -6,291 +6,291 @@ export interface IntervaloPregunta {
 
 export const intervalos_data: IntervaloPregunta[] = [
   {
-    image: "/assets/intervalos/diapason/5. 3/3 5.png",
+    image: "/assets/intervalos/diapason/5.3/35.png",
     answer: "3",
   },
   {
-    image: "/assets/intervalos/diapason/5. 3/3 4.png",
+    image: "/assets/intervalos/diapason/5.3/34.png",
     answer: "3",
   },
   {
-    image: "/assets/intervalos/diapason/5. 3/3 1.png",
+    image: "/assets/intervalos/diapason/5.3/31.png",
     answer: "3",
   },
   {
-    image: "/assets/intervalos/diapason/5. 3/3 3.png",
+    image: "/assets/intervalos/diapason/5.3/33.png",
     answer: "3",
   },
   {
-    image: "/assets/intervalos/diapason/5. 3/3 2.png",
+    image: "/assets/intervalos/diapason/5.3/32.png",
     answer: "3",
   },
   {
-    image: "/assets/intervalos/diapason/3. 2/2 5.png",
+    image: "/assets/intervalos/diapason/3.2/25.png",
     answer: "2",
   },
   {
-    image: "/assets/intervalos/diapason/3. 2/2 1.png",
+    image: "/assets/intervalos/diapason/3.2/21.png",
     answer: "2",
   },
   {
-    image: "/assets/intervalos/diapason/3. 2/2 4.png",
+    image: "/assets/intervalos/diapason/3.2/24.png",
     answer: "2",
   },
   {
-    image: "/assets/intervalos/diapason/3. 2/2 3.png",
+    image: "/assets/intervalos/diapason/3.2/23.png",
     answer: "2",
   },
   {
-    image: "/assets/intervalos/diapason/3. 2/2 2.png",
+    image: "/assets/intervalos/diapason/3.2/22.png",
     answer: "2",
   },
   {
-    image: "/assets/intervalos/diapason/11. b7/b7 1.png",
+    image: "/assets/intervalos/diapason/11.b7/b71.png",
     answer: "b7",
   },
   {
-    image: "/assets/intervalos/diapason/11. b7/b7 3.png",
+    image: "/assets/intervalos/diapason/11.b7/b73.png",
     answer: "b7",
   },
   {
-    image: "/assets/intervalos/diapason/11. b7/b7 4.png",
+    image: "/assets/intervalos/diapason/11.b7/b74.png",
     answer: "b7",
   },
   {
-    image: "/assets/intervalos/diapason/11. b7/b7 2.png",
+    image: "/assets/intervalos/diapason/11.b7/b72.png",
     answer: "b7",
   },
   {
-    image: "/assets/intervalos/diapason/13. 8/8 1.png",
+    image: "/assets/intervalos/diapason/13.8/81.png",
     answer: "8",
   },
   {
-    image: "/assets/intervalos/diapason/13. 8/8 2.png",
+    image: "/assets/intervalos/diapason/13.8/82.png",
     answer: "8",
   },
   {
-    image: "/assets/intervalos/diapason/13. 8/8 4.png",
+    image: "/assets/intervalos/diapason/13.8/84.png",
     answer: "8",
   },
   {
-    image: "/assets/intervalos/diapason/13. 8/8 7.png",
+    image: "/assets/intervalos/diapason/13.8/87.png",
     answer: "8",
   },
   {
-    image: "/assets/intervalos/diapason/13. 8/8 3.png",
+    image: "/assets/intervalos/diapason/13.8/83.png",
     answer: "8",
   },
   {
-    image: "/assets/intervalos/diapason/13. 8/8 6.png",
+    image: "/assets/intervalos/diapason/13.8/86.png",
     answer: "8",
   },
   {
-    image: "/assets/intervalos/diapason/13. 8/8 5.png",
+    image: "/assets/intervalos/diapason/13.8/85.png",
     answer: "8",
   },
   {
-    image: "/assets/intervalos/diapason/12. 7/7 2.png",
+    image: "/assets/intervalos/diapason/12.7/72.png",
     answer: "7",
   },
   {
-    image: "/assets/intervalos/diapason/12. 7/7 4.png",
+    image: "/assets/intervalos/diapason/12.7/74.png",
     answer: "7",
   },
   {
-    image: "/assets/intervalos/diapason/12. 7/7 1.png",
+    image: "/assets/intervalos/diapason/12.7/71.png",
     answer: "7",
   },
   {
-    image: "/assets/intervalos/diapason/12. 7/7 3.png",
+    image: "/assets/intervalos/diapason/12.7/73.png",
     answer: "7",
   },
   {
-    image: "/assets/intervalos/diapason/10. 6/6 4.png",
+    image: "/assets/intervalos/diapason/10.6/64.png",
     answer: "6",
   },
   {
-    image: "/assets/intervalos/diapason/10. 6/6 2.png",
+    image: "/assets/intervalos/diapason/10.6/62.png",
     answer: "6",
   },
   {
-    image: "/assets/intervalos/diapason/10. 6/6 5.png",
+    image: "/assets/intervalos/diapason/10.6/65.png",
     answer: "6",
   },
   {
-    image: "/assets/intervalos/diapason/10. 6/6 9.png",
+    image: "/assets/intervalos/diapason/10.6/69.png",
     answer: "6",
   },
   {
-    image: "/assets/intervalos/diapason/10. 6/6 1.png",
+    image: "/assets/intervalos/diapason/10.6/61.png",
     answer: "6",
   },
   {
-    image: "/assets/intervalos/diapason/10. 6/6 8.png",
+    image: "/assets/intervalos/diapason/10.6/68.png",
     answer: "6",
   },
   {
-    image: "/assets/intervalos/diapason/10. 6/6 7.png",
+    image: "/assets/intervalos/diapason/10.6/67.png",
     answer: "6",
   },
   {
-    image: "/assets/intervalos/diapason/10. 6/6 3.png",
+    image: "/assets/intervalos/diapason/10.6/63.png",
     answer: "6",
   },
   {
-    image: "/assets/intervalos/diapason/10. 6/6 6.png",
+    image: "/assets/intervalos/diapason/10.6/66.png",
     answer: "6",
   },
   {
-    image: "/assets/intervalos/diapason/8. 5/5 8.png",
+    image: "/assets/intervalos/diapason/8.5/58.png",
     answer: "5",
   },
   {
-    image: "/assets/intervalos/diapason/8. 5/5 3.png",
+    image: "/assets/intervalos/diapason/8.5/53.png",
     answer: "5",
   },
   {
-    image: "/assets/intervalos/diapason/8. 5/5 2.png",
+    image: "/assets/intervalos/diapason/8.5/52.png",
     answer: "5",
   },
   {
-    image: "/assets/intervalos/diapason/8. 5/5 7.png",
+    image: "/assets/intervalos/diapason/8.5/57.png",
     answer: "5",
   },
   {
-    image: "/assets/intervalos/diapason/8. 5/5 1.png",
+    image: "/assets/intervalos/diapason/8.5/51.png",
     answer: "5",
   },
   {
-    image: "/assets/intervalos/diapason/8. 5/5 4.png",
+    image: "/assets/intervalos/diapason/8.5/54.png",
     answer: "5",
   },
   {
-    image: "/assets/intervalos/diapason/8. 5/5 6.png",
+    image: "/assets/intervalos/diapason/8.5/56.png",
     answer: "5",
   },
   {
-    image: "/assets/intervalos/diapason/8. 5/5 9.png",
+    image: "/assets/intervalos/diapason/8.5/59.png",
     answer: "5",
   },
   {
-    image: "/assets/intervalos/diapason/8. 5/5 5.png",
+    image: "/assets/intervalos/diapason/8.5/55.png",
     answer: "5",
   },
   {
-    image: "/assets/intervalos/diapason/9. b6/b6 5.png",
+    image: "/assets/intervalos/diapason/9.b6/b65.png",
     answer: "b6",
   },
   {
-    image: "/assets/intervalos/diapason/9. b6/b6 1.png",
+    image: "/assets/intervalos/diapason/9.b6/b61.png",
     answer: "b6",
   },
   {
-    image: "/assets/intervalos/diapason/9. b6/b6 2.png",
+    image: "/assets/intervalos/diapason/9.b6/b62.png",
     answer: "b6",
   },
   {
-    image: "/assets/intervalos/diapason/9. b6/b6 9.png",
+    image: "/assets/intervalos/diapason/9.b6/b69.png",
     answer: "b6",
   },
   {
-    image: "/assets/intervalos/diapason/9. b6/b6 4.png",
+    image: "/assets/intervalos/diapason/9.b6/b64.png",
     answer: "b6",
   },
   {
-    image: "/assets/intervalos/diapason/9. b6/b6 3.png",
+    image: "/assets/intervalos/diapason/9.b6/b63.png",
     answer: "b6",
   },
   {
-    image: "/assets/intervalos/diapason/9. b6/b6 7.png",
+    image: "/assets/intervalos/diapason/9.b6/b67.png",
     answer: "b6",
   },
   {
-    image: "/assets/intervalos/diapason/9. b6/b6 6.png",
+    image: "/assets/intervalos/diapason/9.b6/b66.png",
     answer: "b6",
   },
   {
-    image: "/assets/intervalos/diapason/9. b6/b6 8.png",
+    image: "/assets/intervalos/diapason/9.b6/b68.png",
     answer: "b6",
   },
   {
-    image: "/assets/intervalos/diapason/2. b2/b2 1.png",
+    image: "/assets/intervalos/diapason/2.b2/b21.png",
     answer: "b2",
   },
   {
-    image: "/assets/intervalos/diapason/2. b2/b2 3.png",
+    image: "/assets/intervalos/diapason/2.b2/b23.png",
     answer: "b2",
   },
   {
-    image: "/assets/intervalos/diapason/2. b2/b2 2.png",
+    image: "/assets/intervalos/diapason/2.b2/b22.png",
     answer: "b2",
   },
   {
-    image: "/assets/intervalos/diapason/2. b2/b2 4.png",
+    image: "/assets/intervalos/diapason/2.b2/b24.png",
     answer: "b2",
   },
   {
-    image: "/assets/intervalos/diapason/2. b2/b2 5.png",
+    image: "/assets/intervalos/diapason/2.b2/b25.png",
     answer: "b2",
   },
   {
-    image: "/assets/intervalos/diapason/4. b3/b3 1.png",
+    image: "/assets/intervalos/diapason/4.b3/b31.png",
     answer: "b3",
   },
   {
-    image: "/assets/intervalos/diapason/4. b3/b3 2.png",
+    image: "/assets/intervalos/diapason/4.b3/b32.png",
     answer: "b3",
   },
   {
-    image: "/assets/intervalos/diapason/4. b3/b3 4.png",
+    image: "/assets/intervalos/diapason/4.b3/b34.png",
     answer: "b3",
   },
   {
-    image: "/assets/intervalos/diapason/4. b3/b3 5.png",
+    image: "/assets/intervalos/diapason/4.b3/b35.png",
     answer: "b3",
   },
   {
-    image: "/assets/intervalos/diapason/4. b3/b3 3.png",
+    image: "/assets/intervalos/diapason/4.b3/b33.png",
     answer: "b3",
   },
   {
-    image: "/assets/intervalos/diapason/7 b5/b5 3.png",
+    image: "/assets/intervalos/diapason/7b5/b53.png",
     answer: "b5",
   },
   {
-    image: "/assets/intervalos/diapason/7 b5/b5 5.png",
+    image: "/assets/intervalos/diapason/7b5/b55.png",
     answer: "b5",
   },
   {
-    image: "/assets/intervalos/diapason/7 b5/b5 2.png",
+    image: "/assets/intervalos/diapason/7b5/b52.png",
     answer: "b5",
   },
   {
-    image: "/assets/intervalos/diapason/7 b5/b5 4.png",
+    image: "/assets/intervalos/diapason/7b5/b54.png",
     answer: "b5",
   },
   {
-    image: "/assets/intervalos/diapason/7 b5/b5 1.png",
+    image: "/assets/intervalos/diapason/7b5/b51.png",
     answer: "b5",
   },
   {
-    image: "/assets/intervalos/diapason/6 4/4 4.png",
+    image: "/assets/intervalos/diapason/64/44.png",
     answer: "4",
   },
   {
-    image: "/assets/intervalos/diapason/6 4/4 5.png",
+    image: "/assets/intervalos/diapason/64/45.png",
     answer: "4",
   },
   {
-    image: "/assets/intervalos/diapason/6 4/4 3.png",
+    image: "/assets/intervalos/diapason/64/43.png",
     answer: "4",
   },
   {
-    image: "/assets/intervalos/diapason/6 4/4 1.png",
+    image: "/assets/intervalos/diapason/64/41.png",
     answer: "4",
   },
   {
-    image: "/assets/intervalos/diapason/6 4/4 2.png",
+    image: "/assets/intervalos/diapason/64/42.png",
     answer: "4",
   },
 ];
