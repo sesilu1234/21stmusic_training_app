@@ -13,6 +13,9 @@ interface StoredPassword {
 }
 
 type PasswordStore = Record<string, StoredPassword>;
+type RecoveryRequestResult =
+  | { ok: true }
+  | { ok: false; reason: "missing_api_key" | "not_allowed" | "not_registered" | "locked" | "provider_error" };
 
 const passwordFilePath = path.join(process.cwd(), "data", "student-passwords.json");
 
@@ -39,13 +42,13 @@ const createRecoveryCode = () => {
   return code;
 };
 
-const sendRecoveryEmail = async (email: string, code: string) => {
+const sendRecoveryEmail = async (email: string, code: string): Promise<RecoveryRequestResult> => {
   const resendApiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.PASSWORD_RECOVERY_FROM_EMAIL || "21st Century Music <info@escuelademusicamoderna.com>";
 
   if (!resendApiKey) {
     console.warn(`[21st Century Music] No se ha enviado el codigo para ${email}: falta RESEND_API_KEY.`);
-    return false;
+    return { ok: false, reason: "missing_api_key" };
   }
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -62,7 +65,13 @@ const sendRecoveryEmail = async (email: string, code: string) => {
     }),
   });
 
-  return response.ok;
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    console.warn(`[21st Century Music] Resend no ha aceptado el correo para ${email}: ${response.status} ${errorText}`);
+    return { ok: false, reason: "provider_error" };
+  }
+
+  return { ok: true };
 };
 
 export const hasStudentPassword = async (email: string) => {
@@ -97,14 +106,14 @@ export const verifyStudentPassword = async (email: string, password: string) => 
   return timingSafeEqual(savedBuffer, candidateBuffer);
 };
 
-export const requestPasswordRecoveryCode = async (email: string) => {
+export const requestPasswordRecoveryCode = async (email: string): Promise<RecoveryRequestResult> => {
   const normalizedEmail = normalizeEmail(email);
-  if (!isAllowedStudentEmail(normalizedEmail)) return false;
+  if (!isAllowedStudentEmail(normalizedEmail)) return { ok: false, reason: "not_allowed" };
 
   const store = await readPasswordStore();
   const currentPassword = store[normalizedEmail];
-  if (!currentPassword) return false;
-  if ((currentPassword.recoveryAttempts || 0) >= 3) return false;
+  if (!currentPassword) return { ok: false, reason: "not_registered" };
+  if ((currentPassword.recoveryAttempts || 0) >= 3) return { ok: false, reason: "locked" };
 
   const code = createRecoveryCode();
   const hashedCode = hashPassword(code);

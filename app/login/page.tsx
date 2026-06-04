@@ -36,6 +36,8 @@ const getErrorMessage = (error?: string) => {
   if (error === "RecoveryCode") return "Código de recuperación incorrecto.";
   if (error === "RecoveryLocked") return "Has agotado los 3 intentos de recuperación.";
   if (error === "RecoverySend") return "No se ha podido enviar el código: falta configurar el servicio de envío de correos.";
+  if (error === "RecoveryProvider") return "Resend no ha aceptado el envío. Revisa que el remitente esté verificado y que la API key sea correcta.";
+  if (error === "RecoveryNotRegistered") return "Este correo todavía no tiene contraseña creada.";
   if (error === "RecoveryExpired") return "El código no es válido o ha caducado. Pide uno nuevo.";
   return "";
 };
@@ -306,8 +308,22 @@ export default async function LoginPage({
               }
               const currentAttempts = await getRecoveryAttempts(submittedEmail);
               if (currentAttempts >= 3) redirect("/login?mode=recover&error=RecoveryLocked");
-              const sent = await requestPasswordRecoveryCode(submittedEmail);
-              if (!sent) redirect(`/login?mode=recover&email=${encodeURIComponent(submittedEmail)}&error=RecoverySend`);
+              const recoveryRequest = await requestPasswordRecoveryCode(submittedEmail);
+              if (!recoveryRequest.ok) {
+                if (recoveryRequest.reason === "missing_api_key") {
+                  redirect(`/login?mode=recover&email=${encodeURIComponent(submittedEmail)}&error=RecoverySend`);
+                }
+                if (recoveryRequest.reason === "provider_error") {
+                  redirect(`/login?mode=recover&email=${encodeURIComponent(submittedEmail)}&error=RecoveryProvider`);
+                }
+                if (recoveryRequest.reason === "not_registered") {
+                  redirect(`/login?mode=recover&email=${encodeURIComponent(submittedEmail)}&error=RecoveryNotRegistered`);
+                }
+                if (recoveryRequest.reason === "locked") {
+                  redirect("/login?mode=recover&error=RecoveryLocked");
+                }
+                redirect("/login?mode=recover&error=NoAccess");
+              }
               redirect(`/login?mode=reset&email=${encodeURIComponent(submittedEmail)}&status=codeSent`);
             }}
           >
