@@ -280,6 +280,7 @@ const juegos: Juego[] = [
   { id: 6, titulo: "Trivial", desc: "Cultura general de guitarra y artistas.", icon: Music, bg: "bg-red-500/20", accent: "text-red-400", slug: "/play/trivia" },
   { id: 7, titulo: "Lectura Rítmica", desc: "Pulsa al ritmo exacto de la partitura.", icon: Activity, bg: "bg-orange-500/20", accent: "text-orange-400", slug: "/play/ritmo" },
   { id: 8, titulo: "Ej. Canto/ E. del oído", desc: "Entra para elegir Constructor de melodías o Ej. Rockschool.", icon: Music2, bg: "bg-teal-500/20", accent: "text-teal-400", slug: "/play/melodias" },
+  { id: 9, titulo: "Oído: Intervalos", desc: "Escucha dos notas e identifica el intervalo de oído.", icon: Headphones, bg: "bg-violet-500/20", accent: "text-violet-400", slug: "/play/oido-intervalos" },
 ];
 
 export default function Home() {
