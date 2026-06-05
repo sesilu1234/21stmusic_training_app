@@ -30,7 +30,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${chaney.variable} h-full antialiased`}
     >
       <body className={`min-h-full flex flex-col ${chaney.variable}`}>
-        <AccessGuard />
+        {/* <AccessGuard /> */}
         {children}
       </body>
     </html>

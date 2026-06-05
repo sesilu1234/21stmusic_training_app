@@ -49,10 +49,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       return true;
     },
-    async authorized({ auth, request }) {
-      const path = request.nextUrl.pathname;
-      if (path === "/login") return true;
-      return !!auth;
+    async authorized() {
+      return true;
     },
   },
 });

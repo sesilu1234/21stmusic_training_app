@@ -322,6 +322,7 @@ export default function Home() {
       all[userEmail] = loadedProfile;
       localStorage.setItem("student_profiles_index", JSON.stringify(all));
     };
+
     load();
   }, []);
 
@@ -475,33 +476,57 @@ export default function Home() {
                   <span className="hidden md:inline">{label}</span>
                 </button>
               ))}
-              <button onClick={() => goToView("perfil")} className={`rounded-2xl px-2 py-1 flex items-center gap-2 text-[10px] font-black uppercase transition-colors ${view === "perfil" ? activeTabClass : inactiveTabClass}`}>
-                <div className="w-9 h-9 rounded-2xl bg-black/40 border border-amber-300/30 flex items-center justify-center overflow-hidden">
-                  {profile?.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profile.photoUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
-                  ) : (
-                    <User size={20} />
-                  )}
-                </div>
-                <div className="hidden md:flex flex-col items-start leading-tight">
-                  <span>{displayName}</span>
-                  <div className="grid grid-cols-4 gap-1 mt-1">
-                    {Array.from({ length: 8 }, (_, i) => (
-                      <Award key={i} size={13} className={i < medalsCount ? "text-amber-400 fill-amber-400" : "text-slate-400"} />
-                    ))}
+              {email ? (
+                <button onClick={() => goToView("perfil")} className={`rounded-2xl px-2 py-1 flex items-center gap-2 text-[10px] font-black uppercase transition-colors ${view === "perfil" ? activeTabClass : inactiveTabClass}`}>
+                  <div className="w-9 h-9 rounded-2xl bg-black/40 border border-amber-300/30 flex items-center justify-center overflow-hidden">
+                    {profile?.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={profile.photoUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
+                    ) : (
+                      <User size={20} />
+                    )}
                   </div>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => signOut({ callbackUrl: "/login" })}
-                className={`rounded-full p-2 transition-colors ${inactiveTabClass}`}
-                title="Cerrar sesión"
-                aria-label="Cerrar sesión"
-              >
-                <LogOut size={16} />
-              </button>
+                  <div className="hidden md:flex flex-col items-start leading-tight">
+                    <span>{displayName}</span>
+                    <div className="grid grid-cols-4 gap-1 mt-1">
+                      {Array.from({ length: 8 }, (_, i) => (
+                        <Award key={i} size={13} className={i < medalsCount ? "text-amber-400 fill-amber-400" : "text-slate-400"} />
+                      ))}
+                    </div>
+                  </div>
+                </button>
+              ) : (
+                <button
+                  
+                  className="rounded-2xl px-2 py-1 flex items-center gap-2 text-[10px] font-black uppercase opacity-40 text-slate-400"
+           
+                >
+                  <div className="w-9 h-9 rounded-2xl bg-black/40 border border-slate-600/30 flex items-center justify-center">
+                    <User size={20} />
+                  </div>
+                  <span className="hidden md:inline">Perfil</span>
+                </button>
+              )}
+              {email ? (
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  className={`rounded-full p-2 transition-colors ${inactiveTabClass}`}
+                  title="Cerrar sesión"
+                  aria-label="Cerrar sesión"
+                >
+                  <LogOut size={16} />
+                </button>
+              ) : (
+                <Link
+                  href="/"
+                  className={`rounded-full p-2 transition-colors ${inactiveTabClass} flex items-center justify-center`}
+                  title="Iniciar sesión"
+                  aria-label="Iniciar sesión"
+                >
+                  <LogOut size={16} className="rotate-180" />
+                </Link>
+              )}
             </div>
           </nav>
         </div>
@@ -746,6 +771,19 @@ export default function Home() {
               <div className="space-y-3">
                 {notas.map((n) => <div key={n.id} className="bg-black/30 border border-white/5 p-4 rounded-2xl"><div className="text-[8px] uppercase text-amber-400 mb-1">{n.fecha}</div><p className="text-sm text-slate-300">{n.contenido}</p></div>)}
               </div>
+            </div>
+          )}
+
+          {view === "perfil" && !email && (
+            <div className="max-w-md mx-auto text-center space-y-5 mt-10">
+              <div className="w-20 h-20 mx-auto rounded-full bg-black/40 border border-white/10 flex items-center justify-center">
+                <User size={36} className="text-slate-400" />
+              </div>
+              <h2 className="text-2xl italic font-black text-slate-300">Perfil no disponible</h2>
+              <p className="text-sm text-slate-400">Inicia sesión para acceder a tu perfil, historial de partidas y medallas.</p>
+              <Link href="/login" className="inline-block bg-amber-400 text-slate-900 font-black rounded-2xl px-6 py-3 text-sm uppercase tracking-widest hover:bg-amber-300 transition-colors">
+                Iniciar sesión
+              </Link>
             </div>
           )}
 
