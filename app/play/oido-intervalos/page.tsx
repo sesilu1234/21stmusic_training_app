@@ -330,7 +330,7 @@ export default function IntervalosAuditivos() {
             Repetir
           </button>
 
-          <div className="flex items-center bg-black/50 border border-white/10 rounded-md p-2 backdrop-blur-md gap-1">
+          <div className="flex items-center bg-black/50 border border-white/10 rounded-md p-2 backdrop-blur-md gap-2">
             {PRESETS.map((p, i) => (
               <button
                 key={i}
