@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Volume2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
 
 const TOTAL_QUESTIONS = 24;
 
@@ -149,6 +149,8 @@ export default function IntervalosAuditivos() {
   const [answerState, setAnswerState] = useState<"idle"|"correct"|"wrong">("idle");
   const [gameOver, setGameOver]       = useState(false);
   const [isMounted, setIsMounted]     = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [solutionStep, setSolutionStep] = useState<number | null>(null);
 
   const [presetIdx, setPresetIdx]     = useState(0);
   const [speed, setSpeed]             = useState(0.25);
@@ -158,45 +160,91 @@ export default function IntervalosAuditivos() {
   const [isPlaying, setIsPlaying]     = useState(false);
 
   const currentRootRef = useRef(-1);
+  const shouldAutoPlayNextRef = useRef(false);
+  const flashTimerRef = useRef<number | null>(null);
+  const finishTimerRef = useRef<number | null>(null);
   const { playInterval } = useAudio();
 
   useEffect(() => {
     const list: typeof INTERVALS = [];
-    for (let i = 0; i < TOTAL_QUESTIONS; i++)
-      list.push(INTERVALS[Math.floor(Math.random() * INTERVALS.length)]);
+    for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+      const previous = list[i - 1];
+      const availableIntervals = previous
+        ? INTERVALS.filter((interval) => interval.name !== previous.name)
+        : INTERVALS;
+      list.push(
+        availableIntervals[Math.floor(Math.random() * availableIntervals.length)],
+      );
+    }
     setQuizList(list);
     setIsMounted(true);
   }, []);
 
   const currentInterval = quizList[step];
   const correctCount    = results.filter(r => r === "correct").length;
+  const progresoMaximo = userAnswers.indexOf(null) === -1 ? TOTAL_QUESTIONS : userAnswers.indexOf(null);
 
-  const triggerPlay = useCallback((interval: typeof INTERVALS[0], root = -1) => {
-    if (isPlaying) return;
+  const triggerPlay = useCallback((interval: typeof INTERVALS[0], root = -1, force = false) => {
+    if (isPlaying && !force) return;
+    if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
+    if (finishTimerRef.current) window.clearTimeout(finishTimerRef.current);
     setIsPlaying(true);
     setNoteFlash(1);
     currentRootRef.current = playInterval(interval.semitones, gapMs, presetIdx, root);
-    setTimeout(() => setNoteFlash(2), gapMs);
-    setTimeout(() => { setNoteFlash(0); setIsPlaying(false); }, gapMs + 1400);
+    flashTimerRef.current = window.setTimeout(() => setNoteFlash(2), gapMs);
+    finishTimerRef.current = window.setTimeout(() => {
+      setNoteFlash(0);
+      setIsPlaying(false);
+      flashTimerRef.current = null;
+      finishTimerRef.current = null;
+    }, gapMs + 1400);
   }, [isPlaying, gapMs, presetIdx, playInterval]);
-
-  useEffect(() => {
-    if (!currentInterval || !isMounted) return;
-    const t = setTimeout(() => triggerPlay(currentInterval), 350);
-    return () => clearTimeout(t);
-  }, [currentInterval, isMounted]); // eslint-disable-line
 
   const handleAnswer = (label: string) => {
     if (userAnswers[step] !== null || gameOver) return;
+    setIsReviewing(false);
+    setSolutionStep(null);
     const isCorrect = label === currentInterval.name;
     const newResults  = [...results];  newResults[step]  = isCorrect ? "correct" : "wrong";
     const newAnswers  = [...userAnswers]; newAnswers[step] = label;
     setResults(newResults); setUserAnswers(newAnswers);
     setAnswerState(isCorrect ? "correct" : "wrong");
     if (step < TOTAL_QUESTIONS - 1) {
-      setTimeout(() => { setStep(step + 1); setAnswerState("idle"); }, 950);
+      setTimeout(() => {
+        shouldAutoPlayNextRef.current = true;
+        currentRootRef.current = -1;
+        setStep(step + 1);
+        setAnswerState("idle");
+      }, 950);
     } else {
       setTimeout(() => setGameOver(true), 1050);
+    }
+  };
+
+  useEffect(() => {
+    if (!currentInterval || !isMounted || isReviewing) return;
+    if (!shouldAutoPlayNextRef.current) return;
+    shouldAutoPlayNextRef.current = false;
+    const timer = window.setTimeout(() => triggerPlay(currentInterval, -1, true), 120);
+    return () => window.clearTimeout(timer);
+  }, [currentInterval, isMounted, isReviewing, triggerPlay]);
+
+  const goBack = () => {
+    setAnswerState("idle");
+    const previousStep = Math.max(0, step - 1);
+    setSolutionStep(userAnswers[previousStep] !== null ? previousStep : null);
+    setIsReviewing(userAnswers[previousStep] !== null);
+    setStep(previousStep);
+  };
+
+  const goNext = () => {
+    const nextStep = step + 1;
+    if (nextStep <= progresoMaximo && nextStep < TOTAL_QUESTIONS) {
+      setAnswerState("idle");
+      const nextIsAnswered = userAnswers[nextStep] !== null;
+      setSolutionStep(nextIsAnswered ? nextStep : null);
+      setIsReviewing(nextIsAnswered);
+      setStep(nextStep);
     }
   };
 
@@ -295,7 +343,7 @@ export default function IntervalosAuditivos() {
           </h2>
         </div>
 
-        <div className="relative flex flex-col items-center w-full max-w-sm md:max-w-lg mb-4">
+        <div className="relative flex flex-col items-center w-full max-w-sm md:max-w-lg mb-8">
           <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl w-full h-44 md:h-52 flex items-center justify-center border-4 border-white relative overflow-hidden">
             <div className="absolute top-4 right-6 text-black/10 font-black italic text-lg">#{step + 1}</div>
             <div className="flex items-center gap-6 md:gap-10">
@@ -314,20 +362,37 @@ export default function IntervalosAuditivos() {
               </div>
             </div>
           </div>
+
+          <div
+            className={`absolute -bottom-7 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 ${
+              isReviewing && solutionStep === step
+                ? "translate-y-0 opacity-100"
+                : "translate-y-4 opacity-0 pointer-events-none"
+            }`}
+          >
+            <div className="px-6 py-2 rounded-xl border border-amber-400/50 bg-black/90 backdrop-blur-xl flex flex-col items-center shadow-2xl min-w-[140px]">
+              <span className="text-[7px] text-amber-400 uppercase font-black tracking-widest">
+                Solución
+              </span>
+              <span className="text-sm font-bold text-white uppercase">
+                {currentInterval.name}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3 mb-6 mt-6">
           <button
             onClick={() => triggerPlay(currentInterval, currentRootRef.current)}
-            disabled={isPlaying || answerState !== "idle"}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md border text-[10px] font-bold uppercase tracking-widest transition-all
-              ${isPlaying || answerState !== "idle"
-                ? "border-white/5 text-white/20 cursor-default"
-                : "border-white/20 text-white/60 hover:text-white hover:border-white/50 bg-black/20 active:scale-95"
+            disabled={isPlaying}
+            className={`flex items-center gap-3 rounded-full border-2 px-7 py-3 text-xs font-black uppercase tracking-[0.22em] transition-all shadow-xl
+              ${isPlaying
+                ? "border-white/5 bg-white/5 text-white/25 cursor-default"
+                : "border-black bg-amber-400 text-black shadow-[5px_5px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0px_#000] active:translate-x-[5px] active:translate-y-[5px] active:shadow-none"
               }`}
           >
-            <Volume2 size={11} />
-            Repetir
+            <Volume2 size={18} />
+            Escuchar
           </button>
 
           <div className="flex items-center bg-black/50 border border-white/10 rounded-md p-2 backdrop-blur-md gap-2">
@@ -363,8 +428,9 @@ export default function IntervalosAuditivos() {
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 gap-2 md:gap-3">
             {BUTTON_LABELS.map((btn) => {
               const answered     = userAnswers[step] !== null;
+              const currentResult = results[step];
               const isCorrectBtn = answered && btn === currentInterval.name;
-              const isWrongBtn   = answered && answerState === "wrong" && btn === userAnswers[step];
+              const isWrongBtn   = answered && currentResult === "wrong" && btn === userAnswers[step];
               return (
                 <button
                   key={btn}
@@ -391,17 +457,49 @@ export default function IntervalosAuditivos() {
         </div>
 
         <div className="w-full mt-10 md:mt-14 flex flex-col items-center">
-          <div className="flex flex-wrap justify-center gap-1 p-2 bg-black/20 rounded-2xl border border-white/5 max-w-[260px] md:max-w-none">
-            {results.map((res, i) => (
-              <div key={i} className={`w-5 h-5 md:w-6 md:h-6 rounded-md border flex items-center justify-center text-[7px] font-black transition-all ${
-                res === "correct"  ? "bg-green-500 text-white border-green-400" :
-                res === "wrong"    ? "bg-red-500 text-white border-red-400" :
-                i === step         ? "border-amber-400 bg-white/20 text-white scale-110 shadow-[0_0_10px_rgba(251,191,36,0.4)]" :
-                                     "border-white/5 text-white/5"
-              }`}>
-                {i + 1}
-              </div>
-            ))}
+          <div className="flex items-center justify-between w-full max-w-md gap-4">
+            <button
+              onClick={goBack}
+              className={`p-3 bg-white/5 border border-white/10 text-white rounded-full transition-all ${step === 0 ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+            >
+              <ArrowLeft size={18} />
+            </button>
+
+            <div className="flex flex-wrap justify-center gap-1 p-2 bg-black/20 rounded-2xl border border-white/5 max-w-[260px] md:max-w-none">
+              {results.map((res, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    if (userAnswers[i] !== null) {
+                      setAnswerState("idle");
+                      setSolutionStep(i);
+                      setIsReviewing(true);
+                      setStep(i);
+                    }
+                  }}
+                  className={`w-5 h-5 md:w-6 md:h-6 rounded-md border flex items-center justify-center text-[7px] font-black transition-all ${
+                    res === "correct"  ? "bg-green-500 text-white border-green-400 cursor-pointer" :
+                    res === "wrong"    ? "bg-red-500 text-white border-red-400 cursor-pointer" :
+                    i === step         ? "border-amber-400 bg-white/20 text-white scale-110 shadow-[0_0_10px_rgba(251,191,36,0.4)]" :
+                                         "border-white/5 text-white/5"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={goNext}
+              className={`p-3 bg-amber-500 text-black rounded-full shadow-lg transition-all ${
+                step < progresoMaximo && step < TOTAL_QUESTIONS - 1
+                  ? "opacity-100"
+                  : "opacity-0 pointer-events-none"
+              }`}
+            >
+              <ArrowRight size={18} />
+            </button>
           </div>
         </div>
 
