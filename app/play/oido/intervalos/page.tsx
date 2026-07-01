@@ -2,142 +2,15 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
+import {
+  INTERVALS,
+  BUTTON_LABELS,
+  PRESETS,
+  PRESET_ICONS,
+  useAudio,
+} from "../audio";
 
 const TOTAL_QUESTIONS = 24;
-
-const INTERVALS = [
-  { name: "Unísono", semitones: 0 },
-  { name: "b2",      semitones: 1 },
-  { name: "2",       semitones: 2 },
-  { name: "b3",      semitones: 3 },
-  { name: "3",       semitones: 4 },
-  { name: "4",       semitones: 5 },
-  { name: "b5",      semitones: 6 },
-  { name: "5",       semitones: 7 },
-  { name: "b6",      semitones: 8 },
-  { name: "6",       semitones: 9 },
-  { name: "b7",      semitones: 10 },
-  { name: "7",       semitones: 11 },
-  { name: "8va",     semitones: 12 },
-];
-
-const BUTTON_LABELS = ["Unísono","b2","2","b3","3","4","b5","5","b6","6","b7","7","8va"];
-const BASE_FREQ = 261.63;
-
-function semitonesToFreq(s: number) {
-  return BASE_FREQ * Math.pow(2, s / 12);
-}
-
-type Preset = { label: string; make: (ctx: AudioContext, freq: number, when: number) => void };
-
-const PRESETS: Preset[] = [
-  {
-    label: "Piano",
-    make(ctx, freq, when) {
-      const master = ctx.createGain();
-      master.connect(ctx.destination);
-      master.gain.setValueAtTime(0, when);
-      master.gain.linearRampToValueAtTime(0.55, when + 0.020);
-      master.gain.setTargetAtTime(0.18, when + 0.020, 0.15);
-      master.gain.exponentialRampToValueAtTime(0.001, when + 3.5);
-      [1,2,3,4,5].forEach((p, i) => {
-        const osc = ctx.createOscillator(); const g = ctx.createGain();
-        osc.type = "sine"; osc.frequency.setValueAtTime(freq * p, when);
-        g.gain.setValueAtTime([0.5,0.25,0.12,0.06,0.03][i], when);
-        osc.connect(g); g.connect(master); osc.start(when); osc.stop(when + 3.6);
-      });
-      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
-      const d = buf.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1)*(1-i/d.length);
-      const ns = ctx.createBufferSource(); const ng = ctx.createGain();
-      ns.buffer = buf;
-      ng.gain.setValueAtTime(0, when);
-      ng.gain.linearRampToValueAtTime(0.06, when + 0.006);
-      ng.gain.exponentialRampToValueAtTime(0.001, when + 0.06);
-      ns.connect(ng); ng.connect(master); ns.start(when);
-    },
-  },
-  {
-    label: "Flauta",
-    make(ctx, freq, when) {
-      const master = ctx.createGain();
-      master.connect(ctx.destination);
-      master.gain.setValueAtTime(0, when);
-      master.gain.linearRampToValueAtTime(0.4, when + 0.02);
-      master.gain.exponentialRampToValueAtTime(0.001, when + 2.0);
-      const osc = ctx.createOscillator();
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(freq, when);
-      const lfo = ctx.createOscillator();
-      const lfoGain = ctx.createGain();
-      lfo.frequency.setValueAtTime(5.5, when);
-      lfoGain.gain.setValueAtTime(0, when);
-      lfoGain.gain.linearRampToValueAtTime(3, when + 0.3);
-      lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
-      osc.connect(master); osc.start(when); osc.stop(when + 2.1);
-      lfo.start(when); lfo.stop(when + 2.1);
-    },
-  },
-  {
-    label: "Marimba",
-    make(ctx, freq, when) {
-      const master = ctx.createGain();
-      master.connect(ctx.destination);
-      master.gain.setValueAtTime(0, when);
-      master.gain.linearRampToValueAtTime(0.5, when + 0.005);
-      master.gain.exponentialRampToValueAtTime(0.001, when + 1.6);
-      [[1, 0.6], [3.97, 0.2], [9.87, 0.07], [2, 0.12]].forEach(([ratio, vol]) => {
-        const osc = ctx.createOscillator(); const g = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq * ratio, when);
-        g.gain.setValueAtTime(vol, when);
-        g.gain.exponentialRampToValueAtTime(0.001, when + 1.6 / ratio);
-        osc.connect(g); g.connect(master); osc.start(when); osc.stop(when + 1.7);
-      });
-    },
-  },
-  {
-    label: "Synth",
-    make(ctx, freq, when) {
-      const master = ctx.createGain(); master.connect(ctx.destination);
-      master.gain.setValueAtTime(0, when); master.gain.linearRampToValueAtTime(0.45, when + 0.02);
-      master.gain.setValueAtTime(0.35, when + 0.1); master.gain.exponentialRampToValueAtTime(0.001, when + 2.0);
-      [-2,2].forEach(det => {
-        const osc = ctx.createOscillator(); const g = ctx.createGain();
-        osc.type = "sawtooth"; osc.frequency.setValueAtTime(freq + det, when);
-        osc.frequency.linearRampToValueAtTime(freq + det + 2, when + 0.05);
-        g.gain.setValueAtTime(0.22, when); osc.connect(g); g.connect(master); osc.start(when); osc.stop(when + 2.1);
-      });
-      const sub = ctx.createOscillator(); const sg = ctx.createGain();
-      sub.type = "sine"; sub.frequency.setValueAtTime(freq/2, when); sg.gain.setValueAtTime(0.18, when);
-      sub.connect(sg); sg.connect(master); sub.start(when); sub.stop(when + 2.1);
-    },
-  },
-];
-
-const PRESET_ICONS = ["🎹", "🪈", "🪘", "🎛️"];
-
-function useAudio() {
-  const ctxRef = useRef<AudioContext | null>(null);
-  function getCtx(): AudioContext {
-    if (!ctxRef.current) ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    return ctxRef.current;
-  }
-  const playInterval = useCallback((semitones: number, gapMs: number, presetIdx: number, rootOffset = -1) => {
-    const ctx = getCtx();
-    const root = rootOffset >= 0 ? rootOffset : Math.floor(Math.random() * 8);
-    const gap  = gapMs / 1000;
-    const doPlay = () => {
-      const now = ctx.currentTime;
-      PRESETS[presetIdx].make(ctx, semitonesToFreq(root), now);
-      PRESETS[presetIdx].make(ctx, semitonesToFreq(root + semitones), now + gap);
-    };
-    if (ctx.state === "suspended") ctx.resume().then(doPlay);
-    else doPlay();
-    return root;
-  }, []);
-  return { playInterval };
-}
 
 export default function IntervalosAuditivos() {
   const router = useRouter();
@@ -260,11 +133,11 @@ export default function IntervalosAuditivos() {
       {/* HEADER */}
       <div className="w-full px-4 pt-6 md:px-12 flex justify-between items-start z-20">
         <button
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/play/oido")}
           className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-4 py-2 rounded-full border border-white/10 transition-all"
         >
-          ← <span className="hidden sm:inline">Menú Principal</span>
-          <span className="sm:hidden">Menú</span>
+          ← <span className="hidden sm:inline">Oído</span>
+          <span className="sm:hidden">Oído</span>
         </button>
         <div className="flex gap-4 md:gap-8 opacity-40 md:opacity-90">
           <img src="/assets/logo21stCM_no_white_1.png" className="h-12 md:h-24 w-auto drop-shadow-2xl" alt="logo" />
@@ -385,13 +258,13 @@ export default function IntervalosAuditivos() {
           <button
             onClick={() => triggerPlay(currentInterval, currentRootRef.current)}
             disabled={isPlaying}
-            className={`flex items-center gap-3 rounded-full border-2 px-7 py-3 text-xs font-black uppercase tracking-[0.22em] transition-all shadow-xl
+            className={`flex items-center gap-2 rounded-lg border-2 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all shadow-xl
               ${isPlaying
                 ? "border-white/5 bg-white/5 text-white/25 cursor-default"
-                : "border-black bg-amber-400 text-black shadow-[5px_5px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0px_#000] active:translate-x-[5px] active:translate-y-[5px] active:shadow-none"
+                : "border-black bg-amber-300/95 text-black shadow-[3px_3px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
               }`}
           >
-            <Volume2 size={18} />
+            <Volume2 size={14} />
             Escuchar
           </button>
 

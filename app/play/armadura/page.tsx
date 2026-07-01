@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { armaduras_data } from "./notes_images";
+import { getArmaduras, type ArmaduraData, type Clave } from "./notes_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { saveGameScore } from "@/lib/studentScores";
 
@@ -33,7 +33,8 @@ export default function ArmadurasGame() {
   );
 
   // 1. Hydration Fix: Start with empty state
-  const [quizList, setQuizList] = useState<typeof armaduras_data>([]);
+  const [selectedClaves, setSelectedClaves] = useState<Clave[] | null>(null);
+  const [quizList, setQuizList] = useState<ArmaduraData[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [step, setStep] = useState(0);
   const [results, setResults] = useState<(null | "correct" | "wrong")[]>(
@@ -49,14 +50,28 @@ export default function ArmadurasGame() {
     null,
   );
 
-  // 2. Initialize Game on Client Only
+  // 2. Marca montaje en cliente (evita hydration mismatch)
   useEffect(() => {
-    const shuffled = [...armaduras_data]
+    setIsMounted(true);
+  }, []);
+
+  const scoreSavedRef = useRef(false);
+
+  // Inicia la partida con las claves seleccionadas
+  const startGame = (claves: Clave[]) => {
+    const shuffled = [...getArmaduras(claves)]
       .sort(() => Math.random() - 0.5)
       .slice(0, 24);
     setQuizList(shuffled);
-    setIsMounted(true);
-  }, []);
+    setSelectedClaves(claves);
+    setStep(0);
+    setResults(Array(24).fill(null));
+    setUserAnswers(Array(24).fill(null));
+    setGameOver(false);
+    setIsReviewing(false);
+    setShowFeedback(null);
+    scoreSavedRef.current = false;
+  };
 
   const currentQuestion = quizList[step];
   const esPreguntaMayor = currentQuestion?.image.includes("M.png");
@@ -91,7 +106,6 @@ export default function ArmadurasGame() {
     [results],
   );
   const totalQuestions = quizList.length || 24;
-  const scoreSavedRef = useRef(false);
 
   useEffect(() => {
     if (!gameOver || scoreSavedRef.current) return;
@@ -99,7 +113,106 @@ export default function ArmadurasGame() {
     saveGameScore("Armaduras", correctCount, totalQuestions);
   }, [gameOver, correctCount, totalQuestions]);
 
-  if (!isMounted || !currentQuestion) {
+  if (!isMounted) {
+    return <div className="min-h-screen bg-slate-900" />;
+  }
+
+  // Pantalla de selección de clave (antes de empezar)
+  if (selectedClaves === null) {
+    const opciones: { claves: Clave[]; titulo: string; sub: string; imgs: string[] }[] = [
+      {
+        claves: ["sol"],
+        titulo: "Clave de Sol",
+        sub: "Solo clave de Sol",
+        imgs: ["/assets/armaduras/SolM.png"],
+      },
+      {
+        claves: ["fa"],
+        titulo: "Clave de Fa",
+        sub: "Solo clave de Fa",
+        imgs: ["/assets/armaduras_fa/SolM.png"],
+      },
+      {
+        claves: ["sol", "fa"],
+        titulo: "Ambas claves",
+        sub: "Sol y Fa mezcladas",
+        imgs: ["/assets/armaduras/SolM.png", "/assets/armaduras_fa/SolM.png"],
+      },
+    ];
+
+    return (
+      <div
+        className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans overflow-x-hidden"
+        style={{ backgroundImage: "url('/assets/background.jpeg')" }}
+      >
+        <div className="w-full px-4 pt-6 md:px-12 flex justify-between items-center z-20">
+          <button
+            onClick={() => router.push("/")}
+            className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-4 py-2 rounded-full border border-white/10 transition-all"
+          >
+            ← <span className="hidden sm:inline">Menú Principal</span>
+            <span className="sm:hidden">Menú</span>
+          </button>
+          <div className="flex gap-4 opacity-40 md:opacity-90">
+            <img
+              src="/assets/logo21stCM_no_white_1.png"
+              className="h-12 md:h-20 w-auto"
+              alt="logo"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 z-10 w-full max-w-5xl mx-auto">
+          <div className="mb-10 text-center">
+            <h2
+              className="text-white text-2xl md:text-4xl font-black italic tracking-tighter leading-tight"
+              style={{ fontFamily: "Chaney, sans-serif" }}
+            >
+              Armaduras
+            </h2>
+            <p className="text-white/60 text-xs md:text-sm font-bold uppercase tracking-[0.25em] mt-3">
+              Elige con qué clave quieres jugar
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 w-full">
+            {opciones.map((op) => (
+              <button
+                key={op.titulo}
+                onClick={() => startGame(op.claves)}
+                className="group flex flex-col items-center gap-4 bg-black/40 hover:bg-amber-500 p-6 md:p-8 rounded-[2rem] border border-white/10 hover:border-amber-400 backdrop-blur-md transition-all active:scale-95 shadow-xl"
+              >
+                <div className="bg-white rounded-2xl w-full h-28 md:h-32 flex items-center justify-center gap-2 p-3 overflow-hidden">
+                  {op.imgs.map((src) => (
+                    <img
+                      key={src}
+                      src={encodeURI(src)}
+                      alt=""
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  ))}
+                </div>
+                <div className="text-center">
+                  <div className="text-white group-hover:text-black text-base md:text-lg font-black italic uppercase tracking-tight transition-colors">
+                    {op.titulo}
+                  </div>
+                  <div className="text-white/50 group-hover:text-black/70 text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors">
+                    {op.sub}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <footer className="py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase z-10">
+          © 2026 21st Century Music
+        </footer>
+      </div>
+    );
+  }
+
+  if (!currentQuestion) {
     return <div className="min-h-screen bg-slate-900" />;
   }
 

@@ -4,37 +4,71 @@ export interface ArmaduraData {
   menor: string; //RespuestacorrectacolumnaMenor
 }
 
-export const armaduras_data: ArmaduraData[] = [
-  { image: "/assets/armaduras/Lamen.png", mayor: "Do", menor: "La" },
-  { image: "/assets/armaduras/Mimen.png", mayor: "Sol", menor: "Mi" },
-  { image: "/assets/armaduras/Simen.png", mayor: "Re", menor: "Si" },
-  { image: "/assets/armaduras/Fasmen.png", mayor: "La", menor: "Fas" },
-  { image: "/assets/armaduras/Dosmen.png", mayor: "Mi", menor: "Dos" },
-  { image: "/assets/armaduras/Solsmen.png", mayor: "Si", menor: "Sols" },
-  { image: "/assets/armaduras/Resmen.png", mayor: "Fas", menor: "Res" },
-  { image: "/assets/armaduras/Lasmen.png", mayor: "Dos", menor: "Las" },
-  { image: "/assets/armaduras/Remen.png", mayor: "Fa", menor: "Re" },
-  { image: "/assets/armaduras/Solmen.png", mayor: "Sib", menor: "Sol" },
-  { image: "/assets/armaduras/Domen.png", mayor: "Mib", menor: "Do" },
-  { image: "/assets/armaduras/Famen.png", mayor: "Lab", menor: "Fa" },
-  { image: "/assets/armaduras/Sibmen.png", mayor: "Reb", menor: "Sib" },
-  { image: "/assets/armaduras/Mibmen.png", mayor: "Solb", menor: "Mib" },
-  { image: "/assets/armaduras/Labmen.png", mayor: "Dob", menor: "Lab" },
+export type Clave = "sol" | "fa";
 
-  { image: "/assets/armaduras/DoM.png", mayor: "Do", menor: "La" },
-  { image: "/assets/armaduras/SolM.png", mayor: "Sol", menor: "Mi" },
-  { image: "/assets/armaduras/ReM.png", mayor: "Re", menor: "Si" },
-  { image: "/assets/armaduras/LaM.png", mayor: "La", menor: "Fas" },
-  { image: "/assets/armaduras/MiM.png", mayor: "Mi", menor: "Dos" },
-  { image: "/assets/armaduras/SiM.png", mayor: "Si", menor: "Sols" },
-  { image: "/assets/armaduras/FasM.png", mayor: "Fas", menor: "Res" },
-  { image: "/assets/armaduras/DosM.png", mayor: "Dos", menor: "Las" },
+// Datos base: el nombre del archivo es idéntico para clave de Sol y de Fa,
+// solo cambia la carpeta. La tonalidad (mayor/menor) es la misma en ambas claves.
+interface ArmaduraBase {
+  file: string;
+  mayor: string;
+  menor: string;
+}
 
-  { image: "/assets/armaduras/FaM.png", mayor: "Fa", menor: "Re" },
-  { image: "/assets/armaduras/SibM.png", mayor: "Sib", menor: "Sol" },
-  { image: "/assets/armaduras/MibM.png", mayor: "Mib", menor: "Do" },
-  { image: "/assets/armaduras/LabM.png", mayor: "Lab", menor: "Fa" },
-  { image: "/assets/armaduras/RebM.png", mayor: "Reb", menor: "Sib" },
-  { image: "/assets/armaduras/SolbM.png", mayor: "Solb", menor: "Mib" },
-  { image: "/assets/armaduras/DobM.png", mayor: "Dob", menor: "Lab" },
+const armaduras_base: ArmaduraBase[] = [
+  { file: "Lamen.png", mayor: "Do", menor: "La" },
+  { file: "Mimen.png", mayor: "Sol", menor: "Mi" },
+  { file: "Simen.png", mayor: "Re", menor: "Si" },
+  { file: "Fasmen.png", mayor: "La", menor: "Fas" },
+  { file: "Dosmen.png", mayor: "Mi", menor: "Dos" },
+  { file: "Solsmen.png", mayor: "Si", menor: "Sols" },
+  { file: "Resmen.png", mayor: "Fas", menor: "Res" },
+  { file: "Lasmen.png", mayor: "Dos", menor: "Las" },
+  { file: "Remen.png", mayor: "Fa", menor: "Re" },
+  { file: "Solmen.png", mayor: "Sib", menor: "Sol" },
+  { file: "Domen.png", mayor: "Mib", menor: "Do" },
+  { file: "Famen.png", mayor: "Lab", menor: "Fa" },
+  { file: "Sibmen.png", mayor: "Reb", menor: "Sib" },
+  { file: "Mibmen.png", mayor: "Solb", menor: "Mib" },
+  { file: "Labmen.png", mayor: "Dob", menor: "Lab" },
+
+  { file: "DoM.png", mayor: "Do", menor: "La" },
+  { file: "SolM.png", mayor: "Sol", menor: "Mi" },
+  { file: "ReM.png", mayor: "Re", menor: "Si" },
+  { file: "LaM.png", mayor: "La", menor: "Fas" },
+  { file: "MiM.png", mayor: "Mi", menor: "Dos" },
+  { file: "SiM.png", mayor: "Si", menor: "Sols" },
+  { file: "FasM.png", mayor: "Fas", menor: "Res" },
+  { file: "DosM.png", mayor: "Dos", menor: "Las" },
+
+  { file: "FaM.png", mayor: "Fa", menor: "Re" },
+  { file: "SibM.png", mayor: "Sib", menor: "Sol" },
+  { file: "MibM.png", mayor: "Mib", menor: "Do" },
+  { file: "LabM.png", mayor: "Lab", menor: "Fa" },
+  { file: "RebM.png", mayor: "Reb", menor: "Sib" },
+  { file: "SolbM.png", mayor: "Solb", menor: "Mib" },
+  { file: "DobM.png", mayor: "Dob", menor: "Lab" },
 ];
+
+const CARPETAS: Record<Clave, string> = {
+  sol: "/assets/armaduras",
+  fa: "/assets/armaduras_fa",
+};
+
+function buildData(clave: Clave): ArmaduraData[] {
+  return armaduras_base.map((a) => ({
+    image: `${CARPETAS[clave]}/${a.file}`,
+    mayor: a.mayor,
+    menor: a.menor,
+  }));
+}
+
+export const armaduras_sol: ArmaduraData[] = buildData("sol");
+export const armaduras_fa: ArmaduraData[] = buildData("fa");
+
+// Devuelve el conjunto de armaduras según las claves seleccionadas.
+export function getArmaduras(claves: Clave[]): ArmaduraData[] {
+  return claves.flatMap((c) => (c === "fa" ? armaduras_fa : armaduras_sol));
+}
+
+// Compatibilidad: por defecto, clave de Sol.
+export const armaduras_data = armaduras_sol;
