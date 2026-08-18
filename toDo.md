@@ -1,0 +1,2 @@
+- cambiar iconos de modos de juego
+-cuadro de honor
