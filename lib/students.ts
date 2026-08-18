@@ -78,20 +78,20 @@ export const getStudent = async (email: unknown): Promise<Student | null> => {
   return data ? toStudent(data) : null;
 };
 
-/** Alumno activo por usuario, con el hash para poder validar la contraseña. */
+/** Alumno activo por usuario, con su contraseña para poder validarla. */
 export const getStudentForLogin = async (username: unknown) => {
   const cleanUsername = normalizeUsername(username);
   if (!cleanUsername) return null;
 
   const { data } = await getSupabaseAdmin()
     .from("students")
-    .select(`${STUDENT_COLUMNS}, password_hash`)
+    .select(`${STUDENT_COLUMNS}, password`)
     .eq("username", cleanUsername)
     .eq("is_active", true)
-    .maybeSingle<StudentRow & { password_hash: string | null }>();
+    .maybeSingle<StudentRow & { password: string | null }>();
 
   if (!data) return null;
-  return { ...toStudent(data), passwordHash: data.password_hash };
+  return { ...toStudent(data), password: data.password };
 };
 
 export const listMedals = async (email: string): Promise<Medal[]> => {

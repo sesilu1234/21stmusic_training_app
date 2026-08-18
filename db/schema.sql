@@ -28,7 +28,12 @@ alter table allowed_students rename to students;
 
 alter table students
   add column if not exists username text,
-  add column if not exists password_hash text;
+  add column if not exists password text;
+
+alter table students drop column if exists password_hash;
+
+comment on column students.password is
+  'Contraseña en texto plano, escrita a mano por el profesor.';
 
 update students
    set display_name = coalesce(nullif(trim(display_name), ''), split_part(email, '@', 1));
@@ -41,7 +46,7 @@ create unique index if not exists students_username_key
   on students (lower(username));
 
 comment on table students is
-  'Alumnos con acceso. Google: se valida el email. Usuario/contraseña: username + password_hash (scrypt).';
+  'Alumnos con acceso. Google: se valida el email. Usuario/contraseña: username + password.';
 
 -- 3. game_attempts ----------------------------------------------------
 create table game_attempts (
@@ -78,15 +83,13 @@ alter table student_medals enable row level security;
 -- 6. Dos cuentas de usuario/contraseña de ejemplo ---------------------
 --    alumno / guitarra2026
 --    profe  / metronomo2026
-insert into students (email, display_name, username, password_hash, is_active) values
-  ('alumno@21stcm.local', 'Alumno', 'alumno',
-   'scrypt$6db4b60dbbc47c22b140f6b7bfd1585c$3d0bfbce168022cad2bfc515409b6ce03e098922fe4bde93a789aeff9871c64e7a15f481093a31d9c27c60123abf6c4f498f328f9879fe313e6e2b8a920248d5', true),
-  ('profe@21stcm.local', 'Profe', 'profe',
-   'scrypt$c8eca05d29ab66bc351836e9072aab52$c2f33c3940b03f5845dc5a584f5a947c7f349ff06d24500d2455871748b9a1018135ee8c7909eb090b624c0ea7bb1f4cd4ec87fb4bc41348c11d561b02bf7215', true)
+insert into students (email, display_name, username, password, is_active) values
+  ('alumno@21stcm.local', 'Alumno', 'alumno', 'guitarra2026',  true),
+  ('profe@21stcm.local',  'Profe',  'profe',  'metronomo2026', true)
 on conflict (email) do update
-  set username      = excluded.username,
-      password_hash = excluded.password_hash,
-      display_name  = excluded.display_name,
-      is_active     = true;
+  set username     = excluded.username,
+      password     = excluded.password,
+      display_name = excluded.display_name,
+      is_active    = true;
 
 commit;

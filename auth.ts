@@ -25,7 +25,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!username || !password) return null;
 
         const student = await getStudentForLogin(username);
-        if (!student || !verifyPassword(password, student.passwordHash)) return null;
+        if (!student || !verifyPassword(password, student.password)) return null;
 
         return {
           id: student.email,
