@@ -9,6 +9,7 @@ import {
   PRESET_ICONS,
   useAudio,
 } from "../audio";
+import GameOverModal from "@/app/components/GameOverModal";
 
 const TOTAL_QUESTIONS = 24;
 
@@ -146,63 +147,7 @@ export default function IntervalosAuditivos() {
 
       {/* GAME OVER OVERLAY — blur only, no black */}
       {gameOver && (
-        <div className="fixed inset-0 z-40 backdrop-blur-md" style={{ backgroundColor: "rgba(15,23,42,0.45)" }}>
-          <div className="min-h-screen flex flex-col items-center justify-center px-6 gap-8">
-
-            {/* Score card — same white rounded card as the question card */}
-            <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl w-full max-w-sm md:max-w-md border-4 border-white p-8 md:p-12 flex flex-col items-center gap-6">
-
-              {/* Brutalist score display */}
-              <div className="flex flex-col items-center">
-                <span className="text-[9px] tracking-[0.35em] text-black/40 font-bold uppercase mb-3">Resultado final</span>
-                <div className="flex items-end gap-2">
-                  <span
-                    className="font-black italic leading-none"
-                    style={{ fontFamily: "Chaney, sans-serif", fontSize: "clamp(4rem, 18vw, 6rem)" }}
-                  >
-                    {correctCount}
-                  </span>
-                  <span className="text-black/20 font-black text-3xl mb-3 italic">/{TOTAL_QUESTIONS}</span>
-                </div>
-                {/* Percentage bar */}
-                <div className="w-full h-3 bg-black/8 rounded-full overflow-hidden mt-1">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${pct >= 80 ? "bg-emerald-400" : pct >= 50 ? "bg-amber-400" : "bg-red-400"}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <span className={`text-xs font-black mt-2 tracking-widest uppercase ${pct >= 80 ? "text-emerald-500" : pct >= 50 ? "text-amber-500" : "text-red-500"}`}>
-                  {pct >= 80 ? "¡Excelente!" : pct >= 50 ? "Bien hecho" : "Sigue practicando"}
-                </span>
-              </div>
-
-              <div className="w-full h-px bg-black/8" />
-
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-black/40">
-                +{correctCount} puntos conseguidos
-              </p>
-
-              <button
-                onClick={() => window.location.reload()}
-                className="w-full py-4 bg-amber-400 text-black font-black rounded-2xl text-xs uppercase tracking-widest border-2 border-black shadow-[4px_4px_0px_#000] hover:shadow-[2px_2px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all"
-              >
-                Reiniciar
-              </button>
-            </div>
-
-            {/* Mini breakdown — wrong/correct pills */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-4 py-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="text-white text-xs font-bold">{correctCount} correctas</span>
-              </div>
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-4 py-2">
-                <div className="w-2 h-2 rounded-full bg-red-400" />
-                <span className="text-white text-xs font-bold">{TOTAL_QUESTIONS - correctCount} errores</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <GameOverModal game="Oído" correct={correctCount} total={TOTAL_QUESTIONS} />
       )}
 
       {/* CONTENT */}

@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { modes_images } from "./modes_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
+import GameOverModal from "@/app/components/GameOverModal";
 
 export default function ChordsGame() {
   const router = useRouter();
@@ -345,29 +346,7 @@ export default function ChordsGame() {
 
       {/* MODAL FINAL */}
       {gameOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4">
-          <div className="text-center p-8 md:p-12 bg-white/5 rounded-[2.5rem] md:rounded-[4rem] border border-white/10 max-w-sm w-full animate-in fade-in zoom-in duration-300">
-            <h2
-              className="text-3xl font-black text-white mb-2 uppercase italic"
-              style={{ fontFamily: "Chaney, sans-serif" }}
-            >
-              ¡Hecho!
-            </h2>
-            <div
-              className="text-4xl font-black text-amber-400 my-6 italic"
-              style={{ fontFamily: "Chaney, sans-serif" }}
-            >
-              {results.filter((r) => r === "correct").length}
-              <span className="text-white/20 text-2xl mx-2">/</span>24
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full py-4 bg-amber-500 text-black font-black rounded-2xl text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-amber-500/20"
-            >
-              Reiniciar
-            </button>
-          </div>
-        </div>
+        <GameOverModal game="Modos E. Mayor" correct={results.filter((r) => r === "correct").length} total={results.length} />
       )}
     </div>
   );

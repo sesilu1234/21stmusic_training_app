@@ -1,56 +1,60 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
-import { displayNameFromEmail, normalizeEmail } from "@/lib/studentAuthShared";
+import Credentials from "next-auth/providers/credentials";
+import { getStudent, getStudentForLogin } from "@/lib/students";
+import { verifyPassword } from "@/lib/passwords";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
+    // 1. Google: solo entran los correos dados de alta en `students`.
     Google({
-  clientId: process.env.AUTH_GOOGLE_ID,
-  clientSecret: process.env.AUTH_GOOGLE_SECRET,
-  authorization: {
-    params: {
-      prompt: "select_account",
-    },
-  },
-}),
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      authorization: { params: { prompt: "select_account" } },
+    }),
+
+    // 2. Usuario y contraseña guardados en la misma tabla `students`.
+    Credentials({
+      credentials: {
+        username: { label: "Usuario", type: "text" },
+        password: { label: "Contraseña", type: "password" },
+      },
+      authorize: async (credentials) => {
+        const username = String(credentials?.username || "");
+        const password = String(credentials?.password || "");
+        if (!username || !password) return null;
+
+        const student = await getStudentForLogin(username);
+        if (!student || !verifyPassword(password, student.passwordHash)) return null;
+
+        return {
+          id: student.email,
+          email: student.email,
+          name: student.displayName,
+        };
+      },
+    }),
   ],
-  pages: {
-    signIn: "/login",
-  },
-  callbacks: {
-    async signIn({ user }) {
-      const email = normalizeEmail(user.email);
-      if (!email) return false;
 
-      const supabase = getSupabaseAdmin();
-      const { data: allowedStudent, error } = await supabase
-        .from("allowed_students")
-        .select("email, display_name, is_active")
-        .eq("email", email)
-        .eq("is_active", true)
-        .maybeSingle();
+  session: { strategy: "jwt" },
+  pages: { signIn: "/login", error: "/login" },
 
-      if (error || !allowedStudent) return false;
-
-      const displayName =
-        allowedStudent.display_name ||
-        user.name ||
-        displayNameFromEmail(email);
-
-      await supabase.from("student_profiles").upsert(
-        {
-          email,
-          display_name: displayName,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "email" },
-      );
-
-      return true;
+  logger: {
+    error(error) {
+      // JWTSessionError = el navegador trae una cookie de sesión que ya no se
+      // puede descifrar (sesión vieja u otro AUTH_SECRET). Auth.js lo captura
+      // por dentro y devuelve "sin sesión", así que solo es ruido: el usuario
+      // simplemente vuelve a entrar. Cualquier otro error sí se muestra.
+      if ((error as { type?: string })?.type === "JWTSessionError") return;
+      console.error(error);
     },
-    async authorized() {
-      return true;
+  },
+
+  callbacks: {
+    async signIn({ user, account }) {
+      // Credentials ya se ha validado contra la base de datos en `authorize`.
+      if (account?.provider === "credentials") return true;
+      return Boolean(await getStudent(user.email));
     },
   },
 });

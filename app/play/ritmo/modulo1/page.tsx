@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getCtx } from "./metronome";
 import SimpleMovingScore from "./MusicDisplay";
+import GameOverModal from "@/app/components/GameOverModal";
 
 const MEASURE_OPTIONS = [4, 8, 12, 24];
 
@@ -116,51 +117,13 @@ export default function RitmoGame() {
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
       {/* Pop-up de Marcador */}
-      {showScore && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="relative bg-zinc-950 border border-white/10 p-10 rounded-[2.5rem] shadow-2xl flex flex-col items-center max-w-[280px] w-full border-t-white/20">
-            <button
-              onClick={() => setShowScore(false)}
-              className="absolute top-6 right-8 text-zinc-600 hover:text-white transition-colors text-xl font-light"
-            >
-              ✕
-            </button>
-
-            <div className="flex flex-col items-center mb-8">
-              <span className="text-[9px] tracking-[0.4em] text-zinc-500 uppercase font-bold mb-3">
-                Performance
-              </span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-6xl font-black italic tracking-tighter text-white">
-                  {scoreData.percentage}
-                </span>
-                <span className="text-xl font-bold text-amber-500/80">%</span>
-              </div>
-            </div>
-
-            <div className="w-full space-y-4">
-              <div className="flex items-center justify-between px-5 py-3 bg-white/[0.03] rounded-2xl border border-white/[0.05]">
-                <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-medium">
-                  Measures OK
-                </span>
-                <span className="text-xl font-black text-emerald-500 italic">
-                  {scoreData.hits}
-                </span>
-              </div>
-              <div className="flex items-center justify-between px-5 py-3 bg-white/[0.03] rounded-2xl border border-white/[0.05]">
-                <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-medium">
-                  Wrong ones
-                </span>
-                <span className="text-xl font-black text-rose-500 italic">
-                  {scoreData.misses}
-                </span>
-              </div>
-            </div>
-            <p className="mt-8 text-[8px] tracking-[0.2em] text-zinc-600 uppercase font-bold">
-              Tap 'X' to restart
-            </p>
-          </div>
-        </div>
+      {showScore && scoreData.hits + scoreData.misses > 0 && (
+        <GameOverModal
+          game="Lectura Rítmica"
+          correct={scoreData.hits}
+          total={scoreData.hits + scoreData.misses}
+          onRestart={() => setShowScore(false)}
+        />
       )}
 
       {/* Header */}

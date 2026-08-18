@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { intervalos_data } from "./intervalos_data";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { saveGameScore } from "@/lib/studentScores";
+import GameOverModal from "@/app/components/GameOverModal";
 
 export default function IntervalosGame() {
   const router = useRouter();
@@ -58,13 +58,7 @@ export default function IntervalosGame() {
     [results],
   );
   const totalQuestions = quizList.length || 24;
-  const scoreSavedRef = useRef(false);
 
-  useEffect(() => {
-    if (!gameOver || scoreSavedRef.current) return;
-    scoreSavedRef.current = true;
-    saveGameScore("Intervalos", correctCount, totalQuestions);
-  }, [gameOver, correctCount, totalQuestions]);
 
   useEffect(() => {
     setIsImageLoading(true);
@@ -270,33 +264,7 @@ export default function IntervalosGame() {
 
       {/* FINAL MODAL */}
       {gameOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4">
-          <div className="text-center p-8 md:p-12 bg-white/5 rounded-[2.5rem] md:rounded-[4rem] border border-white/10 max-w-sm w-full animate-in zoom-in duration-300">
-            <h2
-              className="text-3xl font-black text-white mb-2 uppercase italic tracking-tighter"
-              style={{ fontFamily: "Chaney, sans-serif" }}
-            >
-              ¡Hecho!
-            </h2>
-            <div
-              className="text-4xl font-black text-amber-400 my-6 italic"
-              style={{ fontFamily: "Chaney, sans-serif" }}
-            >
-              {correctCount}
-              <span className="text-white/20 text-2xl mx-2">/</span>
-              {totalQuestions}
-            </div>
-            <p className="mb-6 text-xs font-bold uppercase tracking-[0.25em] text-amber-100/80">
-              Enhorabuena, has conseguido +{correctCount} puntos
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full py-4 bg-amber-500 text-black font-black rounded-2xl text-xs uppercase tracking-widest hover:scale-105 transition-all"
-            >
-              Reiniciar
-            </button>
-          </div>
-        </div>
+        <GameOverModal game="Intervalos" correct={correctCount} total={totalQuestions} />
       )}
     </div>
   );
