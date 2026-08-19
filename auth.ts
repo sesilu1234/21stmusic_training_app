@@ -8,13 +8,19 @@ const googleId = process.env.AUTH_GOOGLE_ID;
 const googleSecret = process.env.AUTH_GOOGLE_SECRET;
 
 /**
- * Sin credenciales de Google, Auth.js no arranca el proveedor y responde
- * `?error=Configuration` a cualquier intento de entrar. Pasa en los despliegues
- * de preview de Vercel, donde las variables suelen estar solo en Production.
- * En vez de ofrecer un botón que siempre falla, el proveedor no se registra y
- * el login enseña únicamente usuario y contraseña.
+ * Entrada con Google, apagada a propósito: por ahora las cuentas las da de
+ * alta el profesor a mano, una a una. Poner a `true` para volver a ofrecerla
+ * (hace falta además registrar la URI de retorno en Google Cloud).
  */
-export const isGoogleEnabled = Boolean(googleId && googleSecret);
+const GOOGLE_LOGIN_ENABLED = false;
+
+/**
+ * Y aunque estuviera encendida, sin credenciales Auth.js responde
+ * `?error=Configuration` a cualquier intento de entrar — pasa en los preview de
+ * Vercel, donde las variables suelen estar solo en Production. En ese caso el
+ * proveedor tampoco se registra y el login enseña solo usuario y contraseña.
+ */
+export const isGoogleEnabled = GOOGLE_LOGIN_ENABLED && Boolean(googleId && googleSecret);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
