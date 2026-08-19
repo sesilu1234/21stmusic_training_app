@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import GameChrome from "@/app/components/GameChrome";
 import { getCtx } from "./metronome";
 import SimpleMovingScore from "./MusicDisplay";
 import GameOverModal from "@/app/components/GameOverModal";
@@ -9,7 +9,6 @@ import GameOverModal from "@/app/components/GameOverModal";
 const MEASURE_OPTIONS = [4, 8, 12, 24];
 
 export default function RitmoGame() {
-  const router = useRouter();
   const [isPlaying, setIsPlaying] = useState(false);
   const [flash, setFlash] = useState(false);
   const [showScore, setShowScore] = useState(false);
@@ -126,20 +125,9 @@ export default function RitmoGame() {
         />
       )}
 
-      {/* Header */}
-      <div className="pt-4 px-4 md:pt-6 md:px-6 flex justify-between items-center z-10">
-        <button
-          onClick={() => router.push("/")}
-          className="bg-black/40 px-3 p-1.5 md:px-4 md:p-2 rounded-full border border-white/10 text-[9px] md:text-[10px] font-bold hover:bg-white/20 transition-colors"
-        >
-          ← MENU
-        </button>
-        <img
-          src="/assets/logo21stCM_no_white_1.png"
-          className="h-10 md:h-20"
-          alt="logo"
-        />
-      </div>
+      <GameChrome>
+        Pulsa al <span className="bg-white text-black px-2 py-[1px] rounded">ritmo</span>
+      </GameChrome>
 
       <main className="flex flex-col items-center py-2 md:py-4 gap-4 md:gap-8">
         <div className="w-full max-w-[95%] px-2 md:px-6">
@@ -153,12 +141,6 @@ export default function RitmoGame() {
                   {currentTick < 1 ? 1 : currentTick}
                 </div>
               </div>
-              <h2 className="text-xl md:text-2xl font-black italic uppercase tracking-tight text-white mt-4">
-                Pulsa al{" "}
-                <span className="bg-white text-black px-2 py-[1px] rounded">
-                  ritmo
-                </span>
-              </h2>
             </div>
 
             {/* Widget de Configuración */}

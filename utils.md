@@ -1,1 +1,5 @@
 C:\Users\ulises.pla\Downloads\node-v22.16.0-win-x64\node-v22.16.0-win-x64
+
+
+
+-set PATH="C:\Users\ulises.pla\Downloads\node-v22.16.0-win-x64\node-v22.16.0-win-x64";"PATH"%

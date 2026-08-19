@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
+import { getStoredRoundLength } from "@/lib/roundLength";
+import GameChrome from "@/app/components/GameChrome";
+import { CheckCircle2, XCircle } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
 interface Pregunta {
   pregunta: string;
@@ -11,7 +12,6 @@ interface Pregunta {
 import { preguntasTrivial } from "./preguntasTrivial";
 
 export default function TrivialGuitarra() {
-  const router = useRouter();
 
   const [isMounted, setIsMounted] = useState(false);
   const [quizList, setQuizList] = useState<Pregunta[]>([]);
@@ -27,7 +27,7 @@ export default function TrivialGuitarra() {
   useEffect(() => {
     const shuffled = [...preguntasTrivial]
       .sort(() => Math.random() - 0.5)
-      .slice(0, 24);
+      .slice(0, getStoredRoundLength());
     setQuizList(shuffled);
     setResults(Array(shuffled.length).fill(null));
     setUserAnswers(Array(shuffled.length).fill(null));
@@ -94,37 +94,15 @@ export default function TrivialGuitarra() {
       className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center overflow-x-hidden"
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
-      {/* NAVBAR */}
-      <div className="relative z-20 w-full px-4 pt-5 md:px-12 flex justify-between items-center">
-        <button
-          onClick={() => router.push("/")}
-          className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-4 py-2 rounded-full border border-white/10 transition-all hover:bg-black/60 flex items-center gap-2"
-        >
-          <ArrowLeft size={12} />
-          <span>Menú Principal</span>
-        </button>
-        <img
-          src="/assets/logo21stCM_no_white_1.png"
-          className="h-12 md:h-20 w-auto opacity-80"
-          alt="logo"
-        />
-      </div>
+      <GameChrome>
+        ¿Cuánto sabes de{" "}
+        <span className="text-black mx-1 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
+          GUITARRA
+        </span>
+        ?
+      </GameChrome>
 
-      <div className="flex-1 flex flex-col items-center justify-start px-4 pt-8 pb-8 md:p-6 md:pt-12 z-10">
-        {/* TÍTULO */}
-        <div className="mb-6 text-center px-2">
-          <h2
-            className="text-white text-xl md:text-3xl font-black italic tracking-tighter leading-tight"
-            style={{ fontFamily: "Chaney, sans-serif" }}
-          >
-            ¿<span className="uppercase">Q</span>uánto sabes de{" "}
-            <span className="text-black mx-1 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
-              GUITARRA
-            </span>
-            ?
-          </h2>
-        </div>
-
+      <div className="flex-1 flex flex-col items-center justify-start px-4 pt-4 pb-8 md:px-6 md:pb-6 md:pt-6 z-10">
         {/* CARTA DE PREGUNTA */}
         <div className="relative flex flex-col items-center w-full max-w-2xl mb-10">
           <div

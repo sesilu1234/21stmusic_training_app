@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import GameChrome from "@/app/components/GameChrome";
+import { DEFAULT_ROUND_LENGTH, getStoredRoundLength } from "@/lib/roundLength";
 import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
 import {
   INTERVALS,
@@ -11,15 +12,14 @@ import {
 } from "../audio";
 import GameOverModal from "@/app/components/GameOverModal";
 
-const TOTAL_QUESTIONS = 24;
 
 export default function IntervalosArmonicos() {
-  const router = useRouter();
 
+  const [totalQuestions, setTotalQuestions] = useState(DEFAULT_ROUND_LENGTH);
   const [quizList, setQuizList]       = useState<typeof INTERVALS>([]);
   const [step, setStep]               = useState(0);
-  const [results, setResults]         = useState<(null|"correct"|"wrong")[]>(Array(TOTAL_QUESTIONS).fill(null));
-  const [userAnswers, setUserAnswers] = useState<(string|null)[]>(Array(TOTAL_QUESTIONS).fill(null));
+  const [results, setResults]         = useState<(null|"correct"|"wrong")[]>(Array(totalQuestions).fill(null));
+  const [userAnswers, setUserAnswers] = useState<(string|null)[]>(Array(totalQuestions).fill(null));
   const [gameOver, setGameOver]       = useState(false);
   const [isMounted, setIsMounted]     = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
@@ -36,21 +36,28 @@ export default function IntervalosArmonicos() {
   const { playInterval } = useAudio();
 
   useEffect(() => {
-    const list: typeof INTERVALS = [];
-    // No unísono in harmonic mode: two simultaneous equal notes are indistinguishable.
-    const pool = INTERVALS.filter((iv) => iv.semitones > 0);
-    for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-      const previous = list[i - 1];
-      const available = previous ? pool.filter((iv) => iv.name !== previous.name) : pool;
-      list.push(available[Math.floor(Math.random() * available.length)]);
-    }
-    setQuizList(list);
-    setIsMounted(true);
+    const startRound = () => {
+      const total = getStoredRoundLength();
+      setTotalQuestions(total);
+      setResults(Array(total).fill(null));
+      setUserAnswers(Array(total).fill(null));
+      const list: typeof INTERVALS = [];
+      // No unísono in harmonic mode: two simultaneous equal notes are indistinguishable.
+      const pool = INTERVALS.filter((iv) => iv.semitones > 0);
+      for (let i = 0; i < total; i++) {
+        const previous = list[i - 1];
+        const available = previous ? pool.filter((iv) => iv.name !== previous.name) : pool;
+        list.push(available[Math.floor(Math.random() * available.length)]);
+      }
+      setQuizList(list);
+      setIsMounted(true);
+    };
+    startRound();
   }, []);
 
   const currentInterval = quizList[step];
   const correctCount    = results.filter(r => r === "correct").length;
-  const progresoMaximo = userAnswers.indexOf(null) === -1 ? TOTAL_QUESTIONS : userAnswers.indexOf(null);
+  const progresoMaximo = userAnswers.indexOf(null) === -1 ? totalQuestions : userAnswers.indexOf(null);
 
   const triggerPlay = useCallback((interval: typeof INTERVALS[0], root = -1, force = false) => {
     if (isPlaying && !force) return;
@@ -73,7 +80,7 @@ export default function IntervalosArmonicos() {
     const newResults  = [...results];  newResults[step]  = isCorrect ? "correct" : "wrong";
     const newAnswers  = [...userAnswers]; newAnswers[step] = label;
     setResults(newResults); setUserAnswers(newAnswers);
-    if (step < TOTAL_QUESTIONS - 1) {
+    if (step < totalQuestions - 1) {
       setTimeout(() => {
         shouldAutoPlayNextRef.current = true;
         currentRootRef.current = -1;
@@ -101,7 +108,7 @@ export default function IntervalosArmonicos() {
 
   const goNext = () => {
     const nextStep = step + 1;
-    if (nextStep <= progresoMaximo && nextStep < TOTAL_QUESTIONS) {
+    if (nextStep <= progresoMaximo && nextStep < totalQuestions) {
       const nextIsAnswered = userAnswers[nextStep] !== null;
       setSolutionStep(nextIsAnswered ? nextStep : null);
       setIsReviewing(nextIsAnswered);
@@ -111,41 +118,27 @@ export default function IntervalosArmonicos() {
 
   if (!isMounted || !currentInterval) return <div className="min-h-screen bg-slate-900" />;
 
-  const pct = Math.round((correctCount / TOTAL_QUESTIONS) * 100);
+  const pct = Math.round((correctCount / totalQuestions) * 100);
 
   return (
     <div
       className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans"
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
-      {/* HEADER */}
-      <div className="w-full px-4 pt-6 md:px-12 flex justify-between items-start z-20">
-        <button
-          onClick={() => router.push("/play/oido")}
-          className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-4 py-2 rounded-full border border-white/10 transition-all"
-        >
-          ← <span>Oído</span>
-        </button>
-        <div className="flex gap-4 md:gap-8 opacity-40 md:opacity-90">
-          <img src="/assets/logo21stCM_no_white_1.png" className="h-12 md:h-24 w-auto drop-shadow-2xl" alt="logo" />
-        </div>
-      </div>
+      <GameChrome>
+        ¿Qué{" "}
+        <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">INTERVALO ARMÓNICO</span>
+        {" "}escuchas?
+      </GameChrome>
 
       {/* GAME OVER OVERLAY */}
       {gameOver && (
-        <GameOverModal game="Oído" correct={correctCount} total={TOTAL_QUESTIONS} />
+        <GameOverModal game="Oído" correct={correctCount} total={totalQuestions} />
       )}
 
       {/* CONTENT */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 z-10 w-full max-w-5xl mx-auto">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-5xl mx-auto">
 
-        <div className="mb-6 text-center">
-          <h2 className="text-white text-xl md:text-3xl font-black italic tracking-tighter leading-tight uppercase" style={{ fontFamily: "Chaney, sans-serif" }}>
-            ¿Qué{" "}
-            <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">INTERVALO ARMÓNICO</span>
-            {" "}escuchas?
-          </h2>
-        </div>
 
         <div className="relative flex flex-col items-center w-full max-w-sm md:max-w-lg mb-8">
           <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl w-full h-44 md:h-52 flex items-center justify-center border-4 border-white relative overflow-hidden">
@@ -281,7 +274,7 @@ export default function IntervalosArmonicos() {
             <button
               onClick={goNext}
               className={`p-3 bg-amber-500 text-black rounded-full shadow-lg transition-all ${
-                step < progresoMaximo && step < TOTAL_QUESTIONS - 1 ? "opacity-100" : "opacity-0 pointer-events-none"
+                step < progresoMaximo && step < totalQuestions - 1 ? "opacity-100" : "opacity-0 pointer-events-none"
               }`}
             >
               <ArrowRight size={18} />

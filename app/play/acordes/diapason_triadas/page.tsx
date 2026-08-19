@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
+import GameChrome from "@/app/components/GameChrome";
+import { getStoredRoundLength } from "@/lib/roundLength";
 import { chords_images } from "./chords_images";
 import {
   CheckCircle2,
@@ -12,7 +13,6 @@ import {
 import GameOverModal from "@/app/components/GameOverModal";
 
 export default function TriadsGame() {
-  const router = useRouter();
 
   const opcionesAcordes = ["Mayor", "Menor", "Aumentado", "Disminuido"];
 
@@ -35,8 +35,10 @@ export default function TriadsGame() {
   useEffect(() => {
     const shuffled = [...chords_images]
       .sort(() => Math.random() - 0.5)
-      .slice(0, 24);
+      .slice(0, getStoredRoundLength());
     setQuizList(shuffled);
+    setResults(Array(shuffled.length).fill(null));
+    setUserAnswers(Array(shuffled.length).fill(null));
     setIsMounted(true);
   }, []);
 
@@ -63,8 +65,8 @@ export default function TriadsGame() {
 
   const progresoMaximo = useMemo(() => {
     const firstEmpty = userAnswers.indexOf(null);
-    return firstEmpty === -1 ? 24 : firstEmpty;
-  }, [userAnswers]);
+    return firstEmpty === -1 ? quizList.length : firstEmpty;
+  }, [userAnswers, quizList]);
   const correctCount = useMemo(
     () => results.filter((r) => r === "correct").length,
     [results],
@@ -110,7 +112,7 @@ export default function TriadsGame() {
     setTimeout(
       () => {
         setShowFeedback(null);
-        if (step < 23) {
+        if (step < quizList.length - 1) {
           setStep(step + 1);
         } else {
           setGameOver(true);
@@ -167,36 +169,16 @@ export default function TriadsGame() {
       className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans overflow-x-hidden"
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
-      {/* NAVEGACIÓN SUPERIOR */}
-      <div className="w-full px-4 pt-6 md:px-12 flex justify-between items-center z-20">
-        {/* 3 — Icono de casita en vez de texto */}
-        <button
-          onClick={() => router.push("/")}
-          className="text-white/50 hover:text-white bg-black/40 p-2.5 rounded-xl border border-white/10 transition-all hover:bg-black/60"
-        >
-          <Home size={16} />
-        </button>
-        <img
-          src="/assets/logo21stCM_no_white_1.png"
-          className="h-12 md:h-20 w-auto opacity-80"
-          alt="logo"
-        />
-      </div>
+      <GameChrome>
+        ¿Qué tipo de{" "}
+        <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
+        ACORDE
+        </span>{" "}
+        es?
+      </GameChrome>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 z-10 w-full max-w-5xl mx-auto">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-5xl mx-auto">
         {/* TÍTULO */}
-        <div className="mb-6 text-center">
-          <h2
-            className="text-white text-xl md:text-3xl font-black italic tracking-tighter uppercase"
-            style={{ fontFamily: "Chaney, sans-serif" }}
-          >
-            ¿Qué tipo de{" "}
-            <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
-              ACORDE
-            </span>{" "}
-            es?
-          </h2>
-        </div>
 
         {/* CARTA DE PREGUNTA */}
         <div className="relative flex flex-col items-center w-full max-w-sm md:max-w-md mb-10">
