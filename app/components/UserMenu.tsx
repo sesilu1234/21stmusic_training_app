@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Award, ChevronDown, LogOut, User } from "lucide-react";
+import { Award, LogOut, User } from "lucide-react";
 import Avatar from "./Avatar";
 import ThemeToggle from "./ThemeToggle";
 import { logout } from "@/app/actions";
@@ -53,24 +53,29 @@ export default function UserMenu({
 
   return (
     <div ref={containerRef} className="relative">
+      {/* Solo el avatar, con un anillo que se enciende al abrir: la píldora con
+          chevron ocupaba sitio y no decía nada que el avatar no dijera ya. */}
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className={`flex items-center gap-2 rounded-full border py-1 pl-1 pr-2 transition ${
+        aria-label={`Cuenta de ${displayName}`}
+        className={`group relative grid h-10 w-10 place-items-center rounded-full p-[2px] transition duration-300 ${
           isOpen
-            ? "border-amber-300/45 bg-white/10"
-            : "border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/10"
+            ? "bg-gradient-to-br from-amber-300 to-amber-500 shadow-[0_0_0_3px_rgba(251,191,36,0.16)]"
+            : "bg-gradient-to-br from-white/25 to-white/5 hover:from-amber-300/70 hover:to-amber-500/40"
         }`}
       >
-        <span className="grid h-8 w-8 flex-shrink-0 place-items-center overflow-hidden rounded-full border border-amber-300/30 bg-slate-900">
-          <Avatar src={image} name={displayName} size={32} className="h-full w-full text-xs" />
+        <span className="grid h-full w-full place-items-center overflow-hidden rounded-full bg-slate-950">
+          <Avatar src={image} name={displayName} size={36} className="h-full w-full text-xs" />
         </span>
-        <ChevronDown
-          size={14}
-          className={`text-white/45 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-        />
+
+        {medals > 0 && (
+          <span className="absolute -bottom-0.5 -right-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-slate-950 bg-amber-300 px-1 text-[9px] font-black leading-none text-slate-950">
+            {medals > 99 ? "99+" : medals}
+          </span>
+        )}
       </button>
 
       {isOpen && (

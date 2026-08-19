@@ -63,7 +63,7 @@ export default function InfoShell({
           </article>
         </main>
 
-        <SiteFooter className="border-t border-white/5" />
+        <SiteFooter />
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export type GameIcon =
   | "Music2"
   | "BookOpen";
 
-export type CategoryId = "lenguaje" | "diapason" | "oido" | "cultura" | "herramientas";
+export type CategoryId = "lenguaje" | "diapason" | "oido" | "extra" | "herramientas";
 
 export interface Category {
   id: CategoryId;
@@ -64,8 +64,8 @@ export const CATEGORIES: Category[] = [
     dot: "bg-violet-400",
   },
   {
-    id: "cultura",
-    label: "Cultura",
+    id: "extra",
+    label: "Extra",
     hint: "Lo que rodea a la música",
     accent: "text-rose-300",
     iconBg: "bg-rose-400/15",
@@ -175,14 +175,14 @@ export const GAMES: GameMode[] = [
     scored: true,
   },
 
-  // --- Cultura ---------------------------------------------------------
+  // --- Extra ---------------------------------------------------------
   {
     name: "Trivial",
     label: "Trivial",
     desc: "Guitarra, discos y artistas.",
     slug: "/play/trivia",
     icon: "Lightbulb",
-    category: "cultura",
+    category: "extra",
     scored: true,
   },
 
