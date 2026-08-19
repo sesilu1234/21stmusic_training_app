@@ -26,11 +26,10 @@ export default function ContactoPage() {
               Contacto
             </p>
             <h1 className="mt-2 text-2xl font-black italic tracking-tight md:text-3xl">
-              Escríbenos
+              
             </h1>
             <p className="mt-2.5 text-xs leading-5 text-white/45">
-              Un fallo, algo que no carga, una idea para un modo nuevo. Las dudas de teoría,
-              mejor en clase.
+              Un fallo, algo que no carga, una sugerencia...
             </p>
 
             <div className="mt-5">

@@ -92,7 +92,7 @@ export default function LoginForm({
             autoComplete="username"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder="alumno"
+            placeholder=""
             className={inputClass}
           />
         </Field>
@@ -103,7 +103,7 @@ export default function LoginForm({
             type={showPassword ? "text" : "password"}
             required
             autoComplete="current-password"
-            placeholder="••••••••"
+            placeholder=""
             className={inputClass}
           />
           <button

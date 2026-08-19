@@ -49,7 +49,7 @@ export default function ContactForm() {
         required
         maxLength={CONTACT_LIMITS.email.max}
         autoComplete="email"
-        placeholder="tu@correo.com"
+        placeholder="Email"
         defaultValue={state.values?.email}
         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white transition-colors placeholder:text-white/25 focus:border-amber-300/60 focus:bg-white/[0.08] focus:outline-none"
       />
@@ -63,7 +63,7 @@ export default function ContactForm() {
           maxLength={CONTACT_LIMITS.message.max}
           defaultValue={state.values?.message}
           onChange={(event) => setLength(event.target.value.length)}
-          placeholder="Qué ha pasado, o qué se te ha ocurrido…"
+          placeholder="Mensaje"
           className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 pb-7 text-sm leading-6 text-white transition-colors placeholder:text-white/25 focus:border-amber-300/60 focus:bg-white/[0.08] focus:outline-none"
         />
         <span
@@ -95,7 +95,7 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={pending}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400 py-3 text-xs font-black uppercase tracking-widest text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
+        className="flex px-8 mx-auto items-center justify-center gap-2 rounded-xl bg-amber-400 py-3 text-xs font-black uppercase tracking-widest text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
       >
         <Send size={14} className={pending ? "animate-pulse" : ""} />
         {pending ? "Enviando…" : "Enviar"}
