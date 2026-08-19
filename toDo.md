@@ -13,6 +13,14 @@ Rockschool y Constructor de melodías don't score — they're the only two modes
 
 
 
+- lo de los acordes, pensar como hacerlo, y ordenar que se haga como esta lo de intervalo oido
 
+- que el papa se haga 1000 preguntas y nos las pase en csv
+
+- rework de las herramientas
+
+
+
+- ver cada una de los modos que esta hecho y ver si cambiar algo, opciones, rework, ver ...
 
 
