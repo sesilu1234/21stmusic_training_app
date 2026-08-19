@@ -4,14 +4,30 @@ import Credentials from "next-auth/providers/credentials";
 import { getStudent, getStudentForLogin } from "@/lib/students";
 import { verifyPassword } from "@/lib/passwords";
 
+const googleId = process.env.AUTH_GOOGLE_ID;
+const googleSecret = process.env.AUTH_GOOGLE_SECRET;
+
+/**
+ * Sin credenciales de Google, Auth.js no arranca el proveedor y responde
+ * `?error=Configuration` a cualquier intento de entrar. Pasa en los despliegues
+ * de preview de Vercel, donde las variables suelen estar solo en Production.
+ * En vez de ofrecer un botón que siempre falla, el proveedor no se registra y
+ * el login enseña únicamente usuario y contraseña.
+ */
+export const isGoogleEnabled = Boolean(googleId && googleSecret);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     // 1. Google: solo entran los correos dados de alta en `students`.
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      authorization: { params: { prompt: "select_account" } },
-    }),
+    ...(isGoogleEnabled
+      ? [
+          Google({
+            clientId: googleId,
+            clientSecret: googleSecret,
+            authorization: { params: { prompt: "select_account" } },
+          }),
+        ]
+      : []),
 
     // 2. Usuario y contraseña guardados en la misma tabla `students`.
     Credentials({

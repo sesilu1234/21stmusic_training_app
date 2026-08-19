@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { isGoogleEnabled } from "@/auth";
 import { logout } from "@/app/actions";
 import { safeAuth } from "@/lib/session";
 import { getStudent } from "@/lib/students";
@@ -10,6 +11,14 @@ const errorMessage = (error?: string) => {
   if (error === "AccessDenied")
     return "Ese correo no está dado de alta como alumno de la academia.";
   if (error === "CredentialsSignin") return "Usuario o contraseña incorrectos.";
+  // Auth.js manda "Configuration" cuando le faltan variables de entorno
+  // (AUTH_SECRET, o las credenciales de Google) en ese despliegue.
+  if (error === "Configuration")
+    return "A este despliegue le faltan variables de entorno. Avisa a la academia.";
+  // Google ha vuelto a una dirección que no tiene registrada: pasa en los
+  // previews de Vercel, que estrenan dominio en cada rama.
+  if (error === "OAuthSignin" || error === "OAuthCallback")
+    return "Google no reconoce esta dirección. Entra con tu usuario y contraseña.";
   return "No se ha podido iniciar sesión. Inténtalo de nuevo.";
 };
 
@@ -72,7 +81,10 @@ export default async function LoginPage({
           </p>
         )}
 
-        <LoginForm googleError={errorMessage(params.error)} />
+        <LoginForm
+          googleError={errorMessage(params.error)}
+          googleEnabled={isGoogleEnabled}
+        />
 
         {staleSession && (
           <form action={logout} className="mt-3">

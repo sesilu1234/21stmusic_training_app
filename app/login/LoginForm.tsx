@@ -13,29 +13,39 @@ const GoogleMark = () => (
   </svg>
 );
 
-export default function LoginForm({ googleError }: { googleError?: string }) {
+export default function LoginForm({
+  googleError,
+  googleEnabled,
+}: {
+  googleError?: string;
+  googleEnabled: boolean;
+}) {
   const [passwordError, formAction, pending] = useActionState(loginWithPassword, null);
   const error = passwordError || googleError;
 
   return (
     <div className="space-y-3.5">
-      <form action={loginWithGoogle}>
-        <button
-          type="submit"
-          className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-white px-3 py-2.5 text-[13px] font-black text-slate-900 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
-        >
-          <GoogleMark />
-          Entrar con Google
-        </button>
-      </form>
+      {googleEnabled && (
+        <>
+          <form action={loginWithGoogle}>
+            <button
+              type="submit"
+              className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-white px-3 py-2.5 text-[13px] font-black text-slate-900 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+            >
+              <GoogleMark />
+              Entrar con Google
+            </button>
+          </form>
 
-      <div className="flex items-center gap-2.5">
-        <span className="h-px flex-1 bg-white/15" />
-        <span className="text-[8px] font-black uppercase tracking-[0.28em] text-white/40">
-          o con tu usuario
-        </span>
-        <span className="h-px flex-1 bg-white/15" />
-      </div>
+          <div className="flex items-center gap-2.5">
+            <span className="h-px flex-1 bg-white/15" />
+            <span className="text-[8px] font-black uppercase tracking-[0.28em] text-white/40">
+              o con tu usuario
+            </span>
+            <span className="h-px flex-1 bg-white/15" />
+          </div>
+        </>
+      )}
 
       <form action={formAction} className="space-y-2">
         <label className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 focus-within:border-amber-300/60">
