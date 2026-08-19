@@ -36,7 +36,7 @@ export default function AppShell({
         {/* z-50: si no, las tarjetas del menú (que llevan blur y crean su
             propio contexto de apilado) tapan el desplegable del usuario. */}
         <header className="relative z-50 px-3 pt-3 md:px-6 md:pt-5">
-          <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-xl md:px-5 md:py-3">
+          <nav className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-xl md:px-5 md:py-3">
             <Link href="/" className="flex min-w-0 items-center gap-2.5 md:gap-3.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -84,7 +84,7 @@ export default function AppShell({
           </nav>
         </header>
 
-        <main className="flex-1 px-4 py-7 pb-28 md:px-8 md:py-12 md:pb-14">{children}</main>
+        <main className="flex-1 px-4 py-6 pb-28 md:px-8 md:py-9 md:pb-14">{children}</main>
 
         <SiteFooter className="pb-24 md:pb-6" />
 

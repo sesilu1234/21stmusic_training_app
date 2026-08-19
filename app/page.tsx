@@ -16,26 +16,26 @@ const GameCard = ({ game, progress }: { game: GameMode; progress?: GameProgress 
   return (
     <Link
       href={game.slug}
-      className={`group flex flex-col justify-between gap-4 rounded-2xl border border-white/10 bg-slate-950/70 p-4 shadow-lg backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950/85 md:p-5 ${category.hoverBorder}`}
+      className={`group flex flex-col rounded-2xl border border-white/10 bg-slate-950/70 p-4 shadow-lg backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950/85 md:p-5 ${category.hoverBorder}`}
     >
       <div className="flex items-start gap-3.5">
         <span
           className={`grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl transition-transform duration-200 group-hover:scale-105 ${category.iconBg}`}
         >
-          <Icon size={20} className={category.accent} strokeWidth={1.75} />
+          <Icon size={22} className={category.accent} strokeWidth={1.75} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-black uppercase italic leading-tight tracking-tight text-white md:text-base">
+          <span className="block text-base font-black uppercase italic leading-tight tracking-tight text-white">
             {game.label}
           </span>
-          <span className="mt-1 block text-[11px] leading-snug text-white/45 md:text-xs">
+          <span className="mt-1.5 block text-xs leading-snug text-white/45">
             {game.desc}
           </span>
         </span>
       </div>
 
       {(tier || hasLast) && (
-        <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-3">
+        <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/5 pt-3">
           {tier ? (
             <span
               className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${tier.border} ${tier.bg} ${tier.text}`}
@@ -65,8 +65,8 @@ export default async function HomePage() {
 
   return (
     <AppShell user={{ displayName: student.displayName, image, medals: medals.length }}>
-      <div className="mx-auto max-w-6xl">
-        <div className="space-y-10 md:space-y-12">
+      <div className="mx-auto w-full max-w-5xl">
+        <div className="space-y-8 md:space-y-9">
           {gamesByCategory().map(({ category, games }) => (
             <section key={category.id}>
               <div className="mb-4 flex items-baseline gap-3">
@@ -79,7 +79,7 @@ export default async function HomePage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-3.5">
                 {games.map((game) => (
                   <GameCard
                     key={game.name}

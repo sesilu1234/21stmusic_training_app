@@ -15,6 +15,12 @@ export interface Student {
   createdAt: string;
 }
 
+export interface StudentInstrument {
+  id: string;
+  name: string;
+  startedAt: string | null;
+}
+
 export interface Attempt {
   id: string;
   game: string;
@@ -82,6 +88,67 @@ export const getStudent = async (email: unknown): Promise<Student | null> => {
   if (error) throw new Error(`No se ha podido consultar el alumno: ${error.message}`);
 
   return data ? toStudent(data) : null;
+};
+
+const cleanDate = (value: unknown) => {
+  const text = String(value ?? "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : null;
+};
+
+export const listStudentInstruments = async (
+  email: string,
+): Promise<StudentInstrument[]> => {
+  const { data, error } = await getSupabaseAdmin()
+    .from("student_instruments")
+    .select("id, name, started_at")
+    .eq("student_email", normalizeEmail(email))
+    .order("started_at", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  return (data || []).map((row) => ({
+    id: row.id as string,
+    name: row.name as string,
+    startedAt: (row.started_at as string | null) ?? null,
+  }));
+};
+
+export const updateStudentProfile = async (
+  email: string,
+  academySince: unknown,
+  instruments: Array<{ name: unknown; startedAt: unknown }>,
+) => {
+  const supabase = getSupabaseAdmin();
+  const studentEmail = normalizeEmail(email);
+  const academyDate = cleanDate(academySince);
+
+  const { error: studentError } = await supabase
+    .from("students")
+    .update({ academy_since: academyDate })
+    .eq("email", studentEmail);
+  if (studentError) throw new Error(studentError.message);
+
+  const rows = instruments
+    .map((instrument) => ({
+      student_email: studentEmail,
+      name: String(instrument.name ?? "").trim(),
+      started_at: cleanDate(instrument.startedAt),
+    }))
+    .filter((instrument) => instrument.name.length > 0);
+
+  const { error: deleteError } = await supabase
+    .from("student_instruments")
+    .delete()
+    .eq("student_email", studentEmail);
+  if (deleteError) throw new Error(deleteError.message);
+
+  if (!rows.length) return;
+
+  const { error: insertError } = await supabase
+    .from("student_instruments")
+    .insert(rows);
+  if (insertError) throw new Error(insertError.message);
 };
 
 /** Alumno activo por usuario, con su contraseña para poder validarla. */

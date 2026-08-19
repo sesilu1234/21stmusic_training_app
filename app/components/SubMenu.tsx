@@ -54,26 +54,26 @@ export default function SubMenu({
           Menú principal
         </Link>
 
-        <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center py-10 md:py-14">
-          <div className="mb-8 md:mb-10">
+        <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-start py-9 md:py-10">
+          <div className="mb-6 md:mb-7">
             <p
               className={`mb-2.5 flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.32em] ${palette.accent}`}
             >
               <span className={`h-1.5 w-1.5 rounded-full ${palette.dot}`} />
               {eyebrow}
             </p>
-            <h1 className="text-3xl font-black italic tracking-tight md:text-5xl">{title}</h1>
+            <h1 className="text-3xl font-black italic tracking-tight md:text-4xl">{title}</h1>
             {intro && (
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/50">{intro}</p>
             )}
           </div>
 
-          <div className="grid gap-3.5 sm:grid-cols-2 md:gap-4">
+          <div className="grid gap-3.5 sm:grid-cols-2">
             {options.map(({ title: optionTitle, description, href, Icon, badge }) => (
               <Link
                 key={href}
                 href={href}
-                className={`group flex flex-col rounded-2xl border border-white/10 bg-slate-950/70 p-5 shadow-xl backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950/85 md:p-6 ${palette.hoverBorder}`}
+                className={`group flex min-h-[132px] flex-col rounded-2xl border border-white/10 bg-slate-950/70 p-5 shadow-xl backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950/85 ${palette.hoverBorder}`}
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <span
@@ -96,7 +96,7 @@ export default function SubMenu({
                 </p>
 
                 <span
-                  className={`mt-5 inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] opacity-0 transition-opacity group-hover:opacity-100 ${palette.accent}`}
+                    className={`mt-auto inline-flex items-center gap-1.5 pt-4 text-[10px] font-black uppercase tracking-[0.2em] opacity-0 transition-opacity group-hover:opacity-100 ${palette.accent}`}
                 >
                   Empezar
                   <ArrowRight size={13} />
