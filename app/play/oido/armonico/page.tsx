@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import GameChrome from "@/app/components/GameChrome";
 import { DEFAULT_ROUND_LENGTH, getStoredRoundLength } from "@/lib/roundLength";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
 import {
   INTERVALS,
@@ -14,7 +14,6 @@ import GameOverModal from "@/app/components/GameOverModal";
 
 
 export default function IntervalosArmonicos() {
-  const router = useRouter();
 
   const [totalQuestions, setTotalQuestions] = useState(DEFAULT_ROUND_LENGTH);
   const [quizList, setQuizList]       = useState<typeof INTERVALS>([]);
@@ -126,18 +125,11 @@ export default function IntervalosArmonicos() {
       className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans"
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
-      {/* HEADER */}
-      <div className="w-full px-4 pt-6 md:px-12 flex justify-between items-start z-20">
-        <button
-          onClick={() => router.push("/play/oido")}
-          className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-4 py-2 rounded-full border border-white/10 transition-all"
-        >
-          ← <span>Oído</span>
-        </button>
-        <div className="flex gap-4 md:gap-8 opacity-40 md:opacity-90">
-          <img src="/assets/logo21stCM_no_white_1.png" className="h-12 md:h-24 w-auto drop-shadow-2xl" alt="logo" />
-        </div>
-      </div>
+      <GameChrome>
+        ¿Qué{" "}
+        <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">INTERVALO ARMÓNICO</span>
+        {" "}escuchas?
+      </GameChrome>
 
       {/* GAME OVER OVERLAY */}
       {gameOver && (
@@ -145,15 +137,8 @@ export default function IntervalosArmonicos() {
       )}
 
       {/* CONTENT */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 z-10 w-full max-w-5xl mx-auto">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-5xl mx-auto">
 
-        <div className="mb-6 text-center">
-          <h2 className="text-white text-xl md:text-3xl font-black italic tracking-tighter leading-tight uppercase" style={{ fontFamily: "Chaney, sans-serif" }}>
-            ¿Qué{" "}
-            <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">INTERVALO ARMÓNICO</span>
-            {" "}escuchas?
-          </h2>
-        </div>
 
         <div className="relative flex flex-col items-center w-full max-w-sm md:max-w-lg mb-8">
           <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl w-full h-44 md:h-52 flex items-center justify-center border-4 border-white relative overflow-hidden">

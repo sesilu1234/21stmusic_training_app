@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, RotateCw, Volume2 } from "lucide-react";
+import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import { PRESET_ICONS, PRESETS, useAudio } from "../../audio";
 import {
@@ -15,7 +16,6 @@ import {
   type ChordOption,
 } from "@/lib/chordEar";
 import { getStoredRoundLength } from "@/lib/roundLength";
-import { useStoredThemeMode } from "@/lib/themeMode";
 
 const GAME_NAME = "Acordes al oído";
 /** Hueco entre la tónica de referencia y el acorde de la pregunta. */
@@ -52,7 +52,6 @@ export default function AcordesOidoPage({
 }
 
 function ChordEarGame({ level }: { level: ChordLevel }) {
-  const [isDarkMode] = useStoredThemeMode();
   const { playSequence } = useAudio();
 
   const [round, setRound] = useState<Round | null>(null);
@@ -142,34 +141,47 @@ function ChordEarGame({ level }: { level: ChordLevel }) {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
-      <div
-        className="fixed inset-0 z-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-      >
-        <div
-          className={`absolute inset-0 backdrop-blur-[3px] ${
-            isDarkMode
-              ? "bg-gradient-to-b from-slate-950/92 via-slate-950/82 to-slate-950/95"
-              : "bg-gradient-to-b from-slate-900/65 via-slate-900/45 to-slate-900/70"
-          }`}
-        />
-      </div>
+      <Backdrop />
 
       {gameOver && (
         <GameOverModal game={GAME_NAME} correct={correctCount} total={total} />
       )}
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-5 md:px-6 md:py-7">
-        <div className="flex items-center justify-between gap-3">
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-5 pt-3 md:px-6 md:pb-7 md:pt-4">
+        {/* El enunciado va arriba del todo, en la misma línea que volver y los
+            instrumentos: si no, se queda flotando en mitad de la pantalla. */}
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href="/play/oido/acordes"
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-violet-300/40 hover:text-white"
+            className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/50 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/60 backdrop-blur-sm transition hover:border-violet-300/50 hover:text-white md:px-4"
           >
             <ArrowLeft size={14} />
-            Niveles
+            <span className="hidden sm:inline">Niveles</span>
           </Link>
 
-          <div className="flex items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
+          <div className="min-w-0 text-center">
+            <h1
+              className="text-balance text-base font-black italic uppercase leading-tight tracking-tighter text-white sm:text-xl md:text-2xl"
+              style={{ fontFamily: "Chaney, sans-serif" }}
+            >
+              {level.mode === "grado" ? (
+                <>
+                  ¿Qué{" "}
+                  <span className="text-violet-300">GRADO</span> es?
+                </>
+              ) : (
+                <>
+                  ¿Qué{" "}
+                  <span className="text-violet-300">ACORDE</span> es?
+                </>
+              )}
+            </h1>
+            <p className="mt-1 truncate text-[9px] font-black uppercase tracking-[0.28em] text-white/35">
+              {level.badge} · {level.title}
+            </p>
+          </div>
+
+          <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
             {PRESETS.map((preset, index) => (
               <button
                 key={preset.label}
@@ -177,7 +189,7 @@ function ChordEarGame({ level }: { level: ChordLevel }) {
                 onClick={() => setPresetIdx(index)}
                 title={preset.label}
                 aria-label={preset.label}
-                className={`grid h-8 w-8 place-items-center rounded-full text-sm transition ${
+                className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
                   presetIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
                 }`}
               >
@@ -187,17 +199,12 @@ function ChordEarGame({ level }: { level: ChordLevel }) {
           </div>
         </div>
 
-        <main className="flex flex-1 flex-col justify-center py-8">
-          <div className="mb-6 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-violet-300">
-              {level.badge} · {level.title}
+        <main className="flex flex-1 flex-col justify-center py-6">
+          {level.mode === "grado" && (
+            <p className="mb-5 text-center text-xs text-white/35">
+              Primero suena la tónica y después el acorde.
             </p>
-            <p className="mt-2 text-xs text-white/40">
-              {level.mode === "grado"
-                ? "Primero la tónica, después el acorde. ¿Qué grado es?"
-                : "¿Qué tipo de acorde es?"}
-            </p>
-          </div>
+          )}
 
           <div className="mb-7 flex flex-col items-center gap-4">
             <button

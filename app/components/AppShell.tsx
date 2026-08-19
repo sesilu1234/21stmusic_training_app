@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Award, Gamepad2, StickyNote } from "lucide-react";
+import Backdrop from "./Backdrop";
 import SiteFooter from "./SiteFooter";
 import UserMenu from "./UserMenu";
-import { useStoredThemeMode } from "@/lib/themeMode";
 
 export interface ShellUser {
   displayName: string;
@@ -27,43 +27,33 @@ export default function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [isDarkMode] = useStoredThemeMode();
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
-      {/*
-        El fondo es una foto, así que sin un velo fuerte el texto pequeño se
-        pelea con ella. El degradado oscurece más arriba y abajo, que es donde
-        caen la cabecera y el pie.
-      */}
-      <div
-        className="fixed inset-0 z-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-      >
-        <div
-          className={`absolute inset-0 backdrop-blur-[3px] ${
-            isDarkMode
-              ? "bg-gradient-to-b from-slate-950/92 via-slate-950/82 to-slate-950/95"
-              : "bg-gradient-to-b from-slate-900/65 via-slate-900/45 to-slate-900/70"
-          }`}
-        />
-      </div>
+      <Backdrop />
 
       <div className="relative z-10 flex min-h-screen flex-col">
-        <header className="px-3 pt-3 md:px-6 md:pt-5">
-          <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/50 px-3 py-2.5 shadow-2xl backdrop-blur-xl md:px-5 md:py-3">
+        {/* z-50: si no, las tarjetas del menú (que llevan blur y crean su
+            propio contexto de apilado) tapan el desplegable del usuario. */}
+        <header className="relative z-50 px-3 pt-3 md:px-6 md:pt-5">
+          <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-xl md:px-5 md:py-3">
             <Link href="/" className="flex min-w-0 items-center gap-2.5 md:gap-3.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/assets/logo21stCM_no_white_1.png"
-                className="h-9 w-auto flex-shrink-0 md:h-11"
+                className="h-9 w-auto flex-shrink-0 md:h-12"
                 alt="21st Century Music"
               />
-              <span
-                className="truncate text-sm font-black italic leading-none tracking-tighter text-white md:text-xl"
-                style={{ fontFamily: "Chaney, sans-serif" }}
-              >
-                21st Century Music
+              <span className="flex min-w-0 flex-col">
+                <span
+                  className="truncate text-sm font-black italic leading-tight tracking-tighter text-white md:text-xl"
+                  style={{ fontFamily: "Chaney, sans-serif" }}
+                >
+                  21st Century Music
+                </span>
+                <span className="truncate text-[7px] font-bold uppercase tracking-[0.28em] text-amber-400 md:text-[9px]">
+                  Escuela de música moderna
+                </span>
               </span>
             </Link>
 

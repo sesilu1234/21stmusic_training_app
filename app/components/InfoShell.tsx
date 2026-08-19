@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import Backdrop from "./Backdrop";
 import SiteFooter from "./SiteFooter";
 import { SITE } from "@/lib/site";
 
@@ -20,12 +21,7 @@ export default function InfoShell({
 }) {
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
-      <div
-        className="fixed inset-0 z-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-      >
-        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-[2px]" />
-      </div>
+      <Backdrop />
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="px-3 pt-3 md:px-4 md:pt-4">

@@ -54,7 +54,7 @@ export default async function MedallasPage() {
               return (
                 <article
                   key={game.name}
-                  className="flex items-center gap-4 rounded-2xl border border-white/5 bg-slate-950/45 p-5 backdrop-blur-sm"
+                  className="flex items-center gap-4 rounded-2xl border border-white/5 bg-slate-950/60 p-5 backdrop-blur-sm"
                 >
                   <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl bg-white/5">
                     <Lock size={18} className="text-white/25" />
@@ -120,7 +120,7 @@ export default async function MedallasPage() {
           })}
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-slate-950/55 p-6 backdrop-blur-sm">
+        <section className="rounded-3xl border border-white/10 bg-slate-950/70 p-6 backdrop-blur-sm">
           <h2 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-amber-200">
             Cuadro de honor
           </h2>

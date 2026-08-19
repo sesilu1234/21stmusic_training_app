@@ -1,13 +1,12 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
+import GameChrome from "@/app/components/GameChrome";
 import { getStoredRoundLength } from "@/lib/roundLength";
-import { useRouter } from "next/navigation";
 import { diapason_data } from "./diapason_data";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
 
 export default function DiapasonGame() {
-  const router = useRouter();
 
   const botonesNotas = [
     "Do",
@@ -109,7 +108,7 @@ export default function DiapasonGame() {
 
     setTimeout(() => {
       setShowFeedback(null);
-      if (step < 23) {
+      if (step < quizList.length - 1) {
         setStep(step + 1);
       } else {
         setGameOver(true);
@@ -124,7 +123,7 @@ export default function DiapasonGame() {
   };
 
   const goNext = () => {
-    if (step < 23) {
+    if (step < quizList.length - 1) {
       const nextStep = step + 1;
       setStep(nextStep);
       setShowFeedback(null);
@@ -137,35 +136,15 @@ export default function DiapasonGame() {
       className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center overflow-x-hidden font-sans"
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
-      <div className="w-full px-4 pt-6 md:px-12 md:pt-8 flex justify-between items-center z-20">
-        <button
-          onClick={() => router.push("/")}
-          className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-4 py-2 md:px-6 md:py-2.5 rounded-full border border-white/10 transition-all"
-        >
-          ← <span className="hidden sm:inline">Menú Principal</span>
-        </button>
-        <div className="flex gap-4 opacity-40 md:opacity-90">
-          <img
-            src="/assets/logo21stCM_no_white_1.png"
-            className="h-10 md:h-20 w-auto"
-            alt="logo"
-          />
-        </div>
-      </div>
+      <GameChrome>
+        ¿<span className="uppercase">Q</span>ué{" "}
+        <span className="text-black mx-1 md:mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
+        NOTA
+        </span>{" "}
+        es?
+      </GameChrome>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 z-10 w-full max-w-6xl mx-auto">
-        <div className="mb-4 md:mb-8 text-center">
-          <h2
-            className="text-white text-2xl md:text-4xl font-black italic tracking-tighter leading-tight"
-            style={{ fontFamily: "Chaney, sans-serif" }}
-          >
-            ¿<span className="uppercase">Q</span>ué{" "}
-            <span className="text-black mx-1 md:mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
-              NOTA
-            </span>{" "}
-            es?
-          </h2>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-6xl mx-auto">
 
         <div className="relative flex flex-col items-center w-full max-w-md md:max-w-2xl mb-6 md:mb-10">
           <div

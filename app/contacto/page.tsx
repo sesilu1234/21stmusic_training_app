@@ -1,41 +1,46 @@
-import { ExternalLink } from "lucide-react";
-import InfoShell, { InfoSection } from "../components/InfoShell";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import Backdrop from "../components/Backdrop";
+import SiteFooter from "../components/SiteFooter";
 import ContactForm from "./ContactForm";
-import { SITE } from "@/lib/site";
 
 export const metadata = { title: "Contacto · 21st Century Music" };
 
 export default function ContactoPage() {
   return (
-    <InfoShell
-      eyebrow="Contacto"
-      title="Hablemos"
-      intro="Dudas sobre los ejercicios, problemas para entrar, fallos o ideas para modos nuevos. Escribe y te contestamos."
-    >
-      <ContactForm />
+    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+      <Backdrop />
 
-      <InfoSection title="Si es un problema de acceso">
-        <p>
-          Dinos con qué usuario o correo intentas entrar. Las cuentas las da de alta la academia
-          una a una, así que lo más probable es que sea eso.
-        </p>
-      </InfoSection>
-
-      <InfoSection title="La academia">
-        <p>
-          Esta app es la herramienta de entrenamiento de {SITE.academyName}. Para clases, horarios,
-          matrículas o cualquier cosa que no sea la app, mejor por la web de la escuela.
-        </p>
-        <a
-          href={SITE.academyUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/80 transition hover:border-amber-300/40 hover:text-white"
+      <div className="relative z-10 flex min-h-screen flex-col px-4 py-5 md:px-8">
+        <Link
+          href="/"
+          className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-amber-300/40 hover:text-white"
         >
-          {SITE.academyName}
-          <ExternalLink size={14} />
-        </a>
-      </InfoSection>
-    </InfoShell>
+          <ArrowLeft size={14} />
+          Volver
+        </Link>
+
+        <main className="flex flex-1 items-center justify-center py-8">
+          <section className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-xl md:p-7">
+            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-amber-300">
+              Contacto
+            </p>
+            <h1 className="mt-2 text-2xl font-black italic tracking-tight md:text-3xl">
+              Escríbenos
+            </h1>
+            <p className="mt-2.5 text-xs leading-5 text-white/45">
+              Un fallo, algo que no carga, una idea para un modo nuevo. Las dudas de teoría,
+              mejor en clase.
+            </p>
+
+            <div className="mt-5">
+              <ContactForm />
+            </div>
+          </section>
+        </main>
+
+        <SiteFooter />
+      </div>
+    </div>
   );
 }

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import Backdrop from "./Backdrop";
 import SiteFooter from "./SiteFooter";
 import { categoryOf, type CategoryId } from "@/lib/games";
-import { useStoredThemeMode } from "@/lib/themeMode";
 
 type IconComponent = React.ElementType<{
   size?: number;
@@ -39,23 +39,11 @@ export default function SubMenu({
   category: CategoryId;
   options: SubMenuOption[];
 }) {
-  const [isDarkMode] = useStoredThemeMode();
   const palette = categoryOf(category);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
-      <div
-        className="fixed inset-0 z-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-      >
-        <div
-          className={`absolute inset-0 backdrop-blur-[3px] ${
-            isDarkMode
-              ? "bg-gradient-to-b from-slate-950/92 via-slate-950/82 to-slate-950/95"
-              : "bg-gradient-to-b from-slate-900/65 via-slate-900/45 to-slate-900/70"
-          }`}
-        />
-      </div>
+      <Backdrop />
 
       <div className="relative z-10 flex min-h-screen flex-col px-4 py-5 md:px-8 md:py-7">
         <Link
@@ -85,7 +73,7 @@ export default function SubMenu({
               <Link
                 key={href}
                 href={href}
-                className={`group flex flex-col rounded-2xl border border-white/10 bg-slate-950/55 p-5 shadow-xl backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950/75 md:p-6 ${palette.hoverBorder}`}
+                className={`group flex flex-col rounded-2xl border border-white/10 bg-slate-950/70 p-5 shadow-xl backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950/85 md:p-6 ${palette.hoverBorder}`}
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <span

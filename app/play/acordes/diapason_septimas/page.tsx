@@ -1,13 +1,12 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
+import GameChrome from "@/app/components/GameChrome";
 import { getStoredRoundLength } from "@/lib/roundLength";
-import { useRouter } from "next/navigation";
 import { chords_images } from "./chords_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
 
 export default function ChordsGame() {
-  const router = useRouter();
 
   const opcionesSeptimas = [
     "Mayor 7",
@@ -103,7 +102,7 @@ export default function ChordsGame() {
     setTimeout(
       () => {
         setShowFeedback(null);
-        if (step < 23) {
+        if (step < quizList.length - 1) {
           setStep(step + 1);
         } else {
           setGameOver(true);
@@ -142,35 +141,16 @@ export default function ChordsGame() {
       style={{ backgroundImage: "url('/assets/background.jpeg')" }}
     >
       {/* HEADER / NAVIGATION */}
-      <div className="w-full px-4 pt-6 md:px-12 flex justify-between items-center z-20">
-        <button
-          onClick={() => router.push("/")}
-          className="text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest bg-black/40 px-4 py-2 rounded-full border border-white/10 transition-all"
-        >
-          ← <span className="hidden sm:inline">Menú Principal</span>
-          <span className="sm:hidden">Menú</span>
-        </button>
-        <img
-          src="/assets/logo21stCM_no_white_1.png"
-          className="h-12 md:h-20 w-auto opacity-80"
-          alt="logo"
-        />
-      </div>
+      <GameChrome>
+        ¿Qué tipo de{" "}
+        <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
+        ACORDE
+        </span>{" "}
+        es?
+      </GameChrome>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 z-10 w-full max-w-5xl mx-auto">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-5xl mx-auto">
         {/* TITULO */}
-        <div className="mb-6 text-center">
-          <h2
-            className="text-white text-xl md:text-3xl font-black italic tracking-tighter uppercase"
-            style={{ fontFamily: "Chaney, sans-serif" }}
-          >
-            ¿Qué tipo de{" "}
-            <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
-              ACORDE
-            </span>{" "}
-            es?
-          </h2>
-        </div>
 
         {/* CARTA DE PREGUNTA */}
         <div className="relative flex flex-col items-center w-full max-w-lg md:max-w-xl mb-10">

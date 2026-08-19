@@ -42,12 +42,12 @@ export default function GameOverModal({ game, correct, total, onRestart }: Props
   const restart = onRestart || (() => window.location.reload());
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-xl">
       {perfect && (
         <div className="glow-pulse pointer-events-none absolute h-[26rem] w-[26rem] rounded-full bg-amber-400/25 blur-3xl" />
       )}
 
-      <div className="rise-in relative w-full max-w-sm rounded-[2.5rem] border border-white/10 bg-white/5 p-8 text-center md:p-10">
+      <div className="rise-in relative w-full max-w-sm rounded-[2.5rem] border border-white/15 bg-slate-950/80 p-8 text-center shadow-[0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl md:p-10">
         {perfect ? (
           <>
             <div className="relative mx-auto mb-6 h-32 w-40">

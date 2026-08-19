@@ -30,7 +30,7 @@ export default async function PerfilPage() {
   return (
     <AppShell user={{ displayName: student.displayName, image, medals: medals.length }}>
       <div className="mx-auto max-w-3xl space-y-5">
-        <section className="rounded-3xl border border-white/10 bg-slate-950/55 p-6 backdrop-blur-sm md:p-8">
+        <section className="rounded-3xl border border-white/10 bg-slate-950/70 p-6 backdrop-blur-sm md:p-8">
           <div className="flex items-center gap-5">
             <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-3xl border border-amber-300/25 bg-slate-900">
               <Avatar
@@ -73,7 +73,7 @@ export default async function PerfilPage() {
           {tiles.map(({ label, value, Icon }) => (
             <div
               key={label}
-              className="rounded-2xl border border-white/10 bg-slate-950/55 p-4 text-center"
+              className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 text-center"
             >
               <Icon size={16} className="mx-auto text-amber-400" />
               <div className="mt-2 text-2xl font-black text-white">{value}</div>
@@ -84,7 +84,7 @@ export default async function PerfilPage() {
           ))}
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-slate-950/55 p-6">
+        <section className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
           <h2 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-amber-200">
             Mejores marcas
           </h2>
@@ -120,7 +120,7 @@ export default async function PerfilPage() {
         </section>
 
         {stats.recent.length > 0 && (
-          <section className="rounded-3xl border border-white/10 bg-slate-950/55 p-6">
+          <section className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
             <h2 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-amber-200">
               Últimas partidas
             </h2>
