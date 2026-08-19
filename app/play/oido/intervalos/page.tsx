@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { DEFAULT_ROUND_LENGTH, getStoredRoundLength } from "@/lib/roundLength";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
 import {
@@ -11,15 +12,15 @@ import {
 } from "../audio";
 import GameOverModal from "@/app/components/GameOverModal";
 
-const TOTAL_QUESTIONS = 24;
 
 export default function IntervalosAuditivos() {
   const router = useRouter();
 
+  const [totalQuestions, setTotalQuestions] = useState(DEFAULT_ROUND_LENGTH);
   const [quizList, setQuizList]       = useState<typeof INTERVALS>([]);
   const [step, setStep]               = useState(0);
-  const [results, setResults]         = useState<(null|"correct"|"wrong")[]>(Array(TOTAL_QUESTIONS).fill(null));
-  const [userAnswers, setUserAnswers] = useState<(string|null)[]>(Array(TOTAL_QUESTIONS).fill(null));
+  const [results, setResults]         = useState<(null|"correct"|"wrong")[]>(Array(totalQuestions).fill(null));
+  const [userAnswers, setUserAnswers] = useState<(string|null)[]>(Array(totalQuestions).fill(null));
   const [answerState, setAnswerState] = useState<"idle"|"correct"|"wrong">("idle");
   const [gameOver, setGameOver]       = useState(false);
   const [isMounted, setIsMounted]     = useState(false);
@@ -40,23 +41,30 @@ export default function IntervalosAuditivos() {
   const { playInterval } = useAudio();
 
   useEffect(() => {
-    const list: typeof INTERVALS = [];
-    for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-      const previous = list[i - 1];
-      const availableIntervals = previous
-        ? INTERVALS.filter((interval) => interval.name !== previous.name)
-        : INTERVALS;
-      list.push(
-        availableIntervals[Math.floor(Math.random() * availableIntervals.length)],
-      );
-    }
-    setQuizList(list);
-    setIsMounted(true);
+    const startRound = () => {
+      const total = getStoredRoundLength();
+      setTotalQuestions(total);
+      setResults(Array(total).fill(null));
+      setUserAnswers(Array(total).fill(null));
+      const list: typeof INTERVALS = [];
+      for (let i = 0; i < total; i++) {
+        const previous = list[i - 1];
+        const availableIntervals = previous
+          ? INTERVALS.filter((interval) => interval.name !== previous.name)
+          : INTERVALS;
+        list.push(
+          availableIntervals[Math.floor(Math.random() * availableIntervals.length)],
+        );
+      }
+      setQuizList(list);
+      setIsMounted(true);
+    };
+    startRound();
   }, []);
 
   const currentInterval = quizList[step];
   const correctCount    = results.filter(r => r === "correct").length;
-  const progresoMaximo = userAnswers.indexOf(null) === -1 ? TOTAL_QUESTIONS : userAnswers.indexOf(null);
+  const progresoMaximo = userAnswers.indexOf(null) === -1 ? totalQuestions : userAnswers.indexOf(null);
 
   const triggerPlay = useCallback((interval: typeof INTERVALS[0], root = -1, force = false) => {
     if (isPlaying && !force) return;
@@ -83,7 +91,7 @@ export default function IntervalosAuditivos() {
     const newAnswers  = [...userAnswers]; newAnswers[step] = label;
     setResults(newResults); setUserAnswers(newAnswers);
     setAnswerState(isCorrect ? "correct" : "wrong");
-    if (step < TOTAL_QUESTIONS - 1) {
+    if (step < totalQuestions - 1) {
       setTimeout(() => {
         shouldAutoPlayNextRef.current = true;
         currentRootRef.current = -1;
@@ -113,7 +121,7 @@ export default function IntervalosAuditivos() {
 
   const goNext = () => {
     const nextStep = step + 1;
-    if (nextStep <= progresoMaximo && nextStep < TOTAL_QUESTIONS) {
+    if (nextStep <= progresoMaximo && nextStep < totalQuestions) {
       setAnswerState("idle");
       const nextIsAnswered = userAnswers[nextStep] !== null;
       setSolutionStep(nextIsAnswered ? nextStep : null);
@@ -124,7 +132,7 @@ export default function IntervalosAuditivos() {
 
   if (!isMounted || !currentInterval) return <div className="min-h-screen bg-slate-900" />;
 
-  const pct = Math.round((correctCount / TOTAL_QUESTIONS) * 100);
+  const pct = Math.round((correctCount / totalQuestions) * 100);
 
   return (
     <div
@@ -147,7 +155,7 @@ export default function IntervalosAuditivos() {
 
       {/* GAME OVER OVERLAY — blur only, no black */}
       {gameOver && (
-        <GameOverModal game="Oído" correct={correctCount} total={TOTAL_QUESTIONS} />
+        <GameOverModal game="Oído" correct={correctCount} total={totalQuestions} />
       )}
 
       {/* CONTENT */}
@@ -311,7 +319,7 @@ export default function IntervalosAuditivos() {
             <button
               onClick={goNext}
               className={`p-3 bg-amber-500 text-black rounded-full shadow-lg transition-all ${
-                step < progresoMaximo && step < TOTAL_QUESTIONS - 1
+                step < progresoMaximo && step < totalQuestions - 1
                   ? "opacity-100"
                   : "opacity-0 pointer-events-none"
               }`}

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
+import { getStoredRoundLength } from "@/lib/roundLength";
 import { useRouter } from "next/navigation";
 import { intervalos_data } from "./intervalos_data";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -42,8 +43,10 @@ export default function IntervalosGame() {
   useEffect(() => {
     const shuffled = [...intervalos_data]
       .sort(() => Math.random() - 0.5)
-      .slice(0, 24);
+      .slice(0, getStoredRoundLength());
     setQuizList(shuffled);
+    setResults(Array(shuffled.length).fill(null));
+    setUserAnswers(Array(shuffled.length).fill(null));
     setIsMounted(true);
   }, []);
 
@@ -51,8 +54,8 @@ export default function IntervalosGame() {
 
   const progresoMaximo = useMemo(() => {
     const firstEmpty = userAnswers.indexOf(null);
-    return firstEmpty === -1 ? 24 : firstEmpty;
-  }, [userAnswers]);
+    return firstEmpty === -1 ? quizList.length : firstEmpty;
+  }, [userAnswers, quizList]);
   const correctCount = useMemo(
     () => results.filter((r) => r === "correct").length,
     [results],

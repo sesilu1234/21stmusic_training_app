@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
+import { getStoredRoundLength } from "@/lib/roundLength";
 import { useRouter } from "next/navigation";
 import { diapason_data } from "./diapason_data";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
@@ -45,8 +46,10 @@ export default function DiapasonGame() {
   useEffect(() => {
     const shuffled = [...diapason_data]
       .sort(() => Math.random() - 0.5)
-      .slice(0, 24);
+      .slice(0, getStoredRoundLength());
     setQuizList(shuffled);
+    setResults(Array(shuffled.length).fill(null));
+    setUserAnswers(Array(shuffled.length).fill(null));
     setIsMounted(true);
   }, []);
 
@@ -73,8 +76,8 @@ export default function DiapasonGame() {
 
   const progresoMaximo = useMemo(() => {
     const firstEmpty = userAnswers.indexOf(null);
-    return firstEmpty === -1 ? 24 : firstEmpty;
-  }, [userAnswers]);
+    return firstEmpty === -1 ? quizList.length : firstEmpty;
+  }, [userAnswers, quizList]);
   const correctCount = useMemo(
     () => results.filter((r) => r === "correct").length,
     [results],

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
+import { getStoredRoundLength } from "@/lib/roundLength";
 import { useRouter } from "next/navigation";
 import { modes_images } from "./modes_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
@@ -59,8 +60,10 @@ export default function ChordsGame() {
   useEffect(() => {
     const shuffled = [...modes_images]
       .sort(() => Math.random() - 0.5)
-      .slice(0, 24);
+      .slice(0, getStoredRoundLength());
     setQuizList(shuffled);
+    setResults(Array(shuffled.length).fill(null));
+    setUserAnswers(Array(shuffled.length).fill(null));
     setIsMounted(true);
   }, []);
 
@@ -87,8 +90,8 @@ export default function ChordsGame() {
 
   const progresoMaximo = useMemo(() => {
     const firstEmpty = userAnswers.indexOf(null);
-    return firstEmpty === -1 ? 24 : firstEmpty;
-  }, [userAnswers]);
+    return firstEmpty === -1 ? quizList.length : firstEmpty;
+  }, [userAnswers, quizList]);
 
   if (!isMounted || !currentQuestion)
     return <div className="min-h-screen bg-slate-900" />;

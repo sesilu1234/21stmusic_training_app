@@ -3,6 +3,8 @@
 export interface GameResult {
   perfect: boolean;
   medalAwarded: boolean;
+  /** Pleno que no da medalla porque la partida era demasiado corta. */
+  tooShort: boolean;
   saved: boolean;
 }
 
@@ -21,15 +23,17 @@ export const saveGameResult = async (
       body: JSON.stringify({ game, correct, total }),
     });
 
-    if (!response.ok) return { perfect, medalAwarded: false, saved: false };
+    if (!response.ok)
+      return { perfect, medalAwarded: false, tooShort: false, saved: false };
 
     const data = await response.json();
     return {
       perfect: Boolean(data.perfect),
       medalAwarded: Boolean(data.medalAwarded),
+      tooShort: Boolean(data.tooShort),
       saved: true,
     };
   } catch {
-    return { perfect, medalAwarded: false, saved: false };
+    return { perfect, medalAwarded: false, tooShort: false, saved: false };
   }
 };

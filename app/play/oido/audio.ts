@@ -118,7 +118,12 @@ export type Dyad = { root: number; semi: number };
 export function useAudio() {
   const ctxRef = useRef<AudioContext | null>(null);
   function getCtx(): AudioContext {
-    if (!ctxRef.current) ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Safari viejo solo expone webkitAudioContext.
+    const Ctor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+    if (!ctxRef.current) ctxRef.current = new Ctor();
     return ctxRef.current;
   }
 
@@ -141,18 +146,26 @@ export function useAudio() {
     return root;
   }, []);
 
-  // Two harmonic dyads played one after another.
-  const playDouble = useCallback((d1: Dyad, d2: Dyad, gapMs: number, presetIdx: number) => {
-    const ctx = getCtx();
-    const gap = gapMs / 1000;
-    const doPlay = () => {
-      const now = ctx.currentTime;
-      scheduleChord(ctx, [d1.root, d1.root + d1.semi], presetIdx, now);
-      scheduleChord(ctx, [d2.root, d2.root + d2.semi], presetIdx, now + gap);
-    };
-    if (ctx.state === "suspended") ctx.resume().then(doPlay);
-    else doPlay();
-  }, []);
+  /**
+   * Toca una secuencia de acordes, uno detrás de otro. Cada acorde es una
+   * lista de semitonos absolutos. Lo usa el modo de acordes al oído, que a
+   * veces necesita dar antes la tónica de referencia.
+   */
+  const playSequence = useCallback(
+    (chords: number[][], gapMs: number, presetIdx: number) => {
+      const ctx = getCtx();
+      const gap = gapMs / 1000;
+      const doPlay = () => {
+        const now = ctx.currentTime;
+        chords.forEach((chord, index) =>
+          scheduleChord(ctx, chord, presetIdx, now + index * gap),
+        );
+      };
+      if (ctx.state === "suspended") ctx.resume().then(doPlay);
+      else doPlay();
+    },
+    [],
+  );
 
-  return { playInterval, playDouble };
+  return { playInterval, playSequence };
 }

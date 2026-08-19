@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
+import { getStoredRoundLength } from "@/lib/roundLength";
 import { useRouter } from "next/navigation";
 import { getArmaduras, type ArmaduraData, type Clave } from "./notes_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
@@ -60,12 +61,12 @@ export default function ArmadurasGame() {
   const startGame = (claves: Clave[]) => {
     const shuffled = [...getArmaduras(claves)]
       .sort(() => Math.random() - 0.5)
-      .slice(0, 24);
+      .slice(0, getStoredRoundLength());
     setQuizList(shuffled);
     setSelectedClaves(claves);
     setStep(0);
-    setResults(Array(24).fill(null));
-    setUserAnswers(Array(24).fill(null));
+    setResults(Array(shuffled.length).fill(null));
+    setUserAnswers(Array(shuffled.length).fill(null));
     setGameOver(false);
     setIsReviewing(false);
     setShowFeedback(null);
@@ -97,8 +98,8 @@ export default function ArmadurasGame() {
 
   const progresoMaximo = useMemo(() => {
     const index = userAnswers.indexOf(null);
-    return index === -1 ? 24 : index;
-  }, [userAnswers]);
+    return index === -1 ? quizList.length : index;
+  }, [userAnswers, quizList]);
   const correctCount = useMemo(
     () => results.filter((r) => r === "correct").length,
     [results],

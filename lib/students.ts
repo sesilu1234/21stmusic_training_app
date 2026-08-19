@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "./supabaseAdmin";
+import { MEDAL_MIN_LENGTH } from "./medals";
 
 export const normalizeEmail = (value: unknown) =>
   String(value ?? "").trim().toLowerCase();
@@ -179,7 +180,10 @@ export const recordAttempt = async (
   if (attemptError) throw new Error(attemptError.message);
 
   const perfect = total > 0 && correct === total;
-  if (!perfect) return { perfect, medalAwarded: false };
+  // Una partida corta puede ser un pleno, pero no da medalla: si no, bastaría
+  // con encadenar rondas de 12 para subir de escalón sin esfuerzo.
+  const countsForMedal = perfect && total >= MEDAL_MIN_LENGTH;
+  if (!countsForMedal) return { perfect, medalAwarded: false, tooShort: perfect };
 
   const { error: medalError } = await supabase
     .from("student_medals")
@@ -188,76 +192,84 @@ export const recordAttempt = async (
   // 23505 = ya tenía esa medalla, no es un fallo.
   if (medalError && medalError.code !== "23505") throw new Error(medalError.message);
 
-  return { perfect, medalAwarded: !medalError };
+  return { perfect, medalAwarded: !medalError, tooShort: false };
 };
 
-export interface RankingRow {
-  email: string;
-  displayName: string;
-  points: number;
-  games: number;
-  medals: number;
+export interface GameProgress {
+  game: string;
+  attempts: number;
+  /** partidas perfectas de 24 o más preguntas: son las que suben de escalón */
+  plenos: number;
+  lastCorrect: number | null;
+  lastTotal: number | null;
+  medalAt: string | null;
 }
 
-/** Ranking global y por juego, calculado desde las partidas guardadas. */
-export const getRanking = async () => {
+/**
+ * Estado de cada modo para un alumno: cuántas veces lo ha jugado, cuántos
+ * plenos lleva (para el escalón de medalla) y cómo le fue la última vez.
+ * Lo usan el menú principal y la página de medallas.
+ */
+export const getProgressByGame = async (email: string) => {
   const supabase = getSupabaseAdmin();
+  const studentEmail = normalizeEmail(email);
 
-  const [{ data: students }, { data: attempts }, { data: medals }] = await Promise.all([
-    supabase.from("students").select("email, display_name").eq("is_active", true),
+  const [{ data: attempts }, { data: medals }] = await Promise.all([
     supabase
       .from("game_attempts")
-      .select("student_email, game_name, correct")
+      .select("game_name, correct, total, created_at")
+      .eq("student_email", studentEmail)
       .order("created_at", { ascending: false })
-      .limit(5000),
-    supabase.from("student_medals").select("student_email"),
+      .limit(2000),
+    supabase
+      .from("student_medals")
+      .select("game_name, created_at")
+      .eq("student_email", studentEmail),
   ]);
 
-  const names = new Map<string, string>(
-    (students || []).map((row) => [row.email as string, row.display_name as string]),
-  );
-  const medalCount = new Map<string, number>();
-  for (const row of medals || []) {
-    const key = row.student_email as string;
-    medalCount.set(key, (medalCount.get(key) || 0) + 1);
-  }
+  const progress = new Map<string, GameProgress>();
+  /** El juego de la partida más reciente, para el "sigue por aquí" del menú. */
+  const lastPlayed = (attempts?.[0]?.game_name as string) ?? null;
 
-  const global = new Map<string, RankingRow>();
-  const perGame = new Map<string, Map<string, RankingRow>>();
-
-  const bump = (table: Map<string, RankingRow>, email: string, correct: number) => {
-    const row = table.get(email) || {
-      email,
-      displayName: names.get(email) || email.split("@")[0],
-      points: 0,
-      games: 0,
-      medals: medalCount.get(email) || 0,
+  const entry = (game: string) => {
+    const existing = progress.get(game);
+    if (existing) return existing;
+    const created: GameProgress = {
+      game,
+      attempts: 0,
+      plenos: 0,
+      lastCorrect: null,
+      lastTotal: null,
+      medalAt: null,
     };
-    row.points += correct;
-    row.games += 1;
-    table.set(email, row);
+    progress.set(game, created);
+    return created;
   };
 
-  for (const attempt of attempts || []) {
-    const email = attempt.student_email as string;
-    if (!names.has(email)) continue;
+  // Vienen ordenados de más nuevo a más viejo, así que la primera fila de cada
+  // juego es la última partida.
+  for (const row of attempts || []) {
+    const stat = entry(row.game_name as string);
+    const correct = row.correct as number;
+    const total = row.total as number;
 
-    bump(global, email, attempt.correct as number);
-
-    const game = attempt.game_name as string;
-    if (!perGame.has(game)) perGame.set(game, new Map());
-    bump(perGame.get(game)!, email, attempt.correct as number);
+    stat.attempts += 1;
+    if (stat.lastCorrect === null) {
+      stat.lastCorrect = correct;
+      stat.lastTotal = total;
+    }
+    if (total >= MEDAL_MIN_LENGTH && correct === total) stat.plenos += 1;
   }
 
-  const sorted = (table: Map<string, RankingRow>) =>
-    [...table.values()].sort((a, b) => b.points - a.points || b.games - a.games);
+  for (const row of medals || []) {
+    const stat = entry(row.game_name as string);
+    stat.medalAt = row.created_at as string;
+    // Medallas viejas ganadas con rondas más cortas que las de ahora: la
+    // medalla está concedida, así que como mínimo vale por un pleno.
+    if (stat.plenos === 0) stat.plenos = 1;
+  }
 
-  return {
-    global: sorted(global),
-    perGame: Object.fromEntries(
-      [...perGame.entries()].map(([game, table]) => [game, sorted(table).slice(0, 10)]),
-    ) as Record<string, RankingRow[]>,
-  };
+  return { byGame: progress, lastPlayed };
 };
 
 export interface MedalBoardRow {

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { safeAuth } from "@/lib/session";
+import SiteFooter from "../components/SiteFooter";
 import LoginForm from "./LoginForm";
 
 const errorMessage = (error?: string) => {
@@ -22,7 +23,7 @@ export default async function LoginPage({
   const params = (await searchParams) || {};
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden p-5">
+    <div className="relative flex min-h-screen flex-col overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/assets/background.jpeg')" }}
@@ -30,6 +31,7 @@ export default async function LoginPage({
       <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[3px]" />
       <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-amber-400/15 blur-3xl" />
 
+      <main className="relative flex flex-1 items-center justify-center p-5">
       <section className="relative w-full max-w-[19rem] rounded-3xl border border-white/10 bg-slate-950/70 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-xl">
         <div className="mb-5 flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -55,6 +57,9 @@ export default async function LoginPage({
           Acceso solo para alumnos de la academia.
         </p>
       </section>
-    </main>
+      </main>
+
+      <SiteFooter className="relative" />
+    </div>
   );
 }

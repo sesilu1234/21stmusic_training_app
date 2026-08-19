@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import Avatar from "../components/Avatar";
 import { requireStudent } from "@/lib/session";
 import { getStudentStats, listMedals } from "@/lib/students";
+import { gameLabel } from "@/lib/games";
 import { formatDate, formatMonth } from "@/lib/format";
 
 export const metadata = { title: "Tu perfil · 21st Century Music" };
@@ -29,7 +30,7 @@ export default async function PerfilPage() {
   return (
     <AppShell user={{ displayName: student.displayName, image, medals: medals.length }}>
       <div className="mx-auto max-w-3xl space-y-5">
-        <section className="rounded-3xl border border-white/10 bg-black/45 p-6 backdrop-blur-sm md:p-8">
+        <section className="rounded-3xl border border-white/10 bg-slate-950/55 p-6 backdrop-blur-sm md:p-8">
           <div className="flex items-center gap-5">
             <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-3xl border border-amber-300/25 bg-slate-900">
               <Avatar
@@ -72,7 +73,7 @@ export default async function PerfilPage() {
           {tiles.map(({ label, value, Icon }) => (
             <div
               key={label}
-              className="rounded-2xl border border-white/10 bg-black/45 p-4 text-center"
+              className="rounded-2xl border border-white/10 bg-slate-950/55 p-4 text-center"
             >
               <Icon size={16} className="mx-auto text-amber-400" />
               <div className="mt-2 text-2xl font-black text-white">{value}</div>
@@ -83,7 +84,7 @@ export default async function PerfilPage() {
           ))}
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-black/45 p-6">
+        <section className="rounded-3xl border border-white/10 bg-slate-950/55 p-6">
           <h2 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-amber-200">
             Mejores marcas
           </h2>
@@ -95,7 +96,7 @@ export default async function PerfilPage() {
                   key={stat.game}
                   className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/5 px-4 py-3"
                 >
-                  <span className="min-w-0 truncate text-sm text-white/85">{stat.game}</span>
+                  <span className="min-w-0 truncate text-sm text-white/85">{gameLabel(stat.game)}</span>
                   <span className="flex-shrink-0 text-right">
                     <span className="block text-sm font-black text-amber-300">
                       {stat.best}/{stat.bestTotal}
@@ -119,7 +120,7 @@ export default async function PerfilPage() {
         </section>
 
         {stats.recent.length > 0 && (
-          <section className="rounded-3xl border border-white/10 bg-black/45 p-6">
+          <section className="rounded-3xl border border-white/10 bg-slate-950/55 p-6">
             <h2 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-amber-200">
               Últimas partidas
             </h2>
@@ -130,7 +131,7 @@ export default async function PerfilPage() {
                   className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/5 px-4 py-3"
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-sm text-white/85">{attempt.game}</span>
+                    <span className="block truncate text-sm text-white/85">{gameLabel(attempt.game)}</span>
                     <span className="block text-[10px] uppercase tracking-[0.16em] text-white/35">
                       {formatDate(attempt.createdAt)}
                     </span>
