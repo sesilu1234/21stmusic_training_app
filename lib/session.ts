@@ -19,7 +19,10 @@ export const safeAuth = async () => {
 export const requireStudent = async () => {
   const session = await safeAuth();
   const student = await getStudent(session?.user?.email);
-  if (!student) redirect("/login");
+
+  // Si hay sesión pero no es alumno, se dice por qué: si no, /login vería la
+  // sesión, devolvería aquí, y el navegador entraría en bucle de redirecciones.
+  if (!student) redirect(session ? "/login?error=AccessDenied" : "/login");
 
   return { student, image: session?.user?.image ?? null };
 };

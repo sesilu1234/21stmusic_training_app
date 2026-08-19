@@ -69,12 +69,17 @@ export const getStudent = async (email: unknown): Promise<Student | null> => {
   const cleanEmail = normalizeEmail(email);
   if (!cleanEmail) return null;
 
-  const { data } = await getSupabaseAdmin()
+  const { data, error } = await getSupabaseAdmin()
     .from("students")
     .select(STUDENT_COLUMNS)
     .eq("email", cleanEmail)
     .eq("is_active", true)
     .maybeSingle<StudentRow>();
+
+  // Un fallo de base de datos NO es "no eres alumno". Si se confunden, la
+  // página manda a /login, /login ve que hay sesión y manda a /, y el
+  // navegador se queda dando vueltas (ERR_TOO_MANY_REDIRECTS).
+  if (error) throw new Error(`No se ha podido consultar el alumno: ${error.message}`);
 
   return data ? toStudent(data) : null;
 };

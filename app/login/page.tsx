@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { logout } from "@/app/actions";
 import { safeAuth } from "@/lib/session";
+import { getStudent } from "@/lib/students";
 import SiteFooter from "../components/SiteFooter";
 import LoginForm from "./LoginForm";
 
@@ -18,9 +20,22 @@ export default async function LoginPage({
 }: {
   searchParams?: Promise<{ error?: string }>;
 }) {
-  if (await safeAuth()) redirect("/");
+  const session = await safeAuth();
+
+  // Solo se vuelve a la app si la sesión corresponde a un alumno de verdad.
+  // Antes bastaba con que hubiera sesión, y una cookie de alguien que ya no
+  // está en `students` rebotaba sin parar entre / y /login.
+  let student = null;
+  let databaseDown = false;
+  try {
+    student = session ? await getStudent(session.user?.email) : null;
+  } catch {
+    databaseDown = true;
+  }
+  if (student) redirect("/");
 
   const params = (await searchParams) || {};
+  const staleSession = Boolean(session) && !databaseDown;
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden">
@@ -51,7 +66,24 @@ export default async function LoginPage({
           </p>
         </div>
 
+        {databaseDown && (
+          <p className="mb-3 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2.5 text-[11px] leading-4 text-rose-200">
+            No se puede conectar con la base de datos. Avisa a la academia.
+          </p>
+        )}
+
         <LoginForm googleError={errorMessage(params.error)} />
+
+        {staleSession && (
+          <form action={logout} className="mt-3">
+            <button
+              type="submit"
+              className="w-full rounded-xl border border-white/10 py-2.5 text-[10px] font-black uppercase tracking-widest text-white/45 transition hover:border-white/25 hover:text-white"
+            >
+              Salir de la sesión actual
+            </button>
+          </form>
+        )}
 
         <p className="mt-4 text-center text-[9px] leading-relaxed text-white/35">
           Acceso solo para alumnos de la academia.
