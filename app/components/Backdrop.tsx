@@ -1,5 +1,6 @@
 "use client";
 
+import DustLayer from "./DustLayer";
 import { useStoredThemeMode } from "@/lib/themeMode";
 
 /**
@@ -8,6 +9,9 @@ import { useStoredThemeMode } from "@/lib/themeMode";
  * El contraste se consigue sobre todo con el fondo de las tarjetas, no
  * ahogando la foto: por eso el desenfoque es mínimo y el velo, suave. Sube un
  * poco arriba y abajo, que es donde caen la cabecera y el pie.
+ *
+ * Encima del velo flotan unas motas de polvo, lo justo para que la foto no se
+ * quede del todo quieta.
  */
 export default function Backdrop() {
   const [isDarkMode] = useStoredThemeMode();
@@ -24,6 +28,7 @@ export default function Backdrop() {
             : "bg-gradient-to-b from-slate-900/55 via-slate-900/32 to-slate-900/62"
         }`}
       />
+      <DustLayer />
     </div>
   );
 }
