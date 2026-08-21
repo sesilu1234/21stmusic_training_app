@@ -24,3 +24,26 @@ Rockschool y Constructor de melodías don't score — they're the only two modes
 - ver cada una de los modos que esta hecho y ver si cambiar algo, opciones, rework, ver ...
 
 
+- checkear tras webs para ver si hay algo que pillar
+
+
+
+- en lectura ritimica modificar , que esta mal el nivel 2   (si hay corchea despues tiene venir corchea...)
+
+- una seccion de guia, tutorial,learning...?
+
+
+
+
+- un poquito de parallax con el background , en root / 
+
+
+
+
+-cambiar letras y probar tipografia, probar otro style
+otros iconos 
+
+
+
+
+

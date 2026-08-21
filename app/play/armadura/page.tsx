@@ -393,7 +393,7 @@ export default function ArmadurasGame() {
 
       {/* Game Over Modal */}
       {gameOver && (
-        <GameOverModal game="Armaduras" correct={correctCount} total={totalQuestions} />
+        <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
     </div>
   );

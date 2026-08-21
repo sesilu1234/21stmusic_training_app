@@ -242,7 +242,7 @@ export default function IntervalosGame() {
 
       {/* FINAL MODAL */}
       {gameOver && (
-        <GameOverModal game="Intervalos" correct={correctCount} total={totalQuestions} />
+        <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
     </div>
   );

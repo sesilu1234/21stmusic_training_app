@@ -1,17 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Award, Home, RotateCcw } from "lucide-react";
+import { Home, RotateCcw } from "lucide-react";
 import Crown from "./Crown";
 import RoundLengthPicker from "./RoundLengthPicker";
-import { gameLabel } from "@/lib/games";
-import { saveGameResult, type GameResult } from "@/lib/gameResults";
-import { MEDAL_MIN_LENGTH } from "@/lib/medals";
 
 interface Props {
-  /** Nombre del juego tal y como está en lib/games.ts */
-  game: string;
   correct: number;
   total: number;
   /** Por defecto recarga la página */
@@ -26,16 +20,7 @@ const SPARKLES = [
   { top: "0%", left: "58%", size: 9, delay: "1.6s" },
 ];
 
-export default function GameOverModal({ game, correct, total, onRestart }: Props) {
-  const [result, setResult] = useState<GameResult | null>(null);
-  const savedRef = useRef(false);
-
-  useEffect(() => {
-    if (savedRef.current) return;
-    savedRef.current = true;
-    void saveGameResult(game, correct, total).then(setResult);
-  }, [game, correct, total]);
-
+export default function GameOverModal({ correct, total, onRestart }: Props) {
   const safeTotal = Math.max(1, total);
   const perfect = correct === total && total > 0;
   const pct = Math.round((correct / safeTotal) * 100);
@@ -80,18 +65,6 @@ export default function GameOverModal({ game, correct, total, onRestart }: Props
               {correct} de {total} · todas correctas
             </p>
 
-            {result?.tooShort ? (
-              <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-[11px] font-bold leading-relaxed text-white/55">
-                Pleno, pero la medalla pide partidas de {MEDAL_MIN_LENGTH} preguntas o más.
-              </div>
-            ) : (
-              <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-[11px] font-bold text-amber-100">
-                <Award size={16} className="text-amber-400" />
-                {result?.medalAwarded
-                  ? `¡Medalla de ${gameLabel(game)} conseguida!`
-                  : `Medalla de ${gameLabel(game)}`}
-              </div>
-            )}
           </>
         ) : (
           <>
@@ -141,29 +114,14 @@ export default function GameOverModal({ game, correct, total, onRestart }: Props
             Reiniciar
           </button>
 
-          <div className="flex gap-2">
-            <Link
-              href="/medallas"
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 py-3 text-[10px] font-black uppercase tracking-widest text-white/60 transition hover:text-white"
-            >
-              <Award size={13} />
-              Medallas
-            </Link>
-            <Link
-              href="/"
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 py-3 text-[10px] font-black uppercase tracking-widest text-white/60 transition hover:text-white"
-            >
-              <Home size={13} />
-              Menú
-            </Link>
-          </div>
+          <Link
+            href="/"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 py-3 text-[10px] font-black uppercase tracking-widest text-white/60 transition hover:text-white"
+          >
+            <Home size={13} />
+            Menú
+          </Link>
         </div>
-
-        {result?.saved === false && (
-          <p className="mt-4 text-[10px] text-rose-300/70">
-            No se ha podido guardar la partida (sin conexión).
-          </p>
-        )}
       </div>
     </div>
   );

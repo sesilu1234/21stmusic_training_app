@@ -1,8 +1,8 @@
-// Catálogo único de modos de juego: lo usan el menú, las medallas y el perfil.
+// Catálogo único de modos de juego: lo usan el menú y la página "Sobre la app".
 //
-// IMPORTANTE: `name` es la clave que se guarda en la base de datos
-// (game_attempts.game_name, student_medals.game_name). NO se puede cambiar sin
-// migrar los datos. Lo que se ve en pantalla es `label`, que sí es libre.
+// IMPORTANTE: `name` es la clave con la que se guardaron las partidas en la
+// base de datos (game_attempts.game_name, student_medals.game_name). NO se
+// puede cambiar sin migrar esos datos. En pantalla se enseña `label`.
 
 export type GameIcon =
   | "Hash"
@@ -92,7 +92,7 @@ export interface GameMode {
   slug: string;
   icon: GameIcon;
   category: CategoryId;
-  /** true si el juego puntúa y por tanto puede dar medalla */
+  /** true si el juego lleva marcador de aciertos al terminar */
   scored: boolean;
 }
 
@@ -206,17 +206,6 @@ export const GAMES: GameMode[] = [
     scored: false,
   },
 ];
-
-/** Juegos que puntúan: los únicos que pueden dar medalla. */
-export const SCORED_GAMES = GAMES.filter((game) => game.scored);
-
-export const findGame = (name: string) => GAMES.find((game) => game.name === name);
-
-export const isKnownGame = (name: string) =>
-  GAMES.some((game) => game.name === name && game.scored);
-
-/** Nombre visible de un juego a partir de su clave en base de datos. */
-export const gameLabel = (name: string) => findGame(name)?.label ?? name;
 
 export const categoryOf = (id: CategoryId) =>
   CATEGORIES.find((category) => category.id === id)!;

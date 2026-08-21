@@ -133,7 +133,7 @@ export default function IntervalosArmonicos() {
 
       {/* GAME OVER OVERLAY */}
       {gameOver && (
-        <GameOverModal game="Oído" correct={correctCount} total={totalQuestions} />
+        <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
 
       {/* CONTENT */}

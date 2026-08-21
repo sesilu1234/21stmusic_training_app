@@ -261,7 +261,7 @@ export default function DiapasonGame() {
       </div>
 
       {gameOver && (
-        <GameOverModal game="Diapasón" correct={correctCount} total={totalQuestions} />
+        <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
     </div>
   );

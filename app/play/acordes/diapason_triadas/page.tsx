@@ -314,7 +314,7 @@ export default function TriadsGame() {
 
       {/* MODAL GAME OVER */}
       {gameOver && (
-        <GameOverModal game="Acordes" correct={correctCount} total={totalQuestions} />
+        <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
     </div>
   );

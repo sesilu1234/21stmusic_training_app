@@ -13,33 +13,32 @@ export default function PrivacidadPage() {
     >
       <div className="divide-y divide-white/10 border-t border-white/10">
         <Item title="Qué guardamos">
-          Tu correo y tu nombre para mostrar —y tu foto, si entras con Google—, tus partidas
-          terminadas y tus medallas. Si nos escribes por el formulario, también ese mensaje. Nada
-          más: ni dirección, ni teléfono, ni pagos, ni micrófono.
+          Nada tuyo mientras juegas: la app no pide cuenta ni te identifica. Solo si nos escribes
+          por el formulario guardamos tu correo y tu mensaje, para poder contestarte. Ni dirección,
+          ni teléfono, ni pagos, ni micrófono.
         </Item>
 
         <Item title="Qué no sale de aquí">
-          Tus notas y tu preferencia de tema se guardan solo en este dispositivo. No llegan a
-          ningún servidor y desaparecen si borras los datos del navegador.
+          Tus notas, la longitud de partida y tu preferencia de tema se guardan solo en este
+          dispositivo. No llegan a ningún servidor y desaparecen si borras los datos del navegador.
         </Item>
 
         <Item title="Para qué">
-          Para dejarte entrar, enseñarte tu progreso y que el profesorado vea cómo va cada alumno.
-          Sin publicidad, sin venta de datos, sin cesiones a terceros.
+          Solo para responder a lo que nos escribas. Sin publicidad, sin venta de datos, sin
+          cesiones a terceros.
         </Item>
 
         <Item title="Quién lo ve">
-          El profesorado y la dirección. El resto de alumnos solo ven tu nombre y tus medallas en
-          el ranking; tu correo, tus partidas y tus notas, nunca.
+          El profesorado y la dirección de la academia. Nadie más.
         </Item>
 
         <Item title="Cookies">
-          Una cookie técnica para mantener la sesión abierta. Ni rastreo, ni analítica.
+          Ninguna. Ni sesión, ni rastreo, ni analítica.
         </Item>
 
         <Item title="Dónde y cuánto">
-          En servidores de Supabase; el acceso con Google lo gestiona Google. Mientras tu cuenta
-          esté activa como alumno. Al darla de baja, se borra.
+          Los mensajes del formulario, en servidores de Supabase, el tiempo necesario para
+          atenderlos.
         </Item>
 
         <Item title="Tus derechos">
@@ -52,8 +51,8 @@ export default function PrivacidadPage() {
         </Item>
 
         <Item title="Menores">
-          Las cuentas de alumnos menores las crea la academia con el consentimiento de sus padres o
-          tutores.
+          La app se puede usar sin cuenta y sin dar ningún dato, así que también la pueden usar
+          los alumnos menores de edad.
         </Item>
       </div>
 

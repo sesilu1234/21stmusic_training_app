@@ -2,21 +2,15 @@ import Link from "next/link";
 import AppShell from "./components/AppShell";
 import { gameIcons } from "./components/gameIcons";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
-import { tierFor } from "@/lib/medals";
-import { requireStudent } from "@/lib/session";
-import { getProgressByGame, listMedals, type GameProgress } from "@/lib/students";
 
-
-const GameCard = ({ game, progress }: { game: GameMode; progress?: GameProgress }) => {
+const GameCard = ({ game }: { game: GameMode }) => {
   const category = categoryOf(game.category);
   const Icon = gameIcons[game.icon];
-  const tier = progress ? tierFor(progress.plenos) : null;
-  const hasLast = progress?.lastCorrect != null && progress.lastTotal != null;
 
   return (
     <Link
       href={game.slug}
-      className={`group flex flex-col rounded-2xl border border-white/10 bg-slate-950/70 p-4 shadow-lg backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950/85 md:p-5 ${category.hoverBorder}`}
+      className={`group block rounded-2xl border border-white/10 bg-slate-950/70 p-4 shadow-lg backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950/85 md:p-5 ${category.hoverBorder}`}
     >
       <div className="flex items-start gap-3.5">
         <span
@@ -33,38 +27,13 @@ const GameCard = ({ game, progress }: { game: GameMode; progress?: GameProgress 
           </span>
         </span>
       </div>
-
-      {(tier || hasLast) && (
-        <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/5 pt-3">
-          {tier ? (
-            <span
-              className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${tier.border} ${tier.bg} ${tier.text}`}
-            >
-              {tier.label}
-            </span>
-          ) : (
-            <span />
-          )}
-          {hasLast && (
-            <span className="text-[10px] font-bold text-white/35">
-              Última {progress!.lastCorrect}/{progress!.lastTotal}
-            </span>
-          )}
-        </div>
-      )}
     </Link>
   );
 };
 
-export default async function HomePage() {
-  const { student, image } = await requireStudent();
-  const [medals, progress] = await Promise.all([
-    listMedals(student.email),
-    getProgressByGame(student.email),
-  ]);
-
+export default function HomePage() {
   return (
-    <AppShell user={{ displayName: student.displayName, image, medals: medals.length }}>
+    <AppShell>
       <div className="mx-auto w-full max-w-5xl">
         <div className="space-y-8 md:space-y-9">
           {gamesByCategory().map(({ category, games }) => (
@@ -81,11 +50,7 @@ export default async function HomePage() {
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-3.5">
                 {games.map((game) => (
-                  <GameCard
-                    key={game.name}
-                    game={game}
-                    progress={progress.byGame.get(game.name)}
-                  />
+                  <GameCard key={game.name} game={game} />
                 ))}
               </div>
             </section>

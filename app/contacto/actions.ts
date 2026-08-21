@@ -1,7 +1,6 @@
 "use server";
 
 import { CONTACT_LIMITS, saveContactMessage } from "@/lib/contact";
-import { safeAuth } from "@/lib/session";
 
 export interface ContactState {
   status: "idle" | "ok" | "error";
@@ -41,12 +40,7 @@ export async function sendContactMessage(
   }
 
   try {
-    const session = await safeAuth();
-    await saveContactMessage({
-      email,
-      message,
-      studentEmail: session?.user?.email ?? null,
-    });
+    await saveContactMessage({ email, message });
   } catch {
     return fail("No se ha podido enviar. Inténtalo otra vez en un momento.");
   }

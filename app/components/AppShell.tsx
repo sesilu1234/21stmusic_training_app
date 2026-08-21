@@ -2,30 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Award, Gamepad2, StickyNote } from "lucide-react";
+import { Gamepad2, StickyNote } from "lucide-react";
 import Backdrop from "./Backdrop";
 import SiteFooter from "./SiteFooter";
-import UserMenu from "./UserMenu";
-
-export interface ShellUser {
-  displayName: string;
-  image?: string | null;
-  medals: number;
-}
+import ThemeToggle from "./ThemeToggle";
 
 const links = [
   { href: "/", label: "Juegos", Icon: Gamepad2 },
-  { href: "/medallas", label: "Medallas", Icon: Award },
   { href: "/notas", label: "Notas", Icon: StickyNote },
 ] as const;
 
-export default function AppShell({
-  user,
-  children,
-}: {
-  user: ShellUser;
-  children: React.ReactNode;
-}) {
+export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
@@ -33,8 +20,6 @@ export default function AppShell({
       <Backdrop />
 
       <div className="relative z-10 flex min-h-screen flex-col">
-        {/* z-50: si no, las tarjetas del menú (que llevan blur y crean su
-            propio contexto de apilado) tapan el desplegable del usuario. */}
         <header className="relative z-50 px-3 pt-3 md:px-6 md:pt-5">
           <nav className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-xl md:px-5 md:py-3">
             <Link href="/" className="flex min-w-0 items-center gap-2.5 md:gap-3.5">
@@ -75,11 +60,7 @@ export default function AppShell({
                 ))}
               </div>
 
-              <UserMenu
-                displayName={user.displayName}
-                image={user.image}
-                medals={user.medals}
-              />
+              <ThemeToggle />
             </div>
           </nav>
         </header>

@@ -17,8 +17,7 @@ export default function SobrePage() {
         <p>
           Lo que se explica en clase hay que repetirlo para que se quede: armaduras, intervalos,
           notas del mástil, modos, ritmo y oído. Esta app convierte esa repetición en partidas de
-          pocos minutos, con corrección inmediata y una medalla por cada modo que termines con
-          todos los ejercicios correctos.
+          pocos minutos y con corrección inmediata.
         </p>
         <p>
           No sustituye a la clase ni al profesor: es el trabajo de casa, pero sin fotocopias.

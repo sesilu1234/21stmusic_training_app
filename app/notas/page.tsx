@@ -1,16 +1,11 @@
 import AppShell from "../components/AppShell";
 import NotesBoard from "./NotesBoard";
-import { requireStudent } from "@/lib/session";
-import { listMedals } from "@/lib/students";
 
 export const metadata = { title: "Notas · 21st Century Music" };
 
-export default async function NotasPage() {
-  const { student, image } = await requireStudent();
-  const medals = await listMedals(student.email);
-
+export default function NotasPage() {
   return (
-    <AppShell user={{ displayName: student.displayName, image, medals: medals.length }}>
+    <AppShell>
       <div className="mx-auto max-w-3xl space-y-5">
         <header>
           <h1 className="text-2xl font-black italic tracking-tight md:text-4xl">Mis notas</h1>
@@ -19,7 +14,7 @@ export default async function NotasPage() {
           </p>
         </header>
 
-        <NotesBoard storageKey={`notes:${student.email}`} />
+        <NotesBoard storageKey="notes" />
       </div>
     </AppShell>
   );

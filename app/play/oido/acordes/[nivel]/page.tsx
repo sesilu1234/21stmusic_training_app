@@ -17,7 +17,6 @@ import {
 } from "@/lib/chordEar";
 import { getStoredRoundLength } from "@/lib/roundLength";
 
-const GAME_NAME = "Acordes al oído";
 /** Hueco entre la tónica de referencia y el acorde de la pregunta. */
 const GAP_MS = 1150;
 
@@ -170,7 +169,7 @@ function ChordEarGame({ level }: { level: ChordLevel }) {
       <Backdrop />
 
       {gameOver && (
-        <GameOverModal game={GAME_NAME} correct={correctCount} total={total} />
+        <GameOverModal correct={correctCount} total={total} />
       )}
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[960px] flex-col px-4 pb-5 pt-16 md:px-8 md:pb-7 md:pt-20">

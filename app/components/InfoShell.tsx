@@ -5,8 +5,8 @@ import SiteFooter from "./SiteFooter";
 import { SITE } from "@/lib/site";
 
 /**
- * Marco de las páginas de información (contacto, sobre, privacidad).
- * A diferencia de AppShell no necesita sesión: son páginas públicas.
+ * Marco de las páginas de información (contacto, sobre, privacidad): igual que
+ * AppShell pero sin la navegación entre juegos, solo un "volver".
  */
 export default function InfoShell({
   eyebrow,

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MEDAL_MIN_LENGTH } from "@/lib/medals";
 import {
   DEFAULT_ROUND_LENGTH,
   getStoredRoundLength,
@@ -48,7 +47,7 @@ export default function RoundLengthPicker({ onPick }: { onPick?: () => void }) {
         ))}
       </div>
       <p className="mt-2 text-center text-[9px] uppercase tracking-[0.18em] text-white/30">
-        Preguntas · medalla desde {MEDAL_MIN_LENGTH}
+        Preguntas por partida
       </p>
     </div>
   );

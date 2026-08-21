@@ -146,7 +146,7 @@ export default function IntervalosAuditivos() {
 
       {/* GAME OVER OVERLAY — blur only, no black */}
       {gameOver && (
-        <GameOverModal game="Oído" correct={correctCount} total={totalQuestions} />
+        <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
 
       {/* CONTENT */}

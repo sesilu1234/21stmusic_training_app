@@ -328,7 +328,7 @@ export default function ChordsGame() {
 
       {/* MODAL FINAL */}
       {gameOver && (
-        <GameOverModal game="Modos E. Mayor" correct={results.filter((r) => r === "correct").length} total={results.length} />
+        <GameOverModal correct={results.filter((r) => r === "correct").length} total={results.length} />
       )}
     </div>
   );

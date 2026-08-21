@@ -118,7 +118,6 @@ export default function RitmoGame() {
       {/* Pop-up de Marcador */}
       {showScore && scoreData.hits + scoreData.misses > 0 && (
         <GameOverModal
-          game="Lectura Rítmica"
           correct={scoreData.hits}
           total={scoreData.hits + scoreData.misses}
           onRestart={() => setShowScore(false)}

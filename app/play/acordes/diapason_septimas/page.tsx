@@ -275,7 +275,7 @@ export default function ChordsGame() {
 
       {/* MODAL FINAL */}
       {gameOver && (
-        <GameOverModal game="Acordes" correct={correctCount} total={totalQuestions} />
+        <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
     </div>
   );

@@ -232,7 +232,7 @@ export default function TrivialGuitarra() {
 
       {/* MODAL GAME OVER */}
       {gameOver && (
-        <GameOverModal game="Trivial" correct={correctCount} total={totalQuestions} />
+        <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
     </div>
   );
