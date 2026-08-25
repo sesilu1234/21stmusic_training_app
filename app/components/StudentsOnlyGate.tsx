@@ -14,9 +14,18 @@ import { currentStudent } from "@/lib/session";
 export default async function StudentsOnlyGate({
   children,
   backHref = "/",
+  intro = "Este modo está reservado a los alumnos de 21st Century Music.",
+  backLabel = "Ver los demás modos",
 }: {
   children: React.ReactNode;
   backHref?: string;
+  /**
+   * Primera frase del aviso. Va entera y no partida porque el género cambia
+   * con lo que se esté protegiendo: "el modo … reservado", "la guía …
+   * reservada".
+   */
+  intro?: string;
+  backLabel?: string;
 }) {
   if (await currentStudent()) return <>{children}</>;
 
@@ -47,8 +56,8 @@ export default async function StudentsOnlyGate({
             </h1>
 
             <p className="mt-3 text-sm leading-6 text-white/50">
-              Este modo está reservado a los alumnos de 21st Century Music. Entra
-              con el usuario que te ha dado la academia para abrirlo.
+              {intro} Entra con el usuario que te ha dado la academia para
+              abrirlo.
             </p>
 
             <Link
@@ -63,7 +72,7 @@ export default async function StudentsOnlyGate({
               href={backHref}
               className="mt-3 flex w-full items-center justify-center rounded-2xl border border-white/10 py-3 text-[9px] font-black uppercase tracking-[0.2em] text-white/45 transition hover:border-white/25 hover:text-white"
             >
-              Ver los demás modos
+              {backLabel}
             </Link>
           </section>
         </main>

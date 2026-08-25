@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Waves } from "lucide-react";
 import Backdrop from "@/app/components/Backdrop";
 import SiteFooter from "@/app/components/SiteFooter";
 import PianoKeyboard, { noteName, type KeyMark } from "@/app/components/PianoKeyboard";
-import { PRESETS, useAudio } from "@/app/play/oido/audio";
+import { VOICES, useFreeSynth, type Voice } from "@/lib/freeSynth";
 
 /**
  * Piano suelto para trastear. No puntúa ni pregunta nada: se toca y ya.
@@ -49,19 +49,42 @@ const MIN_SHIFT = -24;
 const MAX_SHIFT = 24;
 
 export default function PianoLibrePage() {
-  const { playSequence } = useAudio();
+  const { play: strikeVoice } = useFreeSynth();
 
-  const [presetIdx, setPresetIdx] = useState(0);
+  const [voice, setVoice] = useState<Voice>(VOICES[0]);
+  const [isVoiceMenuOpen, setIsVoiceMenuOpen] = useState(false);
   const [shift, setShift] = useState(0);
   const [active, setActive] = useState<number[]>([]);
   const [showNames, setShowNames] = useState(true);
 
+  const voiceMenuRef = useRef<HTMLDivElement>(null);
+
   const play = useCallback(
     (semitone: number) => {
-      playSequence([[semitone]], 0, presetIdx);
+      strikeVoice(semitone, voice);
     },
-    [playSequence, presetIdx],
+    [strikeVoice, voice],
   );
+
+  useEffect(() => {
+    if (!isVoiceMenuOpen) return;
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (!voiceMenuRef.current?.contains(event.target as Node)) {
+        setIsVoiceMenuOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsVoiceMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isVoiceMenuOpen]);
 
   /** Suena y se enciende un momento: lo usan el ratón y el teclado. */
   const strike = useCallback(
@@ -177,21 +200,68 @@ export default function PianoLibrePage() {
 
           {/* Controles: sonido, octava y nombres. */}
           <div className="mb-6 flex flex-wrap items-center justify-center gap-2.5">
-            <div className="flex items-center gap-1 rounded-full border border-white/10 bg-slate-950/60 p-1 backdrop-blur-sm">
-              {PRESETS.map((preset, index) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => setPresetIdx(index)}
-                  className={`rounded-full px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] transition ${
-                    presetIdx === index
-                      ? "bg-white/15 text-white"
-                      : "text-white/40 hover:text-white/80"
-                  }`}
+            <div ref={voiceMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsVoiceMenuOpen((open) => !open)}
+                aria-haspopup="menu"
+                aria-expanded={isVoiceMenuOpen}
+                className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/60 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-white/70 backdrop-blur-sm transition hover:border-white/25 hover:text-white"
+              >
+                <Waves size={13} strokeWidth={2} />
+                {voice.label}
+                <ChevronDown
+                  size={13}
+                  className={`transition-transform ${isVoiceMenuOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {isVoiceMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute left-1/2 top-[calc(100%+0.5rem)] z-50 w-64 -translate-x-1/2 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl"
                 >
-                  {preset.label}
-                </button>
-              ))}
+                  {VOICES.map((option) => {
+                    const selected = voice.id === option.id;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => {
+                          setVoice(option);
+                          setIsVoiceMenuOpen(false);
+                          // Se oye al elegirla: si no, hay que ir al teclado
+                          // para saber si te gusta.
+                          strikeVoice(shift, option);
+                        }}
+                        className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left transition ${
+                          selected
+                            ? "bg-white/10 text-white"
+                            : "text-white/55 hover:bg-white/5 hover:text-white"
+                        }`}
+                      >
+                        <span
+                          aria-hidden
+                          className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${
+                            selected ? "bg-emerald-300" : "bg-white/20"
+                          }`}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[11px] font-black uppercase tracking-[0.12em]">
+                            {option.label}
+                          </span>
+                          <span className="mt-0.5 block truncate text-[10px] font-normal normal-case tracking-normal text-white/35">
+                            {option.hint}
+                          </span>
+                        </span>
+                        {selected && (
+                          <Check size={12} className="flex-shrink-0 text-emerald-300" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-1 rounded-full border border-white/10 bg-slate-950/60 p-1 backdrop-blur-sm">

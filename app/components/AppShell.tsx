@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookMarked, Gamepad2, StickyNote } from "lucide-react";
+import { BookMarked, Gamepad2, Lock, StickyNote } from "lucide-react";
 import Backdrop from "./Backdrop";
 import SiteFooter from "./SiteFooter";
 import UserMenu from "./UserMenu";
 
 const links = [
-  { href: "/", label: "Juegos", Icon: Gamepad2 },
-  { href: "/guia", label: "Guía", Icon: BookMarked },
-  { href: "/notas", label: "Notas", Icon: StickyNote },
+  { href: "/", label: "Juegos", Icon: Gamepad2, studentsOnly: false },
+  // La guía es material de la escuela. No se esconde a quien no ha entrado:
+  // se enseña apagada y con candado, y al pulsarla se explica por qué.
+  { href: "/guia", label: "Guía", Icon: BookMarked, studentsOnly: true },
+  { href: "/notas", label: "Notas", Icon: StickyNote, studentsOnly: false },
 ] as const;
 
 /**
@@ -61,20 +63,27 @@ export default function AppShell({
 
             <div className="flex flex-shrink-0 items-center gap-2">
               <div className="hidden items-center gap-1 md:flex">
-                {links.map(({ href, label, Icon }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[10px] font-black uppercase tracking-wider transition-colors ${
-                      isActive(href)
-                        ? "bg-amber-300 text-slate-950"
-                        : "text-white/55 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    <Icon size={14} strokeWidth={2} />
-                    {label}
-                  </Link>
-                ))}
+                {links.map(({ href, label, Icon, studentsOnly }) => {
+                  const locked = studentsOnly && !displayName;
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      title={locked ? "Solo para alumnos de la escuela" : undefined}
+                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[10px] font-black uppercase tracking-wider transition-colors ${
+                        isActive(href)
+                          ? "bg-amber-300 text-slate-950"
+                          : locked
+                            ? "text-white/25 hover:bg-white/5 hover:text-white/45"
+                            : "text-white/55 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      <Icon size={14} strokeWidth={2} />
+                      {label}
+                      {locked && <Lock size={10} strokeWidth={2.5} className="ml-0.5" />}
+                    </Link>
+                  );
+                })}
               </div>
 
               <UserMenu displayName={displayName} />
@@ -89,22 +98,30 @@ export default function AppShell({
         {/* Navegación de móvil: abajo, al alcance del pulgar. */}
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/90 backdrop-blur-xl md:hidden">
           <div className="mx-auto flex max-w-md items-stretch">
-            {links.map(({ href, label, Icon }) => {
+            {links.map(({ href, label, Icon, studentsOnly }) => {
               const active = isActive(href);
+              const locked = studentsOnly && !displayName;
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[9px] font-black uppercase tracking-wider transition-colors ${
-                    active ? "text-amber-300" : "text-white/45"
+                  className={`relative flex flex-1 flex-col items-center gap-1 py-2.5 text-[9px] font-black uppercase tracking-wider transition-colors ${
+                    active ? "text-amber-300" : locked ? "text-white/25" : "text-white/45"
                   }`}
                 >
                   <span
-                    className={`grid h-8 w-12 place-items-center rounded-full transition-colors ${
+                    className={`relative grid h-8 w-12 place-items-center rounded-full transition-colors ${
                       active ? "bg-amber-300/15" : ""
                     }`}
                   >
                     <Icon size={17} strokeWidth={2} />
+                    {locked && (
+                      <Lock
+                        size={9}
+                        strokeWidth={3}
+                        className="absolute -right-0.5 -top-0.5 text-white/40"
+                      />
+                    )}
                   </span>
                   {label}
                 </Link>
