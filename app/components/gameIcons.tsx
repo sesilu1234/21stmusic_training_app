@@ -8,7 +8,9 @@ import {
   Hash,
   Layers,
   Lightbulb,
+  ListMusic,
   Music2,
+  Piano,
   Waypoints,
 } from "lucide-react";
 import type { GameIcon } from "@/lib/games";
@@ -22,6 +24,8 @@ export const gameIcons: Record<GameIcon, React.ElementType<{ size?: number; clas
   Grip,
   Ear,
   Layers,
+  ListMusic,
+  Piano,
   Lightbulb,
   Music2,
   BookOpen,

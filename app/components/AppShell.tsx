@@ -2,24 +2,41 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Gamepad2, StickyNote } from "lucide-react";
+import { BookMarked, Gamepad2, StickyNote } from "lucide-react";
 import Backdrop from "./Backdrop";
 import SiteFooter from "./SiteFooter";
-import ThemeToggle from "./ThemeToggle";
+import UserMenu from "./UserMenu";
 
 const links = [
   { href: "/", label: "Juegos", Icon: Gamepad2 },
+  { href: "/guia", label: "Guía", Icon: BookMarked },
   { href: "/notas", label: "Notas", Icon: StickyNote },
 ] as const;
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+/**
+ * `displayName` viene de la sesión (null si no hay). No es obligatorio entrar:
+ * solo cambia la esquina de la cabecera y qué modos están abiertos.
+ */
+export default function AppShell({
+  displayName = null,
+  children,
+}: {
+  displayName?: string | null;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
+
+  // La guía tiene rutas hijas (/guia/notas), así que ahí no vale el igual.
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       <div className="relative z-10 flex min-h-screen flex-col">
+        {/* z-50: si no, las tarjetas del menú (que llevan blur y crean su
+            propio contexto de apilado) tapan el desplegable del usuario. */}
         <header className="relative z-50 px-3 pt-3 md:px-6 md:pt-5">
           <nav className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-xl md:px-5 md:py-3">
             <Link href="/" className="flex min-w-0 items-center gap-2.5 md:gap-3.5">
@@ -49,7 +66,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     key={href}
                     href={href}
                     className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[10px] font-black uppercase tracking-wider transition-colors ${
-                      pathname === href
+                      isActive(href)
                         ? "bg-amber-300 text-slate-950"
                         : "text-white/55 hover:bg-white/10 hover:text-white"
                     }`}
@@ -60,7 +77,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
 
-              <ThemeToggle />
+              <UserMenu displayName={displayName} />
             </div>
           </nav>
         </header>
@@ -73,18 +90,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/90 backdrop-blur-xl md:hidden">
           <div className="mx-auto flex max-w-md items-stretch">
             {links.map(({ href, label, Icon }) => {
-              const isActive = pathname === href;
+              const active = isActive(href);
               return (
                 <Link
                   key={href}
                   href={href}
                   className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[9px] font-black uppercase tracking-wider transition-colors ${
-                    isActive ? "text-amber-300" : "text-white/45"
+                    active ? "text-amber-300" : "text-white/45"
                   }`}
                 >
                   <span
                     className={`grid h-8 w-12 place-items-center rounded-full transition-colors ${
-                      isActive ? "bg-amber-300/15" : ""
+                      active ? "bg-amber-300/15" : ""
                     }`}
                   >
                     <Icon size={17} strokeWidth={2} />

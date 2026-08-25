@@ -1,11 +1,14 @@
 import AppShell from "../components/AppShell";
 import NotesBoard from "./NotesBoard";
+import { currentStudent } from "@/lib/session";
 
 export const metadata = { title: "Notas · 21st Century Music" };
 
-export default function NotasPage() {
+export default async function NotasPage() {
+  const student = await currentStudent();
+
   return (
-    <AppShell>
+    <AppShell displayName={student?.displayName}>
       <div className="mx-auto max-w-3xl space-y-5">
         <header>
           <h1 className="text-2xl font-black italic tracking-tight md:text-4xl">Mis notas</h1>

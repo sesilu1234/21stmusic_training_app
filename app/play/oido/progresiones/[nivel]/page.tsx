@@ -3,16 +3,16 @@
 import { use } from "react";
 import { notFound } from "next/navigation";
 import ChordEarGame from "../../ChordEarGame";
-import { findLevel } from "@/lib/chordEar";
+import { findProgressionLevel } from "@/lib/chordEar";
 
-export default function AcordesOidoPage({
+export default function ProgresionesOidoPage({
   params,
 }: {
   params: Promise<{ nivel: string }>;
 }) {
   const { nivel } = use(params);
-  const level = findLevel(nivel);
+  const level = findProgressionLevel(nivel);
   if (!level) notFound();
 
-  return <ChordEarGame level={level} backHref="/play/oido/acordes" />;
+  return <ChordEarGame level={level} backHref="/play/oido/progresiones" />;
 }

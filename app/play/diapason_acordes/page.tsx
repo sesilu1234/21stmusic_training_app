@@ -9,7 +9,7 @@ export default function AcordesMenuPage() {
       eyebrow="Acordes en el mástil"
       title="Elige el tipo"
       intro="Reconoce el acorde por su forma sobre el diapasón."
-      category="diapason"
+      category="guitarra"
       options={[
         {
           title: "Tríadas",

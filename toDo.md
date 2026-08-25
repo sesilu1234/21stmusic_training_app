@@ -48,3 +48,70 @@ otros iconos
 
 
 
+
+---------------------------------
+
+
+poder poner en favorito un modo  (por si hay muchos, que alugien logueado lo encunetre rapido)
+
+
+
+pensar , viendo los modos en web, que division o claisfiicacion es la mas apropiada ( teoria, lenguaje musica, guitarra, paino, oido, extras, hrramientas)
+  (ademas las mas importantes y trascendentales como dice la IA son en orden teoria y oido, guitarra, piano, extras, herramientas)
+
+
+
+
+
+
+modo de nota en pentagrama y tocar en el piano
+dar el grado o intervalo : desde mi , toca la 5ta . en el piano.
+se iluminan dos teclas del piano, y decir que intervalo es.
+construir acordes. aparece el nombre de uno y pulsar (iluminando al pulsar) las notas del piano.
+construir escalas. aparece el nombre de uno y pulsar (iluminando al pulsar) las notas del piano.
+
+
+
+modo de oido. y con opciones dentro de ellos : 
+progresiones armonicas. suenan cuatro acordes diatonicos y decir el orden
+reconocer escala/modos escala mayor.
+reconocer entre acordes (may, min , aug, dim, y otros mas)
+copiar el modo ese de https://trainmyear.com/  . simplemente va constantemente sonando un nuevo acorde y dices cual es .  
+
+dictado ritimico. suena un ritmo y lo palmeas .              
+
+memorizacion melodico : va sonando cada vez una nota mas y tienes que tocarlo en orden
+
+
+
+para usuario logeado , en tarjeta de modo poner el mejor / medalla / utlima vez.
+q(dicho por el papa)que un usuario no logeada taeengo acceso trrestring a algunos modos y ponga una x de necesitas logearte
+
+para logeados, una actividad con entrenamiento nuevo...
+
+
+
+rehacer lo de acordes para que quede como esta lo de intervalos al oido
+
+
+y rehacer las herramientas.
+
+
+
+
+quizas, pero ya cuando esté hecho todo esto : al principio, de alguna manera ponerlo mas claro, con algun dibujo o algo cada modo...o el svg mucho mas descriptivo , o algo ...quizas...no se...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

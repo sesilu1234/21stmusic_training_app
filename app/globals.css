@@ -13,6 +13,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Bravura: fuente SMuFL de notación. La usa el pentagrama de los modos de
+   piano; el módulo de ritmo la carga aparte por su cuenta con FontFace. */
+@font-face {
+  font-family: "Bravura";
+  src: url("/assets/bravura.woff2") format("woff2");
+  font-display: block;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -52,3 +60,216 @@ body {
 .sparkle { animation: sparkle 1.8s ease-in-out infinite; }
 .glow-pulse { animation: glow-pulse 2.6s ease-in-out infinite; }
 .rise-in { animation: rise-in 0.5s ease-out both; }
+
+/* --- La guía ---------------------------------------------------------- */
+/* La guía no usa el Backdrop del resto de la app, así que se pinta su fondo
+   aquí. Cada tema define la paleta entera; lo único compartido es cómo se
+   usan los colores:
+     acento  -> estructura (números, sección activa)
+     rosa    -> lo técnico (notas, cifrados, términos)
+     cian    -> tablas y lo que lleva a otro sitio
+     verde   -> practicar
+     naranja -> la frase que remata cada idea
+   El tema por defecto es Drácula; el selector guarda el elegido. */
+
+.guide-root[data-theme="dracula"] {
+  --guide-bg: #282a36;
+  --guide-sidebar: #1a1b23;
+  --guide-heading: #f8f8f2;
+  --guide-text: #dcdde6;
+  --guide-muted: #b3b7cf;
+  --guide-dim: #6272a4;
+  --guide-rule: #3b3e50;
+  --guide-inline: #2f3140;
+  --guide-active: #44475a;
+  --guide-accent: #bd93f9;
+  --guide-pink: #ff79c6;
+  --guide-cyan: #8be9fd;
+  --guide-green: #50fa7b;
+  --guide-orange: #ffb86c;
+  --guide-glow-a: rgba(189,147,249,0.10);
+  --guide-glow-b: rgba(139,233,253,0.055);
+}
+
+.guide-root[data-theme="coal"] {
+  --guide-bg: #141617;
+  --guide-sidebar: #0d0f10;
+  --guide-heading: #e8eaed;
+  --guide-text: #b8c2cc;
+  --guide-muted: #97a0aa;
+  --guide-dim: #6b747d;
+  --guide-rule: #2b2f33;
+  --guide-inline: #1c1f21;
+  --guide-active: #2f3438;
+  --guide-accent: #4a9fd5;
+  --guide-pink: #d17ba8;
+  --guide-cyan: #56b6c2;
+  --guide-green: #7fb069;
+  --guide-orange: #d9a05b;
+  --guide-glow-a: rgba(74,159,213,0.08);
+  --guide-glow-b: rgba(127,176,105,0.045);
+}
+
+.guide-root[data-theme="navy"] {
+  --guide-bg: #161923;
+  --guide-sidebar: #0e1119;
+  --guide-heading: #e8e9f3;
+  --guide-text: #bcbdd0;
+  --guide-muted: #9a9cb4;
+  --guide-dim: #5c5f7a;
+  --guide-rule: #2b3049;
+  --guide-inline: #1d2130;
+  --guide-active: #2f3450;
+  --guide-accent: #6d8ef0;
+  --guide-pink: #e07ab0;
+  --guide-cyan: #62c8e0;
+  --guide-green: #6fcf97;
+  --guide-orange: #e8b06a;
+  --guide-glow-a: rgba(109,142,240,0.11);
+  --guide-glow-b: rgba(98,200,224,0.05);
+}
+
+.guide-root[data-theme="ayu"] {
+  --guide-bg: #0f1419;
+  --guide-sidebar: #080b0e;
+  --guide-heading: #e6e1cf;
+  --guide-text: #c5c5c5;
+  --guide-muted: #a3a09b;
+  --guide-dim: #5c6773;
+  --guide-rule: #253340;
+  --guide-inline: #161b21;
+  --guide-active: #253340;
+  --guide-accent: #ffb454;
+  --guide-pink: #f07178;
+  --guide-cyan: #5ccfe6;
+  --guide-green: #bae67e;
+  --guide-orange: #ffcc66;
+  --guide-glow-a: rgba(255,180,84,0.075);
+  --guide-glow-b: rgba(92,207,230,0.045);
+}
+
+.guide-root[data-theme="rust"] {
+  --guide-bg: #e8e3d9;
+  --guide-sidebar: #ddd6c6;
+  --guide-heading: #241f1c;
+  --guide-text: #3e3833;
+  --guide-muted: #5f574f;
+  --guide-dim: #8c8178;
+  --guide-rule: #cfc7b8;
+  --guide-inline: #ded8ca;
+  --guide-active: #cfc7b8;
+  --guide-accent: #a2542e;
+  --guide-pink: #a0325a;
+  --guide-cyan: #256d74;
+  --guide-green: #4a6b25;
+  --guide-orange: #8a4b1a;
+  --guide-glow-a: rgba(162,84,46,0.07);
+  --guide-glow-b: rgba(37,109,116,0.05);
+}
+
+.guide-root[data-theme="light"] {
+  --guide-bg: #ffffff;
+  --guide-sidebar: #f4f6f8;
+  --guide-heading: #16181d;
+  --guide-text: #3b3f45;
+  --guide-muted: #5c626b;
+  --guide-dim: #98a0aa;
+  --guide-rule: #e3e6ea;
+  --guide-inline: #f2f4f7;
+  --guide-active: #e6e9ef;
+  --guide-accent: #7c3aed;
+  --guide-pink: #be1b5c;
+  --guide-cyan: #0e7490;
+  --guide-green: #15803d;
+  --guide-orange: #b45309;
+  --guide-glow-a: rgba(124,58,237,0.05);
+  --guide-glow-b: rgba(14,116,144,0.04);
+}
+
+.guide-root {
+  background-color: var(--guide-bg);
+  /* Dos manchas muy suaves para que el fondo no sea un plano muerto. */
+  background-image:
+    radial-gradient(70rem 40rem at 85% -5%, var(--guide-glow-a), transparent 65%),
+    radial-gradient(60rem 35rem at 5% 100%, var(--guide-glow-b), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* --- Las cuatro parejas tipográficas ---------------------------------- */
+/* Se cambian desde la barra de arriba. Cuando haya una elegida se borran las
+   otras tres de aquí y de app/fonts.ts: cada una son dos familias más. */
+.guide-root[data-type="a"] {
+  --font-guide-display: var(--type-a-display);
+  --font-guide-body: var(--type-a-body);
+}
+.guide-root[data-type="b"] {
+  --font-guide-display: var(--type-b-display);
+  --font-guide-body: var(--type-b-body);
+}
+.guide-root[data-type="c"] {
+  --font-guide-display: var(--type-c-display);
+  --font-guide-body: var(--type-c-body);
+}
+.guide-root[data-type="d"] {
+  --font-guide-display: var(--type-d-display);
+  --font-guide-body: var(--type-d-body);
+}
+
+.guide-body {
+  font-family: var(--font-guide-body), Georgia, "Times New Roman", serif;
+}
+
+.guide-display {
+  font-family: var(--font-guide-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Cursivas en naranja: son las frases donde el texto se subraya a sí mismo,
+   y así se ven sin tener que marcarlas a mano una por una. */
+.guide-body em {
+  color: var(--guide-orange);
+  font-style: italic;
+}
+
+/* La barra de scroll por defecto de Windows es un bloque gris claro que
+   rompe el conjunto. Se pinta fina y con los grises del tema. */
+html:has(.guide-root) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--guide-active) transparent;
+}
+
+.guide-root,
+.guide-root * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--guide-active) transparent;
+}
+
+html:has(.guide-root)::-webkit-scrollbar,
+.guide-root ::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+html:has(.guide-root)::-webkit-scrollbar-track,
+.guide-root ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html:has(.guide-root)::-webkit-scrollbar-thumb,
+.guide-root ::-webkit-scrollbar-thumb {
+  background-color: var(--guide-active);
+  border-radius: 999px;
+  /* Borde transparente recortado: deja aire a los lados del pulgar. */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+html:has(.guide-root)::-webkit-scrollbar-thumb:hover,
+.guide-root ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--guide-dim);
+  background-clip: padding-box;
+}
+
+.guide-root ::selection {
+  background: color-mix(in srgb, var(--guide-accent) 30%, transparent);
+  color: var(--guide-heading);
+}

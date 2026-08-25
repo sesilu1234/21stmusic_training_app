@@ -1,0 +1,212 @@
+"use client";
+
+/**
+ * Teclado de piano dibujado con divs. Lo comparten todos los modos de piano:
+ * unos solo iluminan teclas y otros recogen pulsaciones, así que aquí no hay
+ * nada de lógica de juego — solo pintar y avisar de lo que se pulsa.
+ *
+ * Los semitonos son absolutos y con el mismo cero que `audio.ts`: 0 = Do
+ * central. Así una tecla se puede mandar a sonar tal cual, sin convertir nada.
+ */
+
+/** Nombres en el sistema latino, que es el que usa el resto de la app. */
+export const NOTE_NAMES = [
+  "Do",
+  "Do#",
+  "Re",
+  "Re#",
+  "Mi",
+  "Fa",
+  "Fa#",
+  "Sol",
+  "Sol#",
+  "La",
+  "La#",
+  "Si",
+] as const;
+
+/** Nombre de un semitono absoluto, sin octava. */
+export const noteName = (semitone: number) =>
+  NOTE_NAMES[((semitone % 12) + 12) % 12];
+
+/** true si el semitono cae en tecla negra. */
+export const isBlackKey = (semitone: number) =>
+  [1, 3, 6, 8, 10].includes(((semitone % 12) + 12) % 12);
+
+/**
+ * Cómo se pinta una tecla marcada:
+ *  - `root`   ámbar   — la nota de partida del enunciado
+ *  - `hint`   cian    — una tecla que el ejercicio enciende para que la mires
+ *  - `correct` verde  — acertada, o la que había que pulsar
+ *  - `wrong`  rojo    — la que se ha pulsado y estaba mal
+ */
+export type KeyMark = "root" | "hint" | "correct" | "wrong";
+
+const WHITE_OFFSETS = [0, 2, 4, 5, 7, 9, 11];
+
+/** Negra que va después de la blanca `afterWhite` dentro de la octava. */
+const BLACK_LAYOUT = [
+  { afterWhite: 0, offset: 1 },
+  { afterWhite: 1, offset: 3 },
+  { afterWhite: 3, offset: 6 },
+  { afterWhite: 4, offset: 8 },
+  { afterWhite: 5, offset: 10 },
+];
+
+const WHITE_MARK: Record<KeyMark, string> = {
+  root: "bg-amber-300 text-black",
+  hint: "bg-sky-300 text-black",
+  correct: "bg-emerald-300 text-black",
+  wrong: "bg-rose-300 text-black",
+};
+
+const BLACK_MARK: Record<KeyMark, string> = {
+  root: "bg-amber-400 text-black",
+  hint: "bg-sky-400 text-black",
+  correct: "bg-emerald-400 text-black",
+  wrong: "bg-rose-400 text-black",
+};
+
+export interface PianoKeyboardProps {
+  /** Semitono más grave. Tiene que ser un Do (múltiplo de 12) para que cuadre. */
+  from?: number;
+  /** Cuántas octavas se dibujan. */
+  octaves?: number;
+  /** Teclas marcadas: semitono absoluto → cómo pintarla. */
+  marks?: Record<number, KeyMark>;
+  /** Texto corto encima de una tecla concreta ("Mi", "5ª"…). */
+  badges?: Record<number, string>;
+  /** Letra del teclado del ordenador que toca esa tecla. Va dentro, al pie. */
+  hints?: Record<number, string>;
+  onPress?: (semitone: number) => void;
+  disabled?: boolean;
+  /** Escribe el nombre en el pie de las teclas blancas. */
+  showLabels?: boolean;
+  className?: string;
+}
+
+export default function PianoKeyboard({
+  from = 0,
+  octaves = 2,
+  marks = {},
+  badges = {},
+  hints = {},
+  onPress,
+  disabled = false,
+  showLabels = false,
+  className = "",
+}: PianoKeyboardProps) {
+  const totalWhite = octaves * 7;
+  const whiteWidth = 100 / totalWhite;
+  const blackWidth = whiteWidth * 0.62;
+
+  const whites = Array.from({ length: totalWhite }, (_, index) => {
+    const octave = Math.floor(index / 7);
+    return {
+      semitone: from + octave * 12 + WHITE_OFFSETS[index % 7],
+      index,
+    };
+  });
+
+  const blacks = Array.from({ length: octaves }).flatMap((_, octave) =>
+    BLACK_LAYOUT.map(({ afterWhite, offset }) => ({
+      semitone: from + octave * 12 + offset,
+      // El centro de la negra cae justo en la junta entre las dos blancas.
+      left: (octave * 7 + afterWhite + 1) * whiteWidth - blackWidth / 2,
+    })),
+  );
+
+  const press = (semitone: number) => {
+    if (disabled || !onPress) return;
+    onPress(semitone);
+  };
+
+  const badge = (semitone: number) =>
+    badges[semitone] ? (
+      <span className="pointer-events-none absolute -top-7 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-950 px-2 py-1 text-[9px] font-black tracking-[0.12em] text-white shadow-lg ring-1 ring-white/20">
+        {badges[semitone]}
+      </span>
+    ) : null;
+
+  return (
+    <div
+      className={`relative mx-auto w-full select-none ${className}`}
+      role="group"
+      aria-label="Teclado de piano"
+    >
+      {/* Marco oscuro: da el borde de piano y evita que las teclas floten. */}
+      <div className="relative h-[150px] w-full rounded-b-2xl rounded-t-lg bg-slate-950 p-1.5 pt-2 shadow-[0_14px_40px_rgba(0,0,0,0.5)] ring-1 ring-white/10 sm:h-[185px] md:h-[215px]">
+        <div className="relative flex h-full w-full">
+          {whites.map(({ semitone, index }) => {
+            const mark = marks[semitone];
+            return (
+              <button
+                key={semitone}
+                type="button"
+                disabled={disabled || !onPress}
+                onClick={() => press(semitone)}
+                aria-label={noteName(semitone)}
+                style={{ width: `${whiteWidth}%` }}
+                className={`relative flex items-end justify-center rounded-b-[6px] border-r border-slate-400/60 pb-2 text-[10px] font-black transition-colors duration-100 last:border-r-0 md:text-xs ${
+                  index === 0 ? "rounded-bl-xl" : ""
+                } ${
+                  mark
+                    ? WHITE_MARK[mark]
+                    : "bg-gradient-to-b from-white to-slate-200 text-slate-500"
+                } ${
+                  disabled || !onPress
+                    ? "cursor-default"
+                    : "cursor-pointer hover:from-amber-50 hover:to-amber-200 active:from-amber-200 active:to-amber-300"
+                }`}
+              >
+                {badge(semitone)}
+                <span className="flex flex-col items-center gap-1">
+                  <span>{showLabels || mark ? noteName(semitone) : ""}</span>
+                  {hints[semitone] && (
+                    <span className="rounded border border-black/20 bg-black/10 px-1 py-px text-[9px] uppercase leading-none text-black/45">
+                      {hints[semitone]}
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Las negras van encima, colocadas a mano sobre las juntas. */}
+          {blacks.map(({ semitone, left }) => {
+            const mark = marks[semitone];
+            return (
+              <button
+                key={semitone}
+                type="button"
+                disabled={disabled || !onPress}
+                onClick={() => press(semitone)}
+                aria-label={noteName(semitone)}
+                style={{ left: `${left}%`, width: `${blackWidth}%` }}
+                className={`absolute top-0 z-20 flex h-[62%] items-end justify-center rounded-b-[5px] pb-1.5 text-[8px] font-black shadow-[0_3px_6px_rgba(0,0,0,0.6)] transition-colors duration-100 md:text-[10px] ${
+                  mark
+                    ? BLACK_MARK[mark]
+                    : "bg-gradient-to-b from-slate-800 to-slate-950 text-slate-600"
+                } ${
+                  disabled || !onPress
+                    ? "cursor-default"
+                    : "cursor-pointer hover:from-slate-700 hover:to-slate-900 active:from-amber-600 active:to-amber-800"
+                }`}
+              >
+                {badge(semitone)}
+                <span className="flex flex-col items-center gap-1">
+                  <span>{mark ? noteName(semitone) : ""}</span>
+                  {hints[semitone] && (
+                    <span className="rounded border border-white/15 bg-white/10 px-1 py-px text-[9px] uppercase leading-none text-white/55">
+                      {hints[semitone]}
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}

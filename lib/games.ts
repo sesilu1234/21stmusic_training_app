@@ -13,11 +13,19 @@ export type GameIcon =
   | "Grip"
   | "Ear"
   | "Layers"
+  | "ListMusic"
+  | "Piano"
   | "Lightbulb"
   | "Music2"
   | "BookOpen";
 
-export type CategoryId = "lenguaje" | "diapason" | "oido" | "extra" | "herramientas";
+export type CategoryId =
+  | "lenguaje"
+  | "oido"
+  | "guitarra"
+  | "piano"
+  | "extras"
+  | "herramientas";
 
 export interface Category {
   id: CategoryId;
@@ -31,9 +39,10 @@ export interface Category {
 }
 
 /**
- * Tres tonos saturados (ámbar, cian, violeta), uno cálido de apoyo (rosa) y
- * uno neutro para lo que no es juego. Antes había un color por modo y el menú
- * parecía un arcoíris; el color ahora dice a qué familia pertenece cada cosa.
+ * Un color por familia. Antes había un color por modo y el menú parecía un
+ * arcoíris; ahora el color dice a qué categoría pertenece cada cosa.
+ *
+ * El orden de este array es el orden en que salen las secciones del menú.
  */
 export const CATEGORIES: Category[] = [
   {
@@ -46,15 +55,6 @@ export const CATEGORIES: Category[] = [
     dot: "bg-amber-400",
   },
   {
-    id: "diapason",
-    label: "Diapasón",
-    hint: "Encontrarlo en el mástil",
-    accent: "text-sky-300",
-    iconBg: "bg-sky-400/15",
-    hoverBorder: "hover:border-sky-300/50",
-    dot: "bg-sky-400",
-  },
-  {
     id: "oido",
     label: "Oído",
     hint: "Reconocerlo sin verlo",
@@ -64,8 +64,26 @@ export const CATEGORIES: Category[] = [
     dot: "bg-violet-400",
   },
   {
-    id: "extra",
-    label: "Extra",
+    id: "guitarra",
+    label: "Guitarra",
+    hint: "Encontrarlo en el mástil",
+    accent: "text-sky-300",
+    iconBg: "bg-sky-400/15",
+    hoverBorder: "hover:border-sky-300/50",
+    dot: "bg-sky-400",
+  },
+  {
+    id: "piano",
+    label: "Piano",
+    hint: "Encontrarlo en el teclado",
+    accent: "text-emerald-300",
+    iconBg: "bg-emerald-400/15",
+    hoverBorder: "hover:border-emerald-300/50",
+    dot: "bg-emerald-400",
+  },
+  {
+    id: "extras",
+    label: "Extras",
     hint: "Lo que rodea a la música",
     accent: "text-rose-300",
     iconBg: "bg-rose-400/15",
@@ -94,6 +112,18 @@ export interface GameMode {
   category: CategoryId;
   /** true si el juego lleva marcador de aciertos al terminar */
   scored: boolean;
+  /**
+   * true = solo para alumnos con cuenta. La tarjeta sale apagada y con candado
+   * en el menú, y entrar por URL enseña el aviso de "solo para alumnos".
+   * Para abrir o cerrar un modo basta con tocar esta línea.
+   */
+  studentsOnly?: boolean;
+  /**
+   * true = idea apuntada, todavía sin construir. La tarjeta se enseña apagada
+   * y sin enlace, para que la categoría exista en el menú desde el principio.
+   * Al construir el modo se borra esta línea y ya está.
+   */
+  comingSoon?: boolean;
 }
 
 export const GAMES: GameMode[] = [
@@ -124,6 +154,7 @@ export const GAMES: GameMode[] = [
     icon: "Waypoints",
     category: "lenguaje",
     scored: true,
+    studentsOnly: true,
   },
   {
     name: "Lectura Rítmica",
@@ -132,26 +163,6 @@ export const GAMES: GameMode[] = [
     slug: "/play/ritmo",
     icon: "Drum",
     category: "lenguaje",
-    scored: true,
-  },
-
-  // --- Diapasón --------------------------------------------------------
-  {
-    name: "Diapasón",
-    label: "Notas en el mástil",
-    desc: "Encuentra cualquier nota sin pensarla.",
-    slug: "/play/diapason",
-    icon: "Guitar",
-    category: "diapason",
-    scored: true,
-  },
-  {
-    name: "Acordes",
-    label: "Acordes en el mástil",
-    desc: "Tríadas y séptimas por su forma.",
-    slug: "/play/diapason_acordes",
-    icon: "Grip",
-    category: "diapason",
     scored: true,
   },
 
@@ -168,25 +179,111 @@ export const GAMES: GameMode[] = [
   {
     name: "Acordes al oído",
     label: "Acordes al oído",
-    desc: "Del I-IV-V a las cuatríadas, por niveles.",
+    desc: "Suena un acorde suelto: di de qué tipo es.",
     slug: "/play/oido/acordes",
     icon: "Layers",
     category: "oido",
     scored: true,
   },
+  {
+    name: "Progresiones al oído",
+    label: "Progresiones al oído",
+    desc: "Suena una rueda de acordes: di qué grados son.",
+    slug: "/play/oido/progresiones",
+    icon: "ListMusic",
+    category: "oido",
+    scored: true,
+    studentsOnly: true,
+  },
 
-  // --- Extra ---------------------------------------------------------
+  // --- Guitarra --------------------------------------------------------
+  {
+    name: "Diapasón",
+    label: "Notas en el mástil",
+    desc: "Encuentra cualquier nota sin pensarla.",
+    slug: "/play/diapason",
+    icon: "Guitar",
+    category: "guitarra",
+    scored: true,
+  },
+  {
+    name: "Acordes",
+    label: "Acordes en el mástil",
+    desc: "Tríadas y séptimas por su forma.",
+    slug: "/play/diapason_acordes",
+    icon: "Grip",
+    category: "guitarra",
+    scored: true,
+  },
+
+  // --- Piano -----------------------------------------------------------
+  {
+    name: "Piano: notas en el teclado",
+    label: "Notas en el teclado",
+    desc: "Sale una nota en el pentagrama y la tocas en el piano.",
+    slug: "/play/piano/notas",
+    icon: "Piano",
+    category: "piano",
+    scored: true,
+  },
+  {
+    name: "Piano: tocar el intervalo",
+    label: "Toca el intervalo",
+    desc: "«Desde Mi, toca la 5ª»: encuentra la tecla que toca.",
+    slug: "/play/piano/intervalos",
+    icon: "ArrowUpDown",
+    category: "piano",
+    scored: true,
+  },
+  {
+    name: "Piano: reconocer el intervalo",
+    label: "Reconoce el intervalo",
+    desc: "Se iluminan dos teclas: di qué distancia hay entre ellas.",
+    slug: "/play/piano/reconocer-intervalos",
+    icon: "Ear",
+    category: "piano",
+    scored: true,
+  },
+  {
+    name: "Piano: construir acordes",
+    label: "Construye acordes",
+    desc: "Sale el nombre de un acorde y lo montas tecla a tecla.",
+    slug: "/play/piano/acordes",
+    icon: "Layers",
+    category: "piano",
+    scored: true,
+  },
+  {
+    name: "Piano: construir escalas",
+    label: "Construye escalas",
+    desc: "Sale el nombre de una escala y la tocas entera.",
+    slug: "/play/piano/escalas",
+    icon: "Waypoints",
+    category: "piano",
+    scored: true,
+  },
+
+  // --- Extras ----------------------------------------------------------
   {
     name: "Trivial",
     label: "Trivial",
     desc: "Guitarra, discos y artistas.",
     slug: "/play/trivia",
     icon: "Lightbulb",
-    category: "extra",
+    category: "extras",
     scored: true,
   },
 
   // --- Herramientas ----------------------------------------------------
+  {
+    name: "Piano libre",
+    label: "Piano libre",
+    desc: "Un piano y ya. Se toca con el ratón o con el teclado.",
+    slug: "/play/piano-libre",
+    icon: "Piano",
+    category: "herramientas",
+    scored: false,
+  },
   {
     name: "Constructor de melodías",
     label: "Constructor de melodías",
@@ -204,6 +301,7 @@ export const GAMES: GameMode[] = [
     icon: "BookOpen",
     category: "herramientas",
     scored: false,
+    studentsOnly: true,
   },
 ];
 
@@ -216,3 +314,14 @@ export const gamesByCategory = () =>
     category,
     games: GAMES.filter((game) => game.category === category.id),
   })).filter((group) => group.games.length > 0);
+
+/**
+ * ¿Esta ruta es de un modo restringido? Se compara por prefijo porque los
+ * modos con submenú viven en rutas hijas (/play/oido/progresiones/i-iv-v).
+ */
+export const isStudentsOnlyPath = (pathname: string) =>
+  GAMES.some(
+    (game) =>
+      game.studentsOnly &&
+      (pathname === game.slug || pathname.startsWith(`${game.slug}/`)),
+  );

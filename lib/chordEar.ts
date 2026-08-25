@@ -1,14 +1,15 @@
-// Niveles del modo "Acordes al oído".
+// Niveles de los dos modos de acordes al oído.
 //
-// Hay dos formas de preguntar:
+// Son dos cosas distintas y por eso son dos modos distintos en el menú:
 //
-//  - "calidad": suena un acorde suelto y hay que decir de qué tipo es. No hace
-//    falta contexto, así que no se da tónica de referencia.
+//  - ACORDES (mode "calidad"): suena un acorde suelto y hay que decir de qué
+//    tipo es. No hace falta contexto, así que no se da tónica de referencia.
 //
-//  - "grado": suena primero el acorde de tónica y después otro acorde de la
-//    misma tonalidad; hay que decir qué grado es. Esto es lo que de verdad se
-//    usa al sacar canciones de oído: no reconoces "un Sol", reconoces "el V".
-//    Por eso la tonalidad se transporta al azar en cada pregunta.
+//  - PROGRESIONES (mode "grado"): suena primero el acorde de tónica y después
+//    una o varias acordes de la misma tonalidad; hay que decir qué grados son,
+//    en orden. Esto es lo que de verdad se usa al sacar canciones de oído: no
+//    reconoces "un Sol", reconoces "el V". Por eso la tonalidad se transporta
+//    al azar en cada pregunta.
 
 export type LevelMode = "calidad" | "grado";
 
@@ -28,6 +29,8 @@ export interface ChordLevel {
   desc: string;
   badge: string;
   mode: LevelMode;
+  /** Cuántos acordes suenan por pregunta. 1 = acorde suelto. */
+  length: number;
   options: ChordOption[];
 }
 
@@ -50,6 +53,17 @@ const degree = (id: string, label: string, root: number, shape: number[]): Chord
   shape,
 });
 
+// Grados diatónicos de la escala mayor que se usan de verdad.
+const I = degree("I", "I", 0, MAYOR);
+const ii = degree("ii", "ii", 2, MENOR);
+const iii = degree("iii", "iii", 4, MENOR);
+const IV = degree("IV", "IV", 5, MAYOR);
+const V = degree("V", "V", 7, MAYOR);
+const vi = degree("vi", "vi", 9, MENOR);
+
+// =====================================================================
+// Modo 1 — Acordes sueltos
+// =====================================================================
 export const CHORD_LEVELS: ChordLevel[] = [
   {
     slug: "mayor-menor",
@@ -58,44 +72,17 @@ export const CHORD_LEVELS: ChordLevel[] = [
     desc: "Un acorde suelto. Solo hay que decir si suena alegre o triste.",
     badge: "Nivel 1",
     mode: "calidad",
+    length: 1,
     options: [quality("M", "Mayor", MAYOR), quality("m", "Menor", MENOR)],
   },
   {
-    slug: "i-iv-v",
-    order: 2,
-    title: "I · IV · V",
-    desc: "La rueda de toda la vida. Suena la tónica y después uno de los tres.",
-    badge: "Nivel 2",
-    mode: "grado",
-    options: [
-      degree("I", "I", 0, MAYOR),
-      degree("IV", "IV", 5, MAYOR),
-      degree("V", "V", 7, MAYOR),
-    ],
-  },
-  {
-    slug: "diatonicos",
-    order: 3,
-    title: "La rueda completa",
-    desc: "Los seis grados que se usan de verdad: I, ii, iii, IV, V y vi.",
-    badge: "Nivel 3",
-    mode: "grado",
-    options: [
-      degree("I", "I", 0, MAYOR),
-      degree("ii", "ii", 2, MENOR),
-      degree("iii", "iii", 4, MENOR),
-      degree("IV", "IV", 5, MAYOR),
-      degree("V", "V", 7, MAYOR),
-      degree("vi", "vi", 9, MENOR),
-    ],
-  },
-  {
     slug: "triadas",
-    order: 4,
+    order: 2,
     title: "Las cuatro tríadas",
     desc: "Mayor, menor, aumentado y disminuido, sin contexto que ayude.",
-    badge: "Nivel 4",
+    badge: "Nivel 2",
     mode: "calidad",
+    length: 1,
     options: [
       quality("M", "Mayor", MAYOR),
       quality("m", "Menor", MENOR),
@@ -105,11 +92,12 @@ export const CHORD_LEVELS: ChordLevel[] = [
   },
   {
     slug: "cuatriadas",
-    order: 5,
+    order: 3,
     title: "Cuatríadas",
     desc: "Maj7, m7, dominante, semidisminuido y disminuido de séptima.",
-    badge: "Nivel 5",
+    badge: "Nivel 3",
     mode: "calidad",
+    length: 1,
     options: [
       quality("maj7", "Maj7", [0, 4, 7, 11]),
       quality("m7", "m7", [0, 3, 7, 10]),
@@ -120,8 +108,70 @@ export const CHORD_LEVELS: ChordLevel[] = [
   },
 ];
 
+// =====================================================================
+// Modo 2 — Progresiones (grados dentro de una tonalidad)
+// =====================================================================
+// Los dos primeros niveles son de un solo acorde a propósito: acostumbrarse a
+// oír un grado suelto contra la tónica es el paso previo a sacar una rueda
+// entera, y sin él el nivel de cuatro acordes es un muro.
+export const PROGRESSION_LEVELS: ChordLevel[] = [
+  {
+    slug: "i-iv-v",
+    order: 1,
+    title: "I · IV · V",
+    desc: "La rueda de toda la vida. Suena la tónica y después uno de los tres.",
+    badge: "Nivel 1",
+    mode: "grado",
+    length: 1,
+    options: [I, IV, V],
+  },
+  {
+    slug: "diatonicos",
+    order: 2,
+    title: "La rueda completa",
+    desc: "Los seis grados que se usan de verdad: I, ii, iii, IV, V y vi.",
+    badge: "Nivel 2",
+    mode: "grado",
+    length: 1,
+    options: [I, ii, iii, IV, V, vi],
+  },
+  {
+    slug: "dos-acordes",
+    order: 3,
+    title: "Dos acordes seguidos",
+    desc: "Tónica y después dos grados. Hay que decirlos en orden.",
+    badge: "Nivel 3",
+    mode: "grado",
+    length: 2,
+    options: [I, IV, V, vi],
+  },
+  {
+    slug: "tres-acordes",
+    order: 4,
+    title: "Progresión de tres",
+    desc: "Tres acordes seguidos sobre la misma tonalidad.",
+    badge: "Nivel 4",
+    mode: "grado",
+    length: 3,
+    options: [I, ii, IV, V, vi],
+  },
+  {
+    slug: "cuatro-acordes",
+    order: 5,
+    title: "Progresión de cuatro",
+    desc: "Una rueda entera de pop, con los seis grados en juego.",
+    badge: "Nivel 5",
+    mode: "grado",
+    length: 4,
+    options: [I, ii, iii, IV, V, vi],
+  },
+];
+
 export const findLevel = (slug: string) =>
   CHORD_LEVELS.find((level) => level.slug === slug);
+
+export const findProgressionLevel = (slug: string) =>
+  PROGRESSION_LEVELS.find((level) => level.slug === slug);
 
 /** Acorde de tónica de la tonalidad, para dar la referencia en modo "grado". */
 export const tonicChord = (keyRoot: number) => MAYOR.map((s) => keyRoot + s);
@@ -136,21 +186,56 @@ export const chordNotes = (option: ChordOption, keyRoot: number) =>
  */
 export const randomKeyRoot = () => Math.floor(Math.random() * 8) - 4;
 
-/** Lista de preguntas sin repetir la misma dos veces seguidas. */
-export const buildChordQuiz = (level: ChordLevel, count: number) => {
-  const questions: { option: ChordOption; keyRoot: number }[] = [];
+/** Una pregunta: la tonalidad y los acordes que suenan, en orden. */
+export interface ChordQuestion {
+  options: ChordOption[];
+  keyRoot: number;
+}
 
-  for (let i = 0; i < count; i++) {
-    const previous = questions[i - 1]?.option.id;
+/**
+ * Construye la secuencia de una pregunta. No se repite el mismo acorde dos
+ * veces seguidas dentro de la progresión: sonaría como si no hubiera cambiado
+ * nada y la pregunta se volvería tramposa.
+ */
+const buildSequence = (level: ChordLevel): ChordOption[] => {
+  const sequence: ChordOption[] = [];
+
+  for (let i = 0; i < level.length; i++) {
+    const previous = sequence[i - 1]?.id;
     const pool =
       level.options.length > 1
         ? level.options.filter((option) => option.id !== previous)
         : level.options;
 
-    questions.push({
-      option: pool[Math.floor(Math.random() * pool.length)],
-      keyRoot: randomKeyRoot(),
-    });
+    sequence.push(pool[Math.floor(Math.random() * pool.length)]);
+  }
+
+  return sequence;
+};
+
+/** Lista de preguntas sin repetir la misma dos veces seguidas. */
+export const buildChordQuiz = (level: ChordLevel, count: number): ChordQuestion[] => {
+  const questions: ChordQuestion[] = [];
+
+  const signature = (options: ChordOption[]) => options.map((o) => o.id).join("-");
+
+  for (let i = 0; i < count; i++) {
+    const previous = questions[i - 1];
+    let options = buildSequence(level);
+
+    // Con pocas combinaciones posibles no siempre hay alternativa, así que se
+    // intenta unas cuantas veces y se acepta lo que salga.
+    for (
+      let attempt = 0;
+      attempt < 8 &&
+      previous &&
+      signature(options) === signature(previous.options);
+      attempt++
+    ) {
+      options = buildSequence(level);
+    }
+
+    questions.push({ options, keyRoot: randomKeyRoot() });
   }
 
   return questions;
