@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookMarked, Gamepad2, Lock, StickyNote } from "lucide-react";
+import { BookMarked, Gamepad2, Lock, StickyNote, TrendingUp } from "lucide-react";
 import Backdrop from "./Backdrop";
 import SiteFooter from "./SiteFooter";
 import UserMenu from "./UserMenu";
@@ -13,6 +13,9 @@ const links = [
   // se enseña apagada y con candado, y al pulsarla se explica por qué.
   { href: "/guia", label: "Guía", Icon: BookMarked, studentsOnly: true },
   { href: "/notas", label: "Notas", Icon: StickyNote, studentsOnly: false },
+  // El progreso solo existe si hay cuenta: sin sesión no se guarda ninguna
+  // partida, así que se enseña con el mismo candado que la guía.
+  { href: "/progreso", label: "Progreso", Icon: TrendingUp, studentsOnly: true },
 ] as const;
 
 /**

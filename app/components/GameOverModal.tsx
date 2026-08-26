@@ -1,9 +1,13 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Home, RotateCcw } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Flame, Home, Medal, RotateCcw } from "lucide-react";
 import Crown from "./Crown";
 import RoundLengthPicker from "./RoundLengthPicker";
+import { saveAttempt } from "@/app/progreso/actions";
+import type { SaveResult } from "@/lib/progress";
 
 interface Props {
   correct: number;
@@ -25,6 +29,23 @@ export default function GameOverModal({ correct, total, onRestart }: Props) {
   const perfect = correct === total && total > 0;
   const pct = Math.round((correct / safeTotal) * 100);
   const restart = onRestart || (() => window.location.reload());
+
+  const pathname = usePathname();
+  const [saved, setSaved] = useState<SaveResult | null>(null);
+  /** El modal se monta una vez por partida, pero en dev React lo monta dos. */
+  const sentRef = useRef(false);
+
+  // Este modal es el único sitio por el que pasan todos los modos al terminar,
+  // así que es aquí donde se guarda la partida. Si no hay sesión, la acción
+  // contesta "no guardado" y no se enseña nada: sin cuenta no hay progreso.
+  useEffect(() => {
+    if (sentRef.current) return;
+    sentRef.current = true;
+
+    saveAttempt({ pathname, correct, total })
+      .then(setSaved)
+      .catch(() => setSaved(null));
+  }, [pathname, correct, total]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-xl">
@@ -101,6 +122,31 @@ export default function GameOverModal({ correct, total, onRestart }: Props) {
                   : "A seguir practicando"}
             </p>
           </>
+        )}
+
+        {/* Lo que ha dejado esta partida en la cuenta del alumno. Sin sesión no
+            sale nada: no hay nada que contar. */}
+        {saved?.saved && (
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            {saved.newMedal && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/15 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
+                <Medal size={12} />
+                Medalla nueva
+              </span>
+            )}
+            {saved.streak > 1 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/60">
+                <Flame size={12} className="text-orange-300" />
+                {saved.streak} días seguidos
+              </span>
+            )}
+            <Link
+              href="/progreso"
+              className="inline-flex items-center rounded-full border border-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/40 transition hover:border-amber-300/40 hover:text-white"
+            >
+              Ver progreso
+            </Link>
+          </div>
         )}
 
         <div className="mt-7 space-y-3">

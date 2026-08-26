@@ -1,16 +1,26 @@
 import Link from "next/link";
-import { Hammer, Lock } from "lucide-react";
+import { Flame, Hammer, Lock, Medal } from "lucide-react";
 import AppShell from "./components/AppShell";
 import { gameIcons } from "./components/gameIcons";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
+import { getProgress, type GameProgress } from "@/lib/progress";
 
 /**
  * Tarjeta de modo. Si el modo es de alumnos y no hay sesión, sigue siendo un
  * enlace (para que se pueda ver de qué va y ofrecer entrar), pero se enseña
  * apagada y con candado: se ve que existe, se ve que está cerrada.
  */
-const GameCard = ({ game, locked }: { game: GameMode; locked: boolean }) => {
+const GameCard = ({
+  game,
+  locked,
+  stat,
+}: {
+  game: GameMode;
+  locked: boolean;
+  /** Lo que lleva hecho el alumno en este modo. Null si no lo ha tocado. */
+  stat?: GameProgress;
+}) => {
   const category = categoryOf(game.category);
   const Icon = gameIcons[game.icon];
 
@@ -88,6 +98,29 @@ const GameCard = ({ game, locked }: { game: GameMode; locked: boolean }) => {
         </span>
       </div>
 
+      {/* Con sesión, la tarjeta cuenta por dónde vas: el mejor resultado y si
+          ya tienes la medalla. Sin partidas jugadas no sale nada. */}
+      {!locked && stat && (
+        <span className="mt-3 flex items-center gap-2">
+          <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/10">
+            <span
+              className={`block h-full rounded-full ${
+                stat.best >= 90
+                  ? "bg-emerald-400"
+                  : stat.best >= 60
+                    ? "bg-amber-400"
+                    : "bg-rose-400"
+              }`}
+              style={{ width: `${stat.best}%` }}
+            />
+          </span>
+          <span className="flex-shrink-0 text-[9px] font-black tracking-wider text-white/40">
+            {stat.best}%
+          </span>
+          {stat.hasMedal && <Medal size={12} className="flex-shrink-0 text-amber-300" />}
+        </span>
+      )}
+
       {locked && (
         <span className="mt-3 block text-[9px] font-black uppercase tracking-[0.18em] text-amber-300/50 transition-colors group-hover:text-amber-300/90">
           Solo alumnos · entra para abrirlo
@@ -100,9 +133,41 @@ const GameCard = ({ game, locked }: { game: GameMode; locked: boolean }) => {
 export default async function HomePage() {
   const student = await currentStudent();
 
+  // El progreso es un extra: si la consulta falla, el menú tiene que salir
+  // igual, solo que sin las marcas de cada tarjeta.
+  const progress = student ? await getProgress(student.email).catch(() => null) : null;
+  const statOf = (name: string) =>
+    progress?.games.find((entry) => entry.game.name === name);
+
   return (
     <AppShell displayName={student?.displayName}>
       <div className="mx-auto w-full max-w-5xl">
+        {progress && progress.attempts > 0 && (
+          <Link
+            href="/progreso"
+            className="mb-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-lg backdrop-blur-sm transition hover:border-amber-300/40"
+          >
+            <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-orange-400/15">
+              <Flame size={17} className="text-orange-300" strokeWidth={1.75} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-black tracking-tight text-white">
+                {progress.streak.current > 0
+                  ? `${progress.streak.current} ${progress.streak.current === 1 ? "día" : "días"} seguidos`
+                  : "Vuelve a empezar una racha"}
+              </span>
+              <span className="block truncate text-[10px] text-white/35">
+                {progress.streak.playedToday
+                  ? `Hoy ya has practicado · ${progress.accuracy}% de aciertos en total`
+                  : "Con una partida de hoy la mantienes viva"}
+              </span>
+            </span>
+            <span className="flex-shrink-0 text-[9px] font-black uppercase tracking-[0.18em] text-white/30">
+              Ver progreso
+            </span>
+          </Link>
+        )}
+
         <div className="space-y-8 md:space-y-9">
           {gamesByCategory().map(({ category, games }) => (
             <section key={category.id}>
@@ -122,6 +187,7 @@ export default async function HomePage() {
                     key={game.name}
                     game={game}
                     locked={Boolean(game.studentsOnly) && !student}
+                    stat={statOf(game.name)}
                   />
                 ))}
               </div>

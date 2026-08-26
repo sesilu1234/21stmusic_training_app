@@ -14,6 +14,35 @@ export type Accidental = "sharp" | "flat" | "natural" | null;
 /** Semitono de cada grado dentro de la octava. */
 const DEGREE_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 
+/** Cómo se llama cada grado dentro de la octava. */
+export const DEGREE_NAMES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"] as const;
+
+/** El grado, ya reducido a la octava: sirve para nombrar y para el semitono. */
+export const degreeInOctave = (degree: number) => ((degree % 7) + 7) % 7;
+
+/**
+ * Una nota tal y como se escribe: en qué grado del pentagrama va y con qué
+ * alteración. Es lo contrario de un semitono suelto — aquí Do# y Reb son dos
+ * notas distintas, que es justo lo que hace falta para escribir acordes.
+ */
+export interface SpelledNote {
+  /** Grado diatónico respecto al Do central. */
+  degree: number;
+  /** -1 bemol, 0 natural, 1 sostenido. */
+  alter: number;
+}
+
+/** Cómo suena una nota escrita, en semitonos absolutos. */
+export const spelledSemitone = ({ degree, alter }: SpelledNote) =>
+  Math.floor(degree / 7) * 12 + DEGREE_SEMITONES[degreeInOctave(degree)] + alter;
+
+/** Cómo se llama una nota escrita: "Do", "Mib", "Fa#"… */
+export const spelledName = ({ degree, alter }: SpelledNote) =>
+  `${DEGREE_NAMES[degreeInOctave(degree)]}${alter === 1 ? "#" : alter === -1 ? "b" : ""}`;
+
+export const alterAccidental = (alter: number): Accidental =>
+  alter === 1 ? "sharp" : alter === -1 ? "flat" : null;
+
 /** Semitono alterado → grado al que se le pone sostenido. */
 const SHARP_DEGREE: Record<number, number> = { 1: 0, 3: 1, 6: 3, 8: 4, 10: 5 };
 /** Semitono alterado → grado al que se le pone bemol. */

@@ -109,9 +109,13 @@ quizas, pero ya cuando esté hecho todo esto : al principio, de alguna manera po
 
 
 
+poner muchas preguntas mas. muchas que sean no de grupos sino de instrumentos y musica  (cosas de clasica no mucho , pero cosas de pastillas, potenciometros, partes de guitarra, cuerdas de piano, tipos deintrumnentos, registros, orquesta, puas, amplificadores, valvulas, tecnologia ...)
 
 
 
+- ver y examinar cada uno de los modos de juego y ver si cambiarles algo, o añadir, o modificar algo  ?
 
 
+-
+ una cosa que esta mal creo, es que selecciono 48 o 24 o 12 al fina d de jugar una partida, wtf ? en todo caso eso tendria que poderse seleccionar en algun lado...o que primero hacer el 12, 24 despues 48 ... o que ? 
 

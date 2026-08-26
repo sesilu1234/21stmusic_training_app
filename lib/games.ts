@@ -129,6 +129,24 @@ export interface GameMode {
 export const GAMES: GameMode[] = [
   // --- Lenguaje musical ------------------------------------------------
   {
+    name: "Lectura de notas",
+    label: "Lectura de notas",
+    desc: "Sale una nota en el pentagrama y dices cuál es.",
+    slug: "/play/lectura-notas",
+    icon: "Music2",
+    category: "lenguaje",
+    scored: true,
+  },
+  {
+    name: "Acordes en el pentagrama",
+    label: "Acordes en el pentagrama",
+    desc: "Léelos del papel y escríbelos nota a nota.",
+    slug: "/play/acordes-pentagrama",
+    icon: "Layers",
+    category: "lenguaje",
+    scored: true,
+  },
+  {
     name: "Armaduras",
     label: "Armaduras",
     desc: "Tonalidades y alteraciones al vuelo.",
@@ -314,6 +332,25 @@ export const gamesByCategory = () =>
     category,
     games: GAMES.filter((game) => game.category === category.id),
   })).filter((group) => group.games.length > 0);
+
+/**
+ * De qué modo es una ruta, y en qué nivel.
+ *
+ * Se busca por prefijo y gana el más largo: /play/oido/acordes es su propio
+ * modo, no una pantalla de /play/oido. Lo que sobra de la ruta es el nivel
+ * ("sol-naturales", "nombrar/triadas"), que es lo que distingue una partida de
+ * otra dentro del mismo modo.
+ */
+export const gameFromPath = (pathname: string) => {
+  const game = GAMES.filter(
+    (item) => pathname === item.slug || pathname.startsWith(`${item.slug}/`),
+  ).sort((a, b) => b.slug.length - a.slug.length)[0];
+
+  if (!game) return null;
+
+  const rest = pathname.slice(game.slug.length).replace(/^\/+|\/+$/g, "");
+  return { game, levelSlug: rest || null };
+};
 
 /**
  * ¿Esta ruta es de un modo restringido? Se compara por prefijo porque los
