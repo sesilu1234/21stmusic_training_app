@@ -33,8 +33,16 @@ export interface Voice {
   decay: number;
   /** Nivel al que cae tras el ataque, de 0 a 1. */
   sustain: number;
-  /** Cuánto suena en total desde que se pulsa. */
+  /** Cuánto suena en total desde que se pulsa. Se ignora si `sustained`. */
   duration: number;
+  /**
+   * true = la nota se mantiene mientras se tiene pulsada la tecla, como un
+   * órgano de verdad. Las demás voces suenan su `duration` y se apagan solas,
+   * que es lo que hace un piano aunque sigas apretando.
+   */
+  sustained?: boolean;
+  /** Cuánto tarda en callarse al soltar. Solo lo usan las voces `sustained`. */
+  release?: number;
   /** Ganancia máxima. Baja en las voces con muchos armónicos. */
   peak: number;
   /** Dos osciladores separados estos cents: engorda el sonido. */
@@ -82,6 +90,8 @@ export const VOICES: Voice[] = [
     sustain: 0.95,
     duration: 1.8,
     peak: 0.3,
+    sustained: true,
+    release: 0.08,
   },
   {
     id: "cuerdas",
@@ -179,14 +189,12 @@ export const VOICES: Voice[] = [
 export const findVoice = (id: string) =>
   VOICES.find((voice) => voice.id === id) ?? VOICES[0];
 
-/** Un LFO conectado a donde haga falta. Devuelve el nodo de salida. */
-const makeLfo = (
-  ctx: AudioContext,
-  rate: number,
-  amount: number,
-  when: number,
-  stopAt: number,
-) => {
+/**
+ * Un LFO conectado a donde haga falta. Devuelve el nodo de salida y cómo
+ * pararlo: en las voces que se mantienen no se sabe cuándo va a acabar la nota,
+ * así que no se puede programar el `stop` al empezar.
+ */
+const makeLfo = (ctx: AudioContext, rate: number, amount: number, when: number) => {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = "sine";
@@ -194,12 +202,163 @@ const makeLfo = (
   gain.gain.setValueAtTime(amount, when);
   osc.connect(gain);
   osc.start(when);
-  osc.stop(stopAt);
-  return gain;
+  return { gain, osc };
+};
+
+/** Una nota sonando, con la manera de soltarla. */
+interface HeldNote {
+  release: () => void;
+}
+
+/**
+ * Monta una nota entera y la arranca.
+ *
+ * `hold` decide de qué va la envolvente: con `false` la nota trae su final
+ * programado desde el principio (piano, campana, pizzicato…) y no hay nada más
+ * que hacer; con `true` se queda en el nivel de sostenido indefinidamente y no
+ * se apaga hasta que alguien llama a `release`, que es como funciona un órgano.
+ */
+const spawn = (
+  ctx: AudioContext,
+  semitone: number,
+  voice: Voice,
+  hold: boolean,
+): HeldNote => {
+  const now = ctx.currentTime;
+  const freq = semitoneToFreq(semitone);
+  const end = now + voice.duration;
+
+  const master = ctx.createGain();
+  // Nodo aparte para el trémolo: así el LFO suma sobre el volumen de la
+  // envolvente en vez de pelearse con ella por el mismo parámetro.
+  const tremolo = ctx.createGain();
+  tremolo.gain.setValueAtTime(1, now);
+
+  let tail: AudioNode = tremolo;
+  if (voice.filter) {
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.Q.setValueAtTime(voice.filter.q, now);
+    filter.frequency.setValueAtTime(voice.filter.from, now);
+    filter.frequency.exponentialRampToValueAtTime(
+      voice.filter.to,
+      now + Math.max(0.05, voice.decay + voice.attack),
+    );
+    // El filtro solo vuelve a cerrarse si la nota tiene final conocido.
+    if (!hold) filter.frequency.exponentialRampToValueAtTime(voice.filter.from, end);
+    tremolo.connect(filter);
+    tail = filter;
+  }
+
+  tail.connect(master);
+  master.connect(ctx.destination);
+
+  // Envolvente. Las rampas exponenciales no pueden llegar a cero.
+  const floor = 0.0001;
+  const sustainLevel = Math.max(voice.peak * voice.sustain, floor);
+  master.gain.setValueAtTime(floor, now);
+  master.gain.linearRampToValueAtTime(voice.peak, now + voice.attack);
+  master.gain.exponentialRampToValueAtTime(
+    sustainLevel,
+    now + voice.attack + voice.decay,
+  );
+  if (!hold) master.gain.exponentialRampToValueAtTime(floor, end);
+
+  const lfos: { gain: GainNode; osc: OscillatorNode }[] = [];
+  if (voice.tremolo) {
+    const lfo = makeLfo(ctx, voice.tremolo.rate, voice.tremolo.depth, now);
+    // El LFO oscila entre ±depth y el nodo parte de 1, así que el volumen
+    // va de 1-depth a 1+depth.
+    lfo.gain.connect(tremolo.gain);
+    lfos.push(lfo);
+  }
+
+  const vibratoLfo = voice.vibrato
+    ? makeLfo(ctx, voice.vibrato.rate, voice.vibrato.depth, now)
+    : null;
+  if (vibratoLfo) lfos.push(vibratoLfo);
+
+  const oscillators: OscillatorNode[] = [];
+
+  // Cada armónico es un oscilador; con `detune`, dos por armónico.
+  const offsets = voice.detune ? [-voice.detune, voice.detune] : [0];
+  voice.partials.forEach(([multiple, gainValue]) => {
+    offsets.forEach((offset) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = voice.wave;
+      osc.frequency.setValueAtTime(freq * multiple, now);
+      osc.detune.setValueAtTime(offset, now);
+      if (vibratoLfo) vibratoLfo.gain.connect(osc.detune);
+      gain.gain.setValueAtTime(gainValue / offsets.length, now);
+      osc.connect(gain);
+      gain.connect(tremolo);
+      osc.start(now);
+      oscillators.push(osc);
+    });
+  });
+
+  const stopAll = (at: number) => {
+    oscillators.forEach((osc) => osc.stop(at));
+    lfos.forEach((lfo) => lfo.osc.stop(at));
+  };
+
+  if (!hold) {
+    // Final ya programado: no hay nada que soltar.
+    stopAll(end + 0.05);
+    return { release: () => {} };
+  }
+
+  let released = false;
+  return {
+    release: () => {
+      if (released) return;
+      released = true;
+
+      const at = ctx.currentTime;
+      const fade = voice.release ?? 0.08;
+
+      // Se corta lo que quedara programado y se baja desde donde esté ahora:
+      // si no, soltar en mitad del ataque daría un salto de volumen.
+      master.gain.cancelScheduledValues(at);
+      master.gain.setValueAtTime(Math.max(master.gain.value, floor), at);
+      master.gain.exponentialRampToValueAtTime(floor, at + fade);
+
+      stopAll(at + fade + 0.05);
+    },
+  };
+};
+
+/**
+ * El click del metrónomo: un pitido cortísimo, no una nota.
+ *
+ * Va aparte de `spawn` a propósito — no tiene envolvente ni armónicos, y sobre
+ * todo no debe pasar por la lista de notas mantenidas: el metrónomo no se
+ * suelta ni lo apaga un `releaseAll`.
+ */
+const tick = (ctx: AudioContext, accent: boolean) => {
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = "square";
+  osc.frequency.setValueAtTime(accent ? 1800 : 1200, now);
+
+  // Muy por debajo del piano: tiene que marcar el pulso, no taparlo.
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(accent ? 0.09 : 0.05, now + 0.001);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.06);
 };
 
 export function useFreeSynth() {
   const ctxRef = useRef<AudioContext | null>(null);
+  /** Las notas que están sonando ahora mismo, por semitono. */
+  const heldRef = useRef(new Map<number, HeldNote>());
 
   const getCtx = () => {
     // Safari viejo solo expone webkitAudioContext.
@@ -211,82 +370,70 @@ export function useFreeSynth() {
     return ctxRef.current;
   };
 
-  const play = useCallback((semitone: number, voice: Voice) => {
-    const ctx = getCtx();
-
-    const strike = () => {
-      const now = ctx.currentTime;
-      const freq = semitoneToFreq(semitone);
-      const end = now + voice.duration;
-
-      const master = ctx.createGain();
-      // Nodo aparte para el trémolo: así el LFO suma sobre el volumen de la
-      // envolvente en vez de pelearse con ella por el mismo parámetro.
-      const tremolo = ctx.createGain();
-      tremolo.gain.setValueAtTime(1, now);
-
-      let tail: AudioNode = tremolo;
-      if (voice.filter) {
-        const filter = ctx.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.Q.setValueAtTime(voice.filter.q, now);
-        filter.frequency.setValueAtTime(voice.filter.from, now);
-        filter.frequency.exponentialRampToValueAtTime(
-          voice.filter.to,
-          now + Math.max(0.05, voice.decay + voice.attack),
-        );
-        filter.frequency.exponentialRampToValueAtTime(voice.filter.from, end);
-        tremolo.connect(filter);
-        tail = filter;
-      }
-
-      tail.connect(master);
-      master.connect(ctx.destination);
-
-      // Envolvente. Las rampas exponenciales no pueden llegar a cero.
-      const floor = 0.0001;
-      const sustainLevel = Math.max(voice.peak * voice.sustain, floor);
-      master.gain.setValueAtTime(floor, now);
-      master.gain.linearRampToValueAtTime(voice.peak, now + voice.attack);
-      master.gain.exponentialRampToValueAtTime(
-        sustainLevel,
-        now + voice.attack + voice.decay,
-      );
-      master.gain.exponentialRampToValueAtTime(floor, end);
-
-      if (voice.tremolo) {
-        const lfo = makeLfo(ctx, voice.tremolo.rate, voice.tremolo.depth, now, end);
-        // El LFO oscila entre ±depth y el nodo parte de 1, así que el volumen
-        // va de 1-depth a 1+depth.
-        lfo.connect(tremolo.gain);
-      }
-
-      const vibrato = voice.vibrato
-        ? makeLfo(ctx, voice.vibrato.rate, voice.vibrato.depth, now, end)
-        : null;
-
-      // Cada armónico es un oscilador; con `detune`, dos por armónico.
-      const offsets = voice.detune ? [-voice.detune, voice.detune] : [0];
-      voice.partials.forEach(([multiple, gainValue]) => {
-        offsets.forEach((offset) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = voice.wave;
-          osc.frequency.setValueAtTime(freq * multiple, now);
-          osc.detune.setValueAtTime(offset, now);
-          if (vibrato) vibrato.connect(osc.detune);
-          gain.gain.setValueAtTime(gainValue / offsets.length, now);
-          osc.connect(gain);
-          gain.connect(tremolo);
-          osc.start(now);
-          osc.stop(end + 0.05);
-        });
-      });
-    };
-
-    if (ctx.state === "suspended") ctx.resume().then(strike);
-    else strike();
+  /** Deja de sonar la nota, si es de las que se mantienen. */
+  const release = useCallback((semitone: number) => {
+    const held = heldRef.current.get(semitone);
+    if (!held) return;
+    heldRef.current.delete(semitone);
+    held.release();
   }, []);
 
-  return { play };
+  /**
+   * Empieza una nota. En las voces que se mantienen hay que llamar después a
+   * `release`; en las demás se apaga sola y `release` no hace nada.
+   */
+  const press = useCallback(
+    (semitone: number, voice: Voice) => {
+      const ctx = getCtx();
+
+      const start = () => {
+        // Volver a pulsar una tecla que ya sonaba la reengancha desde cero, que
+        // es lo que hace un teclado de verdad.
+        const previous = heldRef.current.get(semitone);
+        if (previous) {
+          heldRef.current.delete(semitone);
+          previous.release();
+        }
+
+        const note = spawn(ctx, semitone, voice, Boolean(voice.sustained));
+        if (voice.sustained) heldRef.current.set(semitone, note);
+      };
+
+      if (ctx.state === "suspended") ctx.resume().then(start);
+      else start();
+    },
+    [],
+  );
+
+  /**
+   * Toca la nota y la deja morir sola: es para oír una voz al elegirla en el
+   * menú, donde no hay nada que soltar.
+   *
+   * Va por su cuenta, sin pasar por la lista de notas mantenidas: así una
+   * demostración no se queda colgada ni la apaga un `releaseAll` de paso.
+   */
+  const play = useCallback((semitone: number, voice: Voice) => {
+    const ctx = getCtx();
+    const start = () => spawn(ctx, semitone, voice, false);
+
+    if (ctx.state === "suspended") ctx.resume().then(start);
+    else start();
+  }, []);
+
+  /** Suelta todo lo que estuviera sonando. */
+  const releaseAll = useCallback(() => {
+    heldRef.current.forEach((note) => note.release());
+    heldRef.current.clear();
+  }, []);
+
+  /** Un golpe de metrónomo. `accent` marca el principio de cada vuelta. */
+  const click = useCallback((accent = false) => {
+    const ctx = getCtx();
+    const start = () => tick(ctx, accent);
+
+    if (ctx.state === "suspended") ctx.resume().then(start);
+    else start();
+  }, []);
+
+  return { play, press, release, releaseAll, click };
 }

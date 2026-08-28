@@ -9,6 +9,7 @@ import {
   Layers,
   Lightbulb,
   ListMusic,
+  Mic,
   Music2,
   Piano,
   Waypoints,
@@ -28,5 +29,6 @@ export const gameIcons: Record<GameIcon, React.ElementType<{ size?: number; clas
   Piano,
   Lightbulb,
   Music2,
+  Mic,
   BookOpen,
 };

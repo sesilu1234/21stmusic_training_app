@@ -17,6 +17,7 @@ export type GameIcon =
   | "Piano"
   | "Lightbulb"
   | "Music2"
+  | "Mic"
   | "BookOpen";
 
 export type CategoryId =
@@ -303,18 +304,18 @@ export const GAMES: GameMode[] = [
     scored: false,
   },
   {
-    name: "Constructor de melodías",
-    label: "Constructor de melodías",
-    desc: "Escribe, escucha y transporta tus propias frases.",
-    slug: "/play/constructor-melodias",
-    icon: "Music2",
+    name: "Vocalizaciones",
+    label: "Vocalizaciones",
+    desc: "Calentar y entrenar la voz: escalas y acordes que suben y bajan.",
+    slug: "/play/vocalizaciones",
+    icon: "Mic",
     category: "herramientas",
     scored: false,
   },
   {
     name: "Ej. Rockschool",
-    label: "Ej. Rockschool",
-    desc: "Los ejercicios del método, con pentagrama y audio.",
+    label: "Rockschool",
+    desc: "Los ejercicios del método para cantarlos, grado a grado.",
     slug: "/play/rockschool",
     icon: "BookOpen",
     category: "herramientas",

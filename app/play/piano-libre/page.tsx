@@ -49,7 +49,12 @@ const MIN_SHIFT = -24;
 const MAX_SHIFT = 24;
 
 export default function PianoLibrePage() {
-  const { play: strikeVoice } = useFreeSynth();
+  const {
+    play: previewVoice,
+    press: pressVoice,
+    release: releaseVoice,
+    releaseAll,
+  } = useFreeSynth();
 
   const [voice, setVoice] = useState<Voice>(VOICES[0]);
   const [isVoiceMenuOpen, setIsVoiceMenuOpen] = useState(false);
@@ -59,11 +64,14 @@ export default function PianoLibrePage() {
 
   const voiceMenuRef = useRef<HTMLDivElement>(null);
 
+  /** Cuándo se pulsó cada nota: para que el destello dure lo suficiente. */
+  const pressedAtRef = useRef(new Map<number, number>());
+
   const play = useCallback(
     (semitone: number) => {
-      strikeVoice(semitone, voice);
+      pressVoice(semitone, voice);
     },
-    [strikeVoice, voice],
+    [pressVoice, voice],
   );
 
   useEffect(() => {
@@ -86,19 +94,42 @@ export default function PianoLibrePage() {
     };
   }, [isVoiceMenuOpen]);
 
-  /** Suena y se enciende un momento: lo usan el ratón y el teclado. */
-  const strike = useCallback(
+  /** Empieza la nota y enciende la tecla. Lo usan el ratón y el teclado. */
+  const noteOn = useCallback(
     (semitone: number) => {
       play(semitone);
+      pressedAtRef.current.set(semitone, performance.now());
       setActive((current) =>
         current.includes(semitone) ? current : [...current, semitone],
       );
-      window.setTimeout(
-        () => setActive((current) => current.filter((note) => note !== semitone)),
-        220,
-      );
     },
     [play],
+  );
+
+  /**
+   * Suelta la nota. Con el órgano deja de sonar aquí mismo; con las demás voces
+   * la nota se estaba apagando sola y esto solo apaga la tecla.
+   *
+   * El destello dura un mínimo aunque el clic sea un toque seco: si no, en el
+   * piano se ve un parpadeo raro que no acompaña al sonido.
+   */
+  const noteOff = useCallback(
+    (semitone: number) => {
+      // Soltar el ratón dispara dos avisos (pointerup y el fin de la captura);
+      // el segundo no tiene ya nada que soltar.
+      const pressedAt = pressedAtRef.current.get(semitone);
+      if (pressedAt === undefined) return;
+      pressedAtRef.current.delete(semitone);
+
+      releaseVoice(semitone);
+      const wait = Math.max(0, 160 - (performance.now() - pressedAt));
+
+      window.setTimeout(
+        () => setActive((current) => current.filter((note) => note !== semitone)),
+        wait,
+      );
+    },
+    [releaseVoice],
   );
 
   useEffect(() => {
@@ -118,11 +149,7 @@ export default function PianoLibrePage() {
       if (held.has(event.code)) return;
       held.add(event.code);
 
-      const note = semitone + shift;
-      play(note);
-      setActive((current) =>
-        current.includes(note) ? current : [...current, note],
-      );
+      noteOn(semitone + shift);
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
@@ -130,14 +157,16 @@ export default function PianoLibrePage() {
       const semitone =
         byKey.get(event.key.toLowerCase()) ?? byCode.get(event.code);
       if (semitone === undefined) return;
-      const note = semitone + shift;
-      setActive((current) => current.filter((value) => value !== note));
+      noteOff(semitone + shift);
     };
 
-    // Al salir de la pestaña con una tecla pulsada no llega el keyup, y la
-    // tecla se quedaría encendida para siempre.
+    // Al salir de la pestaña con una tecla pulsada no llega el keyup. Antes eso
+    // solo dejaba la tecla encendida; ahora, con el órgano, dejaría la nota
+    // sonando para siempre.
     const onBlur = () => {
       held.clear();
+      releaseAll();
+      pressedAtRef.current.clear();
       setActive([]);
     };
 
@@ -149,7 +178,10 @@ export default function PianoLibrePage() {
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
     };
-  }, [play, shift]);
+  }, [noteOn, noteOff, releaseAll, shift]);
+
+  // Irse de la página con una nota de órgano sonando la dejaría colgada.
+  useEffect(() => releaseAll, [releaseAll]);
 
   const marks = useMemo(() => {
     const result: Record<number, KeyMark> = {};
@@ -228,11 +260,16 @@ export default function PianoLibrePage() {
                         key={option.id}
                         type="button"
                         onClick={() => {
+                          // Si había una nota mantenida, la voz nueva ya no
+                          // sabría soltarla: se corta todo antes de cambiar.
+                          releaseAll();
+                          pressedAtRef.current.clear();
+                          setActive([]);
                           setVoice(option);
                           setIsVoiceMenuOpen(false);
                           // Se oye al elegirla: si no, hay que ir al teclado
                           // para saber si te gusta.
-                          strikeVoice(shift, option);
+                          previewVoice(shift, option);
                         }}
                         className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left transition ${
                           selected
@@ -306,7 +343,8 @@ export default function PianoLibrePage() {
             octaves={2}
             marks={marks}
             hints={hints}
-            onPress={strike}
+            onPress={noteOn}
+            onRelease={noteOff}
             showLabels={showNames}
           />
 

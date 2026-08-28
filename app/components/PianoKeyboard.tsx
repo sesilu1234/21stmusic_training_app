@@ -79,9 +79,18 @@ export interface PianoKeyboardProps {
   /** Letra del teclado del ordenador que toca esa tecla. Va dentro, al pie. */
   hints?: Record<number, string>;
   onPress?: (semitone: number) => void;
+  /**
+   * Si se pasa, la tecla avisa al pulsar y al soltar en vez de al hacer clic:
+   * es lo que necesita una voz que suena mientras la mantienes (el órgano del
+   * piano libre). Los modos que solo quieren "esta tecla" no lo pasan y siguen
+   * funcionando a base de clics.
+   */
+  onRelease?: (semitone: number) => void;
   disabled?: boolean;
   /** Escribe el nombre en el pie de las teclas blancas. */
   showLabels?: boolean;
+  /** Teclado más bajo, para pantallas donde compite con otras cosas. */
+  compact?: boolean;
   className?: string;
 }
 
@@ -92,8 +101,10 @@ export default function PianoKeyboard({
   badges = {},
   hints = {},
   onPress,
+  onRelease,
   disabled = false,
   showLabels = false,
+  compact = false,
   className = "",
 }: PianoKeyboardProps) {
   const totalWhite = octaves * 7;
@@ -121,6 +132,31 @@ export default function PianoKeyboard({
     onPress(semitone);
   };
 
+  /**
+   * Cómo escucha una tecla. Sin `onRelease` es un botón de toda la vida.
+   *
+   * Con `onRelease` hay que usar eventos de puntero: `click` llega cuando ya
+   * has soltado, y para mantener una nota hace falta enterarse en el momento
+   * de apretar. La captura del puntero garantiza que el "soltar" llegue a la
+   * misma tecla aunque el dedo se haya ido a otra parte de la pantalla — si no,
+   * la nota se quedaría sonando para siempre.
+   */
+  const keyHandlers = (semitone: number) => {
+    if (disabled || !onPress) return {};
+    if (!onRelease) return { onClick: () => press(semitone) };
+
+    return {
+      onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        press(semitone);
+      },
+      onPointerUp: () => onRelease(semitone),
+      onPointerCancel: () => onRelease(semitone),
+      onLostPointerCapture: () => onRelease(semitone),
+    };
+  };
+
   const badge = (semitone: number) =>
     badges[semitone] ? (
       <span className="pointer-events-none absolute -top-7 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-950 px-2 py-1 text-[9px] font-black tracking-[0.12em] text-white shadow-lg ring-1 ring-white/20">
@@ -135,7 +171,13 @@ export default function PianoKeyboard({
       aria-label="Teclado de piano"
     >
       {/* Marco oscuro: da el borde de piano y evita que las teclas floten. */}
-      <div className="relative h-[150px] w-full rounded-b-2xl rounded-t-lg bg-slate-950 p-1.5 pt-2 shadow-[0_14px_40px_rgba(0,0,0,0.5)] ring-1 ring-white/10 sm:h-[185px] md:h-[215px]">
+      <div
+        className={`relative w-full rounded-b-2xl rounded-t-lg bg-slate-950 p-1.5 pt-2 shadow-[0_14px_40px_rgba(0,0,0,0.5)] ring-1 ring-white/10 ${
+          compact
+            ? "h-[112px] sm:h-[134px] md:h-[152px]"
+            : "h-[150px] sm:h-[185px] md:h-[215px]"
+        }`}
+      >
         <div className="relative flex h-full w-full">
           {whites.map(({ semitone, index }) => {
             const mark = marks[semitone];
@@ -144,9 +186,9 @@ export default function PianoKeyboard({
                 key={semitone}
                 type="button"
                 disabled={disabled || !onPress}
-                onClick={() => press(semitone)}
+                {...keyHandlers(semitone)}
                 aria-label={noteName(semitone)}
-                style={{ width: `${whiteWidth}%` }}
+                style={{ width: `${whiteWidth}%`, touchAction: onRelease ? "none" : undefined }}
                 className={`relative flex items-end justify-center rounded-b-[6px] border-r border-slate-400/60 pb-2 text-[10px] font-black transition-colors duration-100 last:border-r-0 md:text-xs ${
                   index === 0 ? "rounded-bl-xl" : ""
                 } ${
@@ -180,9 +222,13 @@ export default function PianoKeyboard({
                 key={semitone}
                 type="button"
                 disabled={disabled || !onPress}
-                onClick={() => press(semitone)}
+                {...keyHandlers(semitone)}
                 aria-label={noteName(semitone)}
-                style={{ left: `${left}%`, width: `${blackWidth}%` }}
+                style={{
+                  left: `${left}%`,
+                  width: `${blackWidth}%`,
+                  touchAction: onRelease ? "none" : undefined,
+                }}
                 className={`absolute top-0 z-20 flex h-[62%] items-end justify-center rounded-b-[5px] pb-1.5 text-[8px] font-black shadow-[0_3px_6px_rgba(0,0,0,0.6)] transition-colors duration-100 md:text-[10px] ${
                   mark
                     ? BLACK_MARK[mark]

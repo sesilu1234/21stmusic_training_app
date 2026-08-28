@@ -9,28 +9,30 @@ import PianoKeyboard, { type KeyMark } from "@/app/components/PianoKeyboard";
 import { findVoice, useFreeSynth } from "@/lib/freeSynth";
 import { Field, Legend, Stepper, Transport } from "@/app/play/vocalControls";
 import {
-  GRADES,
-  ROCKSCHOOL_EXERCISES,
-  exercisesOfGrade,
-  type Grade,
-  type RockschoolExercise,
-  type RockschoolKind,
-} from "@/lib/rockschool";
-import {
   ACCOMPANIMENTS,
-  buildPlan,
+  VOCAL_EXERCISES,
+  VOCAL_GROUPS,
+  VOICE_RANGES,
   buildRoots,
+  buildVocalPlan,
+  degreeLabel,
+  exercisesOfGroup,
   fullNoteName,
   type AccompanimentMode,
-} from "@/lib/vocalPlan";
+  type VocalExercise,
+  type VocalGroupId,
+} from "@/lib/vocalizaciones";
 
 /**
- * Los ejercicios del método Rockschool, para cantarlos.
+ * Vocalizaciones: el calentamiento de un cantante, con un piano detrás.
  *
- * Es la misma máquina que Vocalizaciones — patrón, recorrido y modos de
- * acompañamiento salen de `vocalPlan` — con dos diferencias: los patrones
- * vienen del libro y arriba se enseña el pentagrama original escaneado, que
- * es lo que el alumno tiene delante en clase.
+ * Todo el ejercicio se calcula de una vez en `buildVocalPlan` y aquí solo se
+ * va disparando lo que toca. El reloj es un `setTimeout` encadenado que mira
+ * el tiempo absoluto en cada paso en vez de encadenar esperas fijas: así una
+ * pestaña que se ralentiza no va acumulando retraso vuelta tras vuelta.
+ *
+ * El metrónomo corre por su lado, con su propia cola de golpes, porque suena
+ * también en los silencios — que es justo donde hace falta.
  */
 
 /** El piano toca el patrón; el golpe de tónica suena a cuerdas, más redondo. */
@@ -40,30 +42,16 @@ const CUE_VOICE = findVoice("cuerdas");
 const MIN_BPM = 40;
 const MAX_BPM = 200;
 
-/** Un color por familia, para leer la lista de un vistazo. */
-const KIND_STYLE: Record<RockschoolKind, string> = {
-  escala: "text-sky-300",
-  arpegio: "text-emerald-300",
-  intervalo: "text-amber-300",
-};
-
-const KIND_LABEL: Record<RockschoolKind, string> = {
-  escala: "Escala",
-  arpegio: "Arpegio",
-  intervalo: "Intervalo",
-};
-
-export default function RockschoolPage() {
+export default function VocalizacionesPage() {
   const { play, click, releaseAll } = useFreeSynth();
 
-  const [grade, setGrade] = useState<Grade>("Debut");
-  const [exercise, setExercise] = useState<RockschoolExercise>(
-    ROCKSCHOOL_EXERCISES[0],
-  );
-  const [transpose, setTranspose] = useState(0);
-  const [up, setUp] = useState(0);
-  const [down, setDown] = useState(0);
-  const [bpm, setBpm] = useState(92);
+  const [group, setGroup] = useState<VocalGroupId>("calentamiento");
+  const [exercise, setExercise] = useState<VocalExercise>(VOCAL_EXERCISES[0]);
+  const [rangeId, setRangeId] = useState(VOICE_RANGES[0].id);
+  const [start, setStart] = useState(VOICE_RANGES[0].start);
+  const [up, setUp] = useState(VOICE_RANGES[0].up);
+  const [down, setDown] = useState(VOICE_RANGES[0].down);
+  const [bpm, setBpm] = useState(VOCAL_EXERCISES[0].bpm);
   const [mode, setMode] = useState<AccompanimentMode>("guia");
   const [metronome, setMetronome] = useState(true);
 
@@ -71,20 +59,9 @@ export default function RockschoolPage() {
   /** Índice del evento que está sonando ahora, o -1 si no ha empezado. */
   const [cursor, setCursor] = useState(-1);
 
-  const roots = useMemo(
-    () => buildRoots(exercise.base + transpose, up, down),
-    [exercise, transpose, up, down],
-  );
-
+  const roots = useMemo(() => buildRoots(start, up, down), [start, up, down]);
   const plan = useMemo(
-    () =>
-      buildPlan({
-        pattern: exercise.pattern,
-        roots,
-        bpm,
-        mode,
-        noteBeats: exercise.noteBeats,
-      }),
+    () => buildVocalPlan(exercise, roots, bpm, mode),
     [exercise, roots, bpm, mode],
   );
 
@@ -208,7 +185,7 @@ export default function RockschoolPage() {
   // sonando ya no valdría: se para y se vuelve al principio.
   useEffect(() => {
     stop();
-  }, [exercise, transpose, up, down, bpm, mode, stop]);
+  }, [exercise, start, up, down, bpm, mode, stop]);
 
   useEffect(
     () => () => {
@@ -232,10 +209,17 @@ export default function RockschoolPage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [toggle]);
 
-  const pickExercise = (next: RockschoolExercise) => {
+  const pickExercise = (next: VocalExercise) => {
     setExercise(next);
-    // La transposición era de otro ejercicio: no tiene por qué valer para este.
-    setTranspose(0);
+    setBpm(next.bpm);
+  };
+
+  const pickRange = (id: string) => {
+    const range = VOICE_RANGES.find((option) => option.id === id) ?? VOICE_RANGES[0];
+    setRangeId(range.id);
+    setStart(range.start);
+    setUp(range.up);
+    setDown(range.down);
   };
 
   const current = cursor >= 0 ? plan.events[cursor] : null;
@@ -243,7 +227,7 @@ export default function RockschoolPage() {
   // El teclado se ajusta a lo que va a sonar: se redondea al Do de abajo y se
   // dibujan las octavas justas para que quepa todo el recorrido.
   const from = Math.floor(plan.lowest / 12) * 12;
-  const octaves = Math.min(5, Math.max(2, Math.ceil((plan.highest + 1 - from) / 12)));
+  const octaves = Math.min(4, Math.max(2, Math.ceil((plan.highest + 1 - from) / 12)));
 
   const marks = useMemo(() => {
     const result: Record<number, KeyMark> = {};
@@ -273,47 +257,51 @@ export default function RockschoolPage() {
           Menú principal
         </Link>
 
-        <main className="mx-auto w-full max-w-[1120px] flex-1 pb-4 pt-10 md:pt-4">
+        <main className="mx-auto w-full max-w-[1120px] flex-1 pb-4 pt-10 md:pt-3">
           <div className="mb-4 text-center">
             <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.32em] text-white/35">
-              El método, grado a grado
+              Para cantar
             </p>
             <h1
               className="text-balance text-xl font-black italic uppercase leading-tight tracking-tighter text-white md:text-3xl"
               style={{ fontFamily: "Chaney, sans-serif" }}
             >
-              Rockschool
+              Vocalizaciones
             </h1>
             <p className="mx-auto mt-1.5 max-w-lg text-[12px] leading-5 text-white/45">
-              Los ejercicios del libro, con su pentagrama y sonando. Puedes
-              cambiarlos de tono y encadenarlos subiendo, como en clase.
+              Un patrón corto que se repite subiendo medio tono cada vez y
+              después vuelve a bajar. Elige uno, ponlo a tu altura y canta.
             </p>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[264px_minmax(0,1fr)]">
-            {/* --- El libro ---------------------------------------------- */}
+            {/* --- Compendio --------------------------------------------- */}
             {/* `self-start`: la columna mide lo que ocupa su lista, no lo que
                 ocupe el ejercicio de al lado. */}
             <aside className="self-start rounded-2xl border border-white/10 bg-slate-950/60 p-2.5 backdrop-blur-sm">
               <div className="mb-2 flex flex-wrap gap-1">
-                {GRADES.map((option) => (
+                {VOCAL_GROUPS.map((option) => (
                   <button
-                    key={option}
+                    key={option.id}
                     type="button"
-                    onClick={() => setGrade(option)}
+                    onClick={() => setGroup(option.id)}
                     className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] transition ${
-                      grade === option
+                      group === option.id
                         ? "bg-white text-slate-950"
                         : "text-white/40 hover:bg-white/10 hover:text-white/80"
                     }`}
                   >
-                    {option === "Debut" ? "Debut" : option.replace("Grade ", "")}
+                    {option.label}
                   </button>
                 ))}
               </div>
 
+              <p className="mb-2 px-1 text-[10px] leading-4 text-white/35">
+                {VOCAL_GROUPS.find((option) => option.id === group)?.hint}
+              </p>
+
               <ul className="flex flex-col gap-0.5">
-                {exercisesOfGrade(grade).map((option) => {
+                {exercisesOfGroup(group).map((option) => {
                   const selected = option.slug === exercise.slug;
                   return (
                     <li key={option.slug}>
@@ -326,15 +314,19 @@ export default function RockschoolPage() {
                             : "text-white/55 hover:bg-white/5 hover:text-white"
                         }`}
                       >
-                        <span className="block text-[11px] font-black uppercase tracking-[0.1em]">
-                          {option.name}
+                        <span className="flex items-center gap-2">
+                          <span
+                            aria-hidden
+                            className={`h-1 w-1 flex-shrink-0 rounded-full ${
+                              selected ? "bg-emerald-300" : "bg-white/15"
+                            }`}
+                          />
+                          <span className="text-[11px] font-black uppercase tracking-[0.1em]">
+                            {option.name}
+                          </span>
                         </span>
-                        <span
-                          className={`mt-0.5 block text-[9px] font-black uppercase tracking-[0.14em] ${
-                            selected ? KIND_STYLE[option.kind] : "text-white/25"
-                          }`}
-                        >
-                          {KIND_LABEL[option.kind]}
+                        <span className="mt-0.5 block pl-3 text-[10px] leading-4 text-white/30">
+                          {option.desc}
                         </span>
                       </button>
                     </li>
@@ -350,21 +342,17 @@ export default function RockschoolPage() {
                     título: es lo que más se pulsa y no merece una fila propia. */}
                 <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
                   <div className="min-w-0">
-                    <p className="text-[9px] font-black uppercase tracking-[0.24em] text-white/30">
-                      {exercise.grade}
-                    </p>
-                    <h2 className="mt-0.5 text-lg font-black italic tracking-tight md:text-xl">
+                    <h2 className="text-lg font-black italic tracking-tight md:text-xl">
                       {exercise.name}
                     </h2>
+                    <p className="mt-0.5 text-[11px] leading-4 text-white/40">
+                      {exercise.desc}
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-2.5">
-                    <span
-                      className={`hidden rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] sm:block ${
-                        KIND_STYLE[exercise.kind]
-                      }`}
-                    >
-                      {KIND_LABEL[exercise.kind]}
+                    <span className="hidden rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white/45 sm:block">
+                      {exercise.syllable}
                     </span>
                     <Transport
                       playing={playing}
@@ -375,14 +363,21 @@ export default function RockschoolPage() {
                   </div>
                 </div>
 
-                {/* El escaneo del libro. Es lo que el alumno tiene delante. */}
-                <div className="mt-4 overflow-hidden rounded-xl bg-white p-2.5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`/assets/rockschool/${exercise.image}`}
-                    alt={`${exercise.grade} · ${exercise.name}`}
-                    className="mx-auto max-h-40 w-full object-contain"
-                  />
+                {/* El patrón en grados, con la nota que suena resaltada. */}
+                <div className="mt-4 flex flex-wrap gap-1">
+                  {exercise.pattern.map((offset, index) => {
+                    const active = current?.step === index;
+                    return (
+                      <span
+                        key={`${offset}-${index}`}
+                        className={`grid h-6 min-w-6 place-items-center rounded-md px-1.5 text-[10px] font-black transition ${
+                          active ? "bg-white text-slate-950" : "bg-white/5 text-white/35"
+                        }`}
+                      >
+                        {degreeLabel(offset)}
+                      </span>
+                    );
+                  })}
                 </div>
 
                 {/* Dónde estamos: nota, tónica y vuelta. */}
@@ -405,23 +400,21 @@ export default function RockschoolPage() {
                   </div>
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">
-                      Empieza en
+                      Tónica
                     </p>
                     <p className="text-base font-black leading-tight text-amber-300">
                       {fullNoteName(current ? current.root : roots[0])}
                     </p>
                   </div>
-                  {roots.length > 1 && (
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">
-                        Vuelta
-                      </p>
-                      <p className="text-base font-black leading-tight text-white/60">
-                        {current ? current.repetition + 1 : "–"}
-                        <span className="text-white/25"> / {roots.length}</span>
-                      </p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">
+                      Vuelta
+                    </p>
+                    <p className="text-base font-black leading-tight text-white/60">
+                      {current ? current.repetition + 1 : "–"}
+                      <span className="text-white/25"> / {roots.length}</span>
+                    </p>
+                  </div>
                 </div>
 
                 <div className="mt-3 h-0.5 w-full overflow-hidden rounded-full bg-white/10">
@@ -488,15 +481,30 @@ export default function RockschoolPage() {
                 </Field>
 
                 <div className="flex flex-col gap-3">
-                  <Field label="Tono">
+                  <Field label="Tesitura">
+                    <div className="flex flex-wrap gap-1">
+                      {VOICE_RANGES.map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => pickRange(option.id)}
+                          className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] transition ${
+                            rangeId === option.id
+                              ? "bg-white text-slate-950"
+                              : "border border-white/10 text-white/40 hover:text-white/80"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+
+                  <Field label="Empieza en">
                     <Stepper
-                      value={
-                        transpose === 0
-                          ? "Original"
-                          : `${transpose > 0 ? "+" : ""}${transpose} st`
-                      }
-                      onDown={() => setTranspose((value) => Math.max(-12, value - 1))}
-                      onUp={() => setTranspose((value) => Math.min(12, value + 1))}
+                      value={fullNoteName(start)}
+                      onDown={() => setStart((value) => Math.max(-36, value - 1))}
+                      onUp={() => setStart((value) => Math.min(24, value + 1))}
                       downLabel="Medio tono abajo"
                       upLabel="Medio tono arriba"
                       icons="arrows"
@@ -504,20 +512,20 @@ export default function RockschoolPage() {
                   </Field>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="Encadena arriba">
+                    <Field label="Sube">
                       <Stepper
                         value={`${up} st`}
                         onDown={() => setUp((value) => Math.max(0, value - 1))}
-                        onUp={() => setUp((value) => Math.min(12, value + 1))}
+                        onUp={() => setUp((value) => Math.min(24, value + 1))}
                         downLabel="Subir menos"
                         upLabel="Subir más"
                       />
                     </Field>
-                    <Field label="Y abajo">
+                    <Field label="Baja">
                       <Stepper
                         value={`${down} st`}
                         onDown={() => setDown((value) => Math.max(0, value - 1))}
-                        onUp={() => setDown((value) => Math.min(12, value + 1))}
+                        onUp={() => setDown((value) => Math.min(24, value + 1))}
                         downLabel="Bajar menos"
                         upLabel="Bajar más"
                       />
@@ -537,8 +545,9 @@ export default function RockschoolPage() {
               </div>
 
               <p className="text-center text-[10px] leading-relaxed text-white/25">
-                El ejercicio suena tal como está escrito. Sube el tono solo hasta
-                donde te salga cómodo. Barra espaciadora para arrancar y parar.
+                Empieza por el calentamiento y sin apretar. Si una nota aguda te
+                cuesta, baja el recorrido antes que forzarla. Barra espaciadora
+                para arrancar y parar.
               </p>
             </section>
           </div>
