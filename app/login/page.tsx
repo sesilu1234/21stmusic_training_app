@@ -40,7 +40,7 @@ export default async function LoginPage({
       <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[3px]" />
       <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-amber-400/15 blur-3xl" />
 
-      <main className="relative flex flex-1 items-center justify-center p-5">
+      <main className="relative flex flex-1 items-center justify-center pb-0 pt-12">
         <section className="relative w-full max-w-[19rem] rounded-3xl border border-white/10 bg-slate-950/70 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-xl">
           <div className="mb-5 flex flex-col items-center text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -62,10 +62,16 @@ export default async function LoginPage({
 
           <LoginForm initialError={errorMessage(params.error)} next={next} />
 
-          <p className="mt-4 text-center text-[9px] leading-relaxed text-white/35">
-            Las cuentas las da de alta la academia. Sin cuenta puedes usar casi
-            todos los modos igualmente.
+          <p className="mt-4 text-center text-[9px] leading-relaxed text-white/40">
+            <span className="font-bold">
+              Acceso completo exclusivo para alumnos y ex-alumnos.
+            </span>{" "}
+            Contacta con la academia para registrarte.
           </p>
+
+          {/* <p className="mt-1.5 text-center text-[9px] leading-relaxed text-white/35">
+            Sin cuenta puedes usar casi todos los modos igualmente.
+          </p> */}
 
           <Link
             href="/"

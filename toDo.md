@@ -104,7 +104,7 @@ Progresiones tipicas ( o esto igual no..ya se aprende de otra manera ..no lo sé
 
 
 
-- en las cosas de progresiones : lia porque parece que a veces te pide el primero(que es el I siempre) (asi que el primero tiene que rellenarlo de color o algo, y ademas marcarte en cual estas que tienes que rellenar)
+
 
 
 - en esta nueva UI que esta en acordes y prpogresion...tiene que poder permitir volver a una pregunta anterior y ver y escuchar...
@@ -114,7 +114,7 @@ Progresiones tipicas ( o esto igual no..ya se aprende de otra manera ..no lo sé
 
 
 
- - en /login , poner exclusivo para laumnos y ex alumnos
+
  - solucion no responde en acorde diapason. checkear todos los modos por si hay cosas raras
 
 -cambiar nomencaltura nombre acordes SI M7B5 esta mal y da confusion (seria Si min7b5 o Si m7b5)
@@ -136,3 +136,10 @@ lo de Tónica
 La toca el piano
 La cantas túno tiene
  sentido, es simplemente dos cosas solo : tonica - nota(otros , o alun nombre asi)
+
+
+
+- boton de usuario esta feisimo
+
+
+
