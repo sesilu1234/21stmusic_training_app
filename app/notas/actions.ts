@@ -5,6 +5,7 @@ import {
   createNote,
   deleteNote,
   MAX_NOTE_LENGTH,
+  updateNote,
   type Note,
 } from "@/lib/notes";
 
@@ -34,6 +35,26 @@ export const addNote = async (text: string): Promise<NoteResult> => {
     return { ok: true, note: await createNote(student.email, clean) };
   } catch {
     return { ok: false, error: "No se ha podido guardar. Inténtalo otra vez." };
+  }
+};
+
+export const editNote = async (
+  id: string,
+  text: string,
+): Promise<NoteResult> => {
+  const student = await currentStudent();
+  if (!student) return { ok: false, error: "Entra en tu cuenta para editar notas." };
+
+  const clean = String(text ?? "").trim();
+  if (!clean) return { ok: false, error: "La nota no puede quedarse vacía." };
+  if (clean.length > MAX_NOTE_LENGTH) {
+    return { ok: false, error: `La nota no puede pasar de ${MAX_NOTE_LENGTH} caracteres.` };
+  }
+
+  try {
+    return { ok: true, note: await updateNote(student.email, String(id ?? ""), clean) };
+  } catch {
+    return { ok: false, error: "No se ha podido guardar el cambio. Inténtalo otra vez." };
   }
 };
 

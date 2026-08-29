@@ -83,10 +83,7 @@ poner muchas preguntas mas en trivial. muchas que sean no de grupos sino de inst
 
 
 
-- que el piano libre, en movil se ponga horizontal. en vertical no cabe bien. ademas, que se puede pulsar con dos dedos, ahora no deja dos notas a la vez en movil...
-- organo que tenga un poco de sustain y sonido mas a organo
-- las notas notes se guarden en base de datosm,, no en browser
- -  lo de notas, que esté en lo de usuario dropdow  (y progreso y notas no aparezcan conc a candado sino que litemnte no aparezcan si no estas logeado )  (Lo deg uguia me parece ien que aparezcacon  con can) 
+
 -  
 - la guia hay que mejorarla mucho, pero MUCHO jajaja (aunque esteticamente y UI esta perfect)
 
@@ -119,14 +116,13 @@ Progresiones tipicas ( o esto igual no..ya se aprende de otra manera ..no lo sé
 
  - en /login , poner exclusivo para laumnos y ex alumnos
  - solucion no responde en acorde diapason. checkear todos los modos por si hay cosas raras
- - queda feo esto  de rellenado el fondo gris el input al loggear
 
--cambiar nomencaltura nombre acordes SI M7B5 esta mal y da confusion (seria Si min7b5 o m7b5)
+-cambiar nomencaltura nombre acordes SI M7B5 esta mal y da confusion (seria Si min7b5 o Si m7b5)
 
 
 - en cosas de progrsiones , acordes, sonido... primero : al hacer reset o replay no se corta al momento, eso es malo. ademas, al pricnipio la primera que suena no aparece color a la vez que sonido...--
 - 
-- no tan dimuniminada opaca lscreen al final con el marcador siria...
+
 
 
 - en volcacliazaciones y rockschool : en movil el boton de ir a casa sea mas pequeño , sino no cabe bien con el header
