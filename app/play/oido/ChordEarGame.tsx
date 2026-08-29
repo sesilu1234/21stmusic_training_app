@@ -201,11 +201,7 @@ export default function ChordEarGame({
     ? "border-white/5 bg-white/[0.02] text-white/25"
     : "border-white/10 bg-white/5 text-white hover:-translate-y-0.5 hover:border-violet-300/50 hover:bg-white/10";
 
-  /**
-   * Cuál es la casilla que se está contestando ahora mismo. `draft` se rellena
-   * en orden, así que la que toca es siempre la primera vacía. -1 = ninguna,
-   * porque la respuesta ya está cerrada.
-   */
+  /** La casilla que toca contestar: `draft` se rellena en orden. */
   const askingIndex = answered ? -1 : draft.length;
 
   /** Estado de la casilla i (0-based) de la secuencia. */
@@ -225,13 +221,12 @@ export default function ChordEarGame({
       return "border-black bg-violet-300 text-black shadow-[4px_4px_0px_rgba(0,0,0,0.2)]";
     }
 
-    // La que toca contestar. Sin esto, en una progresión de tres o cuatro
-    // acordes todas las vacías se ven igual y no sabes por cuál vas.
+    // La que toca contestar se queda con el borde de siempre; las que aún no
+    // tocan lo llevan más flojo, y así se ve por cuál vas.
     if (index === askingIndex) {
-      return "scale-105 border-violet-500 bg-white text-black/25 shadow-[4px_4px_0px_rgba(124,58,237,0.5)] ring-4 ring-violet-400/25";
+      return "border-black bg-white text-black/20 shadow-[4px_4px_0px_rgba(0,0,0,0.12)]";
     }
-
-    return "border-black/25 bg-white text-black/15 shadow-[4px_4px_0px_rgba(0,0,0,0.10)]";
+    return "border-black/40 bg-white text-black/20 shadow-[4px_4px_0px_rgba(0,0,0,0.12)]";
   };
 
   /** Lo que se escribe dentro de la casilla i. */
@@ -302,8 +297,8 @@ export default function ChordEarGame({
           {withTonic && (
             <p className="mb-3 text-center text-xs text-white/35">
               {slots > 1
-                ? `La tónica te la damos de referencia; después suenan ${slots} acordes. Dilos en orden.`
-                : "La tónica te la damos de referencia; después suena el acorde."}
+                ? `Primero suena la tónica y después ${slots} acordes. Dilos en orden.`
+                : "Primero suena la tónica y después el acorde."}
             </p>
           )}
 
@@ -318,22 +313,17 @@ export default function ChordEarGame({
                   {withTonic && (
                     <>
                       <div className="flex flex-col items-center gap-3">
-                        <span className="text-[11px] font-black uppercase tracking-[0.22em] text-amber-600/70">
+                        <span className="text-[11px] font-black uppercase tracking-[0.22em] text-black/30">
                           Tónica
                         </span>
-                        {/* Va en ámbar y con su grado escrito desde el
-                            principio: es un dato que te dan, no una casilla
-                            que haya que rellenar. Antes salía blanca y con la
-                            misma corchea que las casillas vacías, así que
-                            parecía una pregunta más. */}
                         <div
-                          className={`relative grid h-16 w-16 place-items-center rounded-3xl border-2 text-2xl font-black italic shadow-xl transition md:h-20 md:w-20 md:text-3xl ${
+                          className={`relative grid h-16 w-16 place-items-center rounded-3xl border-2 text-2xl transition md:h-20 md:w-20 md:text-3xl ${
                             playFlash === 1
                               ? "scale-110 border-black bg-amber-300 text-black shadow-[5px_5px_0px_#000]"
-                              : "border-amber-400/70 bg-amber-200/90 text-black/60 shadow-[5px_5px_0px_rgba(0,0,0,0.12)]"
+                              : "border-black/40 bg-stone-300 text-black/40 shadow-[5px_5px_0px_rgba(0,0,0,0.12)]"
                           }`}
                         >
-                          I
+                          <span className="-mt-1">♩</span>
                         </div>
                       </div>
 
@@ -349,13 +339,7 @@ export default function ChordEarGame({
                       {Array.from({ length: slots }).map((_, index) => (
                         <div key={index} className="flex flex-col items-center gap-1.5">
                           {slots > 1 && (
-                            <span
-                              className={`text-[8px] uppercase tracking-[0.18em] md:text-[9px] ${
-                                index === askingIndex
-                                  ? "font-black text-violet-600"
-                                  : "font-semibold text-black/35"
-                              }`}
-                            >
+                            <span className="text-[8px] font-semibold uppercase tracking-[0.18em] text-black/35 md:text-[9px]">
                               {index + 1}º
                             </span>
                           )}
