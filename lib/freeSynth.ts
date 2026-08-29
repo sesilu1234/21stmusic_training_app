@@ -2,6 +2,9 @@
 
 import { useCallback, useRef } from "react";
 
+import { playPluckedString, type PluckParams } from "./pluckedString";
+import { connectReverb, type ReverbParams } from "./reverb";
+
 /**
  * Sintetizador del piano libre.
  *
@@ -11,7 +14,8 @@ import { useCallback, useRef } from "react";
  * una fila a `VOICES` — que es lo que hace falta para poder trastear.
  *
  * Solo lo usa el piano libre. Los modos de juego siguen con los presets de
- * siempre para no cambiarles el sonido a mitad de curso.
+ * siempre para no cambiarles el sonido a mitad de curso; lo único que
+ * comparten es el motor de cuerda de `lib/pluckedString`, que usan los dos.
  */
 
 /** Do central. El mismo cero que usa el resto de la app. */
@@ -20,7 +24,7 @@ const BASE_FREQ = 261.63;
 export const semitoneToFreq = (semitone: number) =>
   BASE_FREQ * Math.pow(2, semitone / 12);
 
-export interface Voice {
+interface VoiceBase {
   id: string;
   label: string;
   /** Una línea de qué suena, para el desplegable. */
@@ -53,7 +57,32 @@ export interface Voice {
   vibrato?: { rate: number; depth: number };
   /** Barrido de filtro paso bajo, de `from` a `to` en Hz. */
   filter?: { from: number; to: number; q: number };
+  /** Manda la voz a una sala. La señal seca sigue sonando igual. */
+  reverb?: ReverbParams;
 }
+
+/** La voz de siempre: armónicos sumados bajo una envolvente. */
+export interface AdditiveVoice extends VoiceBase {
+  engine?: "additive";
+}
+
+/**
+ * Voz de cuerda pulsada. Aquí no hay armónicos ni envolvente que valgan: la
+ * nota entera sale ya hecha de `pluckedString`, con su caída dentro.
+ */
+export interface PluckedVoice {
+  id: string;
+  label: string;
+  hint: string;
+  engine: "plucked";
+  pluck: PluckParams;
+}
+
+export type Voice = AdditiveVoice | PluckedVoice;
+
+/** Solo el órgano se queda sonando mientras tienes la tecla apretada. */
+const isSustained = (voice: Voice) =>
+  voice.engine !== "plucked" && Boolean(voice.sustained);
 
 export const VOICES: Voice[] = [
   {
@@ -75,23 +104,46 @@ export const VOICES: Voice[] = [
     peak: 0.55,
   },
   {
+    id: "guitarra",
+    label: "Guitarra acústica",
+    hint: "Cuerda de acero pulsada, con caja de resonancia",
+    engine: "plucked",
+    pluck: {
+      sustain: 3.4,
+      brightness: 0.62,
+      peak: 0.5,
+    },
+  },
+  {
     id: "organo",
     label: "Órgano",
-    hint: "Cuadrada, sin caída: suena hasta que sueltas",
-    wave: "square",
+    hint: "Registros de tubo y cola de iglesia",
+    // Un órgano no es una onda cuadrada: es un montón de tubos, y cada tubo da
+    // un seno puro. Lo que se elige son los registros — qué tubos suenan a la
+    // vez — y por eso aquí los armónicos van con sus nombres de registro.
+    wave: "sine",
     partials: [
-      [1, 0.4],
-      [2, 0.2],
-      [4, 0.12],
+      [0.5, 0.2], // 16', la octava grave que da el cuerpo
+      [1, 0.4], //   8', el fundamental
+      [2, 0.26], //  4', la octava
+      // 2⅔', la quinta. Este es EL registro del órgano: es lo que hace que se
+      // reconozca al instante y no suene a sintetizador.
+      [3, 0.17],
+      [4, 0.12], //  2'
+      [6, 0.07],
       [8, 0.05],
     ],
-    attack: 0.02,
-    decay: 0.06,
-    sustain: 0.95,
-    duration: 1.8,
-    peak: 0.3,
+    attack: 0.03,
+    decay: 0.05,
+    sustain: 1,
+    duration: 2,
+    peak: 0.26,
     sustained: true,
-    release: 0.08,
+    // Se suelta despacio y con cola de sala. Antes cortaba en 80 ms y sonaba a
+    // interruptor; un órgano está en una iglesia y la iglesia sigue sonando
+    // después de levantar el dedo.
+    release: 0.22,
+    reverb: { seconds: 2.6, mix: 0.5 },
   },
   {
     id: "cuerdas",
@@ -211,6 +263,22 @@ interface HeldNote {
 }
 
 /**
+ * Cuerda pulsada: la nota ya viene calculada entera, así que aquí solo hay que
+ * pasarla por la caja y dispararla.
+ */
+const spawnPlucked = (
+  ctx: AudioContext,
+  semitone: number,
+  voice: PluckedVoice,
+): HeldNote => {
+  playPluckedString(ctx, semitoneToFreq(semitone), voice.pluck, ctx.currentTime);
+
+  // La cuerda trae su propia caída dentro de la muestra, así que no hay nada
+  // que soltar: levantar el dedo de una guitarra no corta la nota.
+  return { release: () => {} };
+};
+
+/**
  * Monta una nota entera y la arranca.
  *
  * `hold` decide de qué va la envolvente: con `false` la nota trae su final
@@ -224,6 +292,8 @@ const spawn = (
   voice: Voice,
   hold: boolean,
 ): HeldNote => {
+  if (voice.engine === "plucked") return spawnPlucked(ctx, semitone, voice);
+
   const now = ctx.currentTime;
   const freq = semitoneToFreq(semitone);
   const end = now + voice.duration;
@@ -252,6 +322,8 @@ const spawn = (
 
   tail.connect(master);
   master.connect(ctx.destination);
+  // Se pincha detrás de la envolvente, que es lo que oye la sala.
+  if (voice.reverb) connectReverb(ctx, master, voice.reverb);
 
   // Envolvente. Las rampas exponenciales no pueden llegar a cero.
   const floor = 0.0001;
@@ -395,8 +467,8 @@ export function useFreeSynth() {
           previous.release();
         }
 
-        const note = spawn(ctx, semitone, voice, Boolean(voice.sustained));
-        if (voice.sustained) heldRef.current.set(semitone, note);
+        const note = spawn(ctx, semitone, voice, isSustained(voice));
+        if (isSustained(voice)) heldRef.current.set(semitone, note);
       };
 
       if (ctx.state === "suspended") ctx.resume().then(start);

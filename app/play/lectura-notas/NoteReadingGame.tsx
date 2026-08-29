@@ -13,7 +13,7 @@ import {
   type NoteReadingLevel,
   type NoteReadingQuestion,
 } from "@/lib/noteReading";
-import { getStoredRoundLength } from "@/lib/roundLength";
+import { ROUND_LENGTH } from "@/lib/roundLength";
 
 interface Round {
   questions: NoteReadingQuestion[];
@@ -21,7 +21,7 @@ interface Round {
 }
 
 const createRound = (level: NoteReadingLevel): Round => {
-  const total = getStoredRoundLength();
+  const total = ROUND_LENGTH;
   return {
     questions: buildNoteReadingQuiz(level, total),
     answers: Array<string | null>(total).fill(null),
@@ -36,7 +36,8 @@ export default function NoteReadingGame({ level }: { level: NoteReadingLevel }) 
   const advanceTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // getStoredRoundLength() lee localStorage, que no existe en el servidor.
+    // La ronda se sortea con Math.random(): armarla durante el render del
+    // servidor daría una distinta al hidratar.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRound(createRound(level));
     setStep(0);

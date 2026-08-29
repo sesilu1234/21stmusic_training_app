@@ -16,7 +16,7 @@ import {
   type ChordStaffLevel,
   type ChordStaffQuestion,
 } from "@/lib/staffChords";
-import { getStoredRoundLength } from "@/lib/roundLength";
+import { ROUND_LENGTH } from "@/lib/roundLength";
 
 interface Round {
   questions: ChordStaffQuestion[];
@@ -25,7 +25,7 @@ interface Round {
 }
 
 const createRound = (level: ChordStaffLevel): Round => {
-  const total = getStoredRoundLength();
+  const total = ROUND_LENGTH;
   return {
     questions: buildChordStaffQuiz(level, total),
     answers: Array<string[] | null>(total).fill(null),
@@ -47,7 +47,8 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
   const advanceTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // getStoredRoundLength() lee localStorage, que no existe en el servidor.
+    // La ronda se sortea con Math.random(): armarla durante el render del
+    // servidor daría una distinta al hidratar.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRound(createRound(level));
     setStep(0);

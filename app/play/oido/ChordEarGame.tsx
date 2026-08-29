@@ -14,7 +14,7 @@ import {
   type ChordOption,
   type ChordQuestion,
 } from "@/lib/chordEar";
-import { getStoredRoundLength } from "@/lib/roundLength";
+import { ROUND_LENGTH } from "@/lib/roundLength";
 
 /** Hueco entre un acorde y el siguiente. */
 const GAP_MS = 1150;
@@ -28,7 +28,7 @@ interface Round {
 }
 
 const createRound = (level: ChordLevel): Round => {
-  const total = getStoredRoundLength();
+  const total = ROUND_LENGTH;
   return {
     questions: buildChordQuiz(level, total),
     answers: Array<string[] | null>(total).fill(null),
@@ -66,9 +66,9 @@ export default function ChordEarGame({
   const slots = level.length;
 
   // La ronda se arma en un efecto, no al inicializar el estado, porque
-  // getStoredRoundLength() lee localStorage: en el render del servidor no
-  // existe, y sembrarlo ahí daría un desajuste de hidratación. Pasa una vez al
-  // montar, así que el render de más no importa.
+  // La ronda se sortea con Math.random(): armarla durante el render del
+  // servidor daría un desajuste de hidratación. Pasa una vez al montar, así
+  // que el render de más no importa.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRound(createRound(level));

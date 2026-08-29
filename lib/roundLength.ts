@@ -1,29 +1,12 @@
-"use client";
-
-// Longitud de la partida. 24 seguía siendo mucho para practicar cinco minutos
-// en el móvil, así que se puede bajar a 12 o subir a 48.
-//
-// El valor se lee UNA vez, al montar el juego, y no reacciona a cambios: si
-// cambiase a mitad de partida, las listas de preguntas y de respuestas se
-// quedarían descuadradas. El selector guarda y recarga.
-
-export const ROUND_LENGTHS = [12, 24, 48] as const;
-export type RoundLength = (typeof ROUND_LENGTHS)[number];
-
-export const DEFAULT_ROUND_LENGTH: RoundLength = 24;
-
-const ROUND_LENGTH_KEY = "21st_round_length";
-
-const isRoundLength = (value: number): value is RoundLength =>
-  (ROUND_LENGTHS as readonly number[]).includes(value);
-
-export const getStoredRoundLength = (): RoundLength => {
-  if (typeof window === "undefined") return DEFAULT_ROUND_LENGTH;
-  const stored = Number(window.localStorage.getItem(ROUND_LENGTH_KEY));
-  return isRoundLength(stored) ? stored : DEFAULT_ROUND_LENGTH;
-};
-
-export const setStoredRoundLength = (length: RoundLength) => {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(ROUND_LENGTH_KEY, String(length));
-};
+/**
+ * Cuántas preguntas tiene una partida. Igual para todos los modos.
+ *
+ * Hubo un selector de 12 / 24 / 48 guardado en localStorage, pero el único
+ * sitio desde el que se podía tocar era el marcador del final de la partida:
+ * para bajar a 12 había que jugarse antes una de 24 enteras. En vez de moverlo
+ * de sitio se ha quitado entero, que 24 vale para todo el mundo.
+ *
+ * Si algún día vuelve a hacer falta poder elegir, este es el sitio por donde
+ * empezar: los dieciocho modos leen esta constante y nada más.
+ */
+export const ROUND_LENGTH = 24;

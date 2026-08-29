@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useRef } from "react";
+import { playPluckedString, type PluckParams } from "@/lib/pluckedString";
 
 export const INTERVALS = [
   { name: "Unísono", semitones: 0 },
@@ -25,6 +26,13 @@ export function semitonesToFreq(s: number) {
 }
 
 export type Preset = { label: string; make: (ctx: AudioContext, freq: number, when: number) => void };
+
+/**
+ * La guitarra no se monta con osciladores como las demás: la nota sale entera
+ * de `lib/pluckedString`. Suena algo más floja que en el piano libre porque
+ * aquí se apilan hasta cuatro notas de golpe en un acorde.
+ */
+const GUITAR: PluckParams = { sustain: 3.4, brightness: 0.62, peak: 0.45 };
 
 export const PRESETS: Preset[] = [
   {
@@ -54,6 +62,12 @@ export const PRESETS: Preset[] = [
     },
   },
   {
+    label: "Guitarra",
+    make(ctx, freq, when) {
+      playPluckedString(ctx, freq, GUITAR, when);
+    },
+  },
+  {
     label: "Flauta",
     make(ctx, freq, when) {
       const master = ctx.createGain();
@@ -75,24 +89,6 @@ export const PRESETS: Preset[] = [
     },
   },
   {
-    label: "Marimba",
-    make(ctx, freq, when) {
-      const master = ctx.createGain();
-      master.connect(ctx.destination);
-      master.gain.setValueAtTime(0, when);
-      master.gain.linearRampToValueAtTime(0.5, when + 0.005);
-      master.gain.exponentialRampToValueAtTime(0.001, when + 1.6);
-      [[1, 0.6], [3.97, 0.2], [9.87, 0.07], [2, 0.12]].forEach(([ratio, vol]) => {
-        const osc = ctx.createOscillator(); const g = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq * ratio, when);
-        g.gain.setValueAtTime(vol, when);
-        g.gain.exponentialRampToValueAtTime(0.001, when + 1.6 / ratio);
-        osc.connect(g); g.connect(master); osc.start(when); osc.stop(when + 1.7);
-      });
-    },
-  },
-  {
     label: "Synth",
     make(ctx, freq, when) {
       const master = ctx.createGain(); master.connect(ctx.destination);
@@ -111,7 +107,7 @@ export const PRESETS: Preset[] = [
   },
 ];
 
-export const PRESET_ICONS = ["🎹", "🪈", "🪘", "🎛️"];
+export const PRESET_ICONS = ["🎹", "🎸", "🪈", "🎛️"];
 
 export type Dyad = { root: number; semi: number };
 

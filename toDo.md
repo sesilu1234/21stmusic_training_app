@@ -17,7 +17,6 @@ Rockschool y Constructor de melodías don't score — they're the only two modes
 
 - que el papa se haga 1000 preguntas y nos las pase en csv
 
-- rework de las herramientas
 
 
 
@@ -28,13 +27,8 @@ Rockschool y Constructor de melodías don't score — they're the only two modes
 
 - un modo de que sea de suena una melodia y literalmente tienes que repetirla. aunque esto igual queda mal porque suenan melodias to feas y sin sentido. se puede hacer sino o aparte un modo de literlamente memoria...suenan cada vez una nota ma
 
-- en lectura ritimica modificar , que esta mal el nivel 2   (si hay corchea despues tiene venir corchea...)
-
-- una seccion de guia, tutorial,learning...?
 
 
-- poner un instrumento en todo de escucha y free piano de guitarra...es necesario...
-- - hacerlo tambien lo de progreso como logros  :(por ej empl oboviamnete ocneguir lo deacordes, per ono solo en piano, sino tambien en guitarra...)
 
 
 -cambiar letras y probar tipografia, probar otro style
@@ -47,14 +41,10 @@ otros iconos
 
 
 
-- en lectura ritmico, que vayan iunidas corcheas contiguas. y que el 3er tiempo se vea siempre
 
+- cambiar nombre  a algo namecheap https://21stmusic-training-app.vercel.app/
 
 ---------------------------------
-
-
-poder poner en favorito un modo  (por si hay muchos, que alugien logueado lo encunetre rapido)
-
 
 
 
@@ -64,8 +54,6 @@ memorizacion melodico : va sonando cada vez una nota mas y tienes que tocarlo en
 
 
 
-para usuario logeado , en tarjeta de modo poner el mejor / medalla / utlima vez.
-q(dicho por el papa)que un usuario no logeada taeengo acceso trrestring a algunos modos y ponga una x de necesitas logearte
 
 para logeados, una actividad con entrenamiento nuevo o entrenamiento diaria (que sea un simple mix de modos o en lo que mas falla...)...
 
@@ -92,10 +80,7 @@ poner muchas preguntas mas en trivial. muchas que sean no de grupos sino de inst
 - ver y examinar cada uno de los modos de juego y ver si cambiarles algo, o añadir, o modificar algo  ?
 
 
--
- una cosa que esta mal creo, es que selecciono 48 o 24 o 12 al fina d de jugar una partida, wtf ? en todo caso eso tendria que poderse seleccionar en algun lado...o que primero hacer el 12, 24 despues 48 ... o que ? 
 
-- las motas de polvo siempre aparece , alprincippio al menos, igua. por ? es determinista ? 
 
 
 - que el piano libre, en movil se ponga horizontal. en vertical no cabe bien. ademas, que se puede pulsar con dos dedos, ahora no deja dos notas a la vez en movil...
@@ -139,5 +124,19 @@ Progresiones tipicas ( o esto igual no..ya se aprende de otra manera ..no lo sé
 -cambiar nomencaltura nombre acordes SI M7B5 esta mal y da confusion (seria Si min7b5 o m7b5)
 
 
+- en cosas de progrsiones , acordes, sonido... primero : al hacer reset o replay no se corta al momento, eso es malo. ademas, al pricnipio la primera que suena no aparece color a la vez que sonido...--
+- 
+- no tan dimuniminada opaca lscreen al final con el marcador siria...
 
 
+- en volcacliazaciones y rockschool : en movil el boton de ir a casa sea mas pequeño , sino no cabe bien con el header
+boton metronomo no ocupe todo
+mejorar boton play
+en rockschool no llamar encadenar simplemente como en vocalizacion subir o bajar
+ademas en muestra y suelto y lo otro lo hace mal, el 1, el del bajo es literalmente el que empiezas a cantar
+
+
+lo de Tónica
+La toca el piano
+La cantas túno tiene
+ sentido, es simplemente dos cosas solo : tonica - nota(otros , o alun nombre asi)

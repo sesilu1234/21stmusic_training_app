@@ -2,13 +2,18 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import GameChrome from "@/app/components/GameChrome";
-import { getCtx } from "./metronome";
-import SimpleMovingScore from "./MusicDisplay";
 import GameOverModal from "@/app/components/GameOverModal";
+import { getCtx } from "./metronome";
+import SimpleMovingScore, { type MusicRef } from "./MusicDisplay";
+import type { RhythmLevel } from "@/lib/rhythm";
 
-const MEASURE_OPTIONS = [4, 8, 12, 24];
+/** Compases con los que arranca la sesión, si el nivel los ofrece. */
+const preferredMeasures = (options: number[]) =>
+  options.includes(24) ? 24 : options[options.length - 1];
 
-export default function RitmoGame() {
+export default function RhythmGame({ level }: { level: RhythmLevel }) {
+  const measureOptions = level.measureOptions;
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [flash, setFlash] = useState(false);
   const [showScore, setShowScore] = useState(false);
@@ -19,41 +24,52 @@ export default function RitmoGame() {
     percentage: 0,
   });
 
-  const [bpm, setBpm] = useState(120);
-  const [measures, setMeasures] = useState(24);
+  const [bpm, setBpm] = useState(level.defaultBpm);
+  const [localBpm, setLocalBpm] = useState(level.defaultBpm);
+  const [measures, setMeasures] = useState(preferredMeasures(measureOptions));
   const [currentTick, setCurrentTick] = useState(1);
-  const [localBpm, setLocalBpm] = useState(120);
 
   const tapsRef = useRef<{ id: number; time: number }[]>([]);
-  const musicRef = useRef<{
-    handleStart: (isPlaying: boolean) => void;
-    handleBPMChange: (bpm: number) => void;
-    handleMeasuresChange: () => void;
-  }>(null);
+  const musicRef = useRef<MusicRef>(null);
 
-  const bpmRef = useRef<number>(120);
-  const measuresRef = useRef<number>(124);
+  const bpmRef = useRef<number>(level.defaultBpm);
+  const measuresRef = useRef<number>(preferredMeasures(measureOptions));
 
-  const onGameEnd = useCallback((endType: any, data: any = {}) => {
+  const onGameEnd = useCallback((endType: string, data: Record<string, number> = {}) => {
     setIsPlaying(false);
 
     if (endType == "reset") return;
 
+    const played = (data.correct_notes ?? 0) + (data.failed_notes ?? 0);
+
     setScoreData({
-      hits: data.correct_measures,
-      misses: data.failed_measures,
-      percentage: Math.round(
-        ((data.correct_notes / (data.correct_notes + data.failed_notes)) *
-          100) /
-          Math.max(
-            1,
-            tapsRef.current.length / (data.correct_notes + data.failed_notes),
-          ),
-      ),
+      hits: data.correct_measures ?? 0,
+      misses: data.failed_measures ?? 0,
+      percentage:
+        played === 0
+          ? 0
+          : Math.round(
+              (((data.correct_notes ?? 0) / played) * 100) /
+                Math.max(1, tapsRef.current.length / played),
+            ),
     });
 
     setShowScore(true);
   }, []);
+
+  const playTapSound = (time: number) => {
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 1800;
+    gain.gain.setValueAtTime(1.2, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.025);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(time);
+    osc.stop(time + 0.03);
+  };
 
   const handleTap = useCallback(() => {
     const ctx = getCtx();
@@ -84,20 +100,6 @@ export default function RitmoGame() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleTap]);
 
-  const playTapSound = (time: number) => {
-    const ctx = getCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = 1800;
-    gain.gain.setValueAtTime(1.2, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.025);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(time);
-    osc.stop(time + 0.03);
-  };
-
   useEffect(() => {
     bpmRef.current = bpm;
     musicRef.current?.handleBPMChange(bpm);
@@ -125,7 +127,8 @@ export default function RitmoGame() {
       )}
 
       <GameChrome>
-        Pulsa al <span className="bg-white text-black px-2 py-[1px] rounded">ritmo</span>
+        Pulsa al{" "}
+        <span className="bg-white text-black px-2 py-[1px] rounded">ritmo</span>
       </GameChrome>
 
       <main className="flex flex-col items-center py-2 md:py-4 gap-4 md:gap-8">
@@ -139,6 +142,15 @@ export default function RitmoGame() {
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white text-black flex items-center justify-center text-xl md:text-2xl font-black italic shadow-[4px_4px_0px_#000] border-2 border-black">
                   {currentTick < 1 ? 1 : currentTick}
                 </div>
+              </div>
+
+              <div className="flex flex-col">
+                <span className="text-[8px] md:text-[10px] tracking-[0.25em] opacity-40 font-black uppercase">
+                  {level.title}
+                </span>
+                <span className="max-w-[16rem] text-[10px] md:text-xs leading-tight opacity-70">
+                  {level.desc}
+                </span>
               </div>
             </div>
 
@@ -209,7 +221,7 @@ export default function RitmoGame() {
 
                       {openMeasures && !isPlaying && (
                         <div className="z-80 px-1 py-1 absolute top-full flex flex-col gap-1 mt-1 w-full bg-black/60  border border-white/10 rounded-xl shadow-xl overflow-hidden  animate-in fade-in zoom-in-95">
-                          {MEASURE_OPTIONS.map((opt) => (
+                          {measureOptions.map((opt) => (
                             <div
                               key={opt}
                               onClick={() => {
@@ -236,11 +248,12 @@ export default function RitmoGame() {
         </div>
 
         <div
-          className="w-full max-w-[95%] bg-white rounded-[2rem] md:rounded-[2.5rem] h-48 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden"
+          className="w-full max-w-[95%] bg-white rounded-[2rem] md:rounded-[2.5rem] h-56 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden"
           style={{ pointerEvents: openMeasures ? "none" : "auto" }}
         >
           <SimpleMovingScore
             ref={musicRef}
+            level={level}
             BPM={bpmRef}
             measures={measuresRef}
             onComplete={onGameEnd}

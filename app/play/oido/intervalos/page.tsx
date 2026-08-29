@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import GameChrome from "@/app/components/GameChrome";
-import { DEFAULT_ROUND_LENGTH, getStoredRoundLength } from "@/lib/roundLength";
+import { ROUND_LENGTH } from "@/lib/roundLength";
 import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
 import {
   INTERVALS,
@@ -15,7 +15,7 @@ import GameOverModal from "@/app/components/GameOverModal";
 
 export default function IntervalosAuditivos() {
 
-  const [totalQuestions, setTotalQuestions] = useState(DEFAULT_ROUND_LENGTH);
+  const totalQuestions = ROUND_LENGTH;
   const [quizList, setQuizList]       = useState<typeof INTERVALS>([]);
   const [step, setStep]               = useState(0);
   const [results, setResults]         = useState<(null|"correct"|"wrong")[]>(Array(totalQuestions).fill(null));
@@ -41,8 +41,7 @@ export default function IntervalosAuditivos() {
 
   useEffect(() => {
     const startRound = () => {
-      const total = getStoredRoundLength();
-      setTotalQuestions(total);
+      const total = ROUND_LENGTH;
       setResults(Array(total).fill(null));
       setUserAnswers(Array(total).fill(null));
       const list: typeof INTERVALS = [];

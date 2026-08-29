@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 /**
  * Teclado de piano dibujado con divs. Lo comparten todos los modos de piano:
  * unos solo iluminan teclas y otros recogen pulsaciones, así que aquí no hay
@@ -133,13 +135,43 @@ export default function PianoKeyboard({
   };
 
   /**
+   * Qué dedo está tocando qué tecla: id del puntero -> semitono.
+   *
+   * Antes cada tecla se quedaba con la captura de su puntero y esperaba a que
+   * el "soltar" volviera a ella. Eso funciona con un ratón, que solo hay uno,
+   * pero con varios dedos a la vez depende de cómo cada navegador reparte las
+   * capturas, y en el móvil se perdían pulsaciones: no se podía hacer un
+   * acorde. Con el mapa, cada dedo va por su cuenta y da igual cuántos haya.
+   */
+  const touching = useRef(new Map<number, number>());
+
+  // Se escucha en la ventana, no en la tecla: así soltar cuenta aunque el dedo
+  // (o el ratón) se haya ido fuera del teclado. Si no, la nota se quedaría
+  // sonando para siempre.
+  useEffect(() => {
+    if (!onRelease) return;
+
+    const end = (event: PointerEvent) => {
+      const semitone = touching.current.get(event.pointerId);
+      if (semitone === undefined) return;
+      touching.current.delete(event.pointerId);
+      onRelease(semitone);
+    };
+
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
+    return () => {
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+    };
+  }, [onRelease]);
+
+  /**
    * Cómo escucha una tecla. Sin `onRelease` es un botón de toda la vida.
    *
-   * Con `onRelease` hay que usar eventos de puntero: `click` llega cuando ya
-   * has soltado, y para mantener una nota hace falta enterarse en el momento
-   * de apretar. La captura del puntero garantiza que el "soltar" llegue a la
-   * misma tecla aunque el dedo se haya ido a otra parte de la pantalla — si no,
-   * la nota se quedaría sonando para siempre.
+   * Con `onRelease` hacen falta eventos de puntero: `click` llega cuando ya has
+   * soltado, y para mantener una nota hay que enterarse en el momento de
+   * apretar.
    */
   const keyHandlers = (semitone: number) => {
     if (disabled || !onPress) return {};
@@ -148,12 +180,11 @@ export default function PianoKeyboard({
     return {
       onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) => {
         event.preventDefault();
-        event.currentTarget.setPointerCapture(event.pointerId);
+        touching.current.set(event.pointerId, semitone);
         press(semitone);
       },
-      onPointerUp: () => onRelease(semitone),
-      onPointerCancel: () => onRelease(semitone),
-      onLostPointerCapture: () => onRelease(semitone),
+      // Un menú contextual por dejar el dedo apretado cancela la pulsación.
+      onContextMenu: (event: React.MouseEvent) => event.preventDefault(),
     };
   };
 
@@ -169,6 +200,17 @@ export default function PianoKeyboard({
       className={`relative mx-auto w-full select-none ${className}`}
       role="group"
       aria-label="Teclado de piano"
+      style={
+        onRelease
+          ? {
+              // Sin esto el navegador puede leer dos dedos como un pellizco
+              // para hacer zoom y cancelar las dos pulsaciones a la vez.
+              touchAction: "none",
+              WebkitUserSelect: "none",
+              WebkitTapHighlightColor: "transparent",
+            }
+          : undefined
+      }
     >
       {/* Marco oscuro: da el borde de piano y evita que las teclas floten. */}
       <div

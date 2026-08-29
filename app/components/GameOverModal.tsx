@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Flame, Home, Medal, RotateCcw } from "lucide-react";
 import Crown from "./Crown";
-import RoundLengthPicker from "./RoundLengthPicker";
 import { saveAttempt } from "@/app/progreso/actions";
 import type { SaveResult } from "@/lib/progress";
 
@@ -47,8 +46,11 @@ export default function GameOverModal({ correct, total, onRestart }: Props) {
       .catch(() => setSaved(null));
   }, [pathname, correct, total]);
 
+  // El velo tapaba demasiado: iba a media opacidad y con 24px de desenfoque, y
+  // detrás no se veía nada. Ahora es lo justo para que la tarjeta se despegue
+  // del fondo y se siga viendo dónde estabas.
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 p-4 backdrop-blur-[3px]">
       {perfect && (
         <div className="glow-pulse pointer-events-none absolute h-[26rem] w-[26rem] rounded-full bg-amber-400/25 blur-3xl" />
       )}
@@ -150,8 +152,6 @@ export default function GameOverModal({ correct, total, onRestart }: Props) {
         )}
 
         <div className="mt-7 space-y-3">
-          <RoundLengthPicker />
-
           <button
             onClick={restart}
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-500 py-4 text-xs font-black uppercase tracking-widest text-black transition hover:bg-amber-400"

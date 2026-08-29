@@ -13,7 +13,7 @@ import {
   type ChordStaffLevel,
   type ChordStaffQuestion,
 } from "@/lib/staffChords";
-import { getStoredRoundLength } from "@/lib/roundLength";
+import { ROUND_LENGTH } from "@/lib/roundLength";
 
 /** Lo que se ha contestado: la fundamental y la especie, cada una por su lado. */
 interface Answer {
@@ -35,7 +35,7 @@ const rootOptions = (level: ChordStaffLevel) =>
     : NATURAL_ROOT_NAMES;
 
 const createRound = (level: ChordStaffLevel): Round => {
-  const total = getStoredRoundLength();
+  const total = ROUND_LENGTH;
   return {
     questions: buildChordStaffQuiz(level, total),
     answers: Array<Answer | null>(total).fill(null),
@@ -55,7 +55,8 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
   const advanceTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // getStoredRoundLength() lee localStorage, que no existe en el servidor.
+    // La ronda se sortea con Math.random(): armarla durante el render del
+    // servidor daría una distinta al hidratar.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRound(createRound(level));
     setStep(0);

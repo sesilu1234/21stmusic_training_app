@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, LogIn, LogOut } from "lucide-react";
+import { GraduationCap, LogIn, LogOut, StickyNote } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { logout } from "@/app/actions";
 
@@ -94,6 +94,16 @@ export default function UserMenu({ displayName }: { displayName?: string | null 
           </div>
 
           <div className="mt-1.5 space-y-0.5">
+            {/* Las notas son del alumno y se guardan en su cuenta, así que se
+                buscan aquí y no en la barra de navegación. */}
+            <Link
+              href="/notas"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
+            >
+              <StickyNote size={16} strokeWidth={1.75} />
+              Mis notas
+            </Link>
+
             <ThemeToggle withLabel />
 
             <form action={logout}>

@@ -13,7 +13,7 @@ import {
   type PianoNoteLevel,
   type PianoNoteQuestion,
 } from "@/lib/pianoNotes";
-import { getStoredRoundLength } from "@/lib/roundLength";
+import { ROUND_LENGTH } from "@/lib/roundLength";
 
 interface Round {
   questions: PianoNoteQuestion[];
@@ -21,7 +21,7 @@ interface Round {
 }
 
 const createRound = (level: PianoNoteLevel): Round => {
-  const total = getStoredRoundLength();
+  const total = ROUND_LENGTH;
   return {
     questions: buildPianoNoteQuiz(level, total),
     answers: Array<number | null>(total).fill(null),
@@ -39,7 +39,8 @@ export default function PianoNoteGame({ level }: { level: PianoNoteLevel }) {
   const advanceTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // getStoredRoundLength() lee localStorage, que no existe en el servidor.
+    // La ronda se sortea con Math.random(): armarla durante el render del
+    // servidor daría una distinta al hidratar.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRound(createRound(level));
     setStep(0);

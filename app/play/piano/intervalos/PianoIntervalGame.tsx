@@ -12,7 +12,7 @@ import {
   type PianoIntervalLevel,
   type PianoIntervalQuestion,
 } from "@/lib/pianoIntervals";
-import { getStoredRoundLength } from "@/lib/roundLength";
+import { ROUND_LENGTH } from "@/lib/roundLength";
 
 /** Hueco entre la nota de partida y la que se acaba de pulsar. */
 const GAP_MS = 480;
@@ -24,7 +24,7 @@ interface Round {
 }
 
 const createRound = (level: PianoIntervalLevel): Round => {
-  const total = getStoredRoundLength();
+  const total = ROUND_LENGTH;
   return {
     questions: buildPianoIntervalQuiz(level, total),
     answers: Array<number | null>(total).fill(null),
@@ -45,8 +45,8 @@ export default function PianoIntervalGame({ level }: { level: PianoIntervalLevel
   const advanceTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // La ronda se arma en un efecto porque getStoredRoundLength() lee
-    // localStorage, que no existe durante el render del servidor.
+    // La ronda se arma en un efecto porque se sortea con Math.random():
+    // hacerlo en el render del servidor daría una distinta al hidratar.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRound(createRound(level));
     setStep(0);

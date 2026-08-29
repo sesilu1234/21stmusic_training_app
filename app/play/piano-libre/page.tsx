@@ -6,6 +6,7 @@ import { ArrowLeft, Check, ChevronDown, ChevronUp, Waves } from "lucide-react";
 import Backdrop from "@/app/components/Backdrop";
 import SiteFooter from "@/app/components/SiteFooter";
 import PianoKeyboard, { noteName, type KeyMark } from "@/app/components/PianoKeyboard";
+import RotateToLandscape from "@/app/components/RotateToLandscape";
 import { VOICES, useFreeSynth, type Voice } from "@/lib/freeSynth";
 
 /**
@@ -205,6 +206,7 @@ export default function PianoLibrePage() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+      <RotateToLandscape />
       <Backdrop />
 
       <div className="relative z-10 flex min-h-screen flex-col px-4 py-5 md:px-8 md:py-7">

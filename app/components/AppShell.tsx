@@ -2,20 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookMarked, Gamepad2, Lock, StickyNote, TrendingUp } from "lucide-react";
+import { BookMarked, Gamepad2, Lock, TrendingUp } from "lucide-react";
 import Backdrop from "./Backdrop";
 import SiteFooter from "./SiteFooter";
 import UserMenu from "./UserMenu";
 
+/**
+ * Qué hace cada enlace cuando no hay sesión:
+ *
+ *  - `abierto`  se usa igual sin cuenta.
+ *  - `candado`  se enseña apagado y con candado. Es para la guía: material de
+ *               la escuela que interesa que se vea que existe, aunque no se
+ *               pueda abrir todavía.
+ *  - `oculto`   no se pinta siquiera. El progreso sin cuenta no es que esté
+ *               cerrado: es que no hay nada que enseñar, porque sin sesión no
+ *               se guarda ninguna partida. Un candado ahí solo daba a entender
+ *               que la app está más cerrada de lo que está.
+ *
+ * "Mis notas" no está aquí: vive en el desplegable de la cuenta, que es donde
+ * se busca algo que es tuyo y solo tuyo.
+ */
 const links = [
-  { href: "/", label: "Juegos", Icon: Gamepad2, studentsOnly: false },
-  // La guía es material de la escuela. No se esconde a quien no ha entrado:
-  // se enseña apagada y con candado, y al pulsarla se explica por qué.
-  { href: "/guia", label: "Guía", Icon: BookMarked, studentsOnly: true },
-  { href: "/notas", label: "Notas", Icon: StickyNote, studentsOnly: false },
-  // El progreso solo existe si hay cuenta: sin sesión no se guarda ninguna
-  // partida, así que se enseña con el mismo candado que la guía.
-  { href: "/progreso", label: "Progreso", Icon: TrendingUp, studentsOnly: true },
+  { href: "/", label: "Juegos", Icon: Gamepad2, guest: "abierto" },
+  { href: "/guia", label: "Guía", Icon: BookMarked, guest: "candado" },
+  { href: "/progreso", label: "Progreso", Icon: TrendingUp, guest: "oculto" },
 ] as const;
 
 /**
@@ -30,6 +40,10 @@ export default function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
+  const visibleLinks = links.filter(
+    (link) => displayName || link.guest !== "oculto",
+  );
 
   // La guía tiene rutas hijas (/guia/notas), así que ahí no vale el igual.
   const isActive = (href: string) =>
@@ -66,8 +80,8 @@ export default function AppShell({
 
             <div className="flex flex-shrink-0 items-center gap-2">
               <div className="hidden items-center gap-1 md:flex">
-                {links.map(({ href, label, Icon, studentsOnly }) => {
-                  const locked = studentsOnly && !displayName;
+                {visibleLinks.map(({ href, label, Icon, guest }) => {
+                  const locked = guest === "candado" && !displayName;
                   return (
                     <Link
                       key={href}
@@ -101,9 +115,9 @@ export default function AppShell({
         {/* Navegación de móvil: abajo, al alcance del pulgar. */}
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/90 backdrop-blur-xl md:hidden">
           <div className="mx-auto flex max-w-md items-stretch">
-            {links.map(({ href, label, Icon, studentsOnly }) => {
+            {visibleLinks.map(({ href, label, Icon, guest }) => {
               const active = isActive(href);
-              const locked = studentsOnly && !displayName;
+              const locked = guest === "candado" && !displayName;
               return (
                 <Link
                   key={href}

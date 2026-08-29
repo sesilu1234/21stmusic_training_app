@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
 import GameChrome from "@/app/components/GameChrome";
-import { getStoredRoundLength } from "@/lib/roundLength";
+import { ROUND_LENGTH } from "@/lib/roundLength";
 import { intervalos_data } from "./intervalos_data";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
@@ -42,7 +42,7 @@ export default function IntervalosGame() {
   useEffect(() => {
     const shuffled = [...intervalos_data]
       .sort(() => Math.random() - 0.5)
-      .slice(0, getStoredRoundLength());
+      .slice(0, ROUND_LENGTH);
     setQuizList(shuffled);
     setResults(Array(shuffled.length).fill(null));
     setUserAnswers(Array(shuffled.length).fill(null));

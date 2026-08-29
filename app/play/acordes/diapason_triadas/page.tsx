@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
 import GameChrome from "@/app/components/GameChrome";
-import { getStoredRoundLength } from "@/lib/roundLength";
+import { ROUND_LENGTH } from "@/lib/roundLength";
 import { chords_images } from "./chords_images";
 import {
   CheckCircle2,
@@ -35,7 +35,7 @@ export default function TriadsGame() {
   useEffect(() => {
     const shuffled = [...chords_images]
       .sort(() => Math.random() - 0.5)
-      .slice(0, getStoredRoundLength());
+      .slice(0, ROUND_LENGTH);
     setQuizList(shuffled);
     setResults(Array(shuffled.length).fill(null));
     setUserAnswers(Array(shuffled.length).fill(null));
