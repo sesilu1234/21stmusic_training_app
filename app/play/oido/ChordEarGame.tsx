@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, RotateCcw, RotateCw, Volume2 } from "lucide-react";
+import { ArrowLeft, RotateCcw, Volume2 } from "lucide-react";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
+import RoundFooter from "@/app/components/RoundFooter";
 import { PRESET_ICONS, PRESETS, useAudio } from "./audio";
 import {
   buildChordQuiz,
@@ -52,8 +53,9 @@ export default function ChordEarGame({
   const [step, setStep] = useState(0);
   /** Lo que lleva elegido en la pregunta actual, todavía sin corregir. */
   const [draft, setDraft] = useState<string[]>([]);
-  const [answerState, setAnswerState] = useState<"idle" | "correct" | "wrong">("idle");
   const [gameOver, setGameOver] = useState(false);
+  /** true mientras estás mirando una pregunta vieja en vez de jugando. */
+  const [reviewing, setReviewing] = useState(false);
   const [presetIdx, setPresetIdx] = useState(0);
   /** 0 = nada encendido. 1 = tónica (o el acorde en modo calidad). 2… = acordes. */
   const [playFlash, setPlayFlash] = useState(0);
@@ -74,8 +76,8 @@ export default function ChordEarGame({
     setRound(createRound(level));
     setStep(0);
     setDraft([]);
-    setAnswerState("idle");
     setGameOver(false);
+    setReviewing(false);
     autoPlayRef.current = true;
   }, [level]);
 
@@ -107,7 +109,9 @@ export default function ChordEarGame({
       clearFlashTimers();
 
       // Los acordes que suenan: en modo grado, primero la tónica de referencia.
-      const sequence = target.options.map((option) => chordNotes(option, target.keyRoot));
+      const sequence = target.options.map((option, index) =>
+        chordNotes(option, target.keyRoot, target.shapes[index]),
+      );
       const chords = withTonic ? [tonicChord(target.keyRoot), ...sequence] : sequence;
 
       // Se enciende una casilla por acorde, al ritmo al que van sonando.
@@ -141,6 +145,35 @@ export default function ChordEarGame({
 
   const answered = round?.answers[step] ?? null;
 
+  /** En qué pregunta va la partida. -1 = ya están todas contestadas. */
+  const liveStep = round?.answers.findIndex((answer) => answer === null) ?? 0;
+
+  /**
+   * Ir a una pregunta ya contestada para volver a oírla y ver qué pusiste.
+   * No se puede saltar hacia delante: como mucho, a la que está en juego.
+   */
+  const goTo = (index: number) => {
+    const last = liveStep === -1 ? total - 1 : liveStep;
+    if (index < 0 || index > last || index === step) return;
+
+    // Puede haber un avance en marcha (se acaba de contestar): se cancela,
+    // que si no daría un salto en mitad de la revisión.
+    if (advanceTimerRef.current) window.clearTimeout(advanceTimerRef.current);
+    clearFlashTimers();
+    setPlayFlash(0);
+    // Volver a la que está en juego no es revisar: es seguir, y por eso
+    // vuelve a sonar sola igual que al llegar a una pregunta nueva.
+    const back = index !== last;
+    setReviewing(back);
+    autoPlayRef.current = !back && liveStep !== -1;
+    setStep(index);
+    setDraft([]);
+
+    // Si ya no queda ninguna sin contestar, volver a la última es terminar:
+    // el avance que iba a cerrar la partida lo hemos cancelado nosotros.
+    if (liveStep === -1 && index === total - 1) setGameOver(true);
+  };
+
   const choose = (optionId: string) => {
     if (!round || !question || answered || gameOver) return;
 
@@ -157,7 +190,6 @@ export default function ChordEarGame({
     answers[step] = next;
     setRound({ ...round, answers });
     setDraft(next);
-    setAnswerState(sameSequence(next, question.options) ? "correct" : "wrong");
 
     advanceTimerRef.current = window.setTimeout(
       () => {
@@ -165,7 +197,6 @@ export default function ChordEarGame({
           autoPlayRef.current = true;
           setStep(step + 1);
           setDraft([]);
-          setAnswerState("idle");
         } else {
           setGameOver(true);
         }
@@ -210,11 +241,13 @@ export default function ChordEarGame({
     if (lit) return "scale-110 border-black bg-sky-400 text-black shadow-[4px_4px_0px_#000]";
 
     if (answered) {
-      const given = answered[index];
-      const expected = question.options[index].id;
-      return given === expected
+      // Verde solo si lo que enseña la casilla es lo que pusiste. Cuando
+      // fallas, la casilla pasa a enseñar la solución, y esa no puede ir en
+      // verde: parecería que has acertado. Ámbar, que en toda la app es el
+      // color de lo que se te da hecho.
+      return answered[index] === question.options[index].id
         ? "border-emerald-500 bg-emerald-300 text-black shadow-[4px_4px_0px_rgba(0,0,0,0.25)]"
-        : "border-rose-500 bg-rose-300 text-black shadow-[4px_4px_0px_rgba(0,0,0,0.25)]";
+        : "border-amber-500 bg-amber-300 text-black shadow-[4px_4px_0px_rgba(0,0,0,0.25)]";
     }
 
     if (draft[index]) {
@@ -231,19 +264,31 @@ export default function ChordEarGame({
 
   /** Lo que se escribe dentro de la casilla i. */
   const slotLabel = (index: number) => {
-    const chosen = answered?.[index] ?? draft[index];
+    // Ya corregida, la casilla enseña lo que ERA. Antes enseñaba lo que
+    // habías puesto y liaba: lo más gordo de la pantalla era la respuesta
+    // mala, y encima con pinta de etiqueta del acorde que había sonado.
+    const chosen = answered ? question.options[index].id : draft[index];
     if (!chosen) return "♩";
     return level.options.find((option) => option.id === chosen)?.label ?? chosen;
   };
 
   const heading =
-    level.mode === "grado"
+    level.heading ??
+    (level.mode === "grado"
       ? slots > 1
         ? { lead: "¿Qué", word: "PROGRESIÓN", tail: "es?" }
         : { lead: "¿Qué", word: "GRADO", tail: "es?" }
-      : { lead: "¿Qué", word: "ACORDE", tail: "es?" };
+      : { lead: "¿Qué", word: "ACORDE", tail: "es?" });
 
-  const expectedLabels = question.options.map((option) => option.label).join(" · ");
+  const givenLabels = (answered ?? [])
+    .map((id) => level.options.find((option) => option.id === id)?.label ?? id)
+    .join(" · ");
+
+  const answerState = !answered
+    ? "idle"
+    : sameSequence(answered, question.options)
+      ? "correct"
+      : "wrong";
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
@@ -366,15 +411,6 @@ export default function ChordEarGame({
                 Escuchar
               </button>
 
-              <button
-                type="button"
-                onClick={() => play(question)}
-                className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-white/35 transition hover:text-white/70"
-              >
-                <RotateCw size={12} />
-                Repetir
-              </button>
-
               {/* Solo tiene sentido con varias casillas: con una, elegir ya corrige. */}
               {slots > 1 && (
                 <button
@@ -417,41 +453,27 @@ export default function ChordEarGame({
               "¡Bien!"
             ) : (
               <>
-                Era{" "}
+                Dijiste{" "}
                 {/* normal-case: en mayúsculas un "ii" se leería "II", que es
                     otro acorde, y un "b3" se leería "B3", que es otra nota. */}
-                <span className="normal-case">{expectedLabels}</span>
+                <span className="normal-case">{givenLabels}</span>
               </>
             )}
           </p>
         </main>
 
-        <footer className="pb-4">
-          <div className="mb-3 flex flex-wrap justify-center gap-1.5">
-            {round.questions.map((item, index) => {
-              const given = round.answers[index];
-              return (
-                <span
-                  key={index}
-                  className={`h-1.5 rounded-full transition-all ${
-                    index === step ? "w-5 bg-violet-300" : "w-1.5"
-                  } ${
-                    given === null
-                      ? index === step
-                        ? ""
-                        : "bg-white/15"
-                      : sameSequence(given, item.options)
-                        ? "bg-emerald-400"
-                        : "bg-rose-400"
-                  }`}
-                />
-              );
-            })}
-          </div>
-          <p className="text-center text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">
-            {step + 1} / {total} · {correctCount} {correctCount === 1 ? "acierto" : "aciertos"}
-          </p>
-        </footer>
+        <RoundFooter
+          step={step}
+          total={total}
+          liveStep={liveStep}
+          results={round.questions.map((item, index) => {
+            const given = round.answers[index];
+            return given === null ? null : sameSequence(given, item.options);
+          })}
+          correctCount={correctCount}
+          reviewing={reviewing}
+          onGoTo={goTo}
+        />
       </div>
     </div>
   );

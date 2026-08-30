@@ -85,6 +85,10 @@ export function Stepper({
  * El botón grande cambia de material según el estado: disco blanco macizo
  * cuando invita a pulsarlo y cristal con un halo latiendo mientras suena. Así
  * se sabe si el ejercicio está en marcha sin tener que mirar la barra.
+ *
+ * Al pasar por encima el disco crece, se le enciende un halo y se le abre un
+ * anillo alrededor. Son tres cosas a la vez a propósito: es el único botón de
+ * la pantalla que hay que pulsar sí o sí, y tiene que pedirlo.
  */
 export function Transport({
   playing,
@@ -113,29 +117,46 @@ export function Transport({
         type="button"
         onClick={onToggle}
         aria-label={playing ? "Pausa" : "Empezar"}
-        className="group relative grid h-11 w-11 place-items-center rounded-full transition active:scale-95"
+        className="group relative grid h-12 w-12 place-items-center rounded-full outline-none transition-transform duration-200 ease-out hover:scale-[1.08] active:scale-90"
       >
+        {/* Halo: late mientras suena; parado, se enciende al pasar por encima. */}
         <span
           aria-hidden
-          className={`absolute -inset-1.5 rounded-full blur-md transition duration-300 ${
+          className={`absolute -inset-2 rounded-full blur-md transition duration-300 ${
             playing
-              ? "animate-pulse bg-emerald-300/25"
-              : "bg-white/20 opacity-0 group-hover:opacity-100"
+              ? "animate-pulse bg-emerald-300/30"
+              : "bg-white/25 opacity-0 group-hover:opacity-100"
           }`}
         />
+
+        {/* Anillo que se abre hacia fuera al pasar por encima. */}
         <span
           aria-hidden
-          className={`absolute inset-0 rounded-full transition duration-200 group-hover:scale-105 ${
+          className={`absolute inset-0 rounded-full border transition-all duration-300 ease-out group-hover:-inset-[5px] ${
             playing
-              ? "bg-slate-950/70 ring-1 ring-inset ring-white/30"
-              : "bg-gradient-to-b from-white to-slate-300 shadow-[0_6px_18px_-4px_rgba(255,255,255,0.45)]"
+              ? "border-emerald-300/40 group-hover:border-emerald-300/70"
+              : "border-white/0 group-hover:border-white/45"
           }`}
         />
-        <span className={`relative ${playing ? "text-white" : "text-slate-950"}`}>
+
+        <span
+          aria-hidden
+          className={`absolute inset-0 rounded-full transition duration-200 ${
+            playing
+              ? "bg-slate-950/70 ring-1 ring-inset ring-white/30 group-hover:bg-slate-950/85"
+              : "bg-gradient-to-b from-white to-slate-300 shadow-[0_6px_18px_-4px_rgba(255,255,255,0.45)] group-hover:from-white group-hover:to-white group-hover:shadow-[0_10px_26px_-6px_rgba(255,255,255,0.7)]"
+          }`}
+        />
+
+        <span
+          className={`relative transition-transform duration-200 ease-out group-hover:scale-110 group-active:scale-95 ${
+            playing ? "text-white" : "text-slate-950"
+          }`}
+        >
           {playing ? (
-            <Pause size={16} fill="currentColor" />
+            <Pause size={17} fill="currentColor" />
           ) : (
-            <Play size={16} fill="currentColor" className="ml-0.5" />
+            <Play size={17} fill="currentColor" className="ml-0.5" />
           )}
         </span>
       </button>
@@ -143,7 +164,14 @@ export function Transport({
   );
 }
 
-/** Qué significa cada color del teclado. */
+/**
+ * Qué significa cada color del teclado.
+ *
+ * Antes eran tres: tónica, "la toca el piano" y "la cantas tú". Sobraba una,
+ * porque cantar se cantan todas — que el piano la doble o no es cosa del modo
+ * de acompañamiento, no del teclado. Quedan las dos que de verdad hay que
+ * mirar: dónde está la tónica y qué nota va sonando.
+ */
 export function Legend() {
   return (
     <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[9px] font-black uppercase tracking-[0.12em] text-white/30">
@@ -151,10 +179,7 @@ export function Legend() {
         <span className="h-1.5 w-1.5 rounded-full bg-amber-300" /> Tónica
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="h-1.5 w-1.5 rounded-full bg-sky-300" /> La toca el piano
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> La cantas tú
+        <span className="h-1.5 w-1.5 rounded-full bg-sky-300" /> Nota
       </span>
     </div>
   );

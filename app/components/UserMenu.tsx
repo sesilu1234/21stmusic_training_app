@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GraduationCap, LogIn, LogOut, StickyNote } from "lucide-react";
+import AnimalAvatar from "./AnimalAvatar";
 import ThemeToggle from "./ThemeToggle";
 import { logout } from "@/app/actions";
 
@@ -59,8 +60,6 @@ export default function UserMenu({ displayName }: { displayName?: string | null 
     );
   }
 
-  const initial = displayName.trim().charAt(0).toUpperCase() || "?";
-
   return (
     <div ref={containerRef} className="relative">
       <button
@@ -69,14 +68,18 @@ export default function UserMenu({ displayName }: { displayName?: string | null 
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label={`Cuenta de ${displayName}`}
-        className={`group relative grid h-10 w-10 place-items-center rounded-full p-[2px] transition duration-300 ${
-          isOpen
-            ? "bg-gradient-to-br from-amber-300 to-amber-500 shadow-[0_0_0_3px_rgba(251,191,36,0.16)]"
-            : "bg-gradient-to-br from-white/25 to-white/5 hover:from-amber-300/70 hover:to-amber-500/40"
+        // Sin aro ni halo: el dibujo ya tiene su propio fondo y cualquier
+        // marco alrededor lo convertía en una medalla. Lo único que hace al
+        // pasar por encima es crecer, y se queda algo crecido mientras el
+        // menú está abierto.
+        className={`group relative grid h-10 w-10 place-items-center rounded-full transition-transform duration-200 ease-out hover:scale-110 active:scale-95 ${
+          isOpen ? "scale-105" : ""
         }`}
       >
-        <span className="grid h-full w-full place-items-center rounded-full bg-slate-950 text-xs font-black text-amber-300">
-          {initial}
+        {/* El dibujo llena el hueco entero: la baldosa ya trae su propio
+            fondo, así que se recorta en redondo y hace de avatar. */}
+        <span className="grid h-full w-full place-items-center overflow-hidden rounded-full">
+          <AnimalAvatar name={displayName} className="h-full w-full" />
         </span>
       </button>
 

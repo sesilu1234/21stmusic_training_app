@@ -251,8 +251,9 @@ export default function RockschoolPage() {
     // La tónica de la vuelta se queda encendida en ámbar de fondo: es la
     // referencia contra la que se canta todo lo demás.
     result[current.root] = "root";
-    // Cian = lo toca el piano; verde = te toca a ti.
-    result[current.semitone] = current.audible ? "hint" : "correct";
+    // Un solo color para la nota que va sonando: quién la toca ya lo dice el
+    // modo de acompañamiento, y pintarlo aquí solo hacía leer dos veces.
+    result[current.semitone] = "hint";
     return result;
   }, [current]);
 
@@ -270,10 +271,10 @@ export default function RockschoolPage() {
           className="absolute left-4 top-3.5 z-20 inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-3.5 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-slate-300/40 hover:text-white md:left-7 md:top-4"
         >
           <ArrowLeft size={12} />
-          Menú principal
+        
         </Link>
 
-        <main className="mx-auto w-full max-w-[1120px] flex-1 pb-4 pt-10 md:pt-4">
+        <main className="mx-auto w-full max-w-[1120px] flex-1 pb-4 pt-5 md:pt-4">
           <div className="mb-4 text-center">
             <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.32em] text-white/35">
               El método, grado a grado
@@ -286,7 +287,7 @@ export default function RockschoolPage() {
             </h1>
             <p className="mx-auto mt-1.5 max-w-lg text-[12px] leading-5 text-white/45">
               Los ejercicios del libro, con su pentagrama y sonando. Puedes
-              cambiarlos de tono y encadenarlos subiendo, como en clase.
+              cambiarlos de tono y repetirlos subiendo y bajando, como en clase.
             </p>
           </div>
 
@@ -469,7 +470,7 @@ export default function RockschoolPage() {
                   <button
                     type="button"
                     onClick={() => setMetronome((value) => !value)}
-                    className={`mt-2 flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition ${
+                    className={`mt-2 inline-flex items-center gap-2 self-start rounded-lg px-2.5 py-1.5 transition ${
                       metronome
                         ? "bg-white/10 text-white ring-1 ring-white/20"
                         : "text-white/45 hover:bg-white/5 hover:text-white/80"
@@ -504,7 +505,7 @@ export default function RockschoolPage() {
                   </Field>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="Encadena arriba">
+                    <Field label="Sube">
                       <Stepper
                         value={`${up} st`}
                         onDown={() => setUp((value) => Math.max(0, value - 1))}
@@ -513,7 +514,7 @@ export default function RockschoolPage() {
                         upLabel="Subir más"
                       />
                     </Field>
-                    <Field label="Y abajo">
+                    <Field label="Baja">
                       <Stepper
                         value={`${down} st`}
                         onDown={() => setDown((value) => Math.max(0, value - 1))}

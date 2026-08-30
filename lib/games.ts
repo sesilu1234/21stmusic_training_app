@@ -215,6 +215,26 @@ export const GAMES: GameMode[] = [
     studentsOnly: true,
   },
 
+  {
+    name: "Modos al oído",
+    label: "Modos al oído",
+    desc: "Un pedal debajo y la escala encima: di qué modo griego es.",
+    slug: "/play/oido/modos",
+    icon: "Waypoints",
+    category: "oido",
+    scored: true,
+    studentsOnly: true,
+  },
+  {
+    name: "Dictado melódico",
+    label: "Dictado melódico",
+    desc: "Suena una melodía corta y la sacas en el piano.",
+    slug: "/play/oido/dictado",
+    icon: "Music2",
+    category: "oido",
+    scored: true,
+  },
+
   // --- Guitarra --------------------------------------------------------
   {
     name: "Diapasón",
@@ -323,6 +343,42 @@ export const GAMES: GameMode[] = [
     studentsOnly: true,
   },
 ];
+
+/**
+ * Niveles cerrados DENTRO de un modo que está abierto.
+ *
+ * `studentsOnly` en el catálogo cierra un modo entero; esto es para cuando el
+ * modo se puede probar sin cuenta pero sus niveles avanzados no. La clave es
+ * el slug del modo y hay dos maneras de decirlo, cada modo usa la que le
+ * cuadre:
+ *
+ *  - `cerrados`: estos piden cuenta y el resto están abiertos. Para cuando lo
+ *    cerrado es la excepción.
+ *  - `soloAbiertos`: solo estos están abiertos y TODO lo demás pide cuenta,
+ *    incluido lo que se añada mañana. Para cuando lo que se enseña sin cuenta
+ *    es una muestra.
+ *
+ * Para abrir o cerrar un nivel basta con tocar este bloque: la puerta
+ * (`LevelGate`) y el candado de los menús salen los dos de aquí.
+ */
+export const LEVEL_ACCESS: Record<
+  string,
+  { cerrados?: string[]; soloAbiertos?: string[] }
+> = {
+  // De ritmo se prueba el primer módulo y ya. Va con `soloAbiertos` a
+  // propósito: si algún día hay un módulo 7, nace cerrado.
+  "/play/ritmo": { soloAbiertos: ["modulo1"] },
+  "/play/oido/acordes": { cerrados: ["dos-acordes"] },
+  "/play/oido/dictado": { cerrados: ["cinco"] },
+};
+
+/** ¿Este nivel de este modo pide cuenta? */
+export const isStudentsOnlyLevel = (gameSlug: string, levelSlug: string) => {
+  const access = LEVEL_ACCESS[gameSlug];
+  if (!access) return false;
+  if (access.soloAbiertos) return !access.soloAbiertos.includes(levelSlug);
+  return access.cerrados?.includes(levelSlug) ?? false;
+};
 
 export const categoryOf = (id: CategoryId) =>
   CATEGORIES.find((category) => category.id === id)!;

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+body { margin: 0; background: oklch(0.98 0.005 85); }
+a { color: oklch(0.52 0.13 305); }
+a:hover { color: oklch(0.42 0.13 305); }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; padding: 72px 64px 96px; box-sizing: border-box; font-family: 'Space Grotesk', Helvetica, sans-serif; color: oklch(0.28 0.01 285); display: flex; flex-direction: column; gap: 64px">
+
+  <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+    <defs>
+      <symbol id="p4-cat" viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <rect width="16" height="16" rx="3.5" fill="oklch(0.32 0.035 265)" />
+        <path fill="oklch(0.22 0.03 265)" d="M3 2h1v1h-1zM12 2h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM3 4h1v1h-1zM5 4h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM3 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM12 5h1v1h-1zM2 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM5 8h1v1h-1zM10 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM3 10h1v1h-1zM6 10h1v1h-1zM9 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM11 11h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1z" />
+        <path fill="oklch(0.55 0.12 335)" d="M4 4h1v1h-1zM11 4h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1z" />
+        <path fill="oklch(0.7 0.13 335)" d="M3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM11 6h1v1h-1zM12 6h1v1h-1zM3 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM12 7h1v1h-1zM3 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM12 8h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1z" />
+        <path fill="oklch(0.95 0.02 85)" d="M4 7h1v1h-1zM5 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1z" />
+        <path fill="oklch(0.84 0.07 350)" d="M7 9h1v1h-1zM8 9h1v1h-1z" />
+      </symbol>
+
+      <symbol id="p4-owl" viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <rect width="16" height="16" rx="3.5" fill="oklch(0.32 0.035 265)" />
+        <path fill="oklch(0.22 0.03 265)" d="M2 3h1v1h-1zM3 3h1v1h-1zM12 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM4 7h1v1h-1zM11 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM3 11h1v1h-1zM12 11h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1z" />
+        <path fill="oklch(0.7 0.13 200)" d="M3 4h1v1h-1zM12 4h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM12 5h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM6 7h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM9 8h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM3 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM11 11h1v1h-1z" />
+        <path fill="oklch(0.95 0.02 85)" d="M3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM10 6h1v1h-1zM11 6h1v1h-1zM12 6h1v1h-1zM3 7h1v1h-1zM5 7h1v1h-1zM10 7h1v1h-1zM12 7h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1z" />
+        <path fill="oklch(0.84 0.07 350)" d="M7 7h1v1h-1zM8 7h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1z" />
+        <path fill="oklch(0.55 0.12 200)" d="M4 10h1v1h-1zM11 10h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1z" />
+      </symbol>
+
+      <symbol id="p4-fox" viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <rect width="16" height="16" rx="3.5" fill="oklch(0.32 0.035 265)" />
+        <path fill="oklch(0.22 0.03 265)" d="M3 2h1v1h-1zM4 2h1v1h-1zM11 2h1v1h-1zM12 2h1v1h-1zM2 3h1v1h-1zM5 3h1v1h-1zM10 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM10 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM3 9h1v1h-1zM12 9h1v1h-1zM4 10h1v1h-1zM11 10h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM10 11h1v1h-1zM6 12h1v1h-1zM9 12h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1z" />
+        <path fill="oklch(0.55 0.12 50)" d="M3 3h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1z" />
+        <path fill="oklch(0.7 0.13 50)" d="M3 4h1v1h-1zM12 4h1v1h-1zM3 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM12 5h1v1h-1zM3 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM12 6h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM5 10h1v1h-1zM10 10h1v1h-1z" />
+        <path fill="oklch(0.95 0.02 85)" d="M4 5h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM4 6h1v1h-1zM11 6h1v1h-1zM3 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM12 8h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM6 11h1v1h-1zM9 11h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1z" />
+      </symbol>
+
+      <symbol id="p4-tiger" viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <rect width="16" height="16" rx="3.5" fill="oklch(0.32 0.035 265)" />
+        <path fill="oklch(0.22 0.03 265)" d="M3 2h1v1h-1zM4 2h1v1h-1zM11 2h1v1h-1zM12 2h1v1h-1zM2 3h1v1h-1zM5 3h1v1h-1zM10 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM5 7h1v1h-1zM10 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM3 11h1v1h-1zM12 11h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1z" />
+        <path fill="oklch(0.7 0.13 85)" d="M3 3h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM3 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM12 5h1v1h-1zM3 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM12 6h1v1h-1zM3 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM12 7h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM11 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1z" />
+        <path fill="oklch(0.55 0.12 85)" d="M4 5h1v1h-1zM11 5h1v1h-1zM3 8h1v1h-1zM12 8h1v1h-1z" />
+        <path fill="oklch(0.95 0.02 85)" d="M4 6h1v1h-1zM5 6h1v1h-1zM10 6h1v1h-1zM11 6h1v1h-1zM4 7h1v1h-1zM11 7h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1z" />
+      </symbol>
+
+      <symbol id="p4-wolf" viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <rect width="16" height="16" rx="3.5" fill="oklch(0.32 0.035 265)" />
+        <path fill="oklch(0.22 0.03 265)" d="M2 2h1v1h-1zM3 2h1v1h-1zM12 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM5 4h1v1h-1zM10 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM5 7h1v1h-1zM10 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM3 10h1v1h-1zM12 10h1v1h-1zM3 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM12 11h1v1h-1zM4 12h1v1h-1zM11 12h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1z" />
+        <path fill="oklch(0.7 0.13 245)" d="M3 3h1v1h-1zM12 3h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM12 5h1v1h-1zM3 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM12 6h1v1h-1zM3 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM12 7h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM5 12h1v1h-1zM10 12h1v1h-1z" />
+        <path fill="oklch(0.95 0.02 85)" d="M4 6h1v1h-1zM5 6h1v1h-1zM10 6h1v1h-1zM11 6h1v1h-1zM4 7h1v1h-1zM11 7h1v1h-1zM3 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM12 9h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM6 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1z" />
+      </symbol>
+
+      <symbol id="p4-rabbit" viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <rect width="16" height="16" rx="3.5" fill="oklch(0.32 0.035 265)" />
+        <path fill="oklch(0.22 0.03 265)" d="M2 2h1v1h-1zM3 2h1v1h-1zM12 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM3 4h1v1h-1zM5 4h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM3 5h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM12 5h1v1h-1zM3 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM2 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM5 9h1v1h-1zM10 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM3 11h1v1h-1zM12 11h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1z" />
+        <path fill="oklch(0.84 0.07 350)" d="M3 3h1v1h-1zM12 3h1v1h-1zM4 4h1v1h-1zM11 4h1v1h-1zM4 5h1v1h-1zM11 5h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1z" />
+        <path fill="oklch(0.7 0.13 300)" d="M4 6h1v1h-1zM11 6h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM3 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM12 8h1v1h-1zM3 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM12 9h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1z" />
+        <path fill="oklch(0.95 0.02 85)" d="M4 8h1v1h-1zM5 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM4 9h1v1h-1zM11 9h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1z" />
+      </symbol>
+
+      <symbol id="p4-deer" viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <rect width="16" height="16" rx="3.5" fill="oklch(0.32 0.035 265)" />
+        <path fill="oklch(0.88 0.06 25)" d="M2 1h1v1h-1zM3 1h1v1h-1zM12 1h1v1h-1zM13 1h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM5 2h1v1h-1zM6 2h1v1h-1zM9 2h1v1h-1zM10 2h1v1h-1zM12 2h1v1h-1zM13 2h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1z" />
+        <path fill="oklch(0.22 0.03 265)" d="M4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM3 6h1v1h-1zM12 6h1v1h-1zM3 7h1v1h-1zM12 7h1v1h-1zM3 8h1v1h-1zM5 8h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM3 9h1v1h-1zM12 9h1v1h-1zM3 10h1v1h-1zM12 10h1v1h-1zM3 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM12 11h1v1h-1zM4 12h1v1h-1zM11 12h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1z" />
+        <path fill="oklch(0.7 0.13 25)" d="M4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM11 6h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM5 12h1v1h-1zM10 12h1v1h-1z" />
+        <path fill="oklch(0.95 0.02 85)" d="M4 7h1v1h-1zM5 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM6 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1z" />
+      </symbol>
+
+      <symbol id="p4-frog" viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <rect width="16" height="16" rx="3.5" fill="oklch(0.32 0.035 265)" />
+        <path fill="oklch(0.22 0.03 265)" d="M2 3h1v1h-1zM5 3h1v1h-1zM10 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM4 4h1v1h-1zM6 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM6 7h1v1h-1zM9 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM13 9h1v1h-1zM3 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1z" />
+        <path fill="oklch(0.95 0.02 85)" d="M3 3h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM3 4h1v1h-1zM5 4h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1z" />
+        <path fill="oklch(0.7 0.13 140)" d="M3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM12 5h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM11 6h1v1h-1zM12 6h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM3 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1z" />
+      </symbol>
+
+    </defs>
+  </svg>
+
+  <header style="display: flex; flex-direction: column; gap: 14px; max-width: 620px">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.58 0.01 285)">Avatar set</div>
+    <h1 style="margin: 0; font-size: 40px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.1">Eight animals, one grid</h1>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; color: oklch(0.45 0.01 285); text-wrap: pretty">16&#215;16 pixel sprites on dark tiles: one outline color, one cream, one brighter hue per animal.</p>
+  </header>
+
+  <section style="display: flex; flex-direction: column; gap: 32px">
+    <div style="display: flex; align-items: baseline; gap: 14px">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; padding: 4px 8px; border-radius: 5px; background: oklch(0.28 0.01 285); color: oklch(0.98 0.005 85)">4a</div>
+      <div style="font-size: 20px; font-weight: 500">Eight animals, dark tiles, outlined sprites</div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px">
+      <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+        <svg width="100%" viewBox="0 0 16 16" style="display: block; max-width: 180px; image-rendering: pixelated"><use href="#p4-cat"></use></svg>
+        <div style="font-size: 15px; font-weight: 500">Cat</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+        <svg width="100%" viewBox="0 0 16 16" style="display: block; max-width: 180px; image-rendering: pixelated"><use href="#p4-owl"></use></svg>
+        <div style="font-size: 15px; font-weight: 500">Owl</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+        <svg width="100%" viewBox="0 0 16 16" style="display: block; max-width: 180px; image-rendering: pixelated"><use href="#p4-fox"></use></svg>
+        <div style="font-size: 15px; font-weight: 500">Fox</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+        <svg width="100%" viewBox="0 0 16 16" style="display: block; max-width: 180px; image-rendering: pixelated"><use href="#p4-tiger"></use></svg>
+        <div style="font-size: 15px; font-weight: 500">Tiger</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+        <svg width="100%" viewBox="0 0 16 16" style="display: block; max-width: 180px; image-rendering: pixelated"><use href="#p4-wolf"></use></svg>
+        <div style="font-size: 15px; font-weight: 500">Wolf</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+        <svg width="100%" viewBox="0 0 16 16" style="display: block; max-width: 180px; image-rendering: pixelated"><use href="#p4-rabbit"></use></svg>
+        <div style="font-size: 15px; font-weight: 500">Rabbit</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+        <svg width="100%" viewBox="0 0 16 16" style="display: block; max-width: 180px; image-rendering: pixelated"><use href="#p4-deer"></use></svg>
+        <div style="font-size: 15px; font-weight: 500">Deer</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+        <svg width="100%" viewBox="0 0 16 16" style="display: block; max-width: 180px; image-rendering: pixelated"><use href="#p4-frog"></use></svg>
+        <div style="font-size: 15px; font-weight: 500">Frog</div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; align-items: center; gap: 18px">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; width: 44px; color: oklch(0.58 0.01 285)">64px</div>
+        <svg width="64" height="64" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-cat"></use></svg>
+        <svg width="64" height="64" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-owl"></use></svg>
+        <svg width="64" height="64" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-fox"></use></svg>
+        <svg width="64" height="64" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-tiger"></use></svg>
+        <svg width="64" height="64" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-wolf"></use></svg>
+        <svg width="64" height="64" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-rabbit"></use></svg>
+        <svg width="64" height="64" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-deer"></use></svg>
+        <svg width="64" height="64" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-frog"></use></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 18px">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; width: 44px; color: oklch(0.58 0.01 285)">48px</div>
+        <svg width="48" height="48" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-cat"></use></svg>
+        <svg width="48" height="48" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-owl"></use></svg>
+        <svg width="48" height="48" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-fox"></use></svg>
+        <svg width="48" height="48" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-tiger"></use></svg>
+        <svg width="48" height="48" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-wolf"></use></svg>
+        <svg width="48" height="48" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-rabbit"></use></svg>
+        <svg width="48" height="48" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-deer"></use></svg>
+        <svg width="48" height="48" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-frog"></use></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 18px">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; width: 44px; color: oklch(0.58 0.01 285)">32px</div>
+        <svg width="32" height="32" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-cat"></use></svg>
+        <svg width="32" height="32" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-owl"></use></svg>
+        <svg width="32" height="32" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-fox"></use></svg>
+        <svg width="32" height="32" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-tiger"></use></svg>
+        <svg width="32" height="32" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-wolf"></use></svg>
+        <svg width="32" height="32" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-rabbit"></use></svg>
+        <svg width="32" height="32" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-deer"></use></svg>
+        <svg width="32" height="32" viewBox="0 0 16 16" style="image-rendering: pixelated"><use href="#p4-frog"></use></svg>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:900}}"></script>
+</body>
+</html>

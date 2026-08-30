@@ -163,5 +163,65 @@ export function useAudio() {
     [],
   );
 
-  return { playInterval, playSequence };
+  /**
+   * Nota tenida: entra, se queda y se va. Los PRESETS no valen para esto
+   * porque todos decaen en un par de segundos, y un pedal tiene que aguantar
+   * la escala entera por debajo.
+   */
+  const scheduleDrone = (
+    ctx: AudioContext,
+    semitone: number,
+    when: number,
+    seconds: number,
+  ) => {
+    const master = ctx.createGain();
+    master.connect(ctx.destination);
+    master.gain.setValueAtTime(0, when);
+    master.gain.linearRampToValueAtTime(0.17, when + 0.35);
+    master.gain.setValueAtTime(0.17, when + seconds - 0.5);
+    master.gain.exponentialRampToValueAtTime(0.001, when + seconds);
+
+    const freq = semitonesToFreq(semitone);
+    // Fundamental gorda y dos armónicos flojos: suficiente para que se oiga
+    // debajo sin taparle el sitio a la escala.
+    ([
+      [1, 0.5],
+      [2, 0.16],
+      [3, 0.06],
+    ] as const).forEach(([multiple, gain]) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq * multiple, when);
+      g.gain.setValueAtTime(gain, when);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(when);
+      osc.stop(when + seconds + 0.1);
+    });
+  };
+
+  /**
+   * Una melodía con un pedal de fondo. Lo usa el modo de modos griegos: sin
+   * la fundamental sonando debajo, dórico y eólico se diferencian en una nota
+   * que pasa volando; con el pedal, cada modo tiene un color.
+   */
+  const playOverDrone = useCallback(
+    (notes: number[], gapMs: number, presetIdx: number, droneSemitone: number) => {
+      const ctx = getCtx();
+      const gap = gapMs / 1000;
+      const doPlay = () => {
+        const now = ctx.currentTime;
+        scheduleDrone(ctx, droneSemitone, now, notes.length * gap + 1.4);
+        notes.forEach((note, index) =>
+          scheduleChord(ctx, [note], presetIdx, now + 0.25 + index * gap),
+        );
+      };
+      if (ctx.state === "suspended") ctx.resume().then(doPlay);
+      else doPlay();
+    },
+    [],
+  );
+
+  return { playInterval, playSequence, playOverDrone };
 }

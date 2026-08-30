@@ -32,9 +32,15 @@ export const buildRoots = (start: number, up: number, down: number) => {
 /**
  * Cuánto toca el piano:
  *  - `guia`    el patrón entero en cada repetición; se canta encima.
- *  - `muestra` el patrón entero una sola vez y después solo la tónica: se
+ *  - `muestra` el patrón entero una sola vez y después solo la primera nota:
  *              enseña el ejercicio y luego te suelta.
- *  - `bajo`    solo la tónica, siempre. Cantas tú, el piano solo te sitúa.
+ *  - `bajo`    solo la primera nota, siempre. Cantas tú, el piano solo te da
+ *              por dónde entrar.
+ *
+ * En los dos últimos, esa nota que da el piano NO es un aviso previo: es el
+ * primer tiempo del ejercicio, la nota por la que empiezas a cantar. Antes
+ * sonaba la tónica un pulso antes y liaba, porque te quedabas esperando sin
+ * saber si el ejercicio había empezado ya.
  */
 export type AccompanimentMode = "guia" | "muestra" | "bajo";
 
@@ -53,12 +59,12 @@ export const ACCOMPANIMENTS: AccompanimentOption[] = [
   {
     id: "muestra",
     label: "Muestra y suelta",
-    hint: "Lo toca una vez y después solo te da la nota base.",
+    hint: "Lo toca una vez y después solo te da la nota por la que entras.",
   },
   {
     id: "bajo",
     label: "Solo el bajo",
-    hint: "Únicamente la tónica al empezar. El resto lo cantas tú.",
+    hint: "Solo la primera nota de cada vuelta. El resto lo cantas tú.",
   },
 ];
 
@@ -80,7 +86,7 @@ export interface VocalEvent {
   semitone: number;
   /** false = solo se ilumina, la canta el alumno. */
   audible: boolean;
-  /** true si es el golpe de tónica que abre la repetición. */
+  /** true si es la nota que da el piano para que entres: la primera de la vuelta. */
   cue: boolean;
 }
 
@@ -138,30 +144,19 @@ export const buildPlan = ({
     // En "muestra" solo se toca de verdad la primera vuelta; en "bajo", nunca.
     const guided = mode === "guia" || (mode === "muestra" && repetition === 0);
 
-    if (!guided) {
-      // El golpe de tónica ocupa un pulso antes de que empiece el patrón: es
-      // la referencia para entrar cantando.
-      events.push({
-        at,
-        repetition,
-        root,
-        step: -1,
-        semitone: root,
-        audible: true,
-        cue: true,
-      });
-      at += beat;
-    }
-
     pattern.forEach((offset, step) => {
+      // Cuando el piano no guía la vuelta, da la primera nota y calla. Ocupa
+      // el primer tiempo del ejercicio, no un pulso de más antes de empezar.
+      const lead = !guided && step === 0;
+
       events.push({
         at,
         repetition,
         root,
         step,
         semitone: root + offset,
-        audible: guided,
-        cue: false,
+        audible: guided || lead,
+        cue: lead,
       });
       at += beat * (step === pattern.length - 1 ? lastBeats : noteBeats);
     });

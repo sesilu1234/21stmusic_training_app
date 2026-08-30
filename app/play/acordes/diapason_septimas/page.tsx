@@ -8,11 +8,15 @@ import GameOverModal from "@/app/components/GameOverModal";
 
 export default function ChordsGame() {
 
+  // El cifrado manda y el nombre hablado va debajo. Antes los botones decían
+  // "Mayor 7", que según a quién preguntes es maj7 o es dominante: el mismo
+  // lío que teníamos con las mayúsculas. `answer` es el id de la imagen y no
+  // se toca.
   const opcionesSeptimas = [
-    "Mayor 7",
-    "Menor 7",
-    "Dominante 7",
-    "Semidisminuido",
+    { symbol: "maj7", word: "séptima mayor", answer: "maj7" },
+    { symbol: "m7", word: "séptima menor", answer: "min 7" },
+    { symbol: "7", word: "dominante", answer: "7" },
+    { symbol: "m7b5", word: "semidisminuido", answer: "min 7 b5" },
   ];
 
   // Hydration fix: Mezclar en el cliente
@@ -77,18 +81,11 @@ export default function ChordsGame() {
   if (!isMounted || !currentQuestion)
     return <div className="min-h-screen bg-slate-900" />;
 
-  const handleAnswer = (notaSeleccionada: string) => {
+  const handleAnswer = (opcion: (typeof opcionesSeptimas)[number]) => {
     if (userAnswers[step] !== null || gameOver || !!showFeedback) return;
     setIsReviewing(false);
 
-    const mapping: Record<string, string> = {
-      "Mayor 7": "maj7",
-      "Menor 7": "min 7",
-      "Dominante 7": "7",
-      Semidisminuido: "min 7 b5",
-    };
-
-    const isCorrect = mapping[notaSeleccionada] === currentQuestion.answer;
+    const isCorrect = opcion.answer === currentQuestion.answer;
     setShowFeedback(isCorrect ? "correct" : "wrong");
 
     const newResults = [...results];
@@ -96,7 +93,7 @@ export default function ChordsGame() {
     setResults(newResults);
 
     const newAnswers = [...userAnswers];
-    newAnswers[step] = notaSeleccionada;
+    newAnswers[step] = opcion.symbol;
     setUserAnswers(newAnswers);
 
     setTimeout(
@@ -125,15 +122,8 @@ export default function ChordsGame() {
     if (nextStep >= progresoMaximo) setIsReviewing(false);
   };
 
-  const getSolucionTexto = () => {
-    const mapping: any = {
-      maj7: "Mayor 7",
-      "min 7": "Menor 7",
-      "7": "Dominante 7",
-      "min 7 b5": "Semidisminuido",
-    };
-    return mapping[currentQuestion.answer] || "";
-  };
+  const getSolucion = () =>
+    opcionesSeptimas.find((opcion) => opcion.answer === currentQuestion.answer);
 
   return (
     <div
@@ -199,8 +189,14 @@ export default function ChordsGame() {
               <span className="text-[7px] text-amber-400 uppercase font-black tracking-widest">
                 Solución
               </span>
-              <span className="text-xs md:text-sm font-bold text-white uppercase italic">
-                {getSolucionTexto()}
+              {/* normal-case: el cifrado distingue mayúsculas de minúsculas,
+                  y "m7b5" en mayúsculas se lee "M7B5", que es otro acorde.
+                  Ver lib/chordNames.ts. */}
+              <span className="text-sm md:text-base font-bold text-white italic normal-case">
+                {getSolucion()?.symbol}
+              </span>
+              <span className="text-[8px] text-white/40 uppercase tracking-wider">
+                {getSolucion()?.word}
               </span>
             </div>
           </div>
@@ -211,14 +207,19 @@ export default function ChordsGame() {
           className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-all ${userAnswers[step] !== null || showFeedback ? "opacity-40 pointer-events-none" : "opacity-100"}`}
         >
           <div className="grid grid-cols-2 gap-3 md:gap-4">
-            {opcionesSeptimas.map((nota) => (
+            {opcionesSeptimas.map((opcion) => (
               <button
-                key={nota}
+                key={opcion.symbol}
                 disabled={userAnswers[step] !== null || !!showFeedback}
-                onClick={() => handleAnswer(nota)}
-                className="py-4 md:py-6 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black transition-all active:scale-95"
+                onClick={() => handleAnswer(opcion)}
+                className="group py-3 md:py-5 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black transition-all active:scale-95"
               >
-                <span className="text-xs md:text-sm font-bold">{nota}</span>
+                <span className="block text-base md:text-lg font-black">
+                  {opcion.symbol}
+                </span>
+                <span className="mt-0.5 block text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-white/40 group-hover:text-black/60">
+                  {opcion.word}
+                </span>
               </button>
             ))}
           </div>

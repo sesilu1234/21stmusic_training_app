@@ -31,13 +31,8 @@ Rockschool y Constructor de melodías don't score — they're the only two modes
 
 
 
--cambiar letras y probar tipografia, probar otro style
-otros iconos 
+-cambiar letras y probar tipografia, probar otro style otros iconos. y ver descripciones y textos, comprobar 
 
-- no me gusta mucho el hover en root de modos de juego. que se haga algo mas grande o flote mas
-
-
-- poner hovers todo donde se pueda
 
 
 

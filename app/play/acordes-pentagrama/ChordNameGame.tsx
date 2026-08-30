@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
+import RoundFooter from "@/app/components/RoundFooter";
 import Staff, { type NoteState } from "@/app/components/Staff";
 import { alterAccidental, spelledName, type SpelledNote } from "@/lib/staff";
 import {
@@ -51,6 +52,8 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
   /** La fundamental elegida mientras falta la especie. */
   const [draftRoot, setDraftRoot] = useState<string | null>(null);
   const [gameOver, setGameOver] = useState(false);
+  /** true mientras estás mirando una pregunta vieja en vez de jugando. */
+  const [reviewing, setReviewing] = useState(false);
 
   const advanceTimerRef = useRef<number | null>(null);
 
@@ -62,6 +65,7 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
     setStep(0);
     setDraftRoot(null);
     setGameOver(false);
+    setReviewing(false);
   }, [level]);
 
   useEffect(
@@ -99,6 +103,30 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
       },
       isRight(answer, question) ? 900 : 2000,
     );
+  };
+
+  /** En qué pregunta va la partida. -1 = ya están todas contestadas. */
+  const liveStep = round?.answers.findIndex((answer) => answer === null) ?? 0;
+
+  /**
+   * Ir a una pregunta ya contestada para volver a verla y ver qué pusiste y
+   * qué era. No se puede saltar hacia delante: como mucho, a la que está en
+   * juego.
+   */
+  const goTo = (index: number) => {
+    const last = liveStep === -1 ? total - 1 : liveStep;
+    if (index < 0 || index > last || index === step) return;
+
+    // Puede haber un avance en marcha (se acaba de contestar): se cancela,
+    // que si no daría un salto en mitad de la revisión.
+    if (advanceTimerRef.current) window.clearTimeout(advanceTimerRef.current);
+    setReviewing(index !== last);
+    setStep(index);
+    setDraftRoot(null);
+
+    // Si ya no queda ninguna sin contestar, volver a la última es terminar:
+    // el avance que iba a cerrar la partida lo hemos cancelado nosotros.
+    if (liveStep === -1 && index === total - 1) setGameOver(true);
   };
 
   if (!round || !question) {
@@ -246,40 +274,29 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
                   isCorrect ? "text-emerald-300" : "text-rose-300"
                 }`}
               >
-                {isCorrect ? `¡Bien! Era ${solution}` : `Era ${solution}`}
+                {isCorrect ? "¡Bien! Era " : "Era "}
+                {/* normal-case: "m7b5" en mayúsculas se lee "M7B5", que es otro
+                    acorde. Ver lib/chordNames.ts. */}
+                <span className="normal-case">{solution}</span>
                 {question.inversion > 0 && ` · ${question.inversion}ª inversión`}
               </p>
             )}
           </div>
         </main>
 
-        <footer className="pb-4">
-          <div className="mb-3 flex flex-wrap justify-center gap-1.5">
-            {round.questions.map((item, index) => {
-              const given = round.answers[index];
-              return (
-                <span
-                  key={index}
-                  className={`h-1.5 rounded-full transition-all ${
-                    index === step ? "w-5 bg-amber-300" : "w-1.5"
-                  } ${
-                    given === null
-                      ? index === step
-                        ? ""
-                        : "bg-white/15"
-                      : isRight(given, item)
-                        ? "bg-emerald-400"
-                        : "bg-rose-400"
-                  }`}
-                />
-              );
-            })}
-          </div>
-          <p className="text-center text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">
-            {step + 1} / {total} · {correctCount}{" "}
-            {correctCount === 1 ? "acierto" : "aciertos"}
-          </p>
-        </footer>
+        <RoundFooter
+          step={step}
+          total={total}
+          liveStep={liveStep}
+          results={round.questions.map((item, index) => {
+            const given = round.answers[index];
+            return given === null ? null : isRight(given, item);
+          })}
+          correctCount={correctCount}
+          reviewing={reviewing}
+          onGoTo={goTo}
+          accent="amber"
+        />
       </div>
     </div>
   );
