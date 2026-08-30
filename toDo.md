@@ -66,9 +66,9 @@ Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da 
 
 
 
+- poner en about o algun siiotio, "empezado en 1998 por Jaáume Pla"
 
 
 
-
-
+s
 
