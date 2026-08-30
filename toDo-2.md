@@ -15,12 +15,3 @@
 
 
 
-
-
-
-
-- solucion no responde en acorde diapason. checkear todos los modos por si hay cosas raras
-
-
-
- 

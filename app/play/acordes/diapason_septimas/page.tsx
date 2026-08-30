@@ -105,7 +105,7 @@ export default function ChordsGame() {
           setGameOver(true);
         }
       },
-      isCorrect ? 300 : 700,
+      isCorrect ? 900 : 1800,
     );
   };
 
@@ -204,24 +204,41 @@ export default function ChordsGame() {
 
         {/* GRID DE BOTONES RESPONSIVE */}
         <div
-          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-all ${userAnswers[step] !== null || showFeedback ? "opacity-40 pointer-events-none" : "opacity-100"}`}
+          className={`bg-black/40 p-3 md:p-5 rounded-[1.75rem] md:rounded-[2.5rem] border border-white/10 w-full backdrop-blur-md transition-all ${userAnswers[step] !== null || showFeedback ? "pointer-events-none" : ""}`}
         >
-          <div className="grid grid-cols-2 gap-3 md:gap-4">
-            {opcionesSeptimas.map((opcion) => (
-              <button
-                key={opcion.symbol}
-                disabled={userAnswers[step] !== null || !!showFeedback}
-                onClick={() => handleAnswer(opcion)}
-                className="group py-3 md:py-5 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black transition-all active:scale-95"
-              >
-                <span className="block text-base md:text-lg font-black">
-                  {opcion.symbol}
-                </span>
-                <span className="mt-0.5 block text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-white/40 group-hover:text-black/60">
-                  {opcion.word}
-                </span>
-              </button>
-            ))}
+          <div className="grid grid-cols-2 gap-2.5 md:gap-3">
+            {opcionesSeptimas.map((opcion) => {
+              // Corregida: verde la buena y rojo la que pulsaste si fallaste,
+              // como en el resto de modos.
+              const contestada = userAnswers[step];
+              const esSolucion = opcion.answer === currentQuestion.answer;
+              const laPulsaste = contestada === opcion.symbol;
+
+              const estado =
+                contestada === null
+                  ? "border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black"
+                  : esSolucion
+                    ? "border-emerald-400 bg-emerald-400/25 text-emerald-100"
+                    : laPulsaste
+                      ? "border-rose-400 bg-rose-500/25 text-rose-100"
+                      : "border-white/5 bg-white/5 text-white/25";
+
+              return (
+                <button
+                  key={opcion.symbol}
+                  disabled={contestada !== null || !!showFeedback}
+                  onClick={() => handleAnswer(opcion)}
+                  className={`group py-2.5 md:py-3.5 rounded-xl border transition-all active:scale-95 disabled:cursor-default ${estado}`}
+                >
+                  <span className="block text-sm md:text-base font-black">
+                    {opcion.symbol}
+                  </span>
+                  <span className="mt-0.5 block text-[8px] md:text-[9px] font-bold uppercase tracking-wider opacity-50 group-hover:opacity-70">
+                    {opcion.word}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

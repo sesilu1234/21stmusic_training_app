@@ -210,15 +210,17 @@ export default function PianoLibrePage() {
       <Backdrop />
 
       <div className="relative z-10 flex min-h-screen flex-col px-4 py-5 md:px-8 md:py-7">
+        {/* Flotando: ocupaba una fila entera para un botón que cabe en una
+            esquina, y el teclado se quedaba sin sitio. */}
         <Link
           href="/"
-          className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-slate-300/40 hover:text-white"
+          className="absolute left-4 top-5 z-20 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-slate-300/40 hover:text-white md:left-8 md:top-7"
         >
           <ArrowLeft size={14} />
-          Menú principal
+          
         </Link>
 
-        <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col justify-center py-8">
+        <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col justify-center pb-8 pt-2">
           <div className="mb-7 text-center">
             <h1
               className="text-balance text-2xl font-black italic uppercase leading-tight tracking-tighter text-white md:text-4xl"
