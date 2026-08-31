@@ -73,4 +73,4 @@ Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da 
 
 - centrar los animlatios un pelin mas y poner un shadow al rededor del circulo (o seiempre, o sn en hover ... o como prefeiera IA quede mas chulo)
 
-
+- no hay sonido en iOS ... , ademas free piano no gira

@@ -29,7 +29,7 @@ const GameCard = ({
     return (
       <div
         aria-disabled
-        className="relative block cursor-default rounded-2xl border border-dashed border-white/[0.09] bg-slate-950/30 p-4 shadow-lg backdrop-blur-sm md:p-5"
+        className="relative block cursor-default rounded-2xl border border-dashed border-white/[0.09] bg-slate-950/30 p-4 shadow-lg md:p-5"
       >
         <span
           title="Todavía sin construir"
@@ -65,7 +65,7 @@ const GameCard = ({
     <Link
       href={locked ? "/login" : game.slug}
       aria-label={locked ? `${game.label} — solo para alumnos` : game.label}
-      className={`group relative block rounded-2xl border p-4 shadow-lg backdrop-blur-sm transition duration-200 md:p-5 ${
+      className={`group relative block rounded-2xl border p-4 shadow-lg transition duration-200 md:p-5 ${
         locked
           ? "border-white/[0.06] bg-slate-950/40 hover:border-amber-300/30 hover:bg-slate-950/60"
           : `border-white/10 bg-slate-950/70 hover:-translate-y-0.5 hover:bg-slate-950/85 ${category.hoverBorder}`
@@ -145,7 +145,7 @@ export default async function HomePage() {
         {progress && progress.attempts > 0 && (
           <Link
             href="/progreso"
-            className="mb-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-lg backdrop-blur-sm transition hover:border-amber-300/40"
+            className="mb-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-lg transition hover:border-amber-300/40"
           >
             <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-orange-400/15">
               <Flame size={17} className="text-orange-300" strokeWidth={1.75} />

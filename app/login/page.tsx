@@ -45,7 +45,7 @@ export default async function LoginPage({
           <div className="mb-5 flex flex-col items-center text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/assets/logo21stCM_no_white_1.png"
+              src="/assets/logo21stCM_no_white_1-192.png"
               alt="21st Century Music"
               className="h-11 w-auto"
             />

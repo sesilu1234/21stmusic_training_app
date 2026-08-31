@@ -184,7 +184,7 @@ export default function GuideShell({ children }: { children: React.ReactNode }) 
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/assets/logo21stCM_no_white_1.png"
+        src="/assets/logo21stCM_no_white_1-192.png"
         alt="21st Century Music"
         className="h-12 w-auto flex-shrink-0"
       />

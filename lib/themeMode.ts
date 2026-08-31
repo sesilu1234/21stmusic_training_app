@@ -12,6 +12,14 @@ export const getStoredDarkMode = () => {
 export const setStoredDarkMode = (isDarkMode: boolean) => {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(THEME_MODE_KEY, isDarkMode ? "dark" : "light");
+  // El velo del fondo se pinta desde CSS mirando este atributo (ver
+  // `.backdrop-veil` en globals.css). El script inline de `layout.tsx` lo pone
+  // al cargar; aquí hay que mantenerlo al día cuando se cambia el modo a mano.
+  if (isDarkMode) {
+    delete document.documentElement.dataset.themeMode;
+  } else {
+    document.documentElement.dataset.themeMode = "light";
+  }
   window.dispatchEvent(new Event("theme-mode-change"));
 };
 

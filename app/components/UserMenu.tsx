@@ -77,8 +77,12 @@ export default function UserMenu({ displayName }: { displayName?: string | null 
         }`}
       >
         {/* El dibujo llena el hueco entero: la baldosa ya trae su propio
-            fondo, así que se recorta en redondo y hace de avatar. */}
-        <span className="grid h-full w-full place-items-center overflow-hidden rounded-full">
+            fondo, así que se recorta en redondo y hace de avatar.
+
+            La sombra va aquí y no en el SVG porque el `overflow-hidden` de
+            este mismo span se comería un `drop-shadow` de dentro. Como el
+            recorte es un círculo, un `box-shadow` normal lo sigue exacto. */}
+        <span className="grid h-full w-full place-items-center overflow-hidden rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
           <AnimalAvatar name={displayName} className="h-full w-full" />
         </span>
       </button>

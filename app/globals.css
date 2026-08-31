@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Changa+One&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -25,6 +24,33 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* --- Velo del fondo --------------------------------------------------- */
+/* El degradado que va sobre la foto de `Backdrop`. Está aquí y no en clases de
+   React porque el modo (claro/oscuro) se guarda en localStorage: con estado de
+   React el servidor pinta siempre el velo oscuro y el modo claro entraba con un
+   parpadeo al hidratar. El script de `layout.tsx` marca `data-theme-mode` en
+   <html> antes del primer pintado y el velo sale ya bien.
+
+   Los colores son los mismos de antes: slate-950 en oscuro, slate-900 en claro,
+   con las mismas opacidades y las mismas paradas (0% / 50% / 100%). */
+.backdrop-veil {
+  background-image: linear-gradient(
+    to bottom,
+    rgb(2 6 23 / 0.82),
+    rgb(2 6 23 / 0.64),
+    rgb(2 6 23 / 0.88)
+  );
+}
+
+html[data-theme-mode="light"] .backdrop-veil {
+  background-image: linear-gradient(
+    to bottom,
+    rgb(15 23 42 / 0.55),
+    rgb(15 23 42 / 0.32),
+    rgb(15 23 42 / 0.62)
+  );
 }
 
 /* --- Celebración de pleno (corona) ------------------------------------ */

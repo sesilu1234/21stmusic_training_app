@@ -24,6 +24,36 @@ export interface Animal {
 
 export const GRID = 16;
 
+/**
+ * Aire alrededor del dibujo, en unidades de la rejilla.
+ *
+ * El número no es a ojo: en el menú de cuenta la baldosa se recorta en redondo,
+ * y un círculo inscrito en la rejilla de 16 tiene radio 8, así que todo píxel
+ * que quede a más de 8 del centro se pierde. Midiendo hasta dónde llega cada
+ * animal:
+ *
+ *   oso                              9.90   <- las orejas, el caso peor
+ *   gato, ciervo, zorro, búho, mapache 9.22
+ *   conejo                           8.60
+ *   lobo                             8.49
+ *   pingüino                         8.06   <- los pies, por los pelos
+ *
+ * Con 2 el radio pasa a 10 y entran todos. Con 1 seguiría cortándole las orejas
+ * al oso. Si algún día se dibuja uno que llegue más lejos, se sube esto y ya.
+ *
+ * Va en el `viewBox` y no como `padding` de CSS a propósito: así el fondo de la
+ * baldosa sigue llenando el hueco entero y lo único que se separa es el dibujo.
+ */
+export const PAD = 2;
+
+/** La caja del avatar: la rejilla más el aire de los cuatro lados. */
+export const VIEW = {
+  min: -PAD,
+  size: GRID + PAD * 2,
+  /** El radio de siempre (3.5 sobre 16), reescalado para que se vea igual. */
+  corner: (3.5 * (GRID + PAD * 2)) / GRID,
+};
+
 /** Un trazo por color, listo para meter en un `<path>`. */
 export const animalPaths = (animal: Animal) => {
   const runs: Record<string, string[]> = {};

@@ -7,6 +7,9 @@ import wolf from "./wolf";
 import rabbit from "./rabbit";
 import deer from "./deer";
 import frog from "./frog";
+import bear from "./bear";
+import raccoon from "./raccoon";
+import penguin from "./penguin";
 
 /**
  * La baraja de avatares. El orden importa poco, pero cambiarlo le cambia el
@@ -23,7 +26,12 @@ export const ANIMALS: Animal[] = [
   rabbit,
   deer,
   frog,
+  // Los nuevos van al final: el animal se elige por posición, así que meterlos
+  // en medio le cambiaría el avatar a gente que ya tenía uno asignado.
+  bear,
+  raccoon,
+  penguin,
 ];
 
 export type { Animal } from "./pixels";
-export { animalPaths, GRID } from "./pixels";
+export { animalPaths, GRID, PAD, VIEW } from "./pixels";

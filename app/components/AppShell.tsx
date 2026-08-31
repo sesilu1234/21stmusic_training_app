@@ -61,7 +61,7 @@ export default function AppShell({
             <Link href="/" className="flex min-w-0 items-center gap-2.5 md:gap-3.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/assets/logo21stCM_no_white_1.png"
+                src="/assets/logo21stCM_no_white_1-192.png"
                 className="h-9 w-auto flex-shrink-0 md:h-12"
                 alt="21st Century Music"
               />
@@ -112,8 +112,13 @@ export default function AppShell({
 
         <SiteFooter className="pb-24 md:pb-6" />
 
-        {/* Navegación de móvil: abajo, al alcance del pulgar. */}
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/90 backdrop-blur-xl md:hidden">
+        {/* Navegación de móvil: abajo, al alcance del pulgar.
+
+            Sin `backdrop-blur`: al 90% de opacidad no pasaba luz suficiente
+            para que se notara, y en una barra fija el navegador tiene que
+            releer y desenfocar lo que hay detrás en cada fotograma de scroll.
+            Justo en la pantalla donde más caro sale. */}
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/90 md:hidden">
           <div className="mx-auto flex max-w-md items-stretch">
             {visibleLinks.map(({ href, label, Icon, guest }) => {
               const active = isActive(href);

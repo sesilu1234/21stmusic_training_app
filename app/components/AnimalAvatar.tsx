@@ -15,10 +15,50 @@
  */
 
 import { nameHash } from "@/lib/nameHash";
-import { animalPaths, ANIMALS, GRID } from "./animals";
+import { animalPaths, ANIMALS, VIEW, type Animal } from "./animals";
 
 /** El animal que le toca a un nombre. Siempre el mismo. */
 export const animalFor = (name: string) => ANIMALS[nameHash(name) % ANIMALS.length];
+
+/**
+ * La baldosa de un animal concreto, sin pasar por el nombre. Va aparte porque
+ * el muestrario de `/animales` los pinta todos y así no hay dos copias del
+ * mismo SVG que puedan acabar diciendo cosas distintas.
+ *
+ * El `viewBox` es la rejilla más el aire de `PAD` por los cuatro lados; el
+ * fondo cubre la caja entera, así que la baldosa sigue llena de color y lo
+ * único que queda separado del borde es el dibujo.
+ */
+export function AnimalTile({
+  animal,
+  className = "",
+}: {
+  animal: Animal;
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox={`${VIEW.min} ${VIEW.min} ${VIEW.size} ${VIEW.size}`}
+      // Sin esto el navegador suaviza los bordes y el pixel art se emborrona.
+      shapeRendering="crispEdges"
+      role="img"
+      aria-label={`Avatar: ${animal.label}`}
+      className={className}
+    >
+      <rect
+        x={VIEW.min}
+        y={VIEW.min}
+        width={VIEW.size}
+        height={VIEW.size}
+        rx={VIEW.corner}
+        fill={animal.bg}
+      />
+      {animalPaths(animal).map((layer) => (
+        <path key={layer.fill} fill={layer.fill} d={layer.d} />
+      ))}
+    </svg>
+  );
+}
 
 export default function AnimalAvatar({
   name,
@@ -27,21 +67,5 @@ export default function AnimalAvatar({
   name: string;
   className?: string;
 }) {
-  const animal = animalFor(name);
-
-  return (
-    <svg
-      viewBox={`0 0 ${GRID} ${GRID}`}
-      // Sin esto el navegador suaviza los bordes y el pixel art se emborrona.
-      shapeRendering="crispEdges"
-      role="img"
-      aria-label={`Avatar: ${animal.label}`}
-      className={className}
-    >
-      <rect width={GRID} height={GRID} rx="3.5" fill={animal.bg} />
-      {animalPaths(animal).map((layer) => (
-        <path key={layer.fill} fill={layer.fill} d={layer.d} />
-      ))}
-    </svg>
-  );
+  return <AnimalTile animal={animalFor(name)} className={className} />;
 }

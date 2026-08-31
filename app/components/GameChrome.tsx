@@ -35,7 +35,7 @@ export default function GameChrome({ children }: { children?: React.ReactNode })
 
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/assets/logo21stCM_no_white_1.png"
+        src="/assets/logo21stCM_no_white_1-192.png"
         alt=""
         aria-hidden="true"
         className="h-8 w-auto flex-shrink-0 opacity-40 drop-shadow-2xl md:h-12"

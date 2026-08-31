@@ -29,7 +29,7 @@ export default function InfoShell({
             <Link href="/" className="flex min-w-0 items-center gap-2 md:gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/assets/logo21stCM_no_white_1.png"
+                src="/assets/logo21stCM_no_white_1-192.png"
                 className="h-9 w-auto flex-shrink-0 md:h-11"
                 alt={SITE.name}
               />
