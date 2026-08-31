@@ -2,6 +2,7 @@
 
 import { useCallback, useRef } from "react";
 
+import { createAudioContext } from "./audioContext";
 import { playPluckedString, type PluckParams } from "./pluckedString";
 import { connectReverb, type ReverbParams } from "./reverb";
 
@@ -433,12 +434,7 @@ export function useFreeSynth() {
   const heldRef = useRef(new Map<number, HeldNote>());
 
   const getCtx = () => {
-    // Safari viejo solo expone webkitAudioContext.
-    const Ctor =
-      window.AudioContext ??
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    if (!ctxRef.current) ctxRef.current = new Ctor();
+    if (!ctxRef.current) ctxRef.current = createAudioContext();
     return ctxRef.current;
   };
 

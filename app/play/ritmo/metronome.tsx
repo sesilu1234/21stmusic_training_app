@@ -1,13 +1,10 @@
 // metronome.ts
+import { createAudioContext } from "@/lib/audioContext";
+
 let audioCtx: AudioContext | null = null;
 
 export const getCtx = () => {
-  if (!audioCtx) {
-    const w = window as typeof window & {
-      webkitAudioContext?: typeof AudioContext;
-    };
-    audioCtx = new (w.AudioContext || w.webkitAudioContext!)();
-  }
+  if (!audioCtx) audioCtx = createAudioContext();
   return audioCtx;
 };
 

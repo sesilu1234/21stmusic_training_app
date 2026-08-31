@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useRef } from "react";
+import { createAudioContext } from "@/lib/audioContext";
 import { playPluckedString, type PluckParams } from "@/lib/pluckedString";
 
 export const INTERVALS = [
@@ -114,12 +115,7 @@ export type Dyad = { root: number; semi: number };
 export function useAudio() {
   const ctxRef = useRef<AudioContext | null>(null);
   function getCtx(): AudioContext {
-    // Safari viejo solo expone webkitAudioContext.
-    const Ctor =
-      window.AudioContext ??
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    if (!ctxRef.current) ctxRef.current = new Ctor();
+    if (!ctxRef.current) ctxRef.current = createAudioContext();
     return ctxRef.current;
   }
 
