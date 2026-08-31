@@ -63,12 +63,14 @@ Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da 
 - ver y examinar cada uno de los modos de juego y rutas  (privacidad, about, etc...) y ver si cambiarles algo, o añadir, o modificar algo  ?
 
 - lol, esto va en serio , alguna vez pulso un boton, lo pulso bien, y dice que es erroneo pero la solucion es la que habia pinchado yo jaja , wtf
+- escuhcar con casoscos a ver si acordes suenan realemnte bien o el bajo hayq uque subirl
 
 
-
-- poner en about o algun siiotio, "empezado en 1998 por Jaáume Pla"
-
+- haces scroll y tarda en cargar, ahy click y flash ... malo ....
 
 
-s
+- poner en about o algun siiotio, "empezado en 1998 por Jaume Pla Soler"
+
+- centrar los animlatios un pelin mas y poner un shadow al rededor del circulo (o seiempre, o sn en hover ... o como prefeiera IA quede mas chulo)
+
 
