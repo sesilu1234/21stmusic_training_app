@@ -24,7 +24,7 @@ export default function PrivacidadPage() {
         casi nada
       </PaperTitle>
 
-      <div className="space-y-10 text-xl leading-9 text-white/70 md:text-[22px] md:leading-10">
+      <div className="space-y-6 text-[15px] leading-7 text-white/65 md:text-base md:leading-8">
         <p>
           <Lead>Jugar no deja rastro.</Lead> No hace falta cuenta para entrar, y tus
           partidas, tus notas y el tema que elijas se quedan en este dispositivo.
@@ -56,9 +56,9 @@ export default function PrivacidadPage() {
         </p>
       </div>
 
-      <div className="mt-20">
-        <div aria-hidden className="mb-8 h-px w-16 bg-white/15" />
-        <p className="text-sm leading-7 text-white/30">
+      <div className="mt-14">
+        <div aria-hidden className="mb-6 h-px w-16 bg-white/15" />
+        <p className="text-[13px] leading-6 text-white/30">
           Responsable: {SITE.academyName} ({SITE.name}). Los mensajes del formulario
           se guardan en servidores de Supabase el tiempo necesario para atenderlos.
           <br />

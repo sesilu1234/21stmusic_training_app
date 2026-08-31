@@ -44,6 +44,10 @@ body {
   );
 }
 
+/* Contacto pide el velo claro esté la app como esté: es una pantalla pequeña,
+   con una sola caja en medio, y con el velo oscuro la foto se moría del todo.
+   Misma regla que la del modo claro, solo que pedida por la página. */
+.veil-light .backdrop-veil,
 html[data-theme-mode="light"] .backdrop-veil {
   background-image: linear-gradient(
     to bottom,

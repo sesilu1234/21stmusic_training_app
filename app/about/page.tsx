@@ -13,10 +13,10 @@ export default function AboutPage() {
         se quede
       </PaperTitle>
 
-      <div className="space-y-8 text-xl leading-9 text-white/70 md:text-[22px] md:leading-10">
+      <div className="space-y-5 text-[15px] leading-7 text-white/65 md:text-base md:leading-8">
         {/* Primer párrafo algo más grande y más claro: hace de entradilla sin
             necesidad de ponerle una etiqueta encima. */}
-        <p className="text-2xl leading-10 text-white/85 md:text-[26px] md:leading-[1.7]">
+        <p className="text-lg leading-8 text-white/85 md:text-xl md:leading-9">
           Lo que se descubre en clase necesita repetirse para asentarse. Aquí esa
           repetición se vuelve juego: partidas de tres minutos, respuesta al
           instante y ni una sola fotocopia.
@@ -51,7 +51,7 @@ export default function AboutPage() {
         </p>
       </div>
 
-      <p className="mt-14">
+      <p className="mt-8">
         <a
           href={SITE.academyUrl}
           target="_blank"
@@ -66,10 +66,10 @@ export default function AboutPage() {
       {/* Va al final, apagada y sin nada que la anuncie. Una rayita corta y una
           línea en cursiva: si se le pone más peso deja de ser un homenaje y
           pasa a ser un titular. */}
-      <div className="mt-24 md:mt-32">
-        <div aria-hidden className="mb-8 h-px w-16 bg-white/15" />
+      <div className="mt-16 md:mt-20">
+        <div aria-hidden className="mb-6 h-px w-16 bg-white/15" />
         <p
-          className="text-lg italic leading-8 text-white/30 md:text-xl"
+          className="text-base italic leading-7 text-white/30 md:text-lg"
           style={{ fontFamily: DISPLAY_FONT }}
         >
           Fundado por Jaume Pla Soler en 1998

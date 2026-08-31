@@ -68,9 +68,6 @@ Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da 
 
 
 - poner en about o algun siiotio, "empezado en 1998 por Jaume Pla Soler"
-
-
-
 - no hay sonido en iOS ... , ademas free piano no gira en iOS (iphone)
 
 
@@ -80,3 +77,5 @@ Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da 
 - algun animal centrarlo mas su cara
 
 - cluade, dice que para pedir contacta mejor no salir de la app ... preguntar papa
+
+- lo de privacidad : pone que notas se quedan en dispositivo , y es mentira. que hacer ?

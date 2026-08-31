@@ -6,6 +6,8 @@ import {
   Literata,
   Newsreader,
   Outfit,
+  Pixelify_Sans,
+  Silkscreen,
   Source_Serif_4,
   Space_Grotesk,
 } from "next/font/google";
@@ -43,6 +45,38 @@ export const infoBody = Newsreader({
 
 /** Las dos, para poner en la raíz de cada página de información. */
 export const infoFontVariables = `${infoDisplay.variable} ${infoBody.variable}`;
+
+/**
+ * Tipografía de píxel, para los rótulos de contacto. Es la misma que ya usaban
+ * los bocetos de los avatares, así que el pixel art de la app y esa página
+ * hablan el mismo idioma.
+ *
+ * Solo para rótulos cortos: es una fuente de mapa de bits y un párrafo entero
+ * en Silkscreen no hay quien lo lea. Lo que se escribe va en Geist Mono, que ya
+ * viene cargada desde el layout y no cuesta una descarga más.
+ */
+export const pixelFont = Silkscreen({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-pixel",
+});
+
+/**
+ * La pareja de Silkscreen para lo que se escribe en el formulario.
+ *
+ * También es de píxel, pero de las legibles: tiene minúsculas de altura normal
+ * y proporciones de fuente de texto, así que a 13px se lee un correo sin
+ * esfuerzo. Silkscreen no vale para esto — a ese tamaño es un jeroglífico — y
+ * por eso se queda solo para rótulos de dos palabras.
+ */
+export const pixelBody = Pixelify_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-pixel-body",
+});
+
+/** Las dos, para la raíz de la página de contacto. */
+export const pixelFontVariables = `${pixelFont.variable} ${pixelBody.variable}`;
 
 /**
  * Tipografías de la guía. Va aparte del resto de la app a propósito: la guía
