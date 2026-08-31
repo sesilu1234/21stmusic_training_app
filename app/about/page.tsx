@@ -69,7 +69,7 @@ export default function AboutPage() {
       <div className="mt-16 md:mt-20">
         <div aria-hidden className="mb-6 h-px w-16 bg-white/15" />
         <p
-          className="text-base italic leading-7 text-white/30 md:text-lg"
+          className="text-base italic leading-7 text-white/20 md:text-lg"
           style={{ fontFamily: DISPLAY_FONT }}
         >
           Fundado por Jaume Pla Soler en 1998
