@@ -1,4 +1,5 @@
 import {
+  Fraunces,
   IBM_Plex_Sans,
   IBM_Plex_Serif,
   Inter,
@@ -16,6 +17,32 @@ export const chaney = localFont({
   style: "italic",
   variable: "--font-chaney",
 });
+
+/**
+ * Tipografías de las páginas de información (sobre, contacto, privacidad).
+ *
+ * Esas tres páginas son solo texto, así que se merecen una serif de verdad en
+ * lugar de la sans del resto de la app. Fraunces para los titulares — tiene
+ * cursiva y bastante carácter, que es lo que las hace parecer algo escrito y no
+ * un formulario — y Newsreader para el cuerpo, que es de leer y no cansa.
+ *
+ * Next solo descarga la tipografía en las páginas que la usan, así que esto no
+ * le cuesta nada a las pantallas de juego.
+ */
+export const infoDisplay = Fraunces({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-info-display",
+});
+
+export const infoBody = Newsreader({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-info-body",
+});
+
+/** Las dos, para poner en la raíz de cada página de información. */
+export const infoFontVariables = `${infoDisplay.variable} ${infoBody.variable}`;
 
 /**
  * Tipografías de la guía. Va aparte del resto de la app a propósito: la guía

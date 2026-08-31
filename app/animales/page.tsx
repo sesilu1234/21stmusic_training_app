@@ -83,6 +83,64 @@ export default function MuestrarioPage() {
           </div>
         </section>
 
+        {/* --- En contexto ---------------------------------------------- */}
+        {/*
+          El avatar suelto sobre una tarjeta engaña: en la app vive metido en la
+          barra de la cabecera, a 40px, recortado en redondo y sobre la foto de
+          fondo. Aquí está la cabecera copiada tal cual — mismos colores, mismo
+          desenfoque, mismo tamaño — para poder juzgar de verdad si un dibujo se
+          lee o se convierte en una mancha.
+
+          Es una copia y no la cabecera de verdad porque `AppShell` arrastra
+          sesión, navegación y menú de cuenta; aquí solo interesa el hueco del
+          avatar. Si algún día se retoca la cabecera, esto se queda desfasado:
+          es una página de trabajo, no pasa nada.
+        */}
+        <section className="mb-14">
+          <h2 className="mb-4 text-[11px] font-black uppercase tracking-[0.24em] text-white/70">
+            En contexto
+          </h2>
+
+          <div
+            className="space-y-3 rounded-3xl bg-cover bg-center p-4 sm:p-6"
+            style={{ backgroundImage: "url('/assets/background.jpeg')" }}
+          >
+            {ANIMALS.map((animal) => (
+              <div
+                key={animal.id}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-xl"
+              >
+                <span className="flex min-w-0 items-center gap-2.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/assets/logo21stCM_no_white_1-192.png"
+                    className="h-9 w-auto flex-shrink-0"
+                    alt=""
+                  />
+                  <span className="flex min-w-0 flex-col">
+                    <span
+                      className="truncate text-sm font-black italic leading-tight tracking-tighter text-white"
+                      style={{ fontFamily: "Chaney, sans-serif" }}
+                    >
+                      21st Century Music
+                    </span>
+                    <span className="truncate text-[7px] font-bold uppercase tracking-[0.28em] text-amber-400">
+                      {animal.label}
+                    </span>
+                  </span>
+                </span>
+
+                {/* El botón de cuenta, clavado a como está en `UserMenu`. */}
+                <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full">
+                  <span className="grid h-full w-full place-items-center overflow-hidden rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
+                    <AnimalTile animal={animal} className="h-full w-full" />
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* --- Iconos de juego ------------------------------------------ */}
         <section>
           <h2 className="mb-4 text-[11px] font-black uppercase tracking-[0.24em] text-white/70">

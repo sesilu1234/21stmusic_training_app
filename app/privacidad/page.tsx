@@ -1,81 +1,82 @@
 import Link from "next/link";
-import InfoShell from "../components/InfoShell";
+import PaperShell, { DISPLAY_FONT, PaperTitle } from "../components/PaperShell";
 import { SITE } from "@/lib/site";
 
 export const metadata = { title: "Privacidad · 21st Century Music" };
 
+/**
+ * La versión corta, que es la única que lee alguien.
+ *
+ * Antes eran ocho apartados con epígrafes legales. Leídos de golpe daban la
+ * impresión contraria a la real: parecía que aquí se recoge muchísimo, cuando
+ * lo cierto es que no se recoge casi nada. Ahora son cuatro frases.
+ *
+ * Lo que no se ha quitado, porque no es decoración sino lo que el RGPD exige
+ * que aparezca: quién responde, qué se guarda, para qué, qué derechos tienes y
+ * ante quién reclamar. Eso se queda aunque estorbe.
+ */
 export default function PrivacidadPage() {
   return (
-    <InfoShell
-      eyebrow="Legal"
-      title="Privacidad"
-      intro={`Actualizado el ${SITE.privacyUpdatedAt}.`}
-    >
-      <div className="divide-y divide-white/10 border-t border-white/10">
-        <Item title="Qué guardamos">
-          Nada tuyo mientras juegas: la app no pide cuenta ni te identifica. Solo si nos escribes
-          por el formulario guardamos tu correo y tu mensaje, para poder contestarte. Ni dirección,
-          ni teléfono, ni pagos, ni micrófono.
-        </Item>
+    <PaperShell>
+      <PaperTitle eyebrow="Privacidad">
+        No guardamos
+        <br />
+        casi nada
+      </PaperTitle>
 
-        <Item title="Qué no sale de aquí">
-          Tus notas, la longitud de partida y tu preferencia de tema se guardan solo en este
-          dispositivo. No llegan a ningún servidor y desaparecen si borras los datos del navegador.
-        </Item>
+      <div className="space-y-10 text-xl leading-9 text-white/70 md:text-[22px] md:leading-10">
+        <p>
+          <Lead>Jugar no deja rastro.</Lead> No hace falta cuenta para entrar, y tus
+          partidas, tus notas y el tema que elijas se quedan en este dispositivo.
+          No llegan a ningún servidor y desaparecen si borras los datos del
+          navegador.
+        </p>
 
-        <Item title="Para qué">
-          Solo para responder a lo que nos escribas. Sin publicidad, sin venta de datos, sin
-          cesiones a terceros.
-        </Item>
+        <p>
+          <Lead>Si nos escribes, guardamos tu correo y tu mensaje.</Lead> Solo para
+          poder contestarte, y solo lo ve el profesorado de la escuela. Ni
+          teléfono, ni dirección, ni pagos, ni micrófono.
+        </p>
 
-        <Item title="Quién lo ve">
-          El profesorado y la dirección de la academia. Nadie más.
-        </Item>
+        <p>
+          <Lead>Sin cookies.</Lead> Ni de sesión, ni de rastreo, ni de analítica. Sin
+          publicidad y sin ceder nada a terceros.
+        </p>
 
-        <Item title="Cookies">
-          Ninguna. Ni sesión, ni rastreo, ni analítica.
-        </Item>
-
-        <Item title="Dónde y cuánto">
-          Los mensajes del formulario, en servidores de Supabase, el tiempo necesario para
-          atenderlos.
-        </Item>
-
-        <Item title="Tus derechos">
-          Puedes acceder a tus datos, corregirlos, borrarlos, limitar su uso, oponerte o pedir una
-          copia desde el{" "}
-          <Link href="/contacto" className="text-amber-300 underline-offset-4 hover:underline">
-            formulario de contacto
+        <p>
+          <Lead>Es tuyo y te lo puedes llevar.</Lead> Pídenos ver, corregir o borrar lo
+          que tengamos, cuando quieras, desde{" "}
+          <Link
+            href="/contact"
+            className="text-amber-300 underline decoration-amber-300/30 underline-offset-4 transition hover:decoration-amber-300"
+          >
+            contacto
           </Link>
           . Si algo no te cuadra, puedes reclamar ante la AEPD.
-        </Item>
-
-        <Item title="Menores">
-          La app se puede usar sin cuenta y sin dar ningún dato, así que también la pueden usar
-          los alumnos menores de edad.
-        </Item>
+        </p>
       </div>
 
-      <p className="pt-2 text-xs font-light text-white/30">
-        Responsable: {SITE.academyName} ({SITE.name}).
-      </p>
-    </InfoShell>
+      <div className="mt-20">
+        <div aria-hidden className="mb-8 h-px w-16 bg-white/15" />
+        <p className="text-sm leading-7 text-white/30">
+          Responsable: {SITE.academyName} ({SITE.name}). Los mensajes del formulario
+          se guardan en servidores de Supabase el tiempo necesario para atenderlos.
+          <br />
+          Actualizado el {SITE.privacyUpdatedAt}.
+        </p>
+      </div>
+    </PaperShell>
   );
 }
 
-/**
- * Título a la izquierda, texto a la derecha. Sin tarjetas ni fondos: en una
- * página que solo es texto, las cajas hacían ruido y no ordenaban nada.
- */
-function Item({ title, children }: { title: string; children: React.ReactNode }) {
+/** La frase que abre cada punto, en cursiva y más clara que el resto. */
+function Lead({ children }: { children: React.ReactNode }) {
   return (
-    <div className="py-6 md:flex md:gap-10">
-      <h2 className="text-[11px] font-black uppercase tracking-[0.18em] text-amber-200/80 md:w-44 md:flex-shrink-0 md:pt-1">
-        {title}
-      </h2>
-      <p className="mt-2.5 max-w-prose text-[15px] font-light leading-7 text-white/65 md:mt-0">
-        {children}
-      </p>
-    </div>
+    <strong
+      className="font-normal italic text-white"
+      style={{ fontFamily: DISPLAY_FONT }}
+    >
+      {children}
+    </strong>
   );
 }

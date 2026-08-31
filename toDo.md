@@ -58,7 +58,7 @@ Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da 
 
 - ver descripciones y textos, comprobar 
 
-- cambiar nombre  a algo namecheap https://21stmusic-training-app.vercel.app/
+
 
 - ver y examinar cada uno de los modos de juego y rutas  (privacidad, about, etc...) y ver si cambiarles algo, o añadir, o modificar algo  ?
 
@@ -66,11 +66,17 @@ Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da 
 - escuhcar con casoscos a ver si acordes suenan realemnte bien o el bajo hayq uque subirl
 
 
-- haces scroll y tarda en cargar, ahy click y flash ... malo ....
-
 
 - poner en about o algun siiotio, "empezado en 1998 por Jaume Pla Soler"
 
-- centrar los animlatios un pelin mas y poner un shadow al rededor del circulo (o seiempre, o sn en hover ... o como prefeiera IA quede mas chulo)
 
-- no hay sonido en iOS ... , ademas free piano no gira
+
+- no hay sonido en iOS ... , ademas free piano no gira en iOS (iphone)
+
+
+
+- añadir el sitemap , info de rutas o headers para bots , para que se encuentre facil la web. y mas cositas como google analytics
+
+- algun animal centrarlo mas su cara
+
+- cluade, dice que para pedir contacta mejor no salir de la app ... preguntar papa

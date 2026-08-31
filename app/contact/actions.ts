@@ -1,12 +1,17 @@
 "use server";
 
-import { CONTACT_LIMITS, saveContactMessage } from "@/lib/contact";
+import {
+  CONTACT_LIMITS,
+  isContactTopic,
+  saveContactMessage,
+  type ContactTopic,
+} from "@/lib/contact";
 
 export interface ContactState {
   status: "idle" | "ok" | "error";
   error?: string;
   /** Se devuelve para no vaciar el formulario cuando algo falla. */
-  values?: { email: string; message: string };
+  values?: { email: string; message: string; topic?: string };
 }
 
 export const initialContactState: ContactState = { status: "idle" };
@@ -21,7 +26,14 @@ export async function sendContactMessage(
 ): Promise<ContactState> {
   const email = String(formData.get("email") || "").trim();
   const message = String(formData.get("message") || "").trim();
-  const values = { email, message };
+  const rawTopic = String(formData.get("topic") || "").trim();
+
+  // El motivo es una ayuda para clasificar, no un dato que el usuario deba
+  // acertar. Si llega algo raro (o no llega nada) se guarda el mensaje sin
+  // motivo en vez de devolverle un error por algo que ni ha escrito.
+  const topic: ContactTopic | undefined = isContactTopic(rawTopic) ? rawTopic : undefined;
+
+  const values = { email, message, topic };
 
   // Campo trampa: está oculto, así que un humano nunca lo rellena. Si viene
   // con algo es un bot, y se le contesta que todo bien sin guardar nada.
@@ -40,7 +52,7 @@ export async function sendContactMessage(
   }
 
   try {
-    await saveContactMessage({ email, message });
+    await saveContactMessage({ email, message, topic });
   } catch {
     return fail("No se ha podido enviar. Inténtalo otra vez en un momento.");
   }

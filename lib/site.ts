@@ -8,7 +8,7 @@ export const SITE = {
 
 export const FOOTER_LINKS = [
   { href: "/guia", label: "Guía" },
-  { href: "/contacto", label: "Contacto" },
-  { href: "/sobre", label: "Sobre la app" },
+  { href: "/contact", label: "Contacto" },
+  { href: "/about", label: "Sobre la app" },
   { href: "/privacidad", label: "Privacidad" },
 ] as const;

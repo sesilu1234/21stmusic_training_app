@@ -1,5 +1,11 @@
 -- =====================================================================
--- Mensajes del formulario de contacto (/contacto)
+-- Mensajes del formulario de contacto (/contact)
+--
+-- El motivo que elige el usuario NO tiene columna propia: llega como primera
+-- línea del propio mensaje, entre corchetes ("[Un fallo]"). Se hizo así para no
+-- tener que migrar la tabla antes de desplegar. Si algún día interesa filtrar
+-- por motivo, se añade una columna `topic text` y se cambia `saveContactMessage`
+-- en lib/contact.ts — pero hay que correr el ALTER ANTES de desplegar el código.
 -- Ejecutar entero en el SQL editor de Supabase. Se puede repetir sin miedo.
 -- =====================================================================
 -- El formulario es público: lo puede rellenar alguien sin cuenta. Si quien
