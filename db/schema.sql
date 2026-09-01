@@ -1,6 +1,26 @@
 -- =====================================================================
 -- 21st Century Music — esquema limpio (ejecutar entero en Supabase SQL)
 -- =====================================================================
+--
+--   ###################################################################
+--   #  NO EJECUTAR ESTO EN LA BASE DE DATOS BUENA.                    #
+--   #                                                                 #
+--   #  Es el arranque desde cero, de cuando se limpió el esquema, y   #
+--   #  más abajo hace DROP TABLE de game_attempts y student_medals.   #
+--   #  Volver a pasarlo hoy borra el progreso y las medallas de       #
+--   #  todos los alumnos, y además se lleva por delante la columna    #
+--   #  level_slug que añade db/progress.sql, así que a partir de ese  #
+--   #  momento la app tampoco podría guardar partidas nuevas.         #
+--   #                                                                 #
+--   #  Para una instalación nueva, el orden es:                       #
+--   #    1) schema.sql   2) progress.sql   3) student_notes.sql       #
+--   #    4) profile_fields.sql   5) contact_messages.sql              #
+--   #    6) rename_games.sql                                          #
+--   #                                                                 #
+--   #  Sobre una base de datos que ya está en marcha: solo los        #
+--   #  archivos nuevos, nunca este.                                   #
+--   ###################################################################
+-- =====================================================================
 -- Deja SOLO 3 tablas:
 --   students        -> quién puede entrar (Google y/o usuario+contraseña)
 --   game_attempts   -> una fila por partida terminada

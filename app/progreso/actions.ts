@@ -36,9 +36,15 @@ export const saveAttempt = async (input: {
       correct: Number(input.correct),
       total: Number(input.total),
     });
-  } catch {
+  } catch (error) {
     // Que se caiga la base de datos no puede estropear el final de la partida:
     // el alumno ve su resultado igual, simplemente no queda guardado.
+    //
+    // Pero callarlo del todo era peor: si Supabase empezara a rechazar los
+    // inserts, los alumnos dejarían de acumular progreso y no se enteraría
+    // nadie nunca. Esto corre en el servidor, así que sale en los registros del
+    // despliegue y no en la consola del alumno.
+    console.error("[progreso] no se ha podido guardar la partida:", error);
     return NOT_SAVED;
   }
 };

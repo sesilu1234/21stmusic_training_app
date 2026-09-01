@@ -9,11 +9,50 @@
 // Todo esto es de servidor: usa la service role key de Supabase, igual que
 // lib/students.ts. No se importa desde un componente de cliente.
 
-import { GAMES, type GameMode } from "./games";
+import { GAMES, gameByStoredName, type GameMode } from "./games";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 
-/** Partidas que se traen para calcular el panel. */
-const HISTORY_LIMIT = 600;
+/**
+ * Partidas que se traen para calcular el detalle del panel.
+ *
+ * Era 600 y de ahí salían TODAS las cifras, incluida la casilla de "Partidas",
+ * que por tanto se habría quedado clavada en 600 para siempre, y el récord de
+ * cada modo, que podía BAJAR: cuando la partida del 100% se salía por abajo de
+ * la ventana, la medalla se quedaba pero la barra caía. Un récord que baja se
+ * lee como un fallo.
+ *
+ * El número total de partidas ya no sale de aquí: se pide aparte y exacto, con
+ * un `count` que no trae ni una fila. Esta ventana es solo para el detalle
+ * (medias, récords, niveles, historial), y a 2000 cubre años de uso normal.
+ *
+ * Si algún día un alumno pasa de 2000 partidas, lo correcto es una función en
+ * Postgres que devuelva los agregados ya hechos. No se ha hecho ya porque los
+ * agregados por API están desactivados en este proyecto de Supabase, y montar
+ * un RPC para un caso que hoy no existe es trabajo por adelantado.
+ */
+const DETAIL_LIMIT = 2000;
+
+/**
+ * Cuántas partidas miran las medias que se enseñan.
+ *
+ * La media de toda la vida castiga por haber empezado sin saber: veinte
+ * partidas de los primeros días tiran del número para abajo durante meses, y
+ * el alumno que ha mejorado no lo ve. Diez es bastante para que una partida
+ * mala no lo mueva entero, y poco para que refleje cómo va AHORA.
+ */
+export const FORM_WINDOW = 10;
+
+/** Los días que mira el porcentaje de aciertos de la cabecera. */
+const WEEK_DAYS = 7;
+
+/**
+ * Tope de filas que se leen para recalcular la racha al guardar una partida.
+ *
+ * Un año de partidas, y de cada día basta con que aparezca una. Con 1200 caben
+ * más de tres al día todos los días del año; a partir de ahí lo único que se
+ * pierde es poder alargar la racha por encima de eso, que no va a pasar.
+ */
+const STREAK_ROW_LIMIT = 1200;
 
 /**
  * Una medalla es un pleno, pero solo cuenta desde 24 preguntas.
@@ -49,9 +88,29 @@ export interface Attempt {
 export interface GameProgress {
   game: GameMode;
   attempts: number;
-  /** El mejor porcentaje conseguido, de 0 a 100. */
+  /** El mejor porcentaje conseguido, de 0 a 100. Es un récord, no un nivel. */
   best: number;
-  /** Media de aciertos de todas las partidas, de 0 a 100. */
+  /**
+   * La media de los récords de cada nivel, de 0 a 100. Es LA cifra del modo:
+   * la que va en la barra.
+   *
+   * Antes la barra era el récord del modo entero, y por eso podía marcar 100%
+   * con todos los niveles por debajo: bastaba con haber bordado uno. Así no:
+   * para llegar al 100% hay que haber hecho pleno en todos los niveles que se
+   * han tocado, que es justo lo que significa tener el modo dominado. Y como
+   * son récords, no baja al tener un mal día.
+   *
+   * En los modos sin niveles es directamente el récord del modo.
+   *
+   * Solo cuenta los niveles jugados, no los que el modo tiene: los niveles no
+   * están declarados en ningún catálogo, salen de las URL que se han jugado.
+   * O sea que el 100% quiere decir "pleno en todo lo que has tocado", no
+   * "pleno en todo lo que existe".
+   */
+  mastery: number;
+  /** Media de las últimas partidas, de 0 a 100: cómo va AHORA, no su récord. */
+  form: number;
+  /** Media de aciertos de todas las partidas de la ventana, de 0 a 100. */
   average: number;
   correct: number;
   questions: number;
@@ -62,6 +121,7 @@ export interface GameProgress {
     slug: string;
     attempts: number;
     best: number;
+    form: number;
     lastPlayedAt: string | null;
   }[];
 }
@@ -78,11 +138,16 @@ export interface Streak {
 }
 
 export interface Progress {
+  /** Partidas de toda la vida. Exacto: no sale de la ventana de detalle. */
   attempts: number;
   questions: number;
   correct: number;
-  /** Media global de aciertos, de 0 a 100. */
-  accuracy: number;
+  /** Aciertos de los últimos siete días, de 0 a 100. */
+  weekAccuracy: number;
+  weekCorrect: number;
+  weekQuestions: number;
+  /** true si en los últimos siete días no ha jugado nada. */
+  weekEmpty: boolean;
   medals: number;
   streak: Streak;
   games: GameProgress[];
@@ -91,6 +156,21 @@ export interface Progress {
 
 const percent = (correct: number, total: number) =>
   total > 0 ? Math.round((correct / total) * 100) : 0;
+
+/**
+ * La media de las últimas `FORM_WINDOW` partidas de una lista que ya viene de
+ * la más nueva a la más vieja.
+ *
+ * Se pondera por preguntas y no por partidas: una partida de 48 preguntas dice
+ * más de cómo va alguien que una de 24, y promediar porcentajes las igualaría.
+ */
+const formOf = (list: Attempt[]) => {
+  const recent = list.slice(0, FORM_WINDOW);
+  return percent(
+    recent.reduce((sum, a) => sum + a.correct, 0),
+    recent.reduce((sum, a) => sum + a.total, 0),
+  );
+};
 
 /**
  * La racha, a partir de los días en que hubo alguna partida.
@@ -135,14 +215,21 @@ export const streakFrom = (days: string[], today = dayKey(new Date())): Streak =
 export const getProgress = async (email: string): Promise<Progress> => {
   const supabase = getSupabaseAdmin();
 
-  const [attemptsResult, medalsResult] = await Promise.all([
+  const [attemptsResult, medalsResult, countResult] = await Promise.all([
     supabase
       .from("game_attempts")
       .select("game_name, level_slug, correct, total, created_at")
       .eq("student_email", email)
       .order("created_at", { ascending: false })
-      .limit(HISTORY_LIMIT),
+      .limit(DETAIL_LIMIT),
     supabase.from("student_medals").select("game_name").eq("student_email", email),
+    // `head: true` pide el número y ni una fila: es una consulta de contar, no
+    // de traer. Es lo que hace que "Partidas" sea exacto para siempre sin
+    // depender del tamaño de la ventana de arriba.
+    supabase
+      .from("game_attempts")
+      .select("id", { count: "exact", head: true })
+      .eq("student_email", email),
   ]);
 
   if (attemptsResult.error) {
@@ -150,8 +237,14 @@ export const getProgress = async (email: string): Promise<Progress> => {
   }
 
   const rows = (attemptsResult.data ?? []) as AttemptRow[];
+  // Las medallas también se guardaron con los nombres viejos, así que se
+  // normalizan al entrar: si no, un alumno con la medalla de "Ej. Rockschool"
+  // no la vería en el modo que ahora se llama "Rockschool".
   const medals = new Set(
-    (medalsResult.data ?? []).map((row: { game_name: string }) => row.game_name),
+    (medalsResult.data ?? []).map(
+      (row: { game_name: string }) =>
+        gameByStoredName(row.game_name)?.name ?? row.game_name,
+    ),
   );
 
   const attempts: Attempt[] = rows.map((row) => ({
@@ -165,7 +258,11 @@ export const getProgress = async (email: string): Promise<Progress> => {
   // Los modos salen en el orden del catálogo, y solo los que se han jugado
   // alguna vez o tienen medalla: un panel lleno de ceros no dice nada.
   const games: GameProgress[] = GAMES.map((game) => {
-    const mine = attempts.filter((attempt) => attempt.gameName === game.name);
+    // Por el modo resuelto y no por el texto: así una partida guardada con el
+    // nombre viejo cuenta en el modo que le toca.
+    const mine = attempts.filter(
+      (attempt) => gameByStoredName(attempt.gameName) === game,
+    );
     const correct = mine.reduce((sum, attempt) => sum + attempt.correct, 0);
     const questions = mine.reduce((sum, attempt) => sum + attempt.total, 0);
 
@@ -173,44 +270,77 @@ export const getProgress = async (email: string): Promise<Progress> => {
       ...new Set(mine.map((attempt) => attempt.levelSlug).filter(Boolean)),
     ] as string[];
 
+    const best = Math.max(
+      0,
+      ...mine.map((attempt) => percent(attempt.correct, attempt.total)),
+    );
+
+    // Se calculan aquí arriba y no dentro del objeto porque `mastery` es la
+    // media de sus récords y los necesita ya hechos.
+    const levels = levelSlugs
+      .map((slug) => {
+        const ofLevel = mine.filter((attempt) => attempt.levelSlug === slug);
+        return {
+          slug,
+          attempts: ofLevel.length,
+          best: Math.max(
+            0,
+            ...ofLevel.map((attempt) => percent(attempt.correct, attempt.total)),
+          ),
+          form: formOf(ofLevel),
+          lastPlayedAt: ofLevel[0]?.createdAt ?? null,
+        };
+      })
+      .sort((a, b) => b.attempts - a.attempts);
+
     return {
       game,
       attempts: mine.length,
-      best: Math.max(0, ...mine.map((attempt) => percent(attempt.correct, attempt.total))),
+      best,
+      mastery: levels.length
+        ? Math.round(levels.reduce((sum, level) => sum + level.best, 0) / levels.length)
+        : best,
+      form: formOf(mine),
       average: percent(correct, questions),
       correct,
       questions,
       lastPlayedAt: mine[0]?.createdAt ?? null,
       hasMedal: medals.has(game.name),
-      levels: levelSlugs
-        .map((slug) => {
-          const ofLevel = mine.filter((attempt) => attempt.levelSlug === slug);
-          return {
-            slug,
-            attempts: ofLevel.length,
-            best: Math.max(
-              0,
-              ...ofLevel.map((attempt) => percent(attempt.correct, attempt.total)),
-            ),
-            lastPlayedAt: ofLevel[0]?.createdAt ?? null,
-          };
-        })
-        .sort((a, b) => b.attempts - a.attempts),
+      levels,
     };
   }).filter((entry) => entry.attempts > 0 || entry.hasMedal);
 
   const correct = attempts.reduce((sum, attempt) => sum + attempt.correct, 0);
   const questions = attempts.reduce((sum, attempt) => sum + attempt.total, 0);
 
+  // Los siete días naturales que cuentan como "esta semana", hoy incluido.
+  const weekKeys = new Set(
+    Array.from({ length: WEEK_DAYS }, (_, index) => {
+      const date = new Date();
+      date.setDate(date.getDate() - index);
+      return dayKey(date);
+    }),
+  );
+  const week = attempts.filter((attempt) =>
+    weekKeys.has(dayKey(new Date(attempt.createdAt))),
+  );
+  const weekCorrect = week.reduce((sum, attempt) => sum + attempt.correct, 0);
+  const weekQuestions = week.reduce((sum, attempt) => sum + attempt.total, 0);
+
   return {
-    attempts: attempts.length,
+    attempts: countResult.count ?? attempts.length,
     questions,
     correct,
-    accuracy: percent(correct, questions),
+    weekAccuracy: percent(weekCorrect, weekQuestions),
+    weekCorrect,
+    weekQuestions,
+    weekEmpty: week.length === 0,
     medals: medals.size,
     streak: streakFrom(attempts.map((attempt) => dayKey(new Date(attempt.createdAt)))),
     games,
-    recent: attempts.slice(0, 12),
+    // Ocho y no doce: la lista crecía hasta hacer la página larguísima y las
+    // últimas entradas ya no las miraba nadie.
+    recent: attempts.slice(0, 8),
   };
 };
 
@@ -277,12 +407,19 @@ export const recordAttempt = async (input: {
     newMedal = Boolean(data?.length);
   }
 
+  // Solo hacen falta los días del último año: la racha se corta en el primer
+  // hueco, así que nada de más atrás puede alargarla. Antes se releían 2000
+  // filas enteras después de CADA partida para acabar contando días.
+  const yearAgo = new Date();
+  yearAgo.setDate(yearAgo.getDate() - 366);
+
   const { data: days } = await supabase
     .from("game_attempts")
     .select("created_at")
     .eq("student_email", input.email)
+    .gte("created_at", yearAgo.toISOString())
     .order("created_at", { ascending: false })
-    .limit(HISTORY_LIMIT);
+    .limit(STREAK_ROW_LIMIT);
 
   const streak = streakFrom(
     (days ?? []).map((row: { created_at: string }) => dayKey(new Date(row.created_at))),

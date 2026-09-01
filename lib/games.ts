@@ -103,9 +103,21 @@ export const CATEGORIES: Category[] = [
 ];
 
 export interface GameMode {
-  /** Clave en base de datos. NO cambiar. */
+  /**
+   * Clave en base de datos, igual que `label`.
+   *
+   * Estuvieron separados y se volvió en contra: once de los veintidós modos se
+   * guardaban con un nombre distinto del que se enseñaba ("Modos E. Mayor"
+   * contra "Modos griegos"), y el historial del panel, que pintaba el `name` a
+   * pelo, llamaba a los modos de una manera mientras el resto de la página los
+   * llamaba de otra. Se igualaron, y `db/rename_games.sql` renombró de una vez
+   * lo que ya estaba guardado.
+   *
+   * Al cambiar uno hay que cambiar los dos Y renombrar en base de datos, o las
+   * partidas viejas se quedan huérfanas de modo.
+   */
   name: string;
-  /** Nombre visible. Libre. */
+  /** Nombre visible. Tiene que coincidir con `name`. */
   label: string;
   desc: string;
   slug: string;
@@ -166,7 +178,7 @@ export const GAMES: GameMode[] = [
     scored: true,
   },
   {
-    name: "Modos E. Mayor",
+    name: "Modos griegos",
     label: "Modos griegos",
     desc: "Reconoce cada modo en el pentagrama.",
     slug: "/play/modos",
@@ -176,7 +188,7 @@ export const GAMES: GameMode[] = [
     studentsOnly: true,
   },
   {
-    name: "Lectura Rítmica",
+    name: "Lectura rítmica",
     label: "Lectura rítmica",
     desc: "Pulsa al ritmo exacto de la partitura.",
     slug: "/play/ritmo",
@@ -187,7 +199,7 @@ export const GAMES: GameMode[] = [
 
   // --- Oído ------------------------------------------------------------
   {
-    name: "Oído",
+    name: "Intervalos al oído",
     label: "Intervalos al oído",
     desc: "Melódicos y armónicos, de la b2 a la 8ª.",
     slug: "/play/oido",
@@ -237,7 +249,7 @@ export const GAMES: GameMode[] = [
 
   // --- Guitarra --------------------------------------------------------
   {
-    name: "Diapasón",
+    name: "Notas en el mástil",
     label: "Notas en el mástil",
     desc: "Encuentra cualquier nota sin pensarla.",
     slug: "/play/diapason",
@@ -246,7 +258,7 @@ export const GAMES: GameMode[] = [
     scored: true,
   },
   {
-    name: "Acordes",
+    name: "Acordes en el mástil",
     label: "Acordes en el mástil",
     desc: "Tríadas y séptimas por su forma.",
     slug: "/play/diapason_acordes",
@@ -257,7 +269,7 @@ export const GAMES: GameMode[] = [
 
   // --- Piano -----------------------------------------------------------
   {
-    name: "Piano: notas en el teclado",
+    name: "Notas en el teclado",
     label: "Notas en el teclado",
     desc: "Sale una nota en el pentagrama y la tocas en el piano.",
     slug: "/play/piano/notas",
@@ -266,7 +278,7 @@ export const GAMES: GameMode[] = [
     scored: true,
   },
   {
-    name: "Piano: tocar el intervalo",
+    name: "Toca el intervalo",
     label: "Toca el intervalo",
     desc: "«Desde Mi, toca la 5ª»: encuentra la tecla que toca.",
     slug: "/play/piano/intervalos",
@@ -275,7 +287,7 @@ export const GAMES: GameMode[] = [
     scored: true,
   },
   {
-    name: "Piano: reconocer el intervalo",
+    name: "Reconoce el intervalo",
     label: "Reconoce el intervalo",
     desc: "Se iluminan dos teclas: di qué distancia hay entre ellas.",
     slug: "/play/piano/reconocer-intervalos",
@@ -284,7 +296,7 @@ export const GAMES: GameMode[] = [
     scored: true,
   },
   {
-    name: "Piano: construir acordes",
+    name: "Construye acordes",
     label: "Construye acordes",
     desc: "Sale el nombre de un acorde y lo montas tecla a tecla.",
     slug: "/play/piano/acordes",
@@ -293,7 +305,7 @@ export const GAMES: GameMode[] = [
     scored: true,
   },
   {
-    name: "Piano: construir escalas",
+    name: "Construye escalas",
     label: "Construye escalas",
     desc: "Sale el nombre de una escala y la tocas entera.",
     slug: "/play/piano/escalas",
@@ -333,7 +345,7 @@ export const GAMES: GameMode[] = [
     scored: false,
   },
   {
-    name: "Ej. Rockschool",
+    name: "Rockschool",
     label: "Rockschool",
     desc: "Los ejercicios del método para cantarlos, grado a grado.",
     slug: "/play/rockschool",
@@ -398,6 +410,23 @@ export const gamesByCategory = () =>
  * ("sol-naturales", "nombrar/triadas"), que es lo que distingue una partida de
  * otra dentro del mismo modo.
  */
+/**
+ * El modo al que pertenece un `game_name` guardado.
+ *
+ * Hoy `name` y `label` son lo mismo, así que esto parece un rodeo. No lo es: es
+ * el único sitio por el que pasa un nombre venido de la base de datos, y por
+ * eso una fila de un modo que ya no existe se queda en su nombre a secas en vez
+ * de tirar la página. Pintar el nombre guardado a pelo es lo que hizo que el
+ * historial llamara a los modos de otra manera durante meses.
+ */
+const GAME_BY_STORED_NAME = new Map(GAMES.map((game) => [game.name, game]));
+
+export const gameByStoredName = (name: string) => GAME_BY_STORED_NAME.get(name);
+
+/** Cómo se escribe en pantalla un `game_name` guardado. */
+export const labelForStoredName = (name: string) =>
+  GAME_BY_STORED_NAME.get(name)?.label ?? name;
+
 export const gameFromPath = (pathname: string) => {
   const game = GAMES.filter(
     (item) => pathname === item.slug || pathname.startsWith(`${item.slug}/`),

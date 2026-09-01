@@ -42,8 +42,14 @@ export default function PrivacidadPage() {
           <Lead>Con cuenta.</Lead> Al entrar como alumno guardamos lo justo para
           que el progreso te siga de un dispositivo a otro: tu nombre y tu
           correo, las partidas terminadas, las medallas, los apuntes que
-          escribes y los instrumentos de tu perfil. Lo consulta el profesorado
-          de la escuela y nadie más.
+          escribes y los instrumentos de tu perfil.
+        </p>
+
+        <p>
+          <Lead>Quién ve qué.</Lead> El profesorado puede consultar cómo llevas
+          los ejercicios: partidas, aciertos y medallas. Tus apuntes no salen
+          ahí: son tuyos y no hay ninguna pantalla que se los enseñe a nadie
+          más. Escribe con la misma confianza que en una libreta.
         </p>
 
         <p>

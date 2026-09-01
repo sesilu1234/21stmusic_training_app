@@ -58,7 +58,7 @@ Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da 
 - ver descripciones y textos, comprobar 
 - ver y examinar cada uno de los modos de juego y rutas  (privacidad, about, etc...) y ver si cambiarles algo, o añadir, o modificar algo  ?
 - lol, esto va en serio , alguna vez pulso un boton, lo pulso bien, y dice que es erroneo pero la solucion es la que habia pinchado yo jaja , wtf
-
+- 
 - escuhcar con casoscos a ver si acordes suenan realemnte bien o el bajo hayq uque subirl, y que volumen y sonidos están bien. poner un sonido g"gloo" al darle al avatar jaja.
 
 
@@ -66,3 +66,6 @@ Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da 
 
 
 - añadir el sitemap , info de rutas o headers para bots , para que se encuentre facil la web. y mas cositas como google analytics
+
+
+- ver base de datos a ver que hay , por saber. y dar acceso a papa para contraseñas.

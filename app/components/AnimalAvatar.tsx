@@ -22,7 +22,7 @@ export const animalFor = (name: string) => ANIMALS[nameHash(name) % ANIMALS.leng
 
 /**
  * La baldosa de un animal concreto, sin pasar por el nombre. Va aparte porque
- * el muestrario de `/animales` los pinta todos y así no hay dos copias del
+ * el muestrario de `/muestrario` los pinta todos y así no hay dos copias del
  * mismo SVG que puedan acabar diciendo cosas distintas.
  *
  * El `viewBox` es la rejilla más el aire de `PAD` por los cuatro lados; el

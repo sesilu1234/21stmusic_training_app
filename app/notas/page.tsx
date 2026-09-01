@@ -35,8 +35,8 @@ export default async function NotasPage() {
         <header>
           <h1 className="text-2xl font-black italic tracking-tight md:text-4xl">Mis notas</h1>
           <p className="mt-1 text-xs text-white/50">
-            Apuntes rápidos de estudio. Se guardan en tu cuenta: los tienes en el
-            móvil y en el ordenador.
+            Apuntes rápidos de estudio. Se guardan en tu cuenta, así que los
+            tienes en el móvil y en el ordenador.
           </p>
         </header>
 

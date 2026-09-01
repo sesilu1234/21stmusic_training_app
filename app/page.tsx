@@ -98,24 +98,24 @@ const GameCard = ({
         </span>
       </div>
 
-      {/* Con sesión, la tarjeta cuenta por dónde vas: el mejor resultado y si
-          ya tienes la medalla. Sin partidas jugadas no sale nada. */}
+      {/* Con sesión, la tarjeta cuenta por dónde vas. La misma cifra que el
+          panel de progreso: la media de los récords de cada nivel. */}
       {!locked && stat && (
         <span className="mt-3 flex items-center gap-2">
           <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/10">
             <span
               className={`block h-full rounded-full ${
-                stat.best >= 90
+                stat.mastery >= 90
                   ? "bg-emerald-400"
-                  : stat.best >= 60
+                  : stat.mastery >= 60
                     ? "bg-amber-400"
                     : "bg-rose-400"
               }`}
-              style={{ width: `${stat.best}%` }}
+              style={{ width: `${stat.mastery}%` }}
             />
           </span>
           <span className="flex-shrink-0 text-[9px] font-black tracking-wider text-white/40">
-            {stat.best}%
+            {stat.mastery}%
           </span>
           {stat.hasMedal && <Medal size={12} className="flex-shrink-0 text-amber-300" />}
         </span>
@@ -139,6 +139,7 @@ export default async function HomePage() {
   const statOf = (name: string) =>
     progress?.games.find((entry) => entry.game.name === name);
 
+
   return (
     <AppShell displayName={student?.displayName}>
       <div className="mx-auto w-full max-w-5xl">
@@ -152,13 +153,15 @@ export default async function HomePage() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-black tracking-tight text-white">
-                {progress.streak.current > 0
-                  ? `${progress.streak.current} ${progress.streak.current === 1 ? "día" : "días"} seguidos`
-                  : "Vuelve a empezar una racha"}
+                {progress.streak.current === 0
+                  ? "Vuelve a empezar una racha"
+                  : progress.streak.current === 1
+                    ? "1 día seguido"
+                    : `${progress.streak.current} días seguidos`}
               </span>
               <span className="block truncate text-[10px] text-white/35">
                 {progress.streak.playedToday
-                  ? `Hoy ya has practicado · ${progress.accuracy}% de aciertos en total`
+                  ? `Hoy ya has practicado${progress.weekEmpty ? "" : ` · ${progress.weekAccuracy}% de aciertos esta semana`}`
                   : "Con una partida de hoy la mantienes viva"}
               </span>
             </span>

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Flame, Medal, Target, Trophy } from "lucide-react";
 import { gameIcons } from "@/app/components/gameIcons";
-import { CATEGORIES, categoryOf } from "@/lib/games";
-import { dayKey, MEDAL_MIN_TOTAL, type GameProgress, type Progress } from "@/lib/progress";
+import { CATEGORIES, categoryOf, labelForStoredName } from "@/lib/games";
+import { dayKey, FORM_WINDOW, type GameProgress, type Progress } from "@/lib/progress";
 
 /** "hoy", "ayer", "hace 3 días", "12 mar". */
 const whenLabel = (iso: string) => {
@@ -86,21 +86,25 @@ const GameRow = ({ entry }: { entry: GameProgress }) => {
             )}
           </div>
 
+          {/* La barra es la media de los récords de cada nivel. Era el récord
+              del modo entero, y así podía marcar 100% con todos los niveles
+              por debajo: bastaba con haber bordado uno. */}
           <div className="mt-2 flex items-center gap-2.5">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
               <div
-                className={`h-full rounded-full ${barColor(entry.best)}`}
-                style={{ width: `${entry.best}%` }}
+                className={`h-full rounded-full ${barColor(entry.mastery)}`}
+                style={{ width: `${entry.mastery}%` }}
               />
             </div>
             <span className="w-9 flex-shrink-0 text-right text-[11px] font-black text-white/70">
-              {entry.best}%
+              {entry.mastery}%
             </span>
           </div>
 
           <p className="mt-1.5 text-[10px] text-white/30">
-            {entry.attempts} {entry.attempts === 1 ? "partida" : "partidas"} · media{" "}
-            {entry.average}%
+            {entry.attempts} {entry.attempts === 1 ? "partida" : "partidas"}
+            {entry.attempts > 1 &&
+              ` · últimas ${Math.min(entry.attempts, FORM_WINDOW)}: ${entry.form}%`}
             {entry.lastPlayedAt && ` · ${whenLabel(entry.lastPlayedAt)}`}
           </p>
 
@@ -185,11 +189,18 @@ export default function ProgressBoard({
                 : "Empieza una hoy"
           }
         />
+        {/* De la última semana y no de siempre: la media de toda la vida
+            castiga por haber empezado sin saber, y el alumno que ha mejorado
+            no lo ve moverse en meses. */}
         <Tile
           icon={<Target size={13} />}
-          label="Aciertos"
-          value={`${progress.accuracy}%`}
-          hint={`${progress.correct} de ${progress.questions}`}
+          label="Aciertos · 7 días"
+          value={progress.weekEmpty ? "—" : `${progress.weekAccuracy}%`}
+          hint={
+            progress.weekEmpty
+              ? "Sin partidas esta semana"
+              : `${progress.weekCorrect} de ${progress.weekQuestions}`
+          }
         />
         <Tile
           icon={<Trophy size={13} />}
@@ -201,7 +212,7 @@ export default function ProgressBoard({
           icon={<Medal size={13} className="text-amber-300" />}
           label="Medallas"
           value={String(progress.medals)}
-          hint={`Pleno en ${MEDAL_MIN_TOTAL} o más`}
+          hint="Una partida entera sin fallar"
         />
       </div>
 
@@ -265,7 +276,7 @@ export default function ProgressBoard({
               >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs font-bold text-white/80">
-                    {attempt.gameName}
+                    {labelForStoredName(attempt.gameName)}
                   </span>
                   {attempt.levelSlug && (
                     <span className="block truncate text-[10px] text-white/30">
@@ -289,8 +300,10 @@ export default function ProgressBoard({
         </ul>
       </section>
 
+      {/* Decía "esto solo lo ves tú", y no era verdad: está en la base de
+          datos de la escuela y el profesorado puede consultarlo. */}
       <p className="pb-2 text-center text-[10px] text-white/25">
-        {displayName}, esto solo lo ves tú.
+        {displayName} · tu progreso queda guardado en tu cuenta de la escuela.
       </p>
     </div>
   );

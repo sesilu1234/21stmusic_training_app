@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { INTERNAL_METADATA, isStaffKey } from "@/lib/internalKey";
 import { ANIMALS } from "../components/animals";
 import { AnimalTile } from "../components/AnimalAvatar";
 import { gameIcons } from "../components/gameIcons";
@@ -9,8 +11,9 @@ import BarsAvatar from "../components/BarsAvatar";
  * página de trabajo, para ver de un vistazo cómo ha quedado cada dibujo sin
  * tener que ir cambiando de cuenta hasta que salga el animal que buscas.
  *
- * Se pinta entera en el servidor y no toca sesión ni base de datos, así que no
- * enseña nada de nadie. Si algún día molesta, se borra la carpeta y ya.
+ * Estaba en /animales y abierta a cualquiera. Ahora es /muestrario y pide la
+ * misma clave que la página del profesorado: no enseña datos de nadie, pero
+ * tampoco tiene por qué estar a la vista de quien pase por ahí.
  *
  * Los animales ya no se usan en la app — el avatar de la cuenta son ahora las
  * barras de [BarsAvatar] —, pero siguen aquí a la vista para poder recuperarlos
@@ -18,7 +21,7 @@ import BarsAvatar from "../components/BarsAvatar";
  */
 export const metadata: Metadata = {
   title: "Muestrario · 21st Century Music",
-  robots: { index: false, follow: false },
+  ...INTERNAL_METADATA,
 };
 
 /** Nombres inventados, solo para ver el reparto. No son alumnos. */
@@ -37,7 +40,14 @@ const SAMPLE_NAMES = [
   "Nil Estruch",
 ];
 
-export default function MuestrarioPage() {
+export default async function MuestrarioPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ key?: string }>;
+}) {
+  const params = (await searchParams) ?? {};
+  if (!isStaffKey(params.key)) notFound();
+
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-12 font-sans text-white">
       <div className="mx-auto w-full max-w-6xl">
@@ -48,7 +58,7 @@ export default function MuestrarioPage() {
           <p className="mt-2 text-sm text-white/45">
             El avatar en uso, los {ANIMALS.length} animales que ya no se usan y{" "}
             {Object.keys(gameIcons).length} iconos de juego. Página de trabajo,
-            sin enlazar desde el menú.
+            sin enlazar desde el menú y con clave.
           </p>
         </header>
 
