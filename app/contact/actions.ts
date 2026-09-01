@@ -4,17 +4,15 @@ import {
   CONTACT_LIMITS,
   isContactTopic,
   saveContactMessage,
+  type ContactState,
   type ContactTopic,
 } from "@/lib/contact";
 
-export interface ContactState {
-  status: "idle" | "ok" | "error";
-  error?: string;
-  /** Se devuelve para no vaciar el formulario cuando algo falla. */
-  values?: { email: string; message: string; topic?: string };
-}
-
-export const initialContactState: ContactState = { status: "idle" };
+// OJO: aquí NO se puede exportar nada que no sea una función asíncrona. Un
+// `export const` con un objeto —el estado inicial vivía aquí— hace que Next
+// rechace el archivo entero al cargarlo, y el formulario contesta "A server
+// error occurred" sin llegar a ejecutar una línea. Los tipos sí valen: se
+// borran al compilar. Todo lo demás, a `lib/contact.ts`.
 
 // Un correo válido de verdad no se valida con una regex; esto solo descarta lo
 // obviamente mal escrito para que no se pierda la respuesta.

@@ -338,9 +338,7 @@ export const getProgress = async (email: string): Promise<Progress> => {
     medals: medals.size,
     streak: streakFrom(attempts.map((attempt) => dayKey(new Date(attempt.createdAt)))),
     games,
-    // Ocho y no doce: la lista crecía hasta hacer la página larguísima y las
-    // últimas entradas ya no las miraba nadie.
-    recent: attempts.slice(0, 8),
+    recent: attempts.slice(0, 12),
   };
 };
 

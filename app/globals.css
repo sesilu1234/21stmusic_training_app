@@ -72,6 +72,32 @@ html[data-theme-mode="light"] .paper-scrim {
   background-color: rgb(15 23 42 / 0.34);
 }
 
+/* --- Cargando --------------------------------------------------------- */
+/* Las barras de `LoadingBars`. Se anima `transform` y no la altura: las
+   transformaciones las resuelve el navegador al pintar, sin rehacer el diseño
+   de la página. Animar `height` recalcularía la caja en cada fotograma, que es
+   justo lo que no conviene gastar mientras algo está cargando.
+
+   `scaleY` encoge desde el centro, así que la barra queda centrada sola sin
+   tener que colocarla. */
+@keyframes loading-bar {
+  0%, 100% { transform: scaleY(0.35); opacity: 0.55; }
+  50%      { transform: scaleY(1);    opacity: 1; }
+}
+
+.loading-bar {
+  animation: loading-bar 0.9s ease-in-out infinite;
+}
+
+/* Quien pide menos movimiento se queda con las tres barras quietas y a media
+   altura: se sigue viendo que hay algo esperando, sin nada parpadeando. */
+@media (prefers-reduced-motion: reduce) {
+  .loading-bar {
+    animation: none;
+    transform: scaleY(0.6);
+  }
+}
+
 /* --- Celebración de pleno (corona) ------------------------------------ */
 @keyframes crown-pop {
   0% { transform: scale(0.2) rotate(-18deg); opacity: 0; }

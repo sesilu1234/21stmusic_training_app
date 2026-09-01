@@ -5,6 +5,7 @@ import { ROUND_LENGTH } from "@/lib/roundLength";
 import { modes_images } from "./modes_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
+import LoadingBars from "@/app/components/LoadingBars";
 
 export default function ChordsGame() {
 
@@ -206,8 +207,8 @@ export default function ChordsGame() {
             )}
 
             {isImageLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-                <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
+                <LoadingBars className="h-6 text-amber-500" label="Cargando el ejercicio" />
               </div>
             )}
 

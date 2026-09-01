@@ -7,6 +7,7 @@ import { canSeeAlumnario } from "@/lib/roles";
 import { currentStudent } from "@/lib/session";
 import { getStudentAnyStatus, type Student } from "@/lib/students";
 import { getProgress, FORM_WINDOW, type Progress } from "@/lib/progress";
+import { labelForStoredName } from "@/lib/games";
 import StudentSearch from "./StudentSearch";
 
 /**
@@ -39,6 +40,14 @@ const fmtDate = (iso: string) =>
     day: "numeric",
     month: "short",
     year: "numeric",
+  });
+
+const fmtDateTime = (iso: string) =>
+  new Date(iso).toLocaleString("es-ES", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
 const barColor = (value: number) =>
@@ -202,6 +211,52 @@ const StudentReport = ({
               ))}
             </table>
           </div>
+
+          {/* El histórico va después de la tabla, no antes: la tabla contesta
+              "cómo lleva cada cosa" y esto contesta "qué ha hecho estos días",
+              que es la pregunta de después. Con la hora, porque dos partidas
+              del mismo día se distinguen por ahí. */}
+          <section>
+            <h3 className="mb-2 text-[9px] font-black uppercase tracking-[0.18em] text-white/35">
+              Últimas {progress.recent.length}{" "}
+              {progress.recent.length === 1 ? "partida" : "partidas"}
+            </h3>
+
+            <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">
+              {progress.recent.map((attempt, index) => {
+                const pct = Math.round((attempt.correct / attempt.total) * 100);
+                return (
+                  <li
+                    key={`${attempt.createdAt}-${index}`}
+                    className="flex items-center gap-3 px-3.5 py-2"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-bold text-white/80">
+                        {labelForStoredName(attempt.gameName)}
+                      </span>
+                      {attempt.levelSlug && (
+                        <span className="block truncate text-[10px] text-white/30">
+                          {levelLabel(attempt.levelSlug)}
+                        </span>
+                      )}
+                    </span>
+
+                    <span className="flex-shrink-0 text-[10px] text-white/30">
+                      {fmtDateTime(attempt.createdAt)}
+                    </span>
+
+                    <span
+                      className={`w-14 flex-shrink-0 text-right text-xs font-black ${
+                        pct === 100 ? "text-amber-300" : "text-white/60"
+                      }`}
+                    >
+                      {attempt.correct}/{attempt.total}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
 
           <div className="space-y-1.5 text-[11px] leading-4 text-white/35">
             <p>

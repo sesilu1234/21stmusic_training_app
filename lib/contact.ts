@@ -25,6 +25,25 @@ export type ContactTopic = (typeof CONTACT_TOPICS)[number];
 export const isContactTopic = (value: string): value is ContactTopic =>
   (CONTACT_TOPICS as readonly string[]).includes(value);
 
+/**
+ * Lo que la acción de enviar devuelve al formulario.
+ *
+ * Vive aquí y no al lado de la acción por una regla de Next que no perdona: un
+ * archivo con `"use server"` solo puede exportar funciones asíncronas. Tenía el
+ * estado inicial exportado desde `app/contact/actions.ts`, y como es un objeto,
+ * el módulo entero fallaba al cargarse — el formulario contestaba "A server
+ * error occurred" antes de llegar a ejecutar nada. Los tipos sí se pueden
+ * exportar desde allí (desaparecen al compilar), pero el objeto no.
+ */
+export interface ContactState {
+  status: "idle" | "ok" | "error";
+  error?: string;
+  /** Se devuelve para no vaciar el formulario cuando algo falla. */
+  values?: { email: string; message: string; topic?: string };
+}
+
+export const initialContactState: ContactState = { status: "idle" };
+
 export interface ContactMessage {
   email: string;
   message: string;

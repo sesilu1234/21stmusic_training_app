@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import LoadingBars from "@/app/components/LoadingBars";
 import { findStudents, type Match } from "./actions";
 
 /**
@@ -117,7 +118,7 @@ export default function StudentSearch({ selectedEmail }: { selectedEmail?: strin
     <div ref={rootRef} className="relative">
       <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30">
         {isSearching ? (
-          <Loader2 size={15} className="animate-spin" />
+          <LoadingBars className="h-3.5 text-amber-300/70" label="Buscando" />
         ) : (
           <Search size={15} />
         )}
@@ -130,6 +131,13 @@ export default function StudentSearch({ selectedEmail }: { selectedEmail?: strin
         onKeyDown={onKeyDown}
         autoFocus
         autoComplete="off"
+        /* El corrector del navegador subraya en rojo los nombres propios, que
+           es justo lo único que se escribe aquí: quedaba como si el alumno
+           estuviera mal escrito. Lo mismo para la mayúscula automática del
+           móvil, que estorba al buscar por usuario. */
+        spellCheck={false}
+        autoCorrect="off"
+        autoCapitalize="off"
         role="combobox"
         aria-expanded={isOpen}
         aria-controls={listId}

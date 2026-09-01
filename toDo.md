@@ -69,3 +69,6 @@ Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da 
 
 
 - ver base de datos a ver que hay , por saber. y dar acceso a papa para contraseñas.
+
+
+
