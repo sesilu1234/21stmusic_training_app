@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { INTERNAL_METADATA, isStaffKey } from "@/lib/internalKey";
+import { canSeeMuestrario } from "@/lib/roles";
+import { currentStudent } from "@/lib/session";
 import { ANIMALS } from "../components/animals";
 import { AnimalTile } from "../components/AnimalAvatar";
 import { gameIcons } from "../components/gameIcons";
@@ -11,9 +12,9 @@ import BarsAvatar from "../components/BarsAvatar";
  * página de trabajo, para ver de un vistazo cómo ha quedado cada dibujo sin
  * tener que ir cambiando de cuenta hasta que salga el animal que buscas.
  *
- * Estaba en /animales y abierta a cualquiera. Ahora es /muestrario y pide la
- * misma clave que la página del profesorado: no enseña datos de nadie, pero
- * tampoco tiene por qué estar a la vista de quien pase por ahí.
+ * Estaba en /animales y abierta a cualquiera. Ahora es /muestrario y solo entra
+ * quien tenga rol `admin`: no enseña datos de nadie, pero es una página de
+ * taller y no tiene por qué estar a la vista de quien pase por ahí.
  *
  * Los animales ya no se usan en la app — el avatar de la cuenta son ahora las
  * barras de [BarsAvatar] —, pero siguen aquí a la vista para poder recuperarlos
@@ -21,7 +22,7 @@ import BarsAvatar from "../components/BarsAvatar";
  */
 export const metadata: Metadata = {
   title: "Muestrario · 21st Century Music",
-  ...INTERNAL_METADATA,
+  robots: { index: false, follow: false },
 };
 
 /** Nombres inventados, solo para ver el reparto. No son alumnos. */
@@ -40,13 +41,9 @@ const SAMPLE_NAMES = [
   "Nil Estruch",
 ];
 
-export default async function MuestrarioPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ key?: string }>;
-}) {
-  const params = (await searchParams) ?? {};
-  if (!isStaffKey(params.key)) notFound();
+export default async function MuestrarioPage() {
+  const viewer = await currentStudent();
+  if (!canSeeMuestrario(viewer?.role)) notFound();
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-12 font-sans text-white">
@@ -58,7 +55,7 @@ export default async function MuestrarioPage({
           <p className="mt-2 text-sm text-white/45">
             El avatar en uso, los {ANIMALS.length} animales que ya no se usan y{" "}
             {Object.keys(gameIcons).length} iconos de juego. Página de trabajo,
-            sin enlazar desde el menú y con clave.
+            solo para administración.
           </p>
         </header>
 

@@ -109,22 +109,37 @@ const GameRow = ({ entry }: { entry: GameProgress }) => {
           </p>
 
           {/* Los niveles solo se enseñan si el modo tiene más de uno: en los
-              demás sería repetir la línea de arriba con otras palabras. */}
+              demás sería repetir la línea de arriba con otras palabras.
+
+              Llevan sus dos cifras, igual que el modo: el récord del nivel y
+              cómo lo lleva últimamente. Sin la cabecera de arriba, dos números
+              seguidos no se sabe qué son. */}
           {entry.levels.length > 1 && (
             <ul className="mt-2.5 space-y-1 border-l border-white/10 pl-3">
+              <li className="flex items-center gap-2 text-[8px] uppercase tracking-[0.14em] text-white/25">
+                <span className="min-w-0 flex-1" />
+                <span className="w-14 text-right">Récord</span>
+                <span className="w-10 text-right">Últimas</span>
+              </li>
+
               {entry.levels.map((level) => (
                 <li key={level.slug} className="flex items-center gap-2">
                   <span className="min-w-0 flex-1 truncate text-[10px] text-white/40">
                     {levelLabel(level.slug)}
                   </span>
-                  <span className="h-1 w-14 overflow-hidden rounded-full bg-white/10">
-                    <span
-                      className={`block h-full rounded-full ${barColor(level.best)}`}
-                      style={{ width: `${level.best}%` }}
-                    />
+                  <span className="flex w-14 items-center justify-end gap-1.5">
+                    <span className="h-1 w-8 overflow-hidden rounded-full bg-white/10">
+                      <span
+                        className={`block h-full rounded-full ${barColor(level.best)}`}
+                        style={{ width: `${level.best}%` }}
+                      />
+                    </span>
+                    <span className="text-[10px] font-bold text-white/45">
+                      {level.best}%
+                    </span>
                   </span>
-                  <span className="w-8 text-right text-[10px] font-bold text-white/40">
-                    {level.best}%
+                  <span className="w-10 text-right text-[10px] text-white/25">
+                    {level.form}%
                   </span>
                 </li>
               ))}
@@ -301,10 +316,17 @@ export default function ProgressBoard({
       </section>
 
       {/* Decía "esto solo lo ves tú", y no era verdad: está en la base de
-          datos de la escuela y el profesorado puede consultarlo. */}
-      <p className="pb-2 text-center text-[10px] text-white/25">
-        {displayName} · tu progreso queda guardado en tu cuenta de la escuela.
-      </p>
+          datos de la escuela y el profesorado puede consultarlo.
+
+          Y el aviso de las partidas terminadas, porque si no la cuenta de
+          partidas no cuadra con lo que uno recuerda haber jugado. */}
+      <div className="space-y-1 pb-2 text-center text-[10px] leading-4 text-white/25">
+        <p>
+          Solo cuentan las partidas terminadas: si dejas una a medias o cierras
+          la página, esa no se guarda.
+        </p>
+        <p>{displayName} · tu progreso queda guardado en tu cuenta de la escuela.</p>
+      </div>
     </div>
   );
 }

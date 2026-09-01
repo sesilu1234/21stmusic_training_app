@@ -16,13 +16,7 @@ import { findStudents, type Match } from "./actions";
  * pieza, y la dirección que queda en la barra se puede recargar y guardar —
  * que es lo que hará el profesor que consulta siempre a los mismos.
  */
-export default function StudentSearch({
-  staffKey,
-  selectedEmail,
-}: {
-  staffKey: string;
-  selectedEmail?: string;
-}) {
+export default function StudentSearch({ selectedEmail }: { selectedEmail?: string }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<Match[]>([]);
@@ -67,7 +61,7 @@ export default function StudentSearch({
     let cancelled = false;
 
     const timer = setTimeout(async () => {
-      const found = await findStudents(staffKey, clean);
+      const found = await findStudents(clean);
       if (cancelled) return;
       setMatches(found);
       setActiveIndex(0);
@@ -79,7 +73,7 @@ export default function StudentSearch({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, staffKey]);
+  }, [query]);
 
   // Cerrar al tocar fuera.
   useEffect(() => {
@@ -95,9 +89,7 @@ export default function StudentSearch({
     skipSearchRef.current = true;
     setIsOpen(false);
     setQuery(match.displayName);
-    router.push(
-      `/alumno?key=${encodeURIComponent(staffKey)}&alumno=${encodeURIComponent(match.email)}`,
-    );
+    router.push(`/alumnario?alumno=${encodeURIComponent(match.email)}`);
   };
 
   const onKeyDown = (event: React.KeyboardEvent) => {

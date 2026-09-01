@@ -1,6 +1,7 @@
 "use server";
 
-import { isStaffKey } from "@/lib/internalKey";
+import { canSeeAlumnario } from "@/lib/roles";
+import { currentStudent } from "@/lib/session";
 import { searchStudents } from "@/lib/students";
 
 export interface Match {
@@ -13,17 +14,18 @@ export interface Match {
 /**
  * La búsqueda que se va llamando mientras se escribe.
  *
- * La clave se vuelve a comprobar AQUÍ, y no vale con que la página ya la haya
+ * El rol se vuelve a comprobar AQUÍ, y no vale con que la página ya lo haya
  * mirado: una acción de servidor es un punto de entrada más de la aplicación, y
  * se puede llamar directamente sin pasar por la página. Si la comprobación
- * viviera solo en `page.tsx`, esto sería una lista de alumnos abierta a quien
- * supiera el nombre de la acción.
+ * viviera solo en `page.tsx`, esto sería una lista de alumnos abierta a
+ * cualquiera con una cuenta.
  *
  * Devuelve lo justo para pintar el desplegable. El progreso no viaja por aquí:
  * eso lo carga la página cuando ya se ha elegido a alguien.
  */
-export const findStudents = async (key: string, query: string): Promise<Match[]> => {
-  if (!isStaffKey(key)) return [];
+export const findStudents = async (query: string): Promise<Match[]> => {
+  const viewer = await currentStudent();
+  if (!canSeeAlumnario(viewer?.role)) return [];
 
   try {
     const students = await searchStudents(query);

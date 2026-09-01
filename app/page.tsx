@@ -141,7 +141,7 @@ export default async function HomePage() {
 
 
   return (
-    <AppShell displayName={student?.displayName}>
+    <AppShell displayName={student?.displayName} role={student?.role}>
       <div className="mx-auto w-full max-w-5xl">
         {progress && progress.attempts > 0 && (
           <Link

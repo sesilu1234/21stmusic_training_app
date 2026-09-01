@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import Backdrop from "../components/Backdrop";
-import { INTERNAL_METADATA, isStaffKey } from "@/lib/internalKey";
+import { canSeeAlumnario } from "@/lib/roles";
+import { currentStudent } from "@/lib/session";
 import { getStudentAnyStatus, type Student } from "@/lib/students";
 import { getProgress, FORM_WINDOW, type Progress } from "@/lib/progress";
 import StudentSearch from "./StudentSearch";
@@ -13,19 +16,20 @@ import StudentSearch from "./StudentSearch";
  * o sea que en una escuela no servía de nada: quien da la clase no podía mirar
  * por dónde va nadie.
  *
- * Se entra con `?key=…` y la clave sale de `STAFF_KEY` (ver `lib/internalKey`).
- * Sin clave buena la página no existe — `notFound()` y no un "no autorizado",
- * porque un 401 confirma que la ruta está ahí y que solo falta acertar.
+ * Entran los roles `admin` y `profesor` (ver `lib/roles`). Quien no, se
+ * encuentra un `notFound()` y no un "no autorizado": un 401 confirma que la
+ * ruta está ahí y que solo falta ser alguien, y esto no tiene por qué existir
+ * para quien no puede entrar.
  *
  * Es de solo lectura a propósito. Desde aquí no se puede tocar nada: ni
  * contraseñas, ni altas, ni borrar partidas. Y los apuntes del alumno no se
- * enseñan: son suyos. Una página que solo lee progreso no puede hacer daño si
- * la clave se filtra, y eso es lo que permite que la puerta sea una clave y no
- * un sistema de cuentas entero.
+ * enseñan: son suyos. Que solo lea es lo que permite dejarla en manos de
+ * cualquiera con rol de profesor sin tener que pensarlo dos veces.
  */
 export const metadata: Metadata = {
   title: "Alumnario · 21st Century Music",
-  ...INTERNAL_METADATA,
+  // Es una página de datos de alumnos: fuera de los buscadores.
+  robots: { index: false, follow: false },
 };
 
 export const dynamic = "force-dynamic";
@@ -39,6 +43,13 @@ const fmtDate = (iso: string) =>
 
 const barColor = (value: number) =>
   value >= 90 ? "bg-emerald-400" : value >= 60 ? "bg-amber-400" : "bg-rose-400";
+
+/** El nivel, tal cual sale en la URL, escrito para leerlo: "Sol naturales". */
+const levelLabel = (slug: string) => {
+  const clean = slug.split("/").pop() ?? slug;
+  const words = clean.replace(/-/g, " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};
 
 const Tile = ({
   label,
@@ -118,14 +129,21 @@ const StudentReport = ({
                 <tr>
                   <th className="px-3.5 py-2.5 font-black">Modo</th>
                   <th className="px-3.5 py-2.5 font-black">Partidas</th>
-                  <th className="px-3.5 py-2.5 font-black">Dominio</th>
+                  <th className="px-3.5 py-2.5 font-black">Récord</th>
                   <th className="px-3.5 py-2.5 font-black">Últimas {FORM_WINDOW}</th>
                   <th className="px-3.5 py-2.5 font-black">Última vez</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
-                {progress.games.map((entry) => (
-                  <tr key={entry.game.name} className="transition hover:bg-white/[0.03]">
+
+              {/* Un `tbody` por modo: agrupa el modo con sus niveles, así la
+                  línea que los separa cae donde empieza el siguiente modo y no
+                  entre un módulo y otro del mismo. */}
+              {progress.games.map((entry) => (
+                <tbody
+                  key={entry.game.name}
+                  className="border-t border-white/[0.07] first-of-type:border-t-0"
+                >
+                  <tr className="transition hover:bg-white/[0.03]">
                     <td className="px-3.5 py-2.5 font-bold text-white/85">
                       {entry.game.label}
                       {entry.hasMedal && (
@@ -151,37 +169,54 @@ const StudentReport = ({
                       {entry.lastPlayedAt ? fmtDate(entry.lastPlayedAt) : "—"}
                     </td>
                   </tr>
-                ))}
-              </tbody>
+
+                  {/* Los niveles solo si hay más de uno: con uno sería repetir
+                      la fila de arriba con otro nombre. */}
+                  {entry.levels.length > 1 &&
+                    entry.levels.map((level) => (
+                      <tr key={level.slug} className="text-white/40">
+                        <td className="py-1.5 pl-8 pr-3.5">
+                          <span className="border-l border-white/10 pl-2.5">
+                            {levelLabel(level.slug)}
+                          </span>
+                        </td>
+                        <td className="px-3.5 py-1.5">{level.attempts}</td>
+                        <td className="px-3.5 py-1.5">
+                          <span className="flex items-center gap-2">
+                            <span className="h-0.5 w-16 overflow-hidden rounded-full bg-white/[0.07]">
+                              <span
+                                className={`block h-full rounded-full ${barColor(level.best)} opacity-60`}
+                                style={{ width: `${level.best}%` }}
+                              />
+                            </span>
+                            <span className="font-bold">{level.best}%</span>
+                          </span>
+                        </td>
+                        <td className="px-3.5 py-1.5">{level.form}%</td>
+                        <td className="px-3.5 py-1.5 text-white/25">
+                          {level.lastPlayedAt ? fmtDate(level.lastPlayedAt) : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              ))}
             </table>
           </div>
 
-          {/* Sin esto, el punto ámbar y la palabra "dominio" son adivinanzas.
-              Va debajo de la tabla y no en un tooltip: se lee una vez, se
-              entiende la tabla entera y no estorba después. */}
-          <dl className="space-y-1.5 text-[11px] leading-4 text-white/35">
-            <div className="flex gap-2">
-              <dt className="flex-shrink-0 text-amber-300">●</dt>
-              <dd>Tiene la medalla del modo: una partida entera sin fallar.</dd>
-            </div>
-            <div className="flex gap-2">
-              <dt className="w-16 flex-shrink-0 font-bold text-white/50">Dominio</dt>
-              <dd>
-                Media de su mejor resultado en cada nivel jugado. No baja: es un
-                récord. El 100% quiere decir pleno en todos los niveles que ha
-                tocado.
-              </dd>
-            </div>
-            <div className="flex gap-2">
-              <dt className="w-16 flex-shrink-0 font-bold text-white/50">
-                Últimas {FORM_WINDOW}
-              </dt>
-              <dd>
-                Aciertos de sus últimas {FORM_WINDOW} partidas del modo. Esta sí
-                sube y baja: es cómo lo lleva ahora.
-              </dd>
-            </div>
-          </dl>
+          <div className="space-y-1.5 text-[11px] leading-4 text-white/35">
+            <p>
+              <span className="text-amber-300">●</span> Tiene la medalla del modo:
+              una partida entera sin fallar.
+            </p>
+            {/* Aviso importante para no leer mal la tabla: aquí no hay ni rastro
+                de lo que se deja a medias, porque la partida se guarda al llegar
+                al marcador final. Alguien que abre un modo, falla dos y cierra el
+                navegador no aparece por ningún lado. */}
+            <p>
+              Solo cuenta partidas terminadas. Si alguien deja una a medias o
+              cierra el navegador, esa partida no se guarda y no sale aquí.
+            </p>
+          </div>
         </>
       )}
     </div>
@@ -191,15 +226,12 @@ const StudentReport = ({
 export default async function AlumnoPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ key?: string; alumno?: string }>;
+  searchParams?: Promise<{ alumno?: string }>;
 }) {
+  const viewer = await currentStudent();
+  if (!canSeeAlumnario(viewer?.role)) notFound();
+
   const params = (await searchParams) ?? {};
-
-  // Sin clave buena esta página no existe. Un 404 y no un 401: el "no
-  // autorizado" confirma que la ruta está ahí y que solo falta acertar.
-  if (!isStaffKey(params.key)) notFound();
-
-  const key = String(params.key);
 
   const student = params.alumno ? await getStudentAnyStatus(params.alumno) : null;
   const progress = student ? await getProgress(student.email).catch(() => null) : null;
@@ -220,33 +252,50 @@ export default async function AlumnoPage({
 
       <main className="relative z-10 px-5 py-12 md:py-16">
         <div className="mx-auto w-full max-w-4xl">
-          <header className="mb-7">
-            <h1 className="text-3xl font-black italic tracking-tight md:text-4xl">
-              Alumnario
-            </h1>
-            <p className="mt-1.5 text-xs text-white/40">
-              Se muestra la actividad de un alumno.
-            </p>
+          {/* El volver va arriba a la derecha, enfrente del título: es una
+              página a la que se entra desde el menú de la cuenta, así que hace
+              falta una salida a la vista y no solo el botón del navegador. */}
+          <header className="mb-7 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-black italic tracking-tight md:text-4xl">
+                Alumnario
+              </h1>
+              <p className="mt-1.5 text-xs text-white/40">
+                Se muestra la actividad de un alumno.
+              </p>
+            </div>
+
+            <Link
+              href="/"
+              className="flex flex-shrink-0 items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-white/45 transition hover:border-white/25 hover:text-white"
+            >
+              <ArrowLeft size={12} />
+              Volver
+            </Link>
           </header>
 
-          <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/75 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-xl md:p-6">
-            <StudentSearch staffKey={key} selectedEmail={student?.email} />
-
-            {student ? (
-              <section className="mt-6 border-t border-white/[0.07] pt-6">
-                <h2 className="mb-4 text-xl font-black tracking-tight text-white">
-                  {student.displayName}
-                </h2>
-                <StudentReport student={student} progress={progress} />
-              </section>
-            ) : (
-              <p className="mt-6 text-center text-xs text-white/25">
-                {params.alumno
-                  ? "No hay ningún alumno con ese correo."
-                  : "Escribe un nombre para empezar."}
-              </p>
-            )}
+          {/* El buscador va en su propia tarjeta, separado de la ficha. Antes
+              compartían caja con una rayita en medio y parecían la misma cosa;
+              son dos: la herramienta y el resultado. El `z-20` es para que el
+              desplegable caiga POR ENCIMA de la ficha de abajo. */}
+          <div className="relative z-20 rounded-2xl border border-white/10 bg-slate-950/70 p-3 shadow-[0_16px_40px_rgba(0,0,0,0.4)] backdrop-blur-xl">
+            <StudentSearch selectedEmail={student?.email} />
           </div>
+
+          {student ? (
+            <section className="mt-5 rounded-[1.75rem] border border-white/10 bg-slate-950/75 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-xl md:p-6">
+              <h2 className="mb-4 text-xl font-black tracking-tight text-white">
+                {student.displayName}
+              </h2>
+              <StudentReport student={student} progress={progress} />
+            </section>
+          ) : (
+            <p className="mt-8 text-center text-xs text-white/25">
+              {params.alumno
+                ? "No hay ningún alumno con ese correo."
+                : "Escribe un nombre para empezar."}
+            </p>
+          )}
         </div>
       </main>
     </div>

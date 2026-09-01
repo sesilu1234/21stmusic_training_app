@@ -27,7 +27,7 @@ export default async function ProgresoPage() {
   const progress = await getProgress(student.email).catch(() => null);
 
   return (
-    <AppShell displayName={student.displayName}>
+    <AppShell displayName={student.displayName} role={student.role}>
       <div className="mx-auto w-full max-w-3xl space-y-6">
         <header>
           <h1 className="text-2xl font-black italic tracking-tight md:text-4xl">

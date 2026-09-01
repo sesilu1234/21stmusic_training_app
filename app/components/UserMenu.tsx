@@ -3,18 +3,35 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, LogIn, LogOut, StickyNote } from "lucide-react";
+import { GraduationCap, LogIn, LogOut, Palette, StickyNote, Users } from "lucide-react";
 import BarsAvatar from "./BarsAvatar";
 import ThemeToggle from "./ThemeToggle";
 import { logout } from "@/app/actions";
+import { canSeeAlumnario, canSeeMuestrario, roleLabel } from "@/lib/roles";
+import type { StudentRole } from "@/lib/students";
 
 /**
- * Esquina derecha de la cabecera. Con sesión: la inicial del alumno, que abre
+ * Esquina derecha de la cabecera. Con sesión: el avatar del alumno, que abre
  * un desplegable con el tema y el cerrar sesión. Sin sesión: un botón de entrar
  * y el tema suelto, porque entrar es opcional y no queremos dar la impresión de
  * que la app está cerrada.
+ *
+ * Aquí es donde salen las páginas internas —el alumnario y el muestrario— y
+ * solo para quien puede abrirlas. Enseñar un enlace que luego contesta "no
+ * existe" es peor que no enseñarlo, así que el menú y las páginas preguntan lo
+ * mismo a `lib/roles`.
+ *
+ * `role` llega del servidor, del alumno de la sesión. No se decide nada aquí
+ * con ello: esto solo dibuja. Quien de verdad cierra la puerta es cada página,
+ * que vuelve a mirar el rol en el servidor.
  */
-export default function UserMenu({ displayName }: { displayName?: string | null }) {
+export default function UserMenu({
+  displayName,
+  role,
+}: {
+  displayName?: string | null;
+  role?: StudentRole;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -96,7 +113,7 @@ export default function UserMenu({ displayName }: { displayName?: string | null 
             <p className="truncate text-sm font-bold text-white">{displayName}</p>
             <p className="mt-1 flex items-center gap-1.5 text-[11px] text-amber-300/85">
               <GraduationCap size={12} />
-              Alumno de la escuela
+              {role ? roleLabel(role) : "Alumno de la escuela"}
             </p>
           </div>
 
@@ -110,6 +127,26 @@ export default function UserMenu({ displayName }: { displayName?: string | null 
               <StickyNote size={16} strokeWidth={1.75} />
               Mis notas
             </Link>
+
+            {canSeeAlumnario(role) && (
+              <Link
+                href="/alumnario"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
+              >
+                <Users size={16} strokeWidth={1.75} />
+                Alumnario
+              </Link>
+            )}
+
+            {canSeeMuestrario(role) && (
+              <Link
+                href="/muestrario"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
+              >
+                <Palette size={16} strokeWidth={1.75} />
+                Muestrario
+              </Link>
+            )}
 
             <ThemeToggle withLabel />
 

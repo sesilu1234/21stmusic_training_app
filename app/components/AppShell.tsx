@@ -6,6 +6,7 @@ import { BookMarked, Gamepad2, Lock, TrendingUp } from "lucide-react";
 import Backdrop from "./Backdrop";
 import SiteFooter from "./SiteFooter";
 import UserMenu from "./UserMenu";
+import type { StudentRole } from "@/lib/students";
 
 /**
  * Qué hace cada enlace cuando no hay sesión:
@@ -34,9 +35,12 @@ const links = [
  */
 export default function AppShell({
   displayName = null,
+  role,
   children,
 }: {
   displayName?: string | null;
+  /** Rol del alumno de la sesión: decide qué páginas internas salen en el menú. */
+  role?: StudentRole;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -103,7 +107,7 @@ export default function AppShell({
                 })}
               </div>
 
-              <UserMenu displayName={displayName} />
+              <UserMenu displayName={displayName} role={role} />
             </div>
           </nav>
         </header>
