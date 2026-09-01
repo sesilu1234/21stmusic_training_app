@@ -162,7 +162,7 @@ export default function ContactForm() {
         type="submit"
         disabled={pending}
         style={PIXEL}
-        className="w-full rounded-lg border border-amber-300 bg-amber-400 px-4 py-2.5 text-[9px] uppercase tracking-[0.2em] text-slate-950 shadow-[3px_3px_0_0_rgba(251,191,36,0.25)] transition-all hover:bg-amber-300 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:cursor-wait disabled:opacity-60"
+        className="w-full rounded-lg border border-amber-300 bg-amber-400 px-4 py-2.5 text-[9px] uppercase tracking-[0.2em] text-slate-950 shadow-[3px_3px_0_0_rgba(251,191,36,0.25)] transition-all hover:bg-amber-300 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-60"
       >
         {pending ? (
           <span className="inline-flex items-center justify-center gap-2">

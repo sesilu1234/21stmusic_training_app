@@ -89,7 +89,7 @@ export default function LoginForm({
         <button
           type="submit"
           disabled={pending}
-          className="group relative mt-1 flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-amber-400 px-3 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-950 transition-colors hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
+          className="group relative mt-1 flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-amber-400 px-3 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-950 transition-colors hover:bg-amber-300  disabled:opacity-60"
         >
           {/* Brillo que cruza el botón al pasar por encima. */}
           <span className="pointer-events-none absolute inset-y-0 -left-full w-1/2 skew-x-12 bg-white/35 transition-all duration-700 ease-out group-hover:left-[150%]" />
