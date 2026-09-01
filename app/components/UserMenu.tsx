@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GraduationCap, LogIn, LogOut, StickyNote } from "lucide-react";
-import AnimalAvatar from "./AnimalAvatar";
+import BarsAvatar from "./BarsAvatar";
 import ThemeToggle from "./ThemeToggle";
 import { logout } from "@/app/actions";
 
@@ -83,7 +83,7 @@ export default function UserMenu({ displayName }: { displayName?: string | null 
             este mismo span se comería un `drop-shadow` de dentro. Como el
             recorte es un círculo, un `box-shadow` normal lo sigue exacto. */}
         <span className="grid h-full w-full place-items-center overflow-hidden rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
-          <AnimalAvatar name={displayName} className="h-full w-full" />
+          <BarsAvatar name={displayName} className="h-full w-full" />
         </span>
       </button>
 

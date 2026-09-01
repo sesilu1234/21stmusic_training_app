@@ -3,7 +3,9 @@ export const SITE = {
   name: "21st Century Music",
   academyName: "Escuela de Música Moderna",
   academyUrl: "https://escuelademusicamoderna.com/",
-  privacyUpdatedAt: "19 de agosto de 2026",
+  // Las altas se dan en la academia, no en la app: el login manda aquí.
+  academyContactUrl: "https://escuelademusicamoderna.com/contactar/",
+  privacyUpdatedAt: "1 de septiembre de 2026",
 } as const;
 
 export const FOOTER_LINKS = [

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { currentStudent } from "@/lib/session";
+import { SITE } from "@/lib/site";
 import SiteFooter from "../components/SiteFooter";
 import LoginForm from "./LoginForm";
 
@@ -62,11 +63,27 @@ export default async function LoginPage({
 
           <LoginForm initialError={errorMessage(params.error)} next={next} />
 
+          {/* Las cuentas no se crean aquí: se piden en la academia. El enlace va
+              subrayado y en ámbar porque como texto plano nadie lo pinchaba, y
+              debajo se pide de una vez todo lo que hace falta para dar el alta —
+              si no, la respuesta es siempre otro correo preguntándolo. */}
           <p className="mt-4 text-center text-[9px] leading-relaxed text-white/40">
             <span className="font-bold">
               Acceso completo exclusivo para alumnos y ex-alumnos.
             </span>{" "}
-            Contacta con la academia para registrarte.
+            <a
+              href={SITE.academyContactUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-bold text-amber-300/85 underline decoration-amber-300/40 underline-offset-2 transition-colors hover:text-amber-300 hover:decoration-amber-300"
+            >
+              Contacta con la academia para registrarte
+            </a>
+            .
+          </p>
+
+          <p className="mt-1.5 text-center text-[8px] leading-relaxed text-white/30">
+            Incluye tu nombre completo, el año y el profesor con el que acudiste.
           </p>
 
           {/* <p className="mt-1.5 text-center text-[9px] leading-relaxed text-white/35">

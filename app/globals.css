@@ -57,6 +57,21 @@ html[data-theme-mode="light"] .backdrop-veil {
   );
 }
 
+/* --- La capa plana de PaperShell -------------------------------------- */
+/* Va encima del velo en sobre y privacidad. Estaba fija en slate-950/78, y como
+   no miraba el modo, esas dos páginas salían idénticas en claro y en oscuro: el
+   "Light" de la app aclaraba el velo de debajo y esta capa lo volvía a tapar.
+   Ahora sigue el mismo interruptor que el velo. Sin bajarla del todo: aquí el
+   texto se apoya directamente sobre la foto, sin tarjeta que lo enmarque, y es
+   esta capa la que lo hace legible. */
+.paper-scrim {
+  background-color: rgb(2 6 23 / 0.78);
+}
+
+html[data-theme-mode="light"] .paper-scrim {
+  background-color: rgb(15 23 42 / 0.34);
+}
+
 /* --- Celebración de pleno (corona) ------------------------------------ */
 @keyframes crown-pop {
   0% { transform: scale(0.2) rotate(-18deg); opacity: 0; }

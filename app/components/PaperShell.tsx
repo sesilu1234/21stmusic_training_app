@@ -24,7 +24,7 @@ export default function PaperShell({ children }: { children: React.ReactNode }) 
       style={{ fontFamily: BODY_FONT }}
     >
       <Backdrop />
-      <div aria-hidden className="fixed inset-0 z-0 bg-slate-950/78" />
+      <div aria-hidden className="paper-scrim fixed inset-0 z-0" />
 
       <div className="relative z-10 flex min-h-screen flex-col">
         {/* El "volver" va en absoluto y no en el flujo: ocupando su línea,

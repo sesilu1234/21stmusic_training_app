@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SITE } from "@/lib/site";
 import Backdrop from "../components/Backdrop";
 import { pixelFontVariables } from "../fonts";
 import ContactForm from "./ContactForm";
@@ -8,7 +9,7 @@ export const metadata = { title: "Contacto · 21st Century Music" };
 const PIXEL = { fontFamily: "var(--font-pixel), monospace" };
 
 /**
- * Contacto cabe en una pantalla y no lleva pie de página.
+ * Contacto cabe en una pantalla y solo lleva un pie de dos líneas.
  *
  * Es un formulario de tres campos: obligar a bajar para ver el botón de enviar
  * era pedirle al usuario que se fiara de que abajo había algo. De ahí que aquí
@@ -33,6 +34,20 @@ export default function ContactPage() {
 
       <div className="relative z-10 flex min-h-dvh flex-col items-center justify-center px-5 py-8">
         <main className="w-full max-w-[21rem]">
+          {/* Volver y privacidad van encima de la caja: debajo competían con el
+              pie y el botón de enviar dejaba de ser lo último que se lee. */}
+          <div
+            className="mb-3 flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-white/40"
+            style={PIXEL}
+          >
+            <Link href="/" className="transition-colors hover:text-amber-300">
+              ← Volver
+            </Link>
+            <Link href="/privacidad" className="transition-colors hover:text-amber-300">
+              Privacidad
+            </Link>
+          </div>
+
           {/* Esquina redondeada, borde de un píxel y una sombra dura desplazada.
               El desplazamiento es lo que deja el aire brutalista; las esquinas
               rectas encima ya eran demasiado. */}
@@ -52,7 +67,12 @@ export default function ContactPage() {
               </span>
             </div>
 
-            <p className="mt-2 text-[11px] leading-4 text-white/40">
+            {/* En pixel como el resto de la caja: en la tipografía del cuerpo
+                era la única línea que sonaba a otra página. */}
+            <p
+              className="mt-2.5 text-[9px] leading-[1.6] tracking-[0.04em] text-white/45"
+              style={PIXEL}
+            >
               Un fallo, una idea, una duda. Lo leemos todo.
             </p>
 
@@ -61,18 +81,22 @@ export default function ContactPage() {
             </div>
           </section>
 
-          {/* Pie mínimo: sin el `SiteFooter` entero no cabía en una pantalla,
-              pero privacidad tiene que seguir estando a un toque. */}
-          <div
-            className="mt-4 flex items-center justify-between text-[9px] uppercase tracking-[0.18em] text-white/40"
-            style={PIXEL}
-          >
-            <Link href="/" className="transition-colors hover:text-amber-300">
-              ← Volver
-            </Link>
-            <Link href="/privacidad" className="transition-colors hover:text-amber-300">
-              Privacidad
-            </Link>
+          {/* Pie mínimo: el `SiteFooter` entero no cabe en una pantalla, así que
+              de él se quedan las dos cosas que no pueden faltar — la escuela y
+              la firma. Los legales ya están arriba. */}
+          <div className="mt-5 flex flex-col items-center gap-1.5 text-center">
+            <a
+              href={SITE.academyUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[9px] uppercase tracking-[0.18em] text-amber-300/75 transition-colors hover:text-amber-300"
+              style={PIXEL}
+            >
+              {SITE.academyName}
+            </a>
+            <p className="text-[8px] uppercase tracking-[0.4em] text-white/25">
+              © 2026 {SITE.name}
+            </p>
           </div>
         </main>
       </div>

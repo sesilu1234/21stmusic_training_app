@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ANIMALS } from "../components/animals";
 import { AnimalTile } from "../components/AnimalAvatar";
 import { gameIcons } from "../components/gameIcons";
+import BarsAvatar from "../components/BarsAvatar";
 
 /**
  * Muestrario de avatares e iconos. No está enlazado desde ningún menú: es una
@@ -10,11 +11,31 @@ import { gameIcons } from "../components/gameIcons";
  *
  * Se pinta entera en el servidor y no toca sesión ni base de datos, así que no
  * enseña nada de nadie. Si algún día molesta, se borra la carpeta y ya.
+ *
+ * Los animales ya no se usan en la app — el avatar de la cuenta son ahora las
+ * barras de [BarsAvatar] —, pero siguen aquí a la vista para poder recuperarlos
+ * sin tener que ir a buscarlos al historial.
  */
 export const metadata: Metadata = {
   title: "Muestrario · 21st Century Music",
   robots: { index: false, follow: false },
 };
+
+/** Nombres inventados, solo para ver el reparto. No son alumnos. */
+const SAMPLE_NAMES = [
+  "Ulises Pla",
+  "Jaume Pla Soler",
+  "María González",
+  "Marc Ribas",
+  "Laura Sanz",
+  "Pau Vidal",
+  "Anna Puig",
+  "Sergi Martí",
+  "Alumno",
+  "Profe",
+  "Carla Bosch",
+  "Nil Estruch",
+];
 
 export default function MuestrarioPage() {
   return (
@@ -25,15 +46,45 @@ export default function MuestrarioPage() {
             Muestrario
           </h1>
           <p className="mt-2 text-sm text-white/45">
-            {ANIMALS.length} avatares y {Object.keys(gameIcons).length} iconos de
-            juego. Página de trabajo, sin enlazar desde el menú.
+            El avatar en uso, los {ANIMALS.length} animales que ya no se usan y{" "}
+            {Object.keys(gameIcons).length} iconos de juego. Página de trabajo,
+            sin enlazar desde el menú.
           </p>
         </header>
+
+        {/* --- El avatar en uso ----------------------------------------- */}
+        {/* Nombres de mentira, solo para ver cómo reparte el hash: lo que se
+            juzga aquí es la columna de 40px, que es el tamaño al que se usa de
+            verdad en el menú de la cuenta. */}
+        <section className="mb-14">
+          <h2 className="mb-1 text-[11px] font-black uppercase tracking-[0.24em] text-white/70">
+            Avatar de la cuenta · barras
+          </h2>
+          <p className="mb-4 text-xs text-white/40">
+            El que está en uso. A la izquierda grande, a la derecha a 40px dentro
+            del círculo, como sale en el menú.
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {SAMPLE_NAMES.map((sample) => (
+              <div
+                key={sample}
+                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/60 p-3"
+              >
+                <BarsAvatar name={sample} className="h-14 w-14 rounded-xl" />
+                <span className="grid h-10 w-10 flex-shrink-0 place-items-center overflow-hidden rounded-full">
+                  <BarsAvatar name={sample} className="h-full w-full" />
+                </span>
+                <span className="min-w-0 truncate text-xs text-white/55">{sample}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* --- Avatares ------------------------------------------------- */}
         <section className="mb-14">
           <h2 className="mb-4 text-[11px] font-black uppercase tracking-[0.24em] text-white/70">
-            Avatares
+            Animales · fuera de uso
           </h2>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
