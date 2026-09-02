@@ -325,7 +325,6 @@ export default function ProgressBoard({
           Solo cuentan las partidas terminadas: si dejas una a medias o cierras
           la página, esa no se guarda.
         </p>
-        <p>{displayName} · tu progreso queda guardado en tu cuenta de la escuela.</p>
       </div>
     </div>
   );
