@@ -3,10 +3,10 @@
 import {
   CONTACT_LIMITS,
   isContactTopic,
-  saveContactMessage,
   type ContactState,
   type ContactTopic,
 } from "@/lib/contact";
+import { saveContactMessage } from "@/lib/contactDb";
 
 // OJO: aquí NO se puede exportar nada que no sea una función asíncrona. Un
 // `export const` con un objeto —el estado inicial vivía aquí— hace que Next

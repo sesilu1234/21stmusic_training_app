@@ -4,7 +4,7 @@ import { PRIVADO } from "@/lib/seo";
 import StudentsOnlyGate from "../components/StudentsOnlyGate";
 import NotesBoard from "./NotesBoard";
 import { currentStudent } from "@/lib/session";
-import { listNotes } from "@/lib/notes";
+import { listNotes } from "@/lib/notesDb";
 
 // Apuntes personales del alumno. Fuera de los buscadores, obviamente.
 export const metadata: Metadata = { title: "Notas", robots: PRIVADO };

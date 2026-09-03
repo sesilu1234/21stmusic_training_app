@@ -1,3 +1,15 @@
+// Este import no hace nada en tiempo de ejecucion: es un cerrojo. Si algun dia
+// un componente de cliente acaba tirando de este archivo, aunque sea sin querer
+// y a traves de tres modulos, la compilacion FALLA en vez de colarse.
+//
+// No es un lujo. Estaba pasando: `lib/notes.ts` y `lib/contact.ts` mezclaban
+// constantes que necesita el navegador con el acceso a la base de datos, y sus
+// formularios se llevaban al bundle del cliente todo esto y la libreria de
+// Supabase entera. La clave no llegaba a filtrarse —en el navegador
+// `process.env.SUPABASE_SERVICE_ROLE_KEY` no existe y esto simplemente
+// reventaria—, pero era un accidente esperando a ocurrir.
+import "server-only";
+
 import { createClient } from "@supabase/supabase-js";
 
 // Supabase solo se usa desde el servidor, así que la URL no necesita el

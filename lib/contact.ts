@@ -1,6 +1,9 @@
-import { getSupabaseAdmin } from "./supabaseAdmin";
-
-const normalizeEmail = (value: unknown) => String(value ?? "").trim().toLowerCase();
+// Los motivos, los limites y los tipos del formulario de contacto.
+//
+// Client-safe: lo importan el formulario y el desplegable. Guardar el mensaje
+// en la base de datos esta en `lib/contactDb.ts`. Estaban en el mismo archivo,
+// y como el formulario importa de aqui, el navegador acababa descargandose el
+// acceso a Supabase para no usarlo.
 
 export const CONTACT_LIMITS = {
   email: { max: 120 },
@@ -44,26 +47,9 @@ export interface ContactState {
 
 export const initialContactState: ContactState = { status: "idle" };
 
+/** Lo que se guarda de un mensaje. El tipo es compartido; guardarlo, no. */
 export interface ContactMessage {
   email: string;
   message: string;
   topic?: ContactTopic;
 }
-
-export const saveContactMessage = async (payload: ContactMessage) => {
-  // El motivo va como primera línea del mensaje, no en columna propia. La tabla
-  // `contact_messages` no la tiene, y añadirla obligaría a migrar Supabase antes
-  // de desplegar: si se despliega el código sin haber corrido el ALTER, el
-  // formulario deja de funcionar para todo el mundo. Así no hay ese riesgo, y en
-  // el editor de Supabase el motivo se lee igual de bien.
-  const message = payload.topic
-    ? `[${payload.topic}]\n\n${payload.message}`
-    : payload.message;
-
-  const { error } = await getSupabaseAdmin().from("contact_messages").insert({
-    email: normalizeEmail(payload.email),
-    message,
-  });
-
-  if (error) throw new Error(error.message);
-};

@@ -8,9 +8,16 @@ import { GAMES } from "./games";
  * URLs absolutas no apunten a producción, pero con el dominio de verdad como
  * valor por defecto: sin él, un despliegue al que se le olvide la variable
  * generaría un sitemap con enlaces rotos, que es peor que no tener sitemap.
+ *
+ * VA CON `www` Y NO SIN ÉL, y no es un detalle: el dominio sin www responde un
+ * 308 hacia el que sí lo lleva. Aquí estuvo puesto el apex y el resultado fue
+ * que al pegar el enlace en WhatsApp no salía ninguna tarjeta — su robot pedía
+ * la imagen, se encontraba una redirección en vez de un PNG y se rendía. Lo
+ * mismo valía para la dirección canónica y para el sitemap, que le estaban
+ * dando a Google un dominio que no sirve nada.
  */
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://21stcenturymusic.app"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.21stcenturymusic.app"
 ).replace(/\/+$/, "");
 
 /**

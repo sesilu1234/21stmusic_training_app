@@ -1,13 +1,8 @@
 "use server";
 
 import { currentStudent } from "@/lib/session";
-import {
-  createNote,
-  deleteNote,
-  MAX_NOTE_LENGTH,
-  updateNote,
-  type Note,
-} from "@/lib/notes";
+import { MAX_NOTE_LENGTH, type Note } from "@/lib/notes";
+import { createNote, deleteNote, updateNote } from "@/lib/notesDb";
 
 /**
  * Las notas son de quien las escribe.
