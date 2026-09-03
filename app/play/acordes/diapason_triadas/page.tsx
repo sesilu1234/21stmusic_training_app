@@ -17,7 +17,9 @@ import Backdrop from "@/app/components/Backdrop";
 
 export default function TriadsGame() {
 
-  const opcionesAcordes = ["Mayor", "Menor", "Aumentado", "Disminuido"];
+  // Los nombres que se leen son los de lib/chordNames.ts: en el papel un
+  // acorde pone "dim" y "aug", no "Disminuido" y "Aumentado".
+  const opcionesAcordes = ["Mayor", "Menor", "aug", "dim"];
 
   const [quizList, setQuizList] = useState<typeof chords_images>([]);
   const [isMounted, setIsMounted] = useState(false);
@@ -84,18 +86,21 @@ export default function TriadsGame() {
   if (!isMounted || !currentQuestion)
     return <div className="min-h-screen bg-slate-900" />;
 
+  // A la izquierda, el texto del botón; a la derecha, la etiqueta con la que
+  // están marcadas las imágenes en chords_images.ts. No se tocan las de la
+  // derecha: son datos, no texto que se lea.
   const mapping: Record<string, string> = {
     Mayor: "Mayores",
     Menor: "Menores",
-    Aumentado: "aug",
-    Disminuido: "dim",
+    aug: "aug",
+    dim: "dim",
   };
 
   const reverseMapping: Record<string, string> = {
     Mayores: "Mayor",
     Menores: "Menor",
-    aug: "Aumentado",
-    dim: "Disminuido",
+    aug: "aug",
+    dim: "dim",
   };
 
   // Opción correcta expresada como texto de botón ("Mayor", "Menor"...)
@@ -239,7 +244,10 @@ export default function TriadsGame() {
               <span className="text-[7px] text-amber-400 uppercase font-black tracking-widest">
                 Solución
               </span>
-              <span className="text-xs md:text-sm font-bold text-white uppercase italic">
+              {/* normal-case y no `uppercase`: la solución ahora puede ser
+                  "dim" o "aug", y en mayúsculas se leerían como siglas. Ver
+                  lib/chordNames.ts. */}
+              <span className="text-xs md:text-sm font-bold text-white normal-case italic">
                 {getSolucionTexto()}
               </span>
             </div>

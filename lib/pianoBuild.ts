@@ -6,6 +6,8 @@
 // pulses sus notas; una escala se toca en orden, y ahí el orden es la mitad
 // del ejercicio.
 
+import { CHORD_WORDS } from "./chordNames";
+
 export interface Shape {
   id: string;
   /** Cómo se llama detrás de la nota: "mayor", "m7"… */
@@ -28,10 +30,13 @@ export interface BuildLevel {
 }
 
 // --- Acordes ----------------------------------------------------------
-const MAYOR: Shape = { id: "M", label: "mayor", intervals: [0, 4, 7] };
-const MENOR: Shape = { id: "m", label: "menor", intervals: [0, 3, 7] };
-const DIM: Shape = { id: "dim", label: "disminuido", intervals: [0, 3, 6] };
-const AUG: Shape = { id: "aug", label: "aumentado", intervals: [0, 4, 8] };
+// Los nombres salen de lib/chordNames.ts, que es donde se decide cómo se
+// escribe un acorde en toda la app ("Do Mayor", "Mi dim", "Fa aug"). Las
+// escalas de más abajo no: "mayor" ahí es la escala, no el acorde.
+const MAYOR: Shape = { id: "M", label: CHORD_WORDS.MAYOR, intervals: [0, 4, 7] };
+const MENOR: Shape = { id: "m", label: CHORD_WORDS.MENOR, intervals: [0, 3, 7] };
+const DIM: Shape = { id: "dim", label: CHORD_WORDS.DISMINUIDO, intervals: [0, 3, 6] };
+const AUG: Shape = { id: "aug", label: CHORD_WORDS.AUMENTADO, intervals: [0, 4, 8] };
 
 const MAJ7: Shape = { id: "maj7", label: "maj7", intervals: [0, 4, 7, 11] };
 const M7: Shape = { id: "m7", label: "m7", intervals: [0, 3, 7, 10] };

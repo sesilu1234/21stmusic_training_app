@@ -9,6 +9,7 @@ import {
   Mic,
   Music2,
   Piano,
+  Shuffle,
   Users,
   Zap,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import { ROUND_LENGTH } from "@/lib/roundLength";
  */
 
 const ICONS: Record<string, React.ElementType> = {
+  general: Shuffle,
   guitarra: Guitar,
   amplificacion: Zap,
   teclados: Piano,

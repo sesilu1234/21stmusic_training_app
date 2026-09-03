@@ -28,8 +28,8 @@ export const metadata: Metadata = {
     template: "%s · 21st Century Music",
   },
   description:
-    "Ejercicios de oído, lectura, ritmo, guitarra y piano de la escuela 21st Century Music. " +
-    "Se juega desde el navegador, sin instalar nada.",
+    "Tu gimnasio musical interactivo de la escuela 21st Century Music: " +
+    "oído, ritmo, lectura, guitarra y piano desde el navegador.",
 
   applicationName: "21st Century Music",
   alternates: { canonical: SITE_URL },
@@ -52,13 +52,13 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "21st Century Music · Entrenamiento musical",
     description:
-      "Ejercicios de oído, lectura, ritmo, guitarra y piano. Se juega desde el navegador.",
+      "Tu gimnasio musical interactivo: oído, ritmo, lectura, guitarra y piano desde el navegador.",
   },
   twitter: {
     card: "summary_large_image",
     title: "21st Century Music · Entrenamiento musical",
     description:
-      "Ejercicios de oído, lectura, ritmo, guitarra y piano. Se juega desde el navegador.",
+      "Tu gimnasio musical interactivo: oído, ritmo, lectura, guitarra y piano desde el navegador.",
   },
 
   icons: { icon: "/icon.png", apple: "/apple-icon.png" },

@@ -11,8 +11,8 @@
 
 ---
 
-Veintidós ejercicios que se juegan desde el navegador, sin instalar nada: oído,
-lectura, ritmo, mástil de guitarra y teclado. Cada partida son 24 preguntas.
+Un gimnasio musical interactivo: oído, lectura, ritmo, mástil de guitarra y
+teclado, desde el navegador. Cada partida son 24 preguntas.
 
 Se puede jugar sin cuenta. Con cuenta de alumno, además, se guarda el progreso:
 partidas, medallas, racha de días y un panel donde el profesorado ve por dónde

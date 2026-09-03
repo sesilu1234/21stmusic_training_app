@@ -21,7 +21,27 @@ export interface TriviaTopic {
   desc: string;
 }
 
+/**
+ * El tema que no es un tema.
+ *
+ * "General" no filtra por `tema`: sortea entre TODAS las preguntas de la tabla,
+ * las de guitarra y las de orquesta y las que se escribieron para él. Es el
+ * modo de "a ver qué cae", que es como se juega un trivial de verdad, y de paso
+ * el único sitio donde puede salir una pregunta de un tema que nadie abre.
+ *
+ * Va como slug y no como un caso aparte en la URL para que se comporte igual
+ * que los demás: tiene su /play/trivia/general, su `level_slug` y su medalla.
+ * Lo único distinto es que al pedir las preguntas se manda `null` en vez del
+ * slug (ver `lib/triviaQuestions.ts`).
+ */
+export const TRIVIA_GENERAL = "general";
+
 export const TRIVIA_TOPICS: TriviaTopic[] = [
+  {
+    slug: TRIVIA_GENERAL,
+    title: "General",
+    desc: "De todo un poco: sale cualquier pregunta, de cualquier tema.",
+  },
   {
     slug: "guitarra",
     title: "Guitarra",

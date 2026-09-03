@@ -624,8 +624,8 @@ export const BOOK: BookPage[] = [
           rows={[
             ["Mayor", "3ª mayor + 5ª justa — abierto, alegre"],
             ["Menor", "3ª menor + 5ª justa — oscuro, triste"],
-            ["Disminuido", "3ª menor + 5ª dism. — tenso, inestable"],
-            ["Aumentado", "3ª mayor + 5ª aum. — raro, suspendido"],
+            ["dim", "disminuido: 3ª menor + 5ª dism. — tenso, inestable"],
+            ["aug", "aumentado: 3ª mayor + 5ª aum. — raro, suspendido"],
           ]}
         />
         <P>

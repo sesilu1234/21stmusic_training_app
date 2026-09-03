@@ -7,6 +7,7 @@
 // tercera son siempre dos grados hacia arriba— y la alteración sale de cuadrar
 // el grado con el semitono que toca.
 
+import { CHORD_SUFFIX, CHORD_WORDS } from "./chordNames";
 import {
   DEGREE_NAMES,
   degreeInOctave,
@@ -43,28 +44,30 @@ const seventh = (third: number, fifth: number, top: number): ChordTone[] => [
   { steps: 6, semitones: top },
 ];
 
+// Los nombres que se leen ("Mayor", "dim", "aug") están en lib/chordNames.ts:
+// ese archivo es el que manda sobre cómo se escribe un acorde en toda la app.
 export const MAYOR: ChordShape = {
   id: "M",
-  label: "mayor",
-  suffix: "",
+  label: CHORD_WORDS.MAYOR,
+  suffix: CHORD_SUFFIX.MAYOR,
   tones: triad(4, 7),
 };
 export const MENOR: ChordShape = {
   id: "m",
-  label: "menor",
-  suffix: "m",
+  label: CHORD_WORDS.MENOR,
+  suffix: CHORD_SUFFIX.MENOR,
   tones: triad(3, 7),
 };
 export const DISMINUIDO: ChordShape = {
   id: "dim",
-  label: "disminuido",
-  suffix: "dim",
+  label: CHORD_WORDS.DISMINUIDO,
+  suffix: CHORD_SUFFIX.DISMINUIDO,
   tones: triad(3, 6),
 };
 export const AUMENTADO: ChordShape = {
   id: "aug",
-  label: "aumentado",
-  suffix: "aug",
+  label: CHORD_WORDS.AUMENTADO,
+  suffix: CHORD_SUFFIX.AUMENTADO,
   tones: triad(4, 8),
 };
 

@@ -114,8 +114,8 @@ export const CHORD_LEVELS: ChordLevel[] = [
     options: [
       quality("M", "Mayor", MAYOR),
       quality("m", "Menor", MENOR),
-      quality("aug", "Aum.", AUMENTADO),
-      quality("dim", "Dism.", DISMINUIDO),
+      quality("aug", "aug", AUMENTADO),
+      quality("dim", "dim", DISMINUIDO),
     ],
   },
   {
@@ -145,8 +145,8 @@ export const CHORD_LEVELS: ChordLevel[] = [
     options: [
       quality("M", "Mayor", MAYOR),
       quality("m", "Menor", MENOR),
-      quality("aug", "Aum.", AUMENTADO),
-      quality("dim", "Dism.", DISMINUIDO),
+      quality("aug", "aug", AUMENTADO),
+      quality("dim", "dim", DISMINUIDO),
       quality("maj7", "maj7", [0, 4, 7, 11]),
       quality("m7", "m7", [0, 3, 7, 10]),
       quality("7", "7", [0, 4, 7, 10]),

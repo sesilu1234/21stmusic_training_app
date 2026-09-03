@@ -59,10 +59,8 @@ Mejorar sonido de guitarra
 
  - La guia hay que mejorarla mucho, pero MUCHO jajaja (aunque esteticamente y UI esta perfect)
 
-- ver base de datos a ver que hay , por saber. y dar acceso a papa para contraseñas.
-  
+- ver base de datos a ver que hay , por saber. y dar acceso a papa para contraseñas. y enseñarle las tablas.
 
-
-
+- capar algo mas o algo menos de la web para no loggeados 
 
 

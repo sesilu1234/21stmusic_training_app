@@ -6,7 +6,7 @@
 
 import { getSupabaseAdmin } from "./supabaseAdmin";
 import { ROUND_LENGTH } from "./roundLength";
-import type { TriviaQuestion } from "./trivia";
+import { TRIVIA_GENERAL, type TriviaQuestion } from "./trivia";
 
 interface TriviaRow {
   pregunta: string;
@@ -60,7 +60,11 @@ const toQuestion = (row: TriviaRow): TriviaQuestion => {
 export const getTriviaRound = async (tema: string): Promise<TriviaQuestion[]> => {
   try {
     const { data, error } = await getSupabaseAdmin().rpc("trivia_round", {
-      p_tema: tema,
+      // El tema "general" no es un filtro, es la ausencia de filtro: `null` y
+      // `trivia_round` sortea entre todas las preguntas de la tabla. Esto ya
+      // estaba previsto en db/trivia.sql (`p_tema is null or tema = p_tema`);
+      // lo único que faltaba era un nivel que lo usara.
+      p_tema: tema === TRIVIA_GENERAL ? null : tema,
       p_limit: ROUND_LENGTH,
     });
 
@@ -93,6 +97,18 @@ export const getTriviaCounts = async (): Promise<Record<string, number>> => {
     for (const row of (data ?? []) as { tema: string; total: number }[]) {
       counts[row.tema] = Number(row.total);
     }
+
+    /*
+      El "general" juega con todas, así que su cuenta es la suma de todas — y no
+      la de las preguntas escritas con tema "general", que es lo que devuelve la
+      consulta. Sin esto el menú avisaría de que al tema de todos los temas le
+      faltan preguntas, que es justo al revés.
+
+      Se suma sobre `counts` después de llenarlo, para no contar dos veces las
+      que sí llevan tema "general".
+    */
+    counts[TRIVIA_GENERAL] = Object.values(counts).reduce((a, b) => a + b, 0);
+
     return counts;
   } catch {
     return {};

@@ -37,14 +37,22 @@ export const CHORD_SUFFIX = {
 } as const;
 
 /**
- * Cómo se dice en palabras, para cuando hay sitio y se lee mejor hablado
- * ("séptima mayor" es más claro que "maj7" para quien empieza).
+ * Cómo se dice detrás de la nota: "Mi dim", "Do Mayor", "Fa aug".
+ *
+ * Las tríadas van con el nombre corto y no con la palabra entera —"dim" y no
+ * "disminuido", "aug" y no "aumentado"— porque es lo que se escribe en una
+ * partitura y en un cifrado, y era raro que la app dijera "Mi disminuido"
+ * mientras el papel pone "Mi dim".
+ *
+ * MAYOR va con eme MAYÚSCULA por lo mismo que el resto del archivo: "Do Mayor"
+ * frente a "Do menor" se distingue de un vistazo, igual que la M y la m del
+ * cifrado. No es un capricho tipográfico.
  */
 export const CHORD_WORDS = {
-  MAYOR: "mayor",
+  MAYOR: "Mayor",
   MENOR: "menor",
-  AUMENTADO: "aumentado",
-  DISMINUIDO: "disminuido",
+  AUMENTADO: "aug",
+  DISMINUIDO: "dim",
   MAJ7: "séptima mayor",
   MENOR_7: "séptima menor",
   DOMINANTE: "dominante",

@@ -16,7 +16,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "21st Century Music · Entrenamiento musical",
     short_name: "21st Music",
     description:
-      "Ejercicios de oído, lectura, ritmo, guitarra y piano de la escuela 21st Century Music.",
+      "Tu gimnasio musical interactivo: oído, ritmo, lectura, guitarra y piano desde el navegador.",
     start_url: "/",
     display: "standalone",
     background_color: "#020617",

@@ -31,6 +31,21 @@ export default async function Image() {
     join(process.cwd(), "app/fonts/chaney-bold-italic.ttf"),
   );
 
+  /*
+    El logo de la escuela, de fondo.
+
+    Es una copia recortada y reducida (700px, paleta de 128 colores) del que
+    está en public/assets, no el original: aquel pesa 1,7 MB y aquí la imagen
+    no se enlaza, se INCRUSTA en el dibujo. Un logo de 70 KB o uno de 1,7 MB se
+    ven exactamente igual a este tamaño; lo que cambia es lo que tarda en
+    generarse la tarjeta.
+
+    Se pasa como data URI porque el dibujo no tiene servidor delante: no puede
+    pedir "/assets/algo", solo llevar la imagen dentro.
+  */
+  const logo = await readFile(join(process.cwd(), "app/og-logo.png"));
+  const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
+
   return new ImageResponse(
     (
       <div
@@ -48,6 +63,28 @@ export default async function Image() {
             "radial-gradient(circle at 82% 18%, rgba(251,191,36,0.20), transparent 55%)",
         }}
       >
+        {/*
+          El logo, grande y apagado, saliéndose por el borde derecho. Va como
+          fondo y no como una pieza más de la composición: al tamaño en el que
+          WhatsApp enseña esta tarjeta, un logo pequeño y bien colocado no se
+          distingue de una mancha, y uno grande y apagado sí se reconoce.
+
+          El texto se queda a la izquierda, sobre la parte donde el logo ya casi
+          no está, para que se siga leyendo entero.
+        */}
+        <img
+          src={logoSrc}
+          width={780}
+          height={568}
+          alt=""
+          style={{
+            position: "absolute",
+            right: -150,
+            top: 62,
+            opacity: 0.2,
+          }}
+        />
+
         <div
           style={{
             display: "flex",
@@ -66,7 +103,7 @@ export default async function Image() {
             display: "flex",
             marginTop: 26,
             fontFamily: "Chaney",
-            fontSize: 118,
+            fontSize: 106,
             lineHeight: 1,
             color: "#ffffff",
             letterSpacing: -4,
@@ -78,17 +115,18 @@ export default async function Image() {
         <div
           style={{
             display: "flex",
-            marginTop: 34,
-            fontSize: 40,
+            marginTop: 32,
+            fontSize: 34,
             lineHeight: 1.35,
             color: "rgba(255,255,255,0.62)",
-            maxWidth: 900,
+            maxWidth: 780,
           }}
         >
-          Oído, lectura, ritmo, guitarra y piano. Se juega desde el navegador.
+          Tu gimnasio musical interactivo: oído, ritmo, lectura, guitarra y
+          piano desde el navegador
         </div>
 
-        <div style={{ display: "flex", marginTop: 56, gap: 14 }}>
+        <div style={{ display: "flex", marginTop: 50, gap: 14 }}>
           {["#fbbf24", "#a78bfa", "#34d399", "#fb7185"].map((color) => (
             <div
               key={color}
