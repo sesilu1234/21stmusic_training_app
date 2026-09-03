@@ -52,10 +52,10 @@ Mejorar sonido de guitarra
 
 
 
--checkear si hay .env en historial de git
 
-- ver si me falta algo de seguridad y preguntar a IA, RLS, keys ,....
-- comprobar los headers, compartir link, metadata, sitemaps son accesibles o requieren loggeo, etc....
+
+
+
 
  - La guia hay que mejorarla mucho, pero MUCHO jajaja (aunque esteticamente y UI esta perfect)
 

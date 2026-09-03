@@ -100,16 +100,27 @@ alter table students       enable row level security;
 alter table game_attempts  enable row level security;
 alter table student_medals enable row level security;
 
--- 6. Dos cuentas de usuario/contraseña de ejemplo ---------------------
---    alumno / guitarra2026
---    profe  / metronomo2026
-insert into students (email, display_name, username, password, is_active) values
-  ('alumno@21stcm.local', 'Alumno', 'alumno', 'guitarra2026',  true),
-  ('profe@21stcm.local',  'Profe',  'profe',  'metronomo2026', true)
-on conflict (email) do update
-  set username     = excluded.username,
-      password     = excluded.password,
-      display_name = excluded.display_name,
-      is_active    = true;
+-- 6. La primera cuenta ------------------------------------------------
+--
+--    AQUI NO SE ESCRIBE NINGUNA CONTRASENA. Este repositorio es publico, y
+--    una contrasena escrita en un archivo del repositorio es una contrasena
+--    que ya no vale: cualquiera que lo abra puede entrar. Aqui hubo dos
+--    cuentas de ejemplo con sus claves en claro, y estuvieron publicadas.
+--
+--    Para dar de alta la primera cuenta, ejecutar esto A MANO en el editor
+--    SQL de Supabase cambiando lo que va en mayusculas, y no guardarlo:
+--
+--      insert into students (email, display_name, username, password, is_active)
+--      values ('quien@21stcm.local', 'Nombre', 'usuario', 'CONTRASENA', true)
+--      on conflict (email) do update
+--        set username     = excluded.username,
+--            password     = excluded.password,
+--            display_name = excluded.display_name,
+--            is_active    = true;
+--
+--    Las siguientes se dan de alta igual, o desde el editor de tablas.
+--    Las contrasenas se guardan en claro a proposito (ver lib/passwords.ts):
+--    el profesor tiene que poder leerselas al alumno. Justo por eso no pueden
+--    estar ademas en el codigo.
 
 commit;
