@@ -53,91 +53,140 @@ export default async function Image() {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: "0 90px",
+          position: "relative",
           backgroundColor: "#020617",
-          // El mismo halo ámbar del modal de pleno: es el color con el que la
-          // app celebra las cosas, así que es el que la representa.
-          backgroundImage:
-            "radial-gradient(circle at 82% 18%, rgba(251,191,36,0.20), transparent 55%)",
         }}
       >
         {/*
-          El logo, grande y apagado, saliéndose por el borde derecho. Va como
-          fondo y no como una pieza más de la composición: al tamaño en el que
-          WhatsApp enseña esta tarjeta, un logo pequeño y bien colocado no se
-          distingue de una mancha, y uno grande y apagado sí se reconoce.
+          El fondo va por capas y en este orden, que importa: primero la luz,
+          luego el logo, luego una cortina oscura por encima del logo. Así el
+          logo no está "puesto al 20% y a ver qué sale", sino que emerge de la
+          oscuridad por la derecha y se apaga solo antes de llegar al texto.
 
-          El texto se queda a la izquierda, sobre la parte donde el logo ya casi
-          no está, para que se siga leyendo entero.
+          Antes el logo cruzaba por detrás del título y las dos cosas se
+          estorbaban: el título perdía contraste y el logo no se reconocía.
         */}
+
+        {/* La luz ámbar, detrás del logo y no en una esquina cualquiera: es lo
+            que hace que el metal del logo se vea iluminado y no plano. */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundImage:
+              "radial-gradient(circle at 74% 46%, rgba(251,191,36,0.34), rgba(251,146,60,0.10) 40%, transparent 66%)",
+          }}
+        />
+
         <img
           src={logoSrc}
-          width={780}
-          height={568}
+          width={860}
+          height={626}
           alt=""
           style={{
             position: "absolute",
-            right: -150,
-            top: 62,
-            opacity: 0.2,
+            right: -170,
+            top: 22,
+            opacity: 0.62,
+          }}
+        />
+
+        {/* La cortina. De negro sólido a transparente: la mitad izquierda queda
+            limpia para el texto y el logo sólo asoma por la derecha. Es lo que
+            hace que se pueda subir la opacidad del logo sin que estorbe. */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundImage:
+              "linear-gradient(90deg, #020617 0%, #020617 38%, rgba(2,6,23,0.93) 55%, rgba(2,6,23,0.55) 75%, rgba(2,6,23,0.22) 100%)",
+          }}
+        />
+
+        {/* Viñeta: oscurece arriba y abajo para que la tarjeta tenga suelo y no
+            se vea como un rectángulo plano recortado. */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundImage:
+              "linear-gradient(180deg, rgba(2,6,23,0.55) 0%, transparent 28%, transparent 62%, rgba(2,6,23,0.75) 100%)",
           }}
         />
 
         <div
           style={{
             display: "flex",
-            fontSize: 26,
-            letterSpacing: 6,
-            textTransform: "uppercase",
-            color: "rgba(251,191,36,0.85)",
-            fontWeight: 700,
+            flexDirection: "column",
+            justifyContent: "center",
+            width: "100%",
+            height: "100%",
+            padding: "0 90px",
           }}
         >
-          Escuela de Música Moderna
-        </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 26,
+              letterSpacing: 6,
+              textTransform: "uppercase",
+              color: "rgba(251,191,36,0.9)",
+              fontWeight: 700,
+            }}
+          >
+            Escuela de Música Moderna
+          </div>
 
-        <div
-          style={{
-            display: "flex",
-            marginTop: 26,
-            fontFamily: "Chaney",
-            fontSize: 106,
-            lineHeight: 1,
-            color: "#ffffff",
-            letterSpacing: -4,
-          }}
-        >
-          21st Century Music
-        </div>
+          <div
+            style={{
+              display: "flex",
+              marginTop: 26,
+              fontFamily: "Chaney",
+              fontSize: 96,
+              lineHeight: 1,
+              color: "#ffffff",
+              letterSpacing: -3,
+            }}
+          >
+            21st Century Music
+          </div>
 
-        <div
-          style={{
-            display: "flex",
-            marginTop: 32,
-            fontSize: 34,
-            lineHeight: 1.35,
-            color: "rgba(255,255,255,0.62)",
-            maxWidth: 780,
-          }}
-        >
-          Tu gimnasio musical interactivo: oído, ritmo, lectura, guitarra y
-          piano desde el navegador
-        </div>
+          <div
+            style={{
+              display: "flex",
+              marginTop: 32,
+              fontSize: 34,
+              lineHeight: 1.35,
+              color: "rgba(255,255,255,0.68)",
+              maxWidth: 700,
+            }}
+          >
+            Tu gimnasio musical interactivo: oído, ritmo, lectura, guitarra y
+            piano desde el navegador
+          </div>
 
-        <div style={{ display: "flex", marginTop: 50, gap: 14 }}>
-          {["#fbbf24", "#a78bfa", "#34d399", "#fb7185"].map((color) => (
-            <div
-              key={color}
-              style={{
-                width: 62,
-                height: 10,
-                borderRadius: 999,
-                backgroundColor: color,
-              }}
-            />
-          ))}
+          <div style={{ display: "flex", marginTop: 50, gap: 14 }}>
+            {["#fbbf24", "#a78bfa", "#34d399", "#fb7185"].map((color) => (
+              <div
+                key={color}
+                style={{
+                  width: 62,
+                  height: 10,
+                  borderRadius: 999,
+                  backgroundColor: color,
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     ),
