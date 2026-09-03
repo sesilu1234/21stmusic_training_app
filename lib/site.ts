@@ -5,7 +5,7 @@ export const SITE = {
   academyUrl: "https://escuelademusicamoderna.com/",
   // Las altas se dan en la academia, no en la app: el login manda aquí.
   academyContactUrl: "https://escuelademusicamoderna.com/contactar/",
-  privacyUpdatedAt: "1 de septiembre de 2026",
+  privacyUpdatedAt: "3 de septiembre de 2026",
 } as const;
 
 export const FOOTER_LINKS = [

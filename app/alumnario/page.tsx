@@ -28,7 +28,7 @@ import StudentSearch from "./StudentSearch";
  * cualquiera con rol de profesor sin tener que pensarlo dos veces.
  */
 export const metadata: Metadata = {
-  title: "Alumnario · 21st Century Music",
+  title: "Alumnario",
   // Es una página de datos de alumnos: fuera de los buscadores.
   robots: { index: false, follow: false },
 };
@@ -49,6 +49,18 @@ const fmtDateTime = (iso: string) =>
     hour: "2-digit",
     minute: "2-digit",
   });
+
+/**
+ * "hoy", "ayer", "hace 12 días". Para la última entrada, donde lo que importa
+ * es lo lejos que queda, no la fecha exacta.
+ */
+const fmtAgo = (iso: string) => {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return "hoy";
+  if (days === 1) return "ayer";
+  if (days < 30) return `hace ${days} días`;
+  return `el ${fmtDate(iso)}`;
+};
 
 const barColor = (value: number) =>
   value >= 90 ? "bg-emerald-400" : value >= 60 ? "bg-amber-400" : "bg-rose-400";
@@ -118,6 +130,26 @@ const StudentReport = ({
         <Tile label="Medallas" value={String(progress.medals)} />
       </div>
 
+      {/*
+        La última entrada va aparte y no en la línea gris de abajo porque es lo
+        que distingue tres situaciones que sin ella se leen todas como "0
+        partidas": no ha entrado nunca (la contraseña no le ha llegado o no sabe
+        usarla), entra pero no juega, y juega. Solo la primera es un problema
+        que se arregla con una llamada de teléfono, y por eso se pinta en ámbar.
+      */}
+      {!student.lastLoginAt ? (
+        <p className="rounded-2xl border border-amber-300/20 bg-amber-400/5 px-4 py-2.5 text-xs text-amber-100/70">
+          Nunca ha entrado en la app.
+        </p>
+      ) : (
+        <p className="text-xs leading-5 text-white/45">
+          Última entrada {fmtAgo(student.lastLoginAt)}
+          {student.loginCount > 0 &&
+            ` · ${student.loginCount} ${student.loginCount === 1 ? "entrada" : "entradas"}`}
+          {!lastPlayed && " · entra pero no ha jugado nunca"}
+        </p>
+      )}
+
       <p className="text-xs leading-5 text-white/45">
         En la escuela desde {fmtDate(student.createdAt)}
         {lastPlayed
@@ -132,7 +164,7 @@ const StudentReport = ({
         <p className="text-sm text-white/40">Todavía no ha terminado ninguna partida.</p>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/40">
+          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/30">
             <table className="w-full min-w-[36rem] text-left text-xs">
               <thead className="bg-white/[0.04] text-[9px] uppercase tracking-[0.16em] text-white/35">
                 <tr>
@@ -155,9 +187,17 @@ const StudentReport = ({
                   <tr className="transition hover:bg-white/[0.03]">
                     <td className="px-3.5 py-2.5 font-bold text-white/85">
                       {entry.game.label}
-                      {entry.hasMedal && (
-                        <span aria-label="con medalla" className="ml-1.5 text-amber-300">
-                          ●
+                      {/* Cuantas medallas lleva el alumno en este modo, no un
+                          punto de si/no: al profesor le dice mas "3 de 6" que
+                          "empezado". */}
+                      {entry.medals > 0 && (
+                        <span
+                          aria-label={`${entry.medals} de ${entry.medalsTotal} niveles clavados`}
+                          className={`ml-1.5 text-[10px] font-black ${
+                            entry.hasMedal ? "text-amber-200" : "text-amber-300/60"
+                          }`}
+                        >
+                          {entry.medals}/{entry.medalsTotal}
                         </span>
                       )}
                     </td>
@@ -222,7 +262,7 @@ const StudentReport = ({
               {progress.recent.length === 1 ? "partida" : "partidas"}
             </h3>
 
-            <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">
+            <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/10 bg-slate-950/30">
               {progress.recent.map((attempt, index) => {
                 const pct = Math.round((attempt.correct / attempt.total) * 100);
                 return (
@@ -296,8 +336,13 @@ export default async function AlumnoPage({
       <Backdrop />
       {/* Un velo más suave que el de las páginas de texto: aquí todo lo que se
           lee va dentro de una tarjeta con su propio fondo, así que la foto
-          puede respirar sin quitarle contraste a nada. */}
-      <div aria-hidden className="fixed inset-0 z-0 bg-slate-950/60" />
+          puede respirar sin quitarle contraste a nada.
+
+          Iba al 60% *encima* del velo del propio `Backdrop`, así que en la
+          práctica esta pantalla llevaba dos velos apilados y salía mucho más
+          apagada que el resto de la app. Bajado a 35%: sigue asentando las
+          tarjetas y ya no dobla el oscurecido. */}
+      <div aria-hidden className="fixed inset-0 z-0 bg-slate-950/35" />
       {/* El mismo halo que la pantalla de acceso, para que las dos páginas de
           fuera de la app se reconozcan como de la misma casa. */}
       <div
@@ -338,18 +383,21 @@ export default async function AlumnoPage({
           </div>
 
           {student ? (
-            <section className="mt-5 rounded-[1.75rem] border border-white/10 bg-slate-950/75 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-xl md:p-6">
+            <section className="mt-5 rounded-[1.75rem] border border-white/10 bg-slate-950/65 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-xl md:p-6">
               <h2 className="mb-4 text-xl font-black tracking-tight text-white">
                 {student.displayName}
               </h2>
               <StudentReport student={student} progress={progress} />
             </section>
           ) : (
-            <p className="mt-8 text-center text-xs text-white/25">
-              {params.alumno
-                ? "No hay ningún alumno con ese correo."
-                : "Escribe un nombre para empezar."}
-            </p>
+            /* Sin buscar todavia no se dice nada: el buscador ya esta ahi y se
+               ve lo que hace. El aviso solo tiene sentido cuando se ha buscado
+               algo y no ha salido. */
+            params.alumno && (
+              <p className="mt-8 text-center text-xs text-white/25">
+                No hay ningún alumno con ese correo.
+              </p>
+            )
           )}
         </div>
       </main>

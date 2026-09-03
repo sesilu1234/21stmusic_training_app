@@ -24,11 +24,21 @@ const whenLabel = (iso: string) => {
 };
 
 /** El nivel, tal cual sale en la URL, escrito para leerlo: "Sol naturales". */
-const levelLabel = (slug: string) => {
-  const clean = slug.split("/").pop() ?? slug;
-  const words = clean.replace(/-/g, " ");
+const titleCase = (text: string) => {
+  const words = text.replace(/-/g, " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
+
+/**
+ * "modulo3" -> "Modulo3"; "nombrar/triadas" -> "Nombrar · Triadas".
+ *
+ * El submodo no se puede tirar. Antes se hacía `slug.split("/").pop()`, y en
+ * acordes en el pentagrama eso deja "Mayores menores" dos veces seguidas —
+ * una de nombrar y otra de escribir — sin nada que las distinga. Se notaba poco
+ * mientras solo salían los niveles jugados; ahora que salen todos, se ve.
+ */
+const levelLabel = (slug: string) =>
+  slug.split("/").map(titleCase).join(" · ");
 
 const barColor = (value: number) =>
   value >= 90 ? "bg-emerald-400" : value >= 60 ? "bg-amber-400" : "bg-rose-400";
@@ -64,8 +74,18 @@ const GameRow = ({ entry }: { entry: GameProgress }) => {
   const palette = categoryOf(entry.game.category);
   const Icon = gameIcons[entry.game.icon];
 
+  // Un modo sin estrenar se apaga, igual que un nivel sin estrenar. No es un
+  // suspenso: es un "por aquí no has pasado todavía", y si se pintara con el
+  // mismo peso que los demás el panel sería una lista de ceros en la que no se
+  // distingue lo que llevas de lo que te queda.
+  const untouched = entry.attempts === 0;
+
   return (
-    <li className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3.5">
+    <li
+      className={`rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3.5 ${
+        untouched ? "opacity-50" : ""
+      }`}
+    >
       <div className="flex items-start gap-3">
         <span
           className={`grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl ${palette.iconBg}`}
@@ -81,14 +101,32 @@ const GameRow = ({ entry }: { entry: GameProgress }) => {
             >
               {entry.game.label}
             </Link>
-            {entry.hasMedal && (
-              <Medal size={13} className="flex-shrink-0 text-amber-300" />
+            {/* Las medallas del modo son las de sus niveles, contadas. Cuando
+                están todas el chip se enciende. Cuáles son se ve abajo, en la
+                lista de niveles. */}
+            {entry.medals > 0 && (
+              <span
+                className={`flex flex-shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-black ${
+                  entry.hasMedal
+                    ? "bg-amber-400/20 text-amber-200"
+                    : "text-amber-300/60"
+                }`}
+                aria-label={`${entry.medals} de ${entry.medalsTotal} niveles clavados`}
+              >
+                {entry.medals}
+                <Medal size={11} />
+              </span>
             )}
           </div>
 
-          {/* La barra es la media de los récords de cada nivel. Era el récord
-              del modo entero, y así podía marcar 100% con todos los niveles
-              por debajo: bastaba con haber bordado uno. */}
+          {/* La barra dice cuánto llevas dominado del modo: la suma de los
+              récords de cada nivel repartida entre los niveles que el modo
+              tiene, no entre los que has jugado. Antes se dividía entre los
+              jugados y por eso un solo nivel bordado daba 100%.
+
+              Lo bien que lo haces no se pierde: está en la línea de abajo
+              ("últimas 6: 87%"). Eran el mismo número y una de las dos lecturas
+              tenía que mentir; ahora cada una dice lo suyo. */}
           <div className="mt-2 flex items-center gap-2.5">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
               <div
@@ -102,14 +140,35 @@ const GameRow = ({ entry }: { entry: GameProgress }) => {
           </div>
 
           <p className="mt-1.5 text-[10px] text-white/30">
-            {entry.attempts} {entry.attempts === 1 ? "partida" : "partidas"}
-            {entry.attempts > 1 &&
-              ` · últimas ${Math.min(entry.attempts, FORM_WINDOW)}: ${entry.form}%`}
-            {entry.lastPlayedAt && ` · ${whenLabel(entry.lastPlayedAt)}`}
+            {untouched ? (
+              // Sin partidas no hay nada que resumir: "0 de 6 niveles · 0
+              // partidas" son tres ceros para decir una sola cosa.
+              <>
+                Sin empezar
+                {entry.levelsTotal !== null && ` · ${entry.levelsTotal} niveles`}
+              </>
+            ) : (
+              <>
+                {/* Cuántos niveles llevas tocados, primero del todo: es lo que
+                    explica un porcentaje bajo cuando estás jugando bien, y sin
+                    ello la barra parece una nota en vez de un recorrido. */}
+                {entry.levelsTotal !== null &&
+                  `${entry.levelsPlayed} de ${entry.levelsTotal} niveles · `}
+                {entry.attempts} {entry.attempts === 1 ? "partida" : "partidas"}
+                {entry.attempts > 1 &&
+                  ` · últimas ${Math.min(entry.attempts, FORM_WINDOW)}: ${entry.form}%`}
+                {entry.lastPlayedAt && ` · ${whenLabel(entry.lastPlayedAt)}`}
+              </>
+            )}
           </p>
 
           {/* Los niveles solo se enseñan si el modo tiene más de uno: en los
               demás sería repetir la línea de arriba con otras palabras.
+
+              Salen TODOS, incluidos los que no se han tocado, apagados y a 0%.
+              Son los que explican la barra del modo: sin ellos, un 60% con
+              cuatro niveles bordados a la vista no cuadra con nada, y encima se
+              pierde lo único que dice qué queda por hacer.
 
               Llevan sus dos cifras, igual que el modo: el récord del nivel y
               cómo lo lleva últimamente. Sin la cabecera de arriba, dos números
@@ -122,27 +181,47 @@ const GameRow = ({ entry }: { entry: GameProgress }) => {
                 <span className="w-10 text-right">Últimas</span>
               </li>
 
-              {entry.levels.map((level) => (
-                <li key={level.slug} className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate text-[10px] text-white/40">
-                    {levelLabel(level.slug)}
-                  </span>
-                  <span className="flex w-14 items-center justify-end gap-1.5">
-                    <span className="h-1 w-8 overflow-hidden rounded-full bg-white/10">
-                      <span
-                        className={`block h-full rounded-full ${barColor(level.best)}`}
-                        style={{ width: `${level.best}%` }}
-                      />
+              {entry.levels.map((level) => {
+                const untouched = level.attempts === 0;
+
+                return (
+                  <li
+                    key={level.slug}
+                    className={`flex items-center gap-2 ${untouched ? "opacity-45" : ""}`}
+                  >
+                    <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                      <span className="min-w-0 truncate text-[10px] text-white/40">
+                        {levelLabel(level.slug)}
+                      </span>
+                      {/* Medalla del nivel: pleno en partida larga, el mismo
+                          listón que la del modo. */}
+                      {level.hasMedal && (
+                        <Medal
+                          size={10}
+                          className="flex-shrink-0 text-amber-300"
+                          aria-label="Pleno en este nivel"
+                        />
+                      )}
                     </span>
-                    <span className="text-[10px] font-bold text-white/45">
-                      {level.best}%
+                    <span className="flex w-14 items-center justify-end gap-1.5">
+                      <span className="h-1 w-8 overflow-hidden rounded-full bg-white/10">
+                        {!untouched && (
+                          <span
+                            className={`block h-full rounded-full ${barColor(level.best)}`}
+                            style={{ width: `${level.best}%` }}
+                          />
+                        )}
+                      </span>
+                      <span className="text-[10px] font-bold text-white/45">
+                        {untouched ? "—" : `${level.best}%`}
+                      </span>
                     </span>
-                  </span>
-                  <span className="w-10 text-right text-[10px] text-white/25">
-                    {level.form}%
-                  </span>
-                </li>
-              ))}
+                    <span className="w-10 text-right text-[10px] text-white/25">
+                      {untouched ? "—" : `${level.form}%`}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -227,7 +306,7 @@ export default function ProgressBoard({
           icon={<Medal size={13} className="text-amber-300" />}
           label="Medallas"
           value={String(progress.medals)}
-          hint="Una partida entera sin fallar"
+          hint="Niveles clavados: partida larga sin fallar"
         />
       </div>
 

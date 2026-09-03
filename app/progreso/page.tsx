@@ -1,10 +1,14 @@
+import type { Metadata } from "next";
 import AppShell from "../components/AppShell";
+import { PRIVADO } from "@/lib/seo";
 import StudentsOnlyGate from "../components/StudentsOnlyGate";
 import ProgressBoard from "./ProgressBoard";
 import { currentStudent } from "@/lib/session";
 import { getProgress } from "@/lib/progress";
 
-export const metadata = { title: "Progreso · 21st Century Music" };
+// El panel de un alumno concreto: fuera de los buscadores. `PRIVADO` es
+// index:false + follow:false, porque desde aquí se enlaza a más páginas suyas.
+export const metadata: Metadata = { title: "Progreso", robots: PRIVADO };
 
 // El progreso cambia con cada partida, así que no se cachea.
 export const dynamic = "force-dynamic";

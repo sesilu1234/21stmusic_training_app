@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { getStudentForLogin } from "@/lib/students";
+import { getStudentForLogin, touchLogin } from "@/lib/students";
 import { verifyPassword } from "@/lib/passwords";
 
 /**
@@ -24,6 +24,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const student = await getStudentForLogin(username);
         if (!student || !verifyPassword(password, student.password)) return null;
+
+        // La última entrada se apunta aquí porque este es el único sitio por el
+        // que se pasa al entrar de verdad: con la sesión en un JWT, las páginas
+        // siguientes leen la cookie y no vuelven a tocar la base de datos. Es
+        // justo lo que se quiere medir — entradas, no visitas.
+        //
+        // Sin `await` a propósito: el alumno no espera ni un milisegundo por
+        // una estadística, y si la escritura falla entra igual.
+        touchLogin(student.email);
 
         return {
           id: student.email,

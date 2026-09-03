@@ -6,7 +6,7 @@ import { ArrowLeft, Volume2 } from "lucide-react";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
-import PianoKeyboard, { noteName, type KeyMark } from "@/app/components/PianoKeyboard";
+import PianoKeyboard, { type KeyMark } from "@/app/components/PianoKeyboard";
 import { PRESET_ICONS, PRESETS, useAudio } from "@/app/play/oido/audio";
 import {
   PIANO_INTERVALS,
@@ -144,10 +144,11 @@ export default function PianoRecognizeGame({ level }: { level: PianoIntervalLeve
     [question.root]: "hint",
     [target]: "hint",
   };
-  const badges: Record<number, string> = {
-    [question.root]: noteName(question.root),
-    [target]: noteName(target),
-  };
+  // Aquí no se dice cómo se llaman las dos teclas, ni en un globito ni escrito
+  // encima. La pregunta es la distancia entre ellas: con los nombres puestos se
+  // acaba respondiendo de memoria ("de Do a Sol es quinta") en vez de mirando
+  // el hueco, que es justo lo que hay que aprender a ver. Sin nombres se lee
+  // por forma y por distancia, que es como se lee un teclado de verdad.
 
   // Solo se ofrecen los intervalos del nivel: con los doce siempre en pantalla
   // los primeros niveles no servirían de nada.
@@ -171,7 +172,7 @@ export default function PianoRecognizeGame({ level }: { level: PianoIntervalLeve
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-16 md:px-8 md:pb-7 md:pt-20">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href="/play/piano/reconocer-intervalos"
@@ -212,16 +213,13 @@ export default function PianoRecognizeGame({ level }: { level: PianoIntervalLeve
         </div>
 
         <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
-          {/* pt-9: hueco para los globitos con el nombre de cada tecla. */}
-          <div className="pt-9">
-            <PianoKeyboard
-              from={0}
-              octaves={2}
-              marks={marks}
-              badges={badges}
-              disabled
-            />
-          </div>
+          <PianoKeyboard
+            from={0}
+            octaves={2}
+            marks={marks}
+            markLabels={false}
+            disabled
+          />
 
           <div className="mt-5 flex justify-center">
             <button

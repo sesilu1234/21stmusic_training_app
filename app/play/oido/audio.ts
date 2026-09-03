@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useRef } from "react";
-import { createAudioContext } from "@/lib/audioContext";
+import { createAudioContext, outputNode } from "@/lib/audioContext";
 import { playPluckedString, type PluckParams } from "@/lib/pluckedString";
 
 export const INTERVALS = [
@@ -26,7 +26,15 @@ export function semitonesToFreq(s: number) {
   return BASE_FREQ * Math.pow(2, s / 12);
 }
 
-export type Preset = { label: string; make: (ctx: AudioContext, freq: number, when: number) => void };
+export type Preset = {
+  label: string;
+  /**
+   * `out` es donde se enchufa la nota. Casi siempre es la salida de la app,
+   * pero pasandola por parametro se puede colar un `GainNode` en medio y sonar
+   * una nota concreta mas fuerte que sus vecinas sin tocar el timbre.
+   */
+  make: (ctx: AudioContext, freq: number, when: number, out: AudioNode) => void;
+};
 
 /**
  * La guitarra no se monta con osciladores como las demás: la nota sale entera
@@ -38,9 +46,9 @@ const GUITAR: PluckParams = { sustain: 3.4, brightness: 0.62, peak: 0.45 };
 export const PRESETS: Preset[] = [
   {
     label: "Piano",
-    make(ctx, freq, when) {
+    make(ctx, freq, when, out) {
       const master = ctx.createGain();
-      master.connect(ctx.destination);
+      master.connect(out);
       master.gain.setValueAtTime(0, when);
       master.gain.linearRampToValueAtTime(0.55, when + 0.020);
       master.gain.setTargetAtTime(0.18, when + 0.020, 0.15);
@@ -64,15 +72,15 @@ export const PRESETS: Preset[] = [
   },
   {
     label: "Guitarra",
-    make(ctx, freq, when) {
-      playPluckedString(ctx, freq, GUITAR, when);
+    make(ctx, freq, when, out) {
+      playPluckedString(ctx, freq, GUITAR, when, out);
     },
   },
   {
     label: "Flauta",
-    make(ctx, freq, when) {
+    make(ctx, freq, when, out) {
       const master = ctx.createGain();
-      master.connect(ctx.destination);
+      master.connect(out);
       master.gain.setValueAtTime(0, when);
       master.gain.linearRampToValueAtTime(0.4, when + 0.02);
       master.gain.exponentialRampToValueAtTime(0.001, when + 2.0);
@@ -91,8 +99,8 @@ export const PRESETS: Preset[] = [
   },
   {
     label: "Synth",
-    make(ctx, freq, when) {
-      const master = ctx.createGain(); master.connect(ctx.destination);
+    make(ctx, freq, when, out) {
+      const master = ctx.createGain(); master.connect(out);
       master.gain.setValueAtTime(0, when); master.gain.linearRampToValueAtTime(0.45, when + 0.02);
       master.gain.setValueAtTime(0.35, when + 0.1); master.gain.exponentialRampToValueAtTime(0.001, when + 2.0);
       [-2,2].forEach(det => {
@@ -119,8 +127,39 @@ export function useAudio() {
     return ctxRef.current;
   }
 
-  const scheduleChord = (ctx: AudioContext, semitones: number[], presetIdx: number, when: number) => {
-    semitones.forEach((s) => PRESETS[presetIdx].make(ctx, semitonesToFreq(s), when));
+  /**
+   * `bassBoost` sube solo la nota mas grave del acorde. Va aparte del volumen
+   * general a proposito: en los modos donde hay que sacar de oido la distancia
+   * entre dos acordes, la referencia es el bajo, y apilado con las otras tres o
+   * cuatro notas se pierde. Subiendolo un poco el acorde suena igual pero el
+   * bajo se distingue, que es lo que hay que oir.
+   */
+  const scheduleChord = (
+    ctx: AudioContext,
+    semitones: number[],
+    presetIdx: number,
+    when: number,
+    bassBoost = 1,
+  ) => {
+    const bass = bassBoost === 1 ? null : Math.min(...semitones);
+    let boosted = false;
+
+    semitones.forEach((s) => {
+      // Solo la primera de las que estan en el bajo, por si el acorde repite
+      // la fundamental: si no, el realce se sumaria dos veces.
+      const emphasise = s === bass && !boosted;
+      if (emphasise) boosted = true;
+
+      let out: AudioNode = outputNode(ctx);
+      if (emphasise) {
+        const lift = ctx.createGain();
+        lift.gain.value = bassBoost;
+        lift.connect(out);
+        out = lift;
+      }
+
+      PRESETS[presetIdx].make(ctx, semitonesToFreq(s), when, out);
+    });
   };
 
   // Melodic (gapMs > 0) or harmonic (gapMs === 0) single interval.
@@ -144,13 +183,13 @@ export function useAudio() {
    * veces necesita dar antes la tónica de referencia.
    */
   const playSequence = useCallback(
-    (chords: number[][], gapMs: number, presetIdx: number) => {
+    (chords: number[][], gapMs: number, presetIdx: number, bassBoost = 1) => {
       const ctx = getCtx();
       const gap = gapMs / 1000;
       const doPlay = () => {
         const now = ctx.currentTime;
         chords.forEach((chord, index) =>
-          scheduleChord(ctx, chord, presetIdx, now + index * gap),
+          scheduleChord(ctx, chord, presetIdx, now + index * gap, bassBoost),
         );
       };
       if (ctx.state === "suspended") ctx.resume().then(doPlay);
@@ -171,7 +210,7 @@ export function useAudio() {
     seconds: number,
   ) => {
     const master = ctx.createGain();
-    master.connect(ctx.destination);
+    master.connect(outputNode(ctx));
     master.gain.setValueAtTime(0, when);
     master.gain.linearRampToValueAtTime(0.17, when + 0.35);
     master.gain.setValueAtTime(0.17, when + seconds - 0.5);

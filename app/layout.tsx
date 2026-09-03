@@ -1,14 +1,82 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { chaney } from "./fonts";
+import { SITE_URL } from "@/lib/seo";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "21st Century Music",
-  description: "Entrenamiento musical de la escuela 21st Century Music.",
+  /**
+   * Sin esto, cualquier campo de metadatos con una ruta relativa —la imagen que
+   * sale al compartir, sin ir más lejos— rompe la compilación, porque una
+   * tarjeta de WhatsApp no puede llevar un "/algo": necesita la dirección
+   * entera. Puesto aquí, vale para todas las páginas de la app.
+   */
+  metadataBase: new URL(SITE_URL),
+
+  title: {
+    default: "21st Century Music · Entrenamiento musical",
+    /**
+     * Cada página pone solo lo suyo ("Lectura de notas") y el sufijo lo añade
+     * esto. Antes las veinte pantallas de juego compartían el mismo título, y
+     * para un buscador eso son veinte copias de la misma página: ninguna se
+     * podía encontrar por lo que era.
+     */
+    template: "%s · 21st Century Music",
+  },
+  description:
+    "Ejercicios de oído, lectura, ritmo, guitarra y piano de la escuela 21st Century Music. " +
+    "Se juega desde el navegador, sin instalar nada.",
+
+  applicationName: "21st Century Music",
+  alternates: { canonical: SITE_URL },
+  keywords: [
+    "entrenamiento musical",
+    "ejercicios de oído",
+    "lectura de notas",
+    "intervalos",
+    "acordes",
+    "lenguaje musical",
+    "escuela de música",
+  ],
+
+  // La tarjeta que se ve al pegar el enlace en WhatsApp, Instagram o Twitter.
+  // La imagen no se nombra aquí: la coge sola de app/opengraph-image.tsx.
+  openGraph: {
+    type: "website",
+    siteName: "21st Century Music",
+    locale: "es_ES",
+    url: SITE_URL,
+    title: "21st Century Music · Entrenamiento musical",
+    description:
+      "Ejercicios de oído, lectura, ritmo, guitarra y piano. Se juega desde el navegador.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "21st Century Music · Entrenamiento musical",
+    description:
+      "Ejercicios de oído, lectura, ritmo, guitarra y piano. Se juega desde el navegador.",
+  },
+
+  icons: { icon: "/icon.png", apple: "/apple-icon.png" },
+  manifest: "/manifest.webmanifest",
+};
+
+/**
+ * El color de la barra del navegador en el móvil. Va aparte de `metadata`
+ * porque `themeColor` dentro de los metadatos está obsoleto desde Next 14.
+ *
+ * Dos valores porque la app tiene modo claro y oscuro: el navegador elige el
+ * que toque en vez de dejar una barra oscura pegada a una página clara.
+ */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#020617" },
+  ],
 };
 
 export default function RootLayout({
@@ -49,7 +117,16 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {children}
+        {/*
+          Vercel Analytics: cuántas visitas y a qué páginas. No pone cookies ni
+          identifica a nadie, que con alumnos menores de edad es justo el
+          motivo de no haber puesto Google Analytics. Lo que hace la gente
+          DENTRO de un juego no se mide aquí: eso está en `game_attempts`.
+        */}
+        <Analytics />
+      </body>
     </html>
   );
 }

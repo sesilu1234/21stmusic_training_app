@@ -35,13 +35,24 @@ const createRound = (level: BuildLevel): Round => {
  *
  * Un acorde suena a la vez, así que da igual el orden en que se pulsen sus
  * notas. Una escala se toca subiendo, y ahí el orden es medio ejercicio.
+ *
+ * Y en el acorde da igual también la octava. Antes se comparaban semitonos
+ * absolutos, y como la pregunta se genera siempre con la fundamental en la
+ * octava de abajo, el teclado te obligaba a tocarlo ahí: el mismo acorde una
+ * octava más arriba, que musicalmente es el mismo acorde, se contaba como
+ * fallo. Ahora se comparan clases de altura (el semitono módulo 12), que es lo
+ * que de verdad define un acorde. Se ordenan y se comparan como conjunto, así
+ * que Do-Mi-Sol vale tocado donde sea y en el orden que sea.
+ *
+ * En las escalas no se toca nada: ahí el ejercicio es tocarla entera y seguida
+ * desde su fundamental, y perdonar la octava sería perdonar justo eso.
  */
 const isRight = (given: number[], expected: number[], kind: BuildLevel["kind"]) => {
   if (given.length !== expected.length) return false;
   if (kind === "escala") return given.every((note, index) => note === expected[index]);
 
-  const sortedGiven = [...given].sort((a, b) => a - b);
-  const sortedExpected = [...expected].sort((a, b) => a - b);
+  const sortedGiven = [...given].map((note) => note % 12).sort((a, b) => a - b);
+  const sortedExpected = [...expected].map((note) => note % 12).sort((a, b) => a - b);
   return sortedGiven.every((note, index) => note === sortedExpected[index]);
 };
 
@@ -187,17 +198,31 @@ export default function PianoBuildGame({
 
   // Mientras construyes, tus teclas en cian. Al corregir: verde las que van y
   // rojo las que has pulsado de más.
+  //
+  // En los acordes la comparación es por clase de altura, así que la corrección
+  // tiene que serlo también: si has tocado el acorde bien pero una octava más
+  // arriba, esas teclas son las buenas y van en verde donde las has tocado. Si
+  // se marcaran solo las de `expected`, que están siempre en la octava de
+  // abajo, verías verde donde no has tocado y rojo donde sí, justo después de
+  // que el juego te haya dado la respuesta por buena.
+  const sameNote = (a: number, b: number) =>
+    level.kind === "acorde" ? a % 12 === b % 12 : a === b;
+
   const marks: Record<number, KeyMark> = {};
   if (answered === null) {
     draft.forEach((note) => {
       marks[note] = "hint";
     });
   } else {
+    // Primero la referencia: dónde estaban las notas que había que tocar. Así
+    // una que te hayas dejado se sigue viendo.
     expected.forEach((note) => {
       marks[note] = "correct";
     });
     answered.forEach((note) => {
-      if (!expected.includes(note)) marks[note] = "wrong";
+      marks[note] = expected.some((wanted) => sameNote(note, wanted))
+        ? "correct"
+        : "wrong";
     });
   }
 
@@ -211,7 +236,7 @@ export default function PianoBuildGame({
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-16 md:px-8 md:pb-7 md:pt-20">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href={backHref}

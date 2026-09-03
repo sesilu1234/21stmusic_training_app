@@ -1,10 +1,19 @@
+import type { Metadata } from "next";
 import { guideFontVariables } from "@/app/fonts";
+import { PRIVADO } from "@/lib/seo";
 import StudentsOnlyGate from "@/app/components/StudentsOnlyGate";
 import GuideShell from "./GuideShell";
 
-export const metadata = {
-  title: "Guía · 21st Century Music",
+/**
+ * La guía es material de la escuela para sus alumnos y está detrás de la puerta
+ * de `StudentsOnlyGate`, así que no se indexa. No es una decisión de SEO: sería
+ * el único texto largo de la app y lo que más podría posicionar, pero ofrecer
+ * en Google una página que luego pide cuenta es prometer algo que no se da.
+ */
+export const metadata: Metadata = {
+  title: "Guía",
   description: "Teoría musical básica explicada por capítulos.",
+  robots: PRIVADO,
 };
 
 export default function GuiaLayout({ children }: { children: React.ReactNode }) {

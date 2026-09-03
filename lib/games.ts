@@ -1,7 +1,7 @@
 // Catálogo único de modos de juego: lo usan el menú y la página "Sobre la app".
 //
 // IMPORTANTE: `name` es la clave con la que se guardaron las partidas en la
-// base de datos (game_attempts.game_name, student_medals.game_name). NO se
+// base de datos (game_attempts.game_name). NO se
 // puede cambiar sin migrar esos datos. En pantalla se enseña `label`.
 
 export type GameIcon =
@@ -318,7 +318,7 @@ export const GAMES: GameMode[] = [
   {
     name: "Trivial",
     label: "Trivial",
-    desc: "Guitarra, discos y artistas.",
+    desc: "Diez temas, de la guitarra a la orquesta.",
     slug: "/play/trivia",
     icon: "Lightbulb",
     category: "extras",
@@ -380,7 +380,7 @@ export const LEVEL_ACCESS: Record<
   // De ritmo se prueba el primer módulo y ya. Va con `soloAbiertos` a
   // propósito: si algún día hay un módulo 7, nace cerrado.
   "/play/ritmo": { soloAbiertos: ["modulo1"] },
-  "/play/oido/acordes": { cerrados: ["dos-acordes"] },
+  "/play/oido/acordes": { cerrados: ["dos-acordes", "dos-acordes-variable"] },
   "/play/oido/dictado": { cerrados: ["cinco"] },
 };
 

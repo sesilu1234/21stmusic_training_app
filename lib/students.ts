@@ -34,6 +34,16 @@ export interface Student {
   isActive: boolean;
   createdAt: string;
   role: StudentRole;
+  /**
+   * Cuándo entró por última vez, o null si no ha entrado nunca.
+   *
+   * Es el único dato de la app que no se puede deducir de `game_attempts`:
+   * entrar sin jugar no deja partida. Sin esto, el alumno que no sabe usar su
+   * contraseña y el que entra y no practica se ven exactamente igual.
+   */
+  lastLoginAt: string | null;
+  firstLoginAt: string | null;
+  loginCount: number;
 }
 
 interface StudentRow {
@@ -43,6 +53,9 @@ interface StudentRow {
   is_active: boolean;
   created_at: string;
   role: string | null;
+  last_login_at?: string | null;
+  first_login_at?: string | null;
+  login_count?: number | null;
 }
 
 const toStudent = (row: StudentRow): Student => ({
@@ -52,51 +65,112 @@ const toStudent = (row: StudentRow): Student => ({
   isActive: row.is_active,
   createdAt: row.created_at,
   role: toRole(row.role),
+  // `?? null` y no `!`: estas tres columnas pueden no estar todavía (ver
+  // OPTIONAL_GROUPS), y entonces la fila llega sin ellas.
+  lastLoginAt: row.last_login_at ?? null,
+  firstLoginAt: row.first_login_at ?? null,
+  loginCount: row.login_count ?? 0,
 });
 
 const BASE_COLUMNS = "email, display_name, username, is_active, created_at";
 
 /**
- * Si la columna `role` está o no. Empieza suponiendo que sí.
+ * Columnas que puede ser que la base de datos todavía no tenga.
  *
- * `db/roles.sql` la añade, pero las migraciones se pasan a mano y no tienen por
- * qué caer a la vez que el despliegue. Sin esto, en la ventana entre subir el
- * código y ejecutar el SQL, PostgREST rechazaría TODAS las consultas de alumnos
- * por pedir una columna que no existe — y como `currentStudent` trata un fallo
- * de consulta como "no hay sesión", la escuela entera aparecería sin haber
- * entrado. Un panel que no se ve es un problema; que nadie pueda usar la app es
- * otro.
+ * Las migraciones de este proyecto se pasan a mano en el editor SQL de
+ * Supabase, así que no caen necesariamente a la vez que el despliegue. Sin esta
+ * red, en la ventana entre subir el código y ejecutar el SQL, PostgREST
+ * rechazaría TODAS las consultas de alumnos por pedir una columna que no
+ * existe — y como `currentStudent` trata un fallo de consulta como "no hay
+ * sesión", la escuela entera aparecería sin haber entrado. Un panel que no se
+ * ve es un problema; que nadie pueda usar la app es otro.
  *
- * Se apaga sola en el primer 42703 (`undefined_column`) y ya no se vuelve a
- * pedir mientras dure el proceso. Al ejecutar la migración y reiniciar, vuelve
- * a arrancar en true y se queda.
+ * Van por grupos y no en una lista sola para que la falta de una no apague las
+ * otras: quien ya pasó `roles.sql` pero no `last_login.sql` sigue viendo los
+ * roles.
  */
-let hasRoleColumn = true;
+const OPTIONAL_GROUPS = {
+  role: { columns: ["role"], sql: "db/roles.sql" },
+  login: {
+    columns: ["last_login_at", "first_login_at", "login_count"],
+    sql: "db/last_login.sql",
+  },
+} as const;
+
+type OptionalGroup = keyof typeof OPTIONAL_GROUPS;
+
+/**
+ * Qué grupos se piden. Empieza suponiendo que están todos.
+ *
+ * Un grupo se apaga solo en el primer 42703 (`undefined_column`) que mencione
+ * alguna de sus columnas, y ya no se vuelve a pedir mientras dure el proceso.
+ * Al ejecutar la migración y reiniciar, vuelve a arrancar en true y se queda.
+ */
+const enabled: Record<OptionalGroup, boolean> = { role: true, login: true };
 
 const UNDEFINED_COLUMN = "42703";
 
-const columns = () => (hasRoleColumn ? `${BASE_COLUMNS}, role` : BASE_COLUMNS);
+const columns = () =>
+  [
+    BASE_COLUMNS,
+    ...(Object.keys(OPTIONAL_GROUPS) as OptionalGroup[])
+      .filter((group) => enabled[group])
+      .flatMap((group) => OPTIONAL_GROUPS[group].columns),
+  ].join(", ");
 
 /**
- * Lanza la consulta y, si se queja de que `role` no existe, la repite sin ella.
+ * El grupo al que culpa un error de columna inexistente.
+ *
+ * PostgREST dice cuál falta en el texto ("column students.login_count does not
+ * exist"), así que se busca ahí. Si no se reconoce ninguna —otra versión de
+ * PostgREST, otro texto—, se apaga el primer grupo que siga encendido: es
+ * preferible perder un dato de adorno a dejar la app sin poder leer alumnos.
+ */
+const groupToBlame = (message: string): OptionalGroup | null => {
+  const groups = (Object.keys(OPTIONAL_GROUPS) as OptionalGroup[]).filter(
+    (group) => enabled[group],
+  );
+  return (
+    groups.find((group) =>
+      OPTIONAL_GROUPS[group].columns.some((column) => message.includes(column)),
+    ) ??
+    groups[0] ??
+    null
+  );
+};
+
+/**
+ * Lanza la consulta y, si se queja de una columna que no existe, apaga el grupo
+ * al que pertenece y la repite sin ella.
  *
  * Recibe una función y no una consulta ya hecha porque las de Supabase no se
  * pueden volver a ejecutar: hay que construir otra desde cero para reintentar.
+ *
+ * Se reintenta como mucho una vez por grupo opcional, así que en el peor caso
+ * acaba consultando solo las columnas de siempre.
  */
-const withRoleFallback = async <T>(
+const withOptionalColumns = async <T>(
   run: (
     cols: string,
   ) => PromiseLike<{ data: T | null; error: { code?: string; message: string } | null }>,
 ) => {
-  const first = await run(columns());
-  if (!first.error || first.error.code !== UNDEFINED_COLUMN || !hasRoleColumn) return first;
+  let result = await run(columns());
 
-  console.warn(
-    "[alumnos] la columna `role` no existe todavía: ejecuta db/roles.sql. " +
-      "Mientras tanto todo el mundo cuenta como alumno.",
-  );
-  hasRoleColumn = false;
-  return run(columns());
+  for (let attempt = 0; attempt < Object.keys(OPTIONAL_GROUPS).length; attempt++) {
+    if (!result.error || result.error.code !== UNDEFINED_COLUMN) return result;
+
+    const group = groupToBlame(result.error.message);
+    if (!group) return result;
+
+    console.warn(
+      `[alumnos] faltan columnas en la base de datos: ejecuta ${OPTIONAL_GROUPS[group].sql}. ` +
+        "Mientras tanto se consulta sin ellas.",
+    );
+    enabled[group] = false;
+    result = await run(columns());
+  }
+
+  return result;
 };
 
 /**
@@ -118,7 +192,7 @@ export const searchStudents = async (query: unknown): Promise<Student[]> => {
   // devolvería la lista entera.
   const safe = clean.replace(/[\%_]/g, (match) => `\${match}`);
 
-  const { data, error } = await withRoleFallback<StudentRow[]>((cols) =>
+  const { data, error } = await withOptionalColumns<StudentRow[]>((cols) =>
     getSupabaseAdmin()
       .from("students")
       .select(cols)
@@ -143,7 +217,7 @@ export const getStudentAnyStatus = async (email: unknown): Promise<Student | nul
   const cleanEmail = normalizeEmail(email);
   if (!cleanEmail) return null;
 
-  const { data } = await withRoleFallback<StudentRow>((cols) =>
+  const { data } = await withOptionalColumns<StudentRow>((cols) =>
     getSupabaseAdmin()
       .from("students")
       .select(cols)
@@ -159,7 +233,7 @@ export const getStudent = async (email: unknown): Promise<Student | null> => {
   const cleanEmail = normalizeEmail(email);
   if (!cleanEmail) return null;
 
-  const { data, error } = await withRoleFallback<StudentRow>((cols) =>
+  const { data, error } = await withOptionalColumns<StudentRow>((cols) =>
     getSupabaseAdmin()
       .from("students")
       .select(cols)
@@ -183,7 +257,7 @@ export const getStudentForLogin = async (username: unknown) => {
 
   // Con más razón que las demás: si esta se cayera por la columna que falta,
   // nadie podría entrar en la app.
-  const { data } = await withRoleFallback<StudentRow & { password: string | null }>((cols) =>
+  const { data } = await withOptionalColumns<StudentRow & { password: string | null }>((cols) =>
     getSupabaseAdmin()
       .from("students")
       .select(`${cols}, password`)
@@ -194,4 +268,29 @@ export const getStudentForLogin = async (username: unknown) => {
 
   if (!data) return null;
   return { ...toStudent(data), password: data.password };
+};
+
+/**
+ * Apunta que este alumno acaba de entrar.
+ *
+ * No devuelve promesa a propósito: quien la llama NO debe esperarla. Es una
+ * estadística, y una estadística no puede retrasar el login ni impedirlo si
+ * Supabase está lento o la migración no se ha pasado. Se lanza y se olvida.
+ *
+ * Va por función de Postgres (`record_login`, en db/last_login.sql) porque los
+ * tres campos no son valores sino expresiones: la primera entrada solo se
+ * escribe si estaba vacía y el contador se incrementa sobre sí mismo. Hacerlo
+ * con un select + update desde aquí serían dos viajes, y dos entradas a la vez
+ * podrían pisarse el contador.
+ */
+export const touchLogin = (email: unknown): void => {
+  const cleanEmail = normalizeEmail(email);
+  if (!cleanEmail) return;
+
+  void getSupabaseAdmin()
+    .rpc("record_login", { p_email: cleanEmail })
+    .then(({ error }: { error: { message: string } | null }) => {
+      // Se avisa pero no se levanta: lo normal es que falte pasar la migración.
+      if (error) console.warn("[alumnos] no se ha apuntado la entrada:", error.message);
+    });
 };

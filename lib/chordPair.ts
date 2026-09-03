@@ -10,13 +10,47 @@
 // calidad) y no una lista de acordes en orden, que es lo único que sabe hacer
 // el motor de allí.
 
-/** Todo lo que el menú de niveles necesita saber de este nivel. */
-export const PAIR_LEVEL = {
-  slug: "dos-acordes",
-  title: "Dos acordes seguidos",
-  desc: "Te decimos el primero. Suenan los dos y dices qué distancia hay y qué tipo es el segundo.",
-  badge: "Nivel 6",
-};
+export interface PairLevel {
+  slug: string;
+  title: string;
+  desc: string;
+  badge: string;
+  /**
+   * Si el primer acorde puede ser menor además de mayor.
+   *
+   * En el nivel 6 el primero es siempre mayor: es el ancla de la pregunta, y
+   * con él fijo solo hay que sacar dos cosas de oído (cuánto sube y de qué tipo
+   * es el segundo). En el 7 también varía, y entonces la referencia deja de ser
+   * un color conocido — hay que medir el salto contra un acorde que además
+   * tienes que reconocer. Es bastante más duro, y por eso es un nivel aparte y
+   * no una vuelta de tuerca metida en el 6.
+   */
+  firstVariable: boolean;
+}
+
+/** Los dos niveles de "dos acordes", en orden. */
+export const PAIR_LEVELS: PairLevel[] = [
+  {
+    slug: "dos-acordes",
+    title: "Dos acordes seguidos",
+    desc: "Te decimos el primero, que siempre es mayor. Suenan los dos y dices qué distancia hay y qué tipo es el segundo.",
+    badge: "Nivel 6",
+    firstVariable: false,
+  },
+  {
+    slug: "dos-acordes-variable",
+    title: "Dos acordes, el primero también",
+    desc: "Igual que el anterior, pero el primero puede ser mayor o menor. Se te dice cuál es: lo que cambia es que ya no puedes darlo por sabido de oído.",
+    badge: "Nivel 7",
+    firstVariable: true,
+  },
+];
+
+export const findPairLevel = (slug: string) =>
+  PAIR_LEVELS.find((level) => level.slug === slug);
+
+/** El de siempre. Se mantiene el nombre porque hay sitios que lo usan suelto. */
+export const PAIR_LEVEL = PAIR_LEVELS[0];
 
 export interface PairDistance {
   id: string;
@@ -56,14 +90,13 @@ export const PAIR_QUALITIES: PairQuality[] = [
   { id: "m", label: "Menor", shape: [0, 3, 7] },
 ];
 
-/** El primero siempre es mayor, y se dice cuál es: es el ancla de la pregunta. */
-const FIRST_SHAPE = [0, 4, 7];
-
 export interface PairQuestion {
   /** Fundamental del primer acorde, en semitonos (0 = Do central). */
   root: number;
   distanceId: string;
   qualityId: string;
+  /** Tipo del primer acorde. En el nivel 6 siempre "M". */
+  firstQualityId: string;
 }
 
 export const findDistance = (id: string) =>
@@ -76,7 +109,7 @@ export const findQuality = (id: string) =>
 export const pairChords = (question: PairQuestion): number[][] => {
   const second = question.root + findDistance(question.distanceId).semitones;
   return [
-    FIRST_SHAPE.map((s) => question.root + s),
+    findQuality(question.firstQualityId).shape.map((s) => question.root + s),
     findQuality(question.qualityId).shape.map((s) => second + s),
   ];
 };
@@ -87,11 +120,21 @@ const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
  * Fundamental del primero. Se mueve por toda la octava para que no se aprenda
  * por altura, pero centrada: con el segundo acorde una 8ª por encima ya se sube
  * bastante.
+ *
+ * Iba de -5 a +6 semitonos respecto al Do central. Ahí el primer acorde caía
+ * en la misma zona que el segundo y su fundamental quedaba enterrada entre las
+ * notas de arriba, que es lo que hacía difícil medir el salto: la referencia
+ * hay que oírla, no adivinarla. Bajando el rango una quinta el primero se
+ * asienta debajo y se distingue del segundo por registro, no solo por orden.
  */
-const randomRoot = () => Math.floor(Math.random() * 12) - 5;
+const randomRoot = () => Math.floor(Math.random() * 12) - 12;
 
 /** Preguntas de una ronda, sin repetir la misma distancia dos veces seguidas. */
-export const buildPairQuiz = (count: number): PairQuestion[] => {
+export const buildPairQuiz = (
+  count: number,
+  /** Si el primer acorde puede salir menor. Lo dice el nivel. */
+  firstVariable = false,
+): PairQuestion[] => {
   const questions: PairQuestion[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -108,6 +151,7 @@ export const buildPairQuiz = (count: number): PairQuestion[] => {
       root: randomRoot(),
       distanceId: distance.id,
       qualityId: pick(PAIR_QUALITIES).id,
+      firstQualityId: firstVariable ? pick(PAIR_QUALITIES).id : "M",
     });
   }
 

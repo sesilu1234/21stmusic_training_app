@@ -32,11 +32,9 @@ Quizas, pero ya cuando esté hecho todo esto : al principio, de alguna manera po
 
 
 
-Que el papa se haga 1000 preguntas y nos las pase en csv. Y por topicos
 
-Poner muchas preguntas mas en trivial. muchas que sean no de grupos sino de instrumentos y musica  (cosas de clasica no mucho , pero cosas de pastillas, potenciometros, partes de guitarra, cuerdas de piano, tipos deintrumnentos, registros, orquesta, puas, amplificadores, valvulas, tecnologia ...)
 
-La guia hay que mejorarla mucho, pero MUCHO jajaja (aunque esteticamente y UI esta perfect)
+Mas preguntas en trivial
 
 En acordes o progresiones , algun acorde menor septima , o algun acorde mas
 
@@ -48,28 +46,21 @@ Al pricnipio la primera que suena no aparece color a la vez que sonido...--
 
 Que hayan logros, hacer ejercicios con cada instrumento, aunque no se..meh...da igual posilemente
 
+Mejorar sonido de guitarra
 
 
 
 
+- ver si me falta algo de seguridad y preguntar a IA, RLS, keys ,....
 
 
-- ver descripciones y textos, comprobar 
-- ver y examinar cada uno de los modos de juego y rutas  (privacidad, about, etc...) y ver si cambiarles algo, o añadir, o modificar algo  ?
-- lol, esto va en serio , alguna vez pulso un boton, lo pulso bien, y dice que es erroneo pero la solucion es la que habia pinchado yo jaja , wtf
-- escuhcar con casoscos a ver si acordes suenan realemnte bien o el bajo hayq uque subirl, y que volumen y sonidos están bien. poner un sonido g"gloo" al darle al avatar jaja.
+- hacer ggogle cloud console
 
-
-
-
-
-- añadir el sitemap , info de rutas o headers para bots , para que se encuentre facil la web. y mas cositas como google analytics
-
+ - La guia hay que mejorarla mucho, pero MUCHO jajaja (aunque esteticamente y UI esta perfect)
 
 - ver base de datos a ver que hay , por saber. y dar acceso a papa para contraseñas.
   
 
-- poner un last_login de usuario o que ? repreguntar a claude
 
 
 

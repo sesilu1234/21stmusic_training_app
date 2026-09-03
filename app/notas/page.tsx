@@ -1,10 +1,13 @@
+import type { Metadata } from "next";
 import AppShell from "../components/AppShell";
+import { PRIVADO } from "@/lib/seo";
 import StudentsOnlyGate from "../components/StudentsOnlyGate";
 import NotesBoard from "./NotesBoard";
 import { currentStudent } from "@/lib/session";
 import { listNotes } from "@/lib/notes";
 
-export const metadata = { title: "Notas · 21st Century Music" };
+// Apuntes personales del alumno. Fuera de los buscadores, obviamente.
+export const metadata: Metadata = { title: "Notas", robots: PRIVADO };
 
 // Las notas cambian en cuanto escribes una, así que no se cachea.
 export const dynamic = "force-dynamic";

@@ -5,6 +5,8 @@ import { ROUND_LENGTH } from "@/lib/roundLength";
 import { diapason_data } from "./diapason_data";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
+import { useAbandono } from "@/app/components/useAbandono";
+import Backdrop from "@/app/components/Backdrop";
 
 export default function DiapasonGame() {
 
@@ -36,6 +38,10 @@ export default function DiapasonGame() {
   );
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [gameOver, setGameOver] = useState(false);
+
+  // Si se va a media partida, queda apuntada como abandonada. Lo que ve el
+  // alumno no cambia: esto no pinta nada.
+  useAbandono(results, gameOver);
   const [isReviewing, setIsReviewing] = useState(false);
   const [showFeedback, setShowFeedback] = useState<null | "correct" | "wrong">(
     null,
@@ -104,7 +110,10 @@ export default function DiapasonGame() {
     newAnswers[step] = nota;
     setUserAnswers(newAnswers);
 
-    const delay = isCorrect ? 250 : 600;
+    // Acertando se pasa rapido, que no hay nada que mirar. Fallando hay que
+    // dar tiempo a ver cual era la buena: es el unico momento en el que se
+    // aprende algo.
+    const delay = isCorrect ? 700 : 1600;
 
     setTimeout(() => {
       setShowFeedback(null);
@@ -131,11 +140,14 @@ export default function DiapasonGame() {
     }
   };
 
+  /** Lo contestado en esta pregunta, o null si todavia esta en juego. */
+  const answeredHere = userAnswers[step];
+
   return (
-    <div
-      className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center overflow-x-hidden font-sans"
-      style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-    >
+    <div className="relative min-h-screen flex flex-col overflow-x-hidden font-sans text-white">
+      <Backdrop />
+
+      <div className="relative z-10 min-h-screen flex flex-col">
       <GameChrome>
         ¿<span className="uppercase">Q</span>ué{" "}
         <span className="text-black mx-1 md:mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
@@ -195,20 +207,37 @@ export default function DiapasonGame() {
           </div>
         </div>
 
+        {/* La rejilla entera se apagaba al contestar, asi que la correccion no
+            se veia: se atenuaba justo el sitio donde habia que mirar. Ahora se
+            queda encendida y sin clicks, y son los botones los que dicen lo que
+            ha pasado — verde el bueno, rojo el pulsado si estaba mal. */}
         <div
-          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-opacity duration-150 ${userAnswers[step] !== null || showFeedback ? "opacity-40 pointer-events-none" : "opacity-100"}`}
+          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-opacity duration-150 ${answeredHere !== null ? "pointer-events-none" : ""}`}
         >
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4">
-            {botonesNotas.map((nota) => (
-              <button
-                key={nota}
-                disabled={userAnswers[step] !== null || !!showFeedback}
-                onClick={() => handleAnswer(nota)}
-                className="py-3 md:py-5 rounded-lg md:rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black transition-all active:scale-90 flex items-center justify-center"
-              >
-                <span className="text-xs md:text-sm font-bold">{nota}</span>
-              </button>
-            ))}
+            {botonesNotas.map((nota) => {
+              const isSolution = nota === currentQuestion.answer;
+              const isMistake = nota === answeredHere && !isSolution;
+
+              return (
+                <button
+                  key={nota}
+                  disabled={answeredHere !== null || !!showFeedback}
+                  onClick={() => handleAnswer(nota)}
+                  className={`py-3 md:py-5 rounded-lg md:rounded-xl border transition-all active:scale-90 flex items-center justify-center ${
+                    answeredHere === null
+                      ? "border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black"
+                      : isSolution
+                        ? "border-green-400 bg-green-500/80 text-white"
+                        : isMistake
+                          ? "border-red-400 bg-red-500/80 text-white"
+                          : "border-white/5 bg-white/5 text-white/20"
+                  }`}
+                >
+                  <span className="text-xs md:text-sm font-bold">{nota}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -263,6 +292,7 @@ export default function DiapasonGame() {
       {gameOver && (
         <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
+      </div>
     </div>
   );
 }

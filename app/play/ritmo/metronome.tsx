@@ -1,5 +1,5 @@
 // metronome.ts
-import { createAudioContext } from "@/lib/audioContext";
+import { createAudioContext, outputNode } from "@/lib/audioContext";
 
 let audioCtx: AudioContext | null = null;
 
@@ -24,7 +24,7 @@ export function createMetronome(bpm: number) {
     const gain = ctx.createGain();
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(outputNode(ctx));
 
     osc.frequency.value = 800;
 

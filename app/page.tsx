@@ -117,7 +117,28 @@ const GameCard = ({
           <span className="flex-shrink-0 text-[9px] font-black tracking-wider text-white/40">
             {stat.mastery}%
           </span>
-          {stat.hasMedal && <Medal size={12} className="flex-shrink-0 text-amber-300" />}
+          {/* Cuántos niveles del modo llevas clavados del todo (pleno en
+              partida larga). Es un contador y no un icono suelto porque una
+              medalla no se pierde: si mañana el modo estrena un nivel, lo que ya
+              está ganado sigue ganado y solo hay uno más al que llegar.
+
+              Cuando están todas, el chip se enciende: el modo rematado merece
+              notarse, que es lo único bueno que tenía la medalla de sí o no. */}
+          {stat.medals > 0 && (
+          <span
+  className={`flex flex-shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none tabular-nums ${
+    stat.hasMedal
+      ? "bg-amber-400/20 text-amber-200"
+      : "text-amber-300/60"
+  }`}
+  title={`${stat.medals} de ${stat.medalsTotal} ${
+    stat.medalsTotal === 1 ? "nivel clavado" : "niveles clavados"
+  }`}
+>
+  <span className="leading-none pt-[2px]">{stat.medals}</span>
+  <Medal size={11} className="shrink-0" />
+</span>
+          )}
         </span>
       )}
 

@@ -1,10 +1,17 @@
+import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/seo";
 import Link from "next/link";
 import { SITE } from "@/lib/site";
 import Backdrop from "../components/Backdrop";
 import { pixelFontVariables } from "../fonts";
 import ContactForm from "./ContactForm";
 
-export const metadata = { title: "Contacto · 21st Century Music" };
+export const metadata: Metadata = {
+  title: "Contacto",
+  description:
+    "Escribe a la escuela 21st Century Music: dudas sobre la app, fallos que hayas visto o ideas para nuevos ejercicios.",
+  alternates: { canonical: `${SITE_URL}/contact` },
+};
 
 const PIXEL = { fontFamily: "var(--font-pixel), monospace" };
 

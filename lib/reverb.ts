@@ -1,5 +1,7 @@
 "use client";
 
+import { outputNode } from "./audioContext";
+
 /**
  * Reverb.
  *
@@ -95,7 +97,7 @@ export const getReverbSend = (ctx: AudioContext, seconds: number): GainNode => {
 
   send.connect(convolver);
   convolver.connect(cut);
-  cut.connect(ctx.destination);
+  cut.connect(outputNode(ctx));
 
   byLength.set(seconds, send);
   return send;

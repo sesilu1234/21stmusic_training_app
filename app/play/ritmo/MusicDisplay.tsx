@@ -117,9 +117,60 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
     const w = typeof window !== "undefined" ? window.innerWidth : 0;
 
-    const translatedRef = useRef(
-      w < 710 ? 30 : w < 1070 ? 100 : w < 1400 ? 250 : 470,
-    );
+    /**
+     * Ancho util para dibujar: el de la caja blanca de la partitura, no el de
+     * la ventana.
+     *
+     * El canvas se dimensionaba a `window.innerWidth`, pero su contenedor es
+     * mas estrecho (`max-w-[95%]`) y ademas va centrado, asi que recortaba lo
+     * que sobraba por los dos lados a la vez. En una pantalla grande esos pocos
+     * pixeles no se notan; en un movil se comen un trozo de los dos extremos
+     * justo cuando ya no sobra sitio, y por eso las notas no se veian bien.
+     *
+     * Se mide `[data-score-frame]` y no `canvas.parentElement` a proposito. El
+     * padre directo es un `div` sin ancho propio dentro de una cadena de flex:
+     * lo que mida depende de la caja de fuera, y midiendolo a el el canvas se
+     * quedaba sin ancho y la partitura salia en blanco. La caja marcada tiene
+     * su ancho puesto por CSS (`w-full max-w-[95%]`), que no puede depender de
+     * lo que haya dentro, asi que la medida ni se cae a cero ni se realimenta.
+     */
+    const viewWidth = () => {
+      const canvas = canvasRef.current;
+      const frame = canvas?.closest("[data-score-frame]") ?? canvas?.parentElement;
+      const measured = frame?.clientWidth ?? 0;
+      // Por debajo de esto no hay partitura que valga: si la medida sale rara
+      // (aun sin maquetar, contenedor oculto) es mejor la ventana que un canvas
+      // en blanco.
+      if (measured >= 120) return measured;
+      return typeof window !== "undefined" ? window.innerWidth : 0;
+    };
+
+    /**
+     * Donde se planta el cursor verde, contando desde la izquierda del canvas.
+     *
+     * En pantallas grandes se pone bien adentro para que se vea lo que ya has
+     * tocado. En el movil eso es un lujo que no cabe: lo que hace falta ahi es
+     * ver las figuras que vienen con tiempo de reaccionar, y cada pixel a la
+     * izquierda del cursor es un pixel que se le quita a eso. Asi que en movil
+     * el cursor se va al principio del pentagrama y la pantalla entera queda
+     * para lo que esta por llegar.
+     *
+     * El tope del 45% es lo que impedia el fallo gordo que tenia esto: el valor
+     * se calculaba UNA vez, al montar, y no se volvia a mirar. Si abrias la
+     * pagina con la ventana ancha te tocaba 470, y si luego la estrechabas —
+     * abrir las DevTools acopladas al lado ya vale — el cursor se quedaba en
+     * 470 dentro de un canvas de 458: TODO se dibujaba pasado el borde derecho
+     * y la partitura desaparecia entera. Caja blanca y vacia, sin ningun error
+     * por ningun lado. Ahora se recalcula en cada `resize` y ademas no puede
+     * pasar de la mitad del ancho, asi que quede como quede siempre hay
+     * partitura a la vista.
+     */
+    const cursorOffsetFor = (width: number) => {
+      const wanted = width < 710 ? 8 : width < 1070 ? 100 : width < 1400 ? 250 : 470;
+      return Math.max(8, Math.min(wanted, width * 0.45));
+    };
+
+    const translatedRef = useRef(cursorOffsetFor(w));
 
     // Métricas de grabado, en proporción al cuerpo de la fuente.
     // En SMuFL un espacio de pentagrama es 1/4 del em.
@@ -477,7 +528,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           scrollX.current = LENGTH_LINE[LENGTH_LINE.length - 1];
 
           cancelAnimationFrame(requestRef.current);
-          draw(ctx, scrollX.current, window.innerWidth);
+          draw(ctx, scrollX.current, viewWidth());
           metronomeRef.current?.stop();
           setShowReset(false);
           setShowDrag(true);
@@ -536,7 +587,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         scrollXBase.current +
         speedRef.current * (timecurrent - timeBase.current);
 
-      draw(ctx, scrollX.current, window.innerWidth);
+      draw(ctx, scrollX.current, viewWidth());
 
       requestRef.current = requestAnimationFrame(animate);
     };
@@ -598,7 +649,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       handleMeasuresChange: () => {
         initGame();
         const ctx = ctxCanvasRef.current;
-        if (ctx) draw(ctx, 0, window.innerWidth);
+        if (ctx) draw(ctx, 0, viewWidth());
       },
     }));
 
@@ -629,19 +680,37 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       ctxCanvasRef.current = ctx;
 
       const resize = () => {
-        canvas.width = window.innerWidth * dpr;
+        const width = viewWidth();
+        // Antes que nada: el cursor se recoloca para el ancho que hay ahora. Si
+        // esto no se hace aqui, un cambio de tamano puede dejarlo fuera del
+        // canvas y no se dibuja nada (ver `cursorOffsetFor`).
+        translatedRef.current = cursorOffsetFor(width);
+        canvas.width = width * dpr;
         canvas.height = HEIGHT * dpr;
-        canvas.style.width = `${window.innerWidth}px`;
+        canvas.style.width = `${width}px`;
         canvas.style.height = `${HEIGHT}px`;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        draw(ctx, 0, window.innerWidth);
+        draw(ctx, 0, width);
       };
 
       window.addEventListener("resize", resize);
+
+      // Ahora el canvas se mide por su contenedor, y ese puede cambiar de ancho
+      // sin que cambie el de la ventana: girar el movil, la barra del navegador
+      // que se recoge, el teclado que sube. Con solo el `resize` de la ventana
+      // el canvas se quedaba con el ancho viejo y volvia a recortarse.
+      const frame = canvas.closest("[data-score-frame]") ?? canvas.parentElement;
+      const observer =
+        typeof ResizeObserver === "undefined"
+          ? null
+          : new ResizeObserver(() => resize());
+      if (observer && frame) observer.observe(frame);
+
       resize();
 
       return () => {
         window.removeEventListener("resize", resize);
+        observer?.disconnect();
         cancelAnimationFrame(requestRef.current);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -664,7 +733,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         if (scrollX.current < 0) scrollX.current = 0;
 
         const ctx = canvas.getContext("2d");
-        if (ctx) draw(ctx, scrollX.current, window.innerWidth);
+        if (ctx) draw(ctx, scrollX.current, viewWidth());
       };
 
       const onPointerDown = (e: PointerEvent) => {
@@ -712,15 +781,15 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       setBeat?.(1);
 
       const ctx = ctxCanvasRef.current;
-      if (ctx) draw(ctx, 0, window.innerWidth);
+      if (ctx) draw(ctx, 0, viewWidth());
 
       setShowReset(false);
     };
 
     return (
-      <div style={{ background: "transparent", width: "100%" }}>
+      <div className="w-full min-w-0" style={{ background: "transparent" }}>
         {!fontLoaded ? null : (
-          <div className="relative group">
+          <div className="relative group w-full min-w-0">
             <canvas
               ref={canvasRef}
               className="cursor-pointer"

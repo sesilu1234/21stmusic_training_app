@@ -48,3 +48,43 @@ export const createAudioContext = (): AudioContext => {
 
   return new Ctor();
 };
+
+/**
+ * Cuánto se baja todo lo que suena en la app, sobre la salida final.
+ *
+ * La app se había montado sin ningún punto común de volumen: cada timbre ponía
+ * su ganancia a mano y se conectaba directo a la salida, así que "sonaba alto"
+ * no era una cosa que se pudiera tocar en un sitio. Con el sistema al 40 ya
+ * estaba fuerte y al 80 hacía daño, que es señal de que el margen que se le
+ * dejaba al usuario estaba mal repartido: el volumen del aparato debería poder
+ * recorrer todo su viaje sin llegar a molestar.
+ *
+ * -10.5 dB. El primer intento se quedó en -6 y seguía sonando fuerte, así que
+ * baja otro tanto. Con esto el recorrido del volumen del aparato vuelve a ser
+ * util entero: al 40 se oye cómodo y al 80 sigue sin molestar.
+ */
+const OUTPUT_LEVEL = 0.3;
+
+/**
+ * Un nodo maestro por contexto, creado la primera vez que se pide. Va en un
+ * `WeakMap` y no en una variable suelta porque hay más de un `AudioContext` en
+ * la app (cada modo monta el suyo) y cada uno necesita el propio: un nodo
+ * pertenece al contexto que lo creó y conectarlo a otro es un error.
+ */
+const masters = new WeakMap<AudioContext, GainNode>();
+
+/**
+ * La salida de la app. Todo lo que suene tiene que conectarse aquí y no a
+ * `ctx.destination` directamente: es el único sitio por el que pasa el audio
+ * entero, y por tanto el único donde se puede ajustar el nivel general.
+ */
+export const outputNode = (ctx: AudioContext): GainNode => {
+  const existing = masters.get(ctx);
+  if (existing) return existing;
+
+  const master = ctx.createGain();
+  master.gain.value = OUTPUT_LEVEL;
+  master.connect(ctx.destination);
+  masters.set(ctx, master);
+  return master;
+};

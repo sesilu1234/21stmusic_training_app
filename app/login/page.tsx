@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { PRIVADO } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { currentStudent } from "@/lib/session";
@@ -19,7 +21,9 @@ const errorMessage = (error?: string) => {
 const safeNext = (value?: string) =>
   value && value.startsWith("/") && !value.startsWith("//") ? value : "/";
 
-export const metadata = { title: "Acceso · 21st Century Music" };
+// Una pantalla de acceso no le sirve de nada a quien llega de un buscador, y
+// las altas se dan en la academia: no hay nada que encontrar aquí.
+export const metadata: Metadata = { title: "Acceso", robots: PRIVADO };
 
 export default async function LoginPage({
   searchParams,

@@ -5,7 +5,9 @@ import { ROUND_LENGTH } from "@/lib/roundLength";
 import { modes_images } from "./modes_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
+import { useAbandono } from "@/app/components/useAbandono";
 import LoadingBars from "@/app/components/LoadingBars";
+import Backdrop from "@/app/components/Backdrop";
 
 export default function ChordsGame() {
 
@@ -52,6 +54,10 @@ export default function ChordsGame() {
   );
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [gameOver, setGameOver] = useState(false);
+
+  // Si se va a media partida, queda apuntada como abandonada. Lo que ve el
+  // alumno no cambia: esto no pinta nada.
+  useAbandono(results, gameOver);
   const [isReviewing, setIsReviewing] = useState(false);
   const [showFeedback, setShowFeedback] = useState<null | "correct" | "wrong">(
     null,
@@ -166,10 +172,10 @@ export default function ChordsGame() {
   const getSolucionTexto = () => reverseMapping[currentQuestion.answer] || "";
 
   return (
-    <div
-      className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans overflow-x-hidden"
-      style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-    >
+    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+      <Backdrop />
+
+      <div className="relative z-10 min-h-screen flex flex-col">
       <GameChrome>
         ¿Qué{" "}
         <span className="text-black mx-1 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
@@ -183,8 +189,16 @@ export default function ChordsGame() {
 
         {/* CARTA DE PREGUNTA */}
         <div className="relative flex flex-col items-center w-full max-w-xl md:max-w-3xl mb-10">
+          {/* Alto fijo a propósito, en los dos tamaños. Era `md:h-full`, que
+              dentro de este flex sin altura de referencia significa "lo que
+              mida la imagen": al pasar de pregunta la nueva imagen todavía no
+              ha cargado, la caja se quedaba sin contenido y colapsaba, y toda
+              la página daba un salto con los botones de respuesta debajo. Las
+              partituras de los modos van de 2.7:1 a 5.7:1 de proporción, así
+              que tampoco vale un `aspect-ratio`: sería la misma caja bailando
+              de tamaño. Caja fija y `object-contain` dentro. */}
           <div
-            className={`bg-white p-2 md:p-2  rounded-[1.5rem] md:rounded-[2rem] shadow-2xl w-full h-44 md:h-full flex items-center justify-center border-4 relative overflow-hidden transition-all duration-300 ${
+            className={`bg-white p-2 md:p-2  rounded-[1.5rem] md:rounded-[2rem] shadow-2xl w-full h-44 md:h-64 flex items-center justify-center border-4 relative overflow-hidden transition-all duration-300 ${
               showFeedback === "correct"
                 ? "border-green-500 scale-[1.02]"
                 : showFeedback === "wrong"
@@ -331,6 +345,7 @@ export default function ChordsGame() {
       {gameOver && (
         <GameOverModal correct={results.filter((r) => r === "correct").length} total={results.length} />
       )}
+      </div>
     </div>
   );
 }

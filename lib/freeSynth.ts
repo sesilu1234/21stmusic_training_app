@@ -2,7 +2,7 @@
 
 import { useCallback, useRef } from "react";
 
-import { createAudioContext } from "./audioContext";
+import { createAudioContext, outputNode } from "./audioContext";
 import { playPluckedString, type PluckParams } from "./pluckedString";
 import { connectReverb, type ReverbParams } from "./reverb";
 
@@ -322,7 +322,7 @@ const spawn = (
   }
 
   tail.connect(master);
-  master.connect(ctx.destination);
+  master.connect(outputNode(ctx));
   // Se pincha detrás de la envolvente, que es lo que oye la sala.
   if (voice.reverb) connectReverb(ctx, master, voice.reverb);
 
@@ -423,7 +423,7 @@ const tick = (ctx: AudioContext, accent: boolean) => {
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
 
   osc.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(outputNode(ctx));
   osc.start(now);
   osc.stop(now + 0.06);
 };

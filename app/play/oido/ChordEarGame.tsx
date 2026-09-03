@@ -296,7 +296,7 @@ export default function ChordEarGame({
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[960px] flex-col px-4 pb-5 pt-16 md:px-8 md:pb-7 md:pt-20">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[960px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         {/* Cabecera compacta: baja lo suficiente para quedar unida al bloque del juego. */}
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
@@ -318,6 +318,15 @@ export default function ChordEarGame({
             <p className="mt-1 truncate text-[9px] font-black uppercase tracking-[0.28em] text-white/35">
               {level.badge} · {level.title}
             </p>
+            {/* Solo los niveles que lo piden. En inversiones el enunciado se
+                entendía como "¿qué acorde es?" y el alumno se quedaba buscando
+                mayor o menor, que aquí precisamente da igual: suena de las dos
+                maneras a propósito para que no se pueda responder por ahí. */}
+            {level.hint && (
+              <p className="mt-1.5 text-balance text-[10px] font-medium normal-case leading-snug tracking-normal text-white/40">
+                {level.hint}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">

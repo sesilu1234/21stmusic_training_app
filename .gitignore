@@ -41,3 +41,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Este proyecto usa pnpm. Un package-lock.json solo sirve para que alguien
+# instale con npm y el despliegue se rompa.
+package-lock.json

@@ -44,6 +44,13 @@ export interface ChordLevel {
    * colocado.
    */
   heading?: { lead: string; word: string; tail: string };
+  /**
+   * Una linea corta debajo del titulo, dentro del juego. Solo la llevan los
+   * niveles cuyo enunciado se puede entender mal, y dice lo que hay que
+   * escuchar. La `desc` no sirve para esto: esa se lee en el menu, antes de
+   * entrar, y para cuando suena el primer acorde ya se ha olvidado.
+   */
+  hint?: string;
   options: ChordOption[];
 }
 
@@ -154,8 +161,9 @@ export const CHORD_LEVELS: ChordLevel[] = [
     slug: "inversiones",
     order: 5,
     heading: { lead: "¿Qué nota está", word: "ABAJO", tail: "?" },
+    hint: "Da igual si es mayor o menor: solo importa qué nota ha quedado abajo",
     title: "¿Qué hay en el bajo?",
-    desc: "Suena una tríada mayor o menor: di si está en estado fundamental o invertida.",
+    desc: "Suena una tríada mayor o menor. No preguntamos qué acorde es, sino cuál de sus tres notas ha quedado abajo.",
     badge: "Nivel 5",
     mode: "calidad",
     length: 1,

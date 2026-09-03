@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/seo";
 import Link from "next/link";
 import PaperShell, { DISPLAY_FONT } from "../components/PaperShell";
 import { SITE } from "@/lib/site";
 
-export const metadata = { title: "Privacidad · 21st Century Music" };
+export const metadata: Metadata = {
+  title: "Privacidad",
+  description:
+    "Qué datos guarda la app de 21st Century Music, para qué y quién puede verlos.",
+  alternates: { canonical: `${SITE_URL}/privacidad` },
+};
 
 /**
  * La versión corta, que es la única que lee alguien.
@@ -41,8 +48,18 @@ export default function PrivacidadPage() {
         <p>
           <Lead>Con cuenta.</Lead> Al entrar como alumno guardamos lo justo para
           que el progreso te siga de un dispositivo a otro: tu nombre y tu
-          correo, las partidas terminadas, las medallas, los apuntes que
-          escribes y los instrumentos de tu perfil.
+          correo, las partidas, las medallas, los apuntes que escribes y los
+          instrumentos de tu perfil. También la fecha de la última vez que
+          entraste, para que en la escuela se pueda ver si una cuenta se está
+          usando o se quedó por estrenar.
+        </p>
+
+        <p>
+          <Lead>Las partidas a medias también cuentan.</Lead> Si te sales de un
+          ejercicio sin acabarlo, se guarda por dónde ibas. No es para vigilar a
+          nadie: es la única manera de saber qué pantallas se dejan a medias y
+          arreglarlas. Esas partidas no cuentan para tus medias ni para tus
+          medallas, y no se enseñan en el panel del profesorado.
         </p>
 
         <p>
@@ -61,8 +78,17 @@ export default function PrivacidadPage() {
         <p>
           <Lead>Cookies.</Lead> Solo la de sesión, y solo mientras tienes la
           sesión abierta: es lo que hace que no tengas que volver a entrar en
-          cada página. No hay analítica, ni publicidad, ni rastreo, ni datos
-          cedidos a terceros.
+          cada página. No hay publicidad ni rastreo, y no se ceden datos a nadie
+          para que haga negocio con ellos.
+        </p>
+
+        <p>
+          <Lead>Cuánta gente entra.</Lead> Contamos las visitas de cada página
+          con Vercel Analytics, que es quien nos aloja la web. Cuenta páginas,
+          no personas: no pone cookies, no guarda tu dirección IP y no puede
+          saber que dos visitas son tuyas. Por eso no te pedimos permiso para
+          ello — no hay nada que consentir. Google Analytics no se usa
+          precisamente por lo contrario.
         </p>
 
         <p>

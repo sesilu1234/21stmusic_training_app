@@ -186,7 +186,7 @@ export const RHYTHM_LEVELS: RhythmLevel[] = [
     desc: "Negra con puntillo y síncopa: notas que empiezan fuera del tiempo.",
     badge: "Medio",
     cells: PUNTILLO,
-    defaultBpm: 80,
+    defaultBpm: 95,
     measureOptions: [4, 8, 12, 24, 36],
   },
   {

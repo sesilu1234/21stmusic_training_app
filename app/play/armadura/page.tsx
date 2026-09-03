@@ -5,6 +5,8 @@ import { ROUND_LENGTH } from "@/lib/roundLength";
 import { getArmaduras, type ArmaduraData, type Clave } from "./notes_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
+import { useAbandono } from "@/app/components/useAbandono";
+import Backdrop from "@/app/components/Backdrop";
 
 export default function ArmadurasGame() {
 
@@ -45,6 +47,10 @@ export default function ArmadurasGame() {
   );
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [gameOver, setGameOver] = useState(false);
+
+  // Si se va a media partida, queda apuntada como abandonada. Lo que ve el
+  // alumno no cambia: esto no pinta nada.
+  useAbandono(results, gameOver);
   const [isReviewing, setIsReviewing] = useState(false);
   const [showFeedback, setShowFeedback] = useState<null | "correct" | "wrong">(
     null,
@@ -76,6 +82,22 @@ export default function ArmadurasGame() {
   const respuestaCorrecta = esPreguntaMayor
     ? currentQuestion?.mayor
     : currentQuestion?.menor;
+
+  /**
+   * La nota de la respuesta tal y como aparece en los botones. Los datos la
+   * guardan con la alteracion escrita ("Dos mayor"), asi que hay que traducirla
+   * al "Do#" de la botonera. Estaba dentro del manejador del click; ahora hace
+   * falta tambien al pintar, para poder marcar en verde la que era.
+   */
+  const solucionNormalizada = (respuestaCorrecta?.split(" ")[0] || "")
+    .replace("Dos", "Do#")
+    .replace("Res", "Re#")
+    .replace("Fas", "Fa#")
+    .replace("Sols", "Sol#")
+    .replace("Las", "La#");
+
+  /** Lo contestado en esta pregunta, o null si todavia esta en juego. */
+  const answeredHere = userAnswers[step] ?? null;
 
   useEffect(() => {
     if (quizList.length > 0) {
@@ -134,10 +156,10 @@ export default function ArmadurasGame() {
     ];
 
     return (
-      <div
-        className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans overflow-x-hidden"
-        style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-      >
+      <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+        <Backdrop />
+
+        <div className="relative z-10 min-h-screen flex flex-col">
       <GameChrome>
         ¿Qué tonalidad
         <span className="text-black mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
@@ -192,6 +214,7 @@ export default function ArmadurasGame() {
         <footer className="py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase z-10">
           © 2026 21st Century Music
         </footer>
+        </div>
       </div>
     );
   }
@@ -215,14 +238,6 @@ export default function ArmadurasGame() {
     if (gameOver || userAnswers[step] !== null || showFeedback) return;
     setIsReviewing(false);
 
-    const primeraPalabraSolucion = respuestaCorrecta?.split(" ")[0] || "";
-
-    const solucionNormalizada = primeraPalabraSolucion
-      .replace("Dos", "Do#")
-      .replace("Res", "Re#")
-      .replace("Fas", "Fa#")
-      .replace("Sols", "Sol#")
-      .replace("Las", "La#");
     const isCorrect = notaBoton === solucionNormalizada;
     setShowFeedback(isCorrect ? "correct" : "wrong");
 
@@ -234,6 +249,9 @@ export default function ArmadurasGame() {
     newAnswers[step] = notaBoton;
     setUserAnswers(newAnswers);
 
+    // Acertando se pasa rapido, que no hay nada que mirar. Fallando hay que
+    // dar tiempo a ver cual era la buena: es el unico momento en el que se
+    // aprende algo.
     setTimeout(
       () => {
         setShowFeedback(null);
@@ -243,7 +261,7 @@ export default function ArmadurasGame() {
           setGameOver(true);
         }
       },
-      isCorrect ? 300 : 700,
+      isCorrect ? 700 : 1600,
     );
   };
 
@@ -263,10 +281,10 @@ export default function ArmadurasGame() {
   };
 
   return (
-    <div
-      className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans overflow-x-hidden"
-      style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-    >
+    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+      <Backdrop />
+
+      <div className="relative z-10 min-h-screen flex flex-col">
       {/* Top Navigation */}
       <GameChrome />
 
@@ -323,22 +341,40 @@ export default function ArmadurasGame() {
         </div>
 
         {/* Responsive Note Grid */}
+        {/* La rejilla entera se iba a `opacity-20` al contestar, asi que la
+            correccion no se veia: se apagaba justo el sitio donde habia que
+            mirar. Ahora se queda encendida y sin clicks, y son los botones los
+            que dicen lo que ha pasado — verde el bueno, rojo el pulsado si
+            estaba mal, apagados los demas. */}
         <div
-          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-all ${userAnswers[step] !== null || showFeedback ? "opacity-20 pointer-events-none" : "opacity-100"}`}
+          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-all ${answeredHere !== null ? "pointer-events-none" : ""}`}
         >
           <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-9 gap-2 md:gap-4">
-            {todasLasNotas.map((nota) => (
-              <button
-                key={nota}
-                disabled={userAnswers[step] !== null || !!showFeedback}
-                onClick={() => handleNoteClick(nota)}
-                className="py-3 md:py-5 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black transition-all active:scale-95 shadow-sm"
-              >
-                <span className="text-xs md:text-sm font-bold font-sans">
-                  {nota}
-                </span>
-              </button>
-            ))}
+            {todasLasNotas.map((nota) => {
+              const isSolution = nota === solucionNormalizada;
+              const isMistake = nota === answeredHere && !isSolution;
+
+              return (
+                <button
+                  key={nota}
+                  disabled={answeredHere !== null || !!showFeedback}
+                  onClick={() => handleNoteClick(nota)}
+                  className={`py-3 md:py-5 rounded-xl border transition-all active:scale-95 shadow-sm ${
+                    answeredHere === null
+                      ? "border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black"
+                      : isSolution
+                        ? "border-green-400 bg-green-500/80 text-white"
+                        : isMistake
+                          ? "border-red-400 bg-red-500/80 text-white"
+                          : "border-white/5 bg-white/5 text-white/20"
+                  }`}
+                >
+                  <span className="text-xs md:text-sm font-bold font-sans">
+                    {nota}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -395,6 +431,7 @@ export default function ArmadurasGame() {
       {gameOver && (
         <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
+      </div>
     </div>
   );
 }

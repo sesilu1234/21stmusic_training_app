@@ -127,29 +127,45 @@ export default function GameOverModal({ correct, total, onRestart }: Props) {
         )}
 
         {/* Lo que ha dejado esta partida en la cuenta del alumno. Sin sesión no
-            sale nada: no hay nada que contar. */}
-        {saved?.saved && (
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-            {saved.newMedal && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/15 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
-                <Medal size={12} />
-                Medalla nueva
-              </span>
-            )}
-            {saved.streak > 1 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/60">
-                <Flame size={12} className="text-orange-300" />
-                {saved.streak} días seguidos
-              </span>
-            )}
-            <Link
-              href="/progreso"
-              className="inline-flex items-center rounded-full border border-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/40 transition hover:border-amber-300/40 hover:text-white"
-            >
-              Ver progreso
-            </Link>
-          </div>
-        )}
+            sale nada: no hay nada que contar.
+
+            La fila tiene altura reservada desde el primer pintado. Antes salía
+            de la nada al contestar el servidor, y como aparece *encima* de
+            Reiniciar, empujaba los dos botones hacia abajo justo cuando el
+            alumno ya iba a pulsar: se acababa dando a Menú sin querer. Mientras
+            se guarda hay un hueco del mismo alto con dos placeholders latiendo,
+            y al llegar la respuesta solo cambia el contenido, no el tamaño. */}
+        <div className="mt-6 flex h-[30px] flex-wrap items-center justify-center gap-2">
+          {saved === null ? (
+            <>
+              <span className="skeleton-pill h-[30px] w-32 rounded-full bg-white/[0.07]" />
+              <span className="skeleton-pill h-[30px] w-24 rounded-full bg-white/[0.07]" />
+            </>
+          ) : (
+            saved.saved && (
+              <>
+                {saved.newMedal && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/15 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
+                    <Medal size={12} />
+                    Medalla nueva
+                  </span>
+                )}
+                {saved.streak > 1 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/60">
+                    <Flame size={12} className="text-orange-300" />
+                    {saved.streak} días seguidos
+                  </span>
+                )}
+                <Link
+                  href="/progreso"
+                  className="inline-flex items-center rounded-full border border-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/40 transition hover:border-amber-300/40 hover:text-white"
+                >
+                  Ver progreso
+                </Link>
+              </>
+            )
+          )}
+        </div>
 
         <div className="mt-7 space-y-3">
           <button

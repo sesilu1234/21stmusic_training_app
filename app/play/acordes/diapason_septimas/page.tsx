@@ -5,7 +5,9 @@ import { ROUND_LENGTH } from "@/lib/roundLength";
 import { chords_images } from "./chords_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
+import { useAbandono } from "@/app/components/useAbandono";
 import LoadingBars from "@/app/components/LoadingBars";
+import Backdrop from "@/app/components/Backdrop";
 
 export default function ChordsGame() {
 
@@ -32,6 +34,10 @@ export default function ChordsGame() {
   );
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [gameOver, setGameOver] = useState(false);
+
+  // Si se va a media partida, queda apuntada como abandonada. Lo que ve el
+  // alumno no cambia: esto no pinta nada.
+  useAbandono(results, gameOver);
   const [isReviewing, setIsReviewing] = useState(false);
   const [showFeedback, setShowFeedback] = useState<null | "correct" | "wrong">(
     null,
@@ -127,10 +133,10 @@ export default function ChordsGame() {
     opcionesSeptimas.find((opcion) => opcion.answer === currentQuestion.answer);
 
   return (
-    <div
-      className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans overflow-x-hidden"
-      style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-    >
+    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+      <Backdrop />
+
+      <div className="relative z-10 min-h-screen flex flex-col">
       {/* HEADER / NAVIGATION */}
       <GameChrome>
         ¿Qué tipo de{" "}
@@ -296,6 +302,7 @@ export default function ChordsGame() {
       {gameOver && (
         <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
+      </div>
     </div>
   );
 }

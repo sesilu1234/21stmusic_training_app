@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
+import { useAbandono } from "./useAbandono";
 
 /**
  * Pie de partida de los modos que van pregunta a pregunta: los puntitos del
@@ -10,6 +11,13 @@ import { ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
  * Volver atrás sirve para lo que sirve: oírla otra vez y ver qué contestaste y
  * qué era. Por eso solo se puede ir a lo ya respondido, nunca adelantarse: la
  * pregunta en la que va la partida es la última a la que se llega.
+ *
+ * OJO, que no se ve mirando lo que pinta: aquí dentro también se avisa de las
+ * partidas que se dejan a medias (`useAbandono`). Está aquí y no en cada juego
+ * porque este pie recibe ya lo único que hace falta —qué se ha contestado y si
+ * la partida sigue viva— y lo montan los once modos que van pregunta a
+ * pregunta: once sitios donde poner la misma línea y donde se puede olvidar.
+ * Los modos que no usan este pie llaman al hook ellos mismos.
  */
 
 /** Un color por categoría, igual que en el menú. */
@@ -64,6 +72,10 @@ export default function RoundFooter({
 }) {
   const palette = ACCENTS[accent];
   const lastReachable = liveStep === -1 ? total - 1 : liveStep;
+
+  // `liveStep === -1` es "ya no queda ninguna por contestar", o sea partida
+  // terminada: de esa se encarga GameOverModal y aquí no se avisa de nada.
+  useAbandono(results, liveStep === -1);
 
   const canGo = (index: number) =>
     index >= 0 && index <= lastReachable && index !== step;

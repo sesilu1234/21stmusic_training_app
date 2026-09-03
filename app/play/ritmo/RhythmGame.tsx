@@ -6,6 +6,8 @@ import GameOverModal from "@/app/components/GameOverModal";
 import { getCtx } from "./metronome";
 import SimpleMovingScore, { type MusicRef } from "./MusicDisplay";
 import type { RhythmLevel } from "@/lib/rhythm";
+import Backdrop from "@/app/components/Backdrop";
+import { outputNode } from "@/lib/audioContext";
 
 /** Compases con los que arranca la sesión, si el nivel los ofrece. */
 const preferredMeasures = (options: number[]) =>
@@ -66,7 +68,7 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
     gain.gain.setValueAtTime(1.2, time);
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.025);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(outputNode(ctx));
     osc.start(time);
     osc.stop(time + 0.03);
   };
@@ -113,10 +115,10 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
   const [openMeasures, setOpenMeasures] = useState(false);
 
   return (
-    <div
-      className="min-h-screen flex flex-col bg-slate-900 bg-cover bg-center text-white font-sans relative"
-      style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-    >
+    <div className="min-h-screen flex flex-col text-white font-sans relative overflow-x-hidden">
+      <Backdrop />
+
+      <div className="relative z-10 min-h-screen flex flex-col">
       {/* Pop-up de Marcador */}
       {showScore && scoreData.hits + scoreData.misses > 0 && (
         <GameOverModal
@@ -247,7 +249,12 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
           </div>
         </div>
 
+        {/* `data-score-frame`: es esta caja la que mide el canvas para saber
+            de cuanto ancho dispone. Su ancho lo pone el CSS de aqui y no
+            depende de lo que lleve dentro, que es justo lo que hace que se
+            pueda medir sin morderse la cola. */}
         <div
+          data-score-frame
           className="w-full max-w-[95%] bg-white rounded-[2rem] md:rounded-[2.5rem] h-56 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden"
           style={{ pointerEvents: openMeasures ? "none" : "auto" }}
         >
@@ -293,6 +300,7 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
       <footer className="pb-4 md:pb-8 text-center text-slate-500 text-[7px] md:text-[8px] tracking-[0.4em] uppercase mt-auto">
         © 2026 21st Century Music
       </footer>
+      </div>
     </div>
   );
 }

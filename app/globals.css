@@ -33,14 +33,19 @@ body {
    parpadeo al hidratar. El script de `layout.tsx` marca `data-theme-mode` en
    <html> antes del primer pintado y el velo sale ya bien.
 
-   Los colores son los mismos de antes: slate-950 en oscuro, slate-900 en claro,
-   con las mismas opacidades y las mismas paradas (0% / 50% / 100%). */
+   slate-950 en oscuro, slate-900 en claro, con las mismas paradas (0/50/100%).
+
+   Las opacidades bajaron de 0.82/0.64/0.88 a 0.70/0.50/0.76. Media docena de
+   pantallas de juego se habian quedado sin este velo y pintaban la foto a pelo:
+   al ponerselo, la app entera pasaba a verse tan oscura como la parte que ya lo
+   tenia, y la foto se moria. El punto de encuentro esta un poco por encima: las
+   que estaban oscuras suben, la que estaba a pelo (armaduras) baja. */
 .backdrop-veil {
   background-image: linear-gradient(
     to bottom,
-    rgb(2 6 23 / 0.82),
-    rgb(2 6 23 / 0.64),
-    rgb(2 6 23 / 0.88)
+    rgb(2 6 23 / 0.70),
+    rgb(2 6 23 / 0.50),
+    rgb(2 6 23 / 0.76)
   );
 }
 
@@ -51,9 +56,9 @@ body {
 html[data-theme-mode="light"] .backdrop-veil {
   background-image: linear-gradient(
     to bottom,
-    rgb(15 23 42 / 0.55),
-    rgb(15 23 42 / 0.32),
-    rgb(15 23 42 / 0.62)
+    rgb(15 23 42 / 0.34),
+    rgb(15 23 42 / 0.14),
+    rgb(15 23 42 / 0.40)
   );
 }
 
@@ -69,8 +74,20 @@ html[data-theme-mode="light"] .backdrop-veil {
 }
 
 html[data-theme-mode="light"] .paper-scrim {
-  background-color: rgb(15 23 42 / 0.34);
+  background-color: rgb(15 23 42 / 0.20);
 }
+
+/* --- Aviso sobre el modo claro ---------------------------------------- */
+/* Estas dos reglas y `.backdrop-veil` son, hoy por hoy, TODO lo que cambia
+   entre claro y oscuro. Las tarjetas de la app llevan el color escrito a fuego
+   en cada componente (hay del orden de 120: `bg-slate-950/50`, `bg-black/40`,
+   `bg-slate-900/60`...) y ninguna mira `data-theme-mode`. Es decir: el modo
+   claro solo destapa la foto del fondo, y lo que se lee sigue estando sobre
+   superficies oscuras.
+
+   Por eso subir el velo tiene un techo bajo. La solución de verdad es pasar
+   esas superficies a variables CSS que cambien con el modo; mientras tanto,
+   esto es lo que se puede aclarar sin tocar los 120 sitios. */
 
 /* --- Cargando --------------------------------------------------------- */
 /* Las barras de `LoadingBars`. Se anima `transform` y no la altura: las
@@ -381,4 +398,29 @@ select:autofill {
   background-clip: text;
   -webkit-text-fill-color: #fff;
   caret-color: #fff;
+}
+
+/* --- Skeleton de la fila de racha/medalla ------------------------------ */
+/* La usa `GameOverModal` mientras la partida se esta guardando. No es un
+   spinner: es el hueco que va a ocupar el contenido real, del mismo alto, para
+   que al llegar la respuesta no se mueva nada de sitio. Solo late la opacidad,
+   que es lo unico que se puede animar aqui sin repintar layout. */
+.skeleton-pill {
+  animation: skeleton-breathe 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-pill {
+    animation: none;
+  }
 }

@@ -187,7 +187,7 @@ export default function ModeEarGame() {
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[960px] flex-col px-4 pb-5 pt-16 md:px-8 md:pb-7 md:pt-20">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[960px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href="/"

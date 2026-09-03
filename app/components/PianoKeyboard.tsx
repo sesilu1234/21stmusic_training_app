@@ -91,6 +91,16 @@ export interface PianoKeyboardProps {
   disabled?: boolean;
   /** Escribe el nombre en el pie de las teclas blancas. */
   showLabels?: boolean;
+  /**
+   * Si una tecla marcada escribe su nombre encima. Por defecto sí: en los modos
+   * que corrigen una nota concreta, saber cuál era es media respuesta.
+   *
+   * Los de intervalos lo apagan. Ahí la pregunta es la distancia entre las dos
+   * teclas, y con los nombres puestos se acaba contando de memoria ("de Do a
+   * Sol es quinta") en vez de mirando el hueco, que es lo que se quiere
+   * entrenar. Sin nombres se aprende por forma y por distancia.
+   */
+  markLabels?: boolean;
   /** Teclado más bajo, para pantallas donde compite con otras cosas. */
   compact?: boolean;
   className?: string;
@@ -106,6 +116,7 @@ export default function PianoKeyboard({
   onRelease,
   disabled = false,
   showLabels = false,
+  markLabels = true,
   compact = false,
   className = "",
 }: PianoKeyboardProps) {
@@ -245,7 +256,9 @@ export default function PianoKeyboard({
               >
                 {badge(semitone)}
                 <span className="flex flex-col items-center gap-1">
-                  <span>{showLabels || mark ? noteName(semitone) : ""}</span>
+                  <span>
+                    {showLabels || (mark && markLabels) ? noteName(semitone) : ""}
+                  </span>
                   {hints[semitone] && (
                     <span className="rounded border border-black/20 bg-black/10 px-1 py-px text-[9px] uppercase leading-none text-black/45">
                       {hints[semitone]}
@@ -259,6 +272,10 @@ export default function PianoKeyboard({
           {/* Las negras van encima, colocadas a mano sobre las juntas. */}
           {blacks.map(({ semitone, left }) => {
             const mark = marks[semitone];
+            // `root` y `hint` son pistas de una pregunta que sigue en juego, y
+            // esas teclas se tienen que poder pulsar como siempre. Solo cuando
+            // la tecla ya esta corregida manda el color de la correccion.
+            const corrected = mark === "correct" || mark === "wrong";
             return (
               <button
                 key={semitone}
@@ -276,14 +293,22 @@ export default function PianoKeyboard({
                     ? BLACK_MARK[mark]
                     : "bg-gradient-to-b from-slate-800 to-slate-950 text-slate-600"
                 } ${
-                  disabled || !onPress
+                  disabled || !onPress || corrected
                     ? "cursor-default"
-                    : "cursor-pointer hover:from-slate-700 hover:to-slate-900 active:from-amber-600 active:to-amber-800"
+                    : // El ambar de apretar era `amber-600`→`amber-800`, y
+                      // amber-800 (#92400e) sobre una tecla negra se lee marron
+                      // rojizo: al acertar una negra daba un fogonazo rojo justo
+                      // antes de ponerse verde, que es la senal contraria a la
+                      // que toca. Subido al tramo claro del ambar, que es
+                      // inconfundible. Y en cuanto la tecla esta corregida deja
+                      // de reaccionar a `:active`: el color lo manda la
+                      // correccion, no el dedo.
+                      "cursor-pointer hover:from-slate-700 hover:to-slate-900 active:from-amber-400 active:to-amber-600"
                 }`}
               >
                 {badge(semitone)}
                 <span className="flex flex-col items-center gap-1">
-                  <span>{mark ? noteName(semitone) : ""}</span>
+                  <span>{mark && markLabels ? noteName(semitone) : ""}</span>
                   {hints[semitone] && (
                     <span className="rounded border border-white/15 bg-white/10 px-1 py-px text-[9px] uppercase leading-none text-white/55">
                       {hints[semitone]}

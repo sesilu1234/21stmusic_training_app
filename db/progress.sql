@@ -29,13 +29,17 @@ comment on column game_attempts.level_slug is
 create index if not exists game_attempts_student_game_idx
   on game_attempts (student_email, game_name, created_at desc);
 
-create index if not exists student_medals_student_idx
-  on student_medals (student_email, created_at desc);
+-- OBSOLETO desde db/drop_medals.sql: la tabla student_medals ya no existe.
+-- Las medallas se deducen de game_attempts, que es donde estaban de verdad.
+-- Se deja la linea comentada porque este fichero es el historico de como se
+-- monto el progreso, y borrarla haria que no se entendiese drop_medals.sql.
+-- create index if not exists student_medals_student_idx
+--   on student_medals (student_email, created_at desc);
 
 -- 3. Seguridad ---------------------------------------------------------
 --    Igual que el resto: la app entra con la service role key desde el
 --    servidor, así que RLS activo y sin políticas = el navegador no toca esto.
 alter table game_attempts  enable row level security;
-alter table student_medals enable row level security;
+-- alter table student_medals enable row level security;  -- ver drop_medals.sql
 
 commit;

@@ -3,7 +3,7 @@
 import { ArrowUpDown, Circle, Layers, Shuffle, Sparkles, Stethoscope } from "lucide-react";
 import SubMenu from "@/app/components/SubMenu";
 import { CHORD_LEVELS } from "@/lib/chordEar";
-import { PAIR_LEVEL } from "@/lib/chordPair";
+import { PAIR_LEVELS } from "@/lib/chordPair";
 import { isStudentsOnlyLevel } from "@/lib/games";
 
 const levelIcons = [Circle, Layers, Sparkles, Shuffle, Stethoscope];
@@ -27,14 +27,14 @@ export default function AcordesMenu({ signedIn }: { signedIn: boolean }) {
           badge: level.badge,
           locked: locked(signedIn, level.slug),
         })),
-        {
-          title: PAIR_LEVEL.title,
-          description: PAIR_LEVEL.desc,
-          href: `/play/oido/acordes/${PAIR_LEVEL.slug}`,
+        ...PAIR_LEVELS.map((level) => ({
+          title: level.title,
+          description: level.desc,
+          href: `/play/oido/acordes/${level.slug}`,
           Icon: ArrowUpDown,
-          badge: PAIR_LEVEL.badge,
-          locked: locked(signedIn, PAIR_LEVEL.slug),
-        },
+          badge: level.badge,
+          locked: locked(signedIn, level.slug),
+        })),
       ]}
     />
   );

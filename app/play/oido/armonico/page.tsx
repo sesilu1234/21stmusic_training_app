@@ -11,6 +11,8 @@ import {
   useAudio,
 } from "../audio";
 import GameOverModal from "@/app/components/GameOverModal";
+import { useAbandono } from "@/app/components/useAbandono";
+import Backdrop from "@/app/components/Backdrop";
 
 
 export default function IntervalosArmonicos() {
@@ -21,6 +23,10 @@ export default function IntervalosArmonicos() {
   const [results, setResults]         = useState<(null|"correct"|"wrong")[]>(Array(totalQuestions).fill(null));
   const [userAnswers, setUserAnswers] = useState<(string|null)[]>(Array(totalQuestions).fill(null));
   const [gameOver, setGameOver]       = useState(false);
+
+  // Si se va a media partida, queda apuntada como abandonada. Lo que ve el
+  // alumno no cambia: esto no pinta nada.
+  useAbandono(results, gameOver);
   const [isMounted, setIsMounted]     = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [solutionStep, setSolutionStep] = useState<number | null>(null);
@@ -120,10 +126,10 @@ export default function IntervalosArmonicos() {
   const pct = Math.round((correctCount / totalQuestions) * 100);
 
   return (
-    <div
-      className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans"
-      style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-    >
+    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+      <Backdrop />
+
+      <div className="relative z-10 min-h-screen flex flex-col">
       <GameChrome>
         ¿Qué{" "}
         <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">INTERVALO ARMÓNICO</span>
@@ -284,6 +290,7 @@ export default function IntervalosArmonicos() {
         <footer className="mt-auto py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
           © 2026 21st Century Music
         </footer>
+      </div>
       </div>
     </div>
   );

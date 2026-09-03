@@ -5,7 +5,9 @@ import { ROUND_LENGTH } from "@/lib/roundLength";
 import { intervalos_data } from "./intervalos_data";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
+import { useAbandono } from "@/app/components/useAbandono";
 import LoadingBars from "@/app/components/LoadingBars";
+import Backdrop from "@/app/components/Backdrop";
 
 export default function IntervalosGame() {
 
@@ -37,6 +39,10 @@ export default function IntervalosGame() {
   );
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [gameOver, setGameOver] = useState(false);
+
+  // Si se va a media partida, queda apuntada como abandonada. Lo que ve el
+  // alumno no cambia: esto no pinta nada.
+  useAbandono(results, gameOver);
   const [isReviewing, setIsReviewing] = useState(false);
 
   // Initialize Game on Client
@@ -96,10 +102,15 @@ export default function IntervalosGame() {
     newAnswers[step] = val;
     setUserAnswers(newAnswers);
 
+    // Acertando se pasa rapido, que no hay nada que mirar. Fallando hay que
+    // dar tiempo a ver cual era la buena: es el unico momento en el que se
+    // aprende algo.
+    const pause = isCorrect ? 700 : 1600;
+
     if (step < quizList.length - 1) {
-      setTimeout(() => setStep(step + 1), 400);
+      setTimeout(() => setStep(step + 1), pause);
     } else {
-      setTimeout(() => setGameOver(true), 800);
+      setTimeout(() => setGameOver(true), pause + 400);
     }
   };
 
@@ -121,11 +132,17 @@ export default function IntervalosGame() {
     }
   };
 
+  /** Lo contestado en esta pregunta, o null si todavia esta en juego. */
+  const answeredHere = userAnswers[step];
+  /** El boton que era el bueno. En los datos el unisono se guarda como "0". */
+  const solutionButton =
+    currentQuestion.answer === "0" ? "Unisono" : currentQuestion.answer;
+
   return (
-    <div
-      className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans"
-      style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-    >
+    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+      <Backdrop />
+
+      <div className="relative z-10 min-h-screen flex flex-col">
       <GameChrome>
         ¿Qué{" "}
         <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
@@ -176,19 +193,37 @@ export default function IntervalosGame() {
         </div>
 
         {/* RESPONSIVE BUTTON GRID */}
+        {/* La rejilla entera se iba a `opacity-20` al contestar, asi que la
+            correccion no se veia: se apagaba justo el sitio donde habia que
+            mirar. Ahora se queda encendida y sin clicks, y son los botones los
+            que dicen lo que ha pasado — verde el bueno, rojo el que se ha
+            pulsado si estaba mal, apagados los demas. */}
         <div
-          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-all ${userAnswers[step] !== null ? "opacity-20 pointer-events-none" : "opacity-100"}`}
+          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-all ${answeredHere !== null ? "pointer-events-none" : ""}`}
         >
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 gap-2 md:gap-3">
-            {todosBotones.map((btn) => (
-              <button
-                key={btn}
-                onClick={() => handleAnswer(btn)}
-                className={`flex items-center justify-center h-12 md:h-14 rounded-lg md:rounded-xl border border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black transition-all active:scale-90 ${btn === "Unisono" ? "col-span-2 md:col-span-1" : ""}`}
-              >
-                <span className="text-[10px] md:text-sm font-bold">{btn}</span>
-              </button>
-            ))}
+            {todosBotones.map((btn) => {
+              const isSolution = btn === solutionButton;
+              const isMistake = btn === answeredHere && !isSolution;
+
+              return (
+                <button
+                  key={btn}
+                  onClick={() => handleAnswer(btn)}
+                  className={`flex items-center justify-center h-12 md:h-14 rounded-lg md:rounded-xl border transition-all active:scale-90 ${btn === "Unisono" ? "col-span-2 md:col-span-1" : ""} ${
+                    answeredHere === null
+                      ? "border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black"
+                      : isSolution
+                        ? "border-green-400 bg-green-500/80 text-white"
+                        : isMistake
+                          ? "border-red-400 bg-red-500/80 text-white"
+                          : "border-white/5 bg-white/5 text-white/20"
+                  }`}
+                >
+                  <span className="text-[10px] md:text-sm font-bold">{btn}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -245,6 +280,7 @@ export default function IntervalosGame() {
       {gameOver && (
         <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { ANIMALS } from "../components/animals";
 import { AnimalTile } from "../components/AnimalAvatar";
 import { gameIcons } from "../components/gameIcons";
 import BarsAvatar from "../components/BarsAvatar";
+import Backdrop from "../components/Backdrop";
 
 /**
  * Muestrario de avatares e iconos. No está enlazado desde ningún menú: es una
@@ -21,7 +22,7 @@ import BarsAvatar from "../components/BarsAvatar";
  * sin tener que ir a buscarlos al historial.
  */
 export const metadata: Metadata = {
-  title: "Muestrario · 21st Century Music",
+  title: "Muestrario",
   robots: { index: false, follow: false },
 };
 
@@ -46,8 +47,14 @@ export default async function MuestrarioPage() {
   if (!canSeeMuestrario(viewer?.role)) notFound();
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-12 font-sans text-white">
-      <div className="mx-auto w-full max-w-6xl">
+    /* Era un `bg-slate-950` plano, sin foto ni nada: la pantalla mas oscura de
+       toda la app, y ademas la unica que no se parecia al resto. Con el fondo
+       de siempre debajo se ve lo que se esta mirando y deja de ser un agujero
+       negro. */
+    <main className="relative min-h-screen overflow-x-hidden font-sans text-white">
+      <Backdrop />
+
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-12">
         <header className="mb-10">
           <h1 className="text-2xl font-black uppercase italic tracking-tight">
             Muestrario
@@ -76,7 +83,7 @@ export default async function MuestrarioPage() {
             {SAMPLE_NAMES.map((sample) => (
               <div
                 key={sample}
-                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/60 p-3"
+                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/45 p-3"
               >
                 <BarsAvatar name={sample} className="h-14 w-14 rounded-xl" />
                 <span className="grid h-10 w-10 flex-shrink-0 place-items-center overflow-hidden rounded-full">
@@ -98,7 +105,7 @@ export default async function MuestrarioPage() {
             {ANIMALS.map((animal, index) => (
               <div
                 key={animal.id}
-                className="rounded-2xl border border-white/10 bg-slate-900/60 p-4"
+                className="rounded-2xl border border-white/10 bg-slate-900/45 p-4"
               >
                 <AnimalTile animal={animal} className="w-full rounded-xl" />
 
@@ -209,7 +216,7 @@ export default async function MuestrarioPage() {
             {Object.entries(gameIcons).map(([name, Icon]) => (
               <div
                 key={name}
-                className="flex flex-col items-center gap-2.5 rounded-2xl border border-white/10 bg-slate-900/60 p-4"
+                className="flex flex-col items-center gap-2.5 rounded-2xl border border-white/10 bg-slate-900/45 p-4"
               >
                 <Icon size={26} className="text-amber-300" />
                 <span className="text-center text-[10px] font-bold tracking-wide text-white/40">

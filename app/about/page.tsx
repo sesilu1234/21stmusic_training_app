@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/seo";
 import Link from "next/link";
 import PaperShell, { DISPLAY_FONT } from "../components/PaperShell";
 import { SITE } from "@/lib/site";
 
-export const metadata = { title: "Sobre la app · 21st Century Music" };
+export const metadata: Metadata = {
+  title: "Sobre la app",
+  description:
+    "Qué es esta app, qué modos de entrenamiento tiene y cómo se usa en la escuela 21st Century Music.",
+  alternates: { canonical: `${SITE_URL}/about` },
+};
 
 /**
  * Aquí no se usa `PaperTitle`: su titular es de portada — cursiva, dos líneas y

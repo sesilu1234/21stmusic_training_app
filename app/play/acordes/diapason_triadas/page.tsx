@@ -11,7 +11,9 @@ import {
   Home,
 } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
+import { useAbandono } from "@/app/components/useAbandono";
 import LoadingBars from "@/app/components/LoadingBars";
+import Backdrop from "@/app/components/Backdrop";
 
 export default function TriadsGame() {
 
@@ -28,6 +30,10 @@ export default function TriadsGame() {
   );
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [gameOver, setGameOver] = useState(false);
+
+  // Si se va a media partida, queda apuntada como abandonada. Lo que ve el
+  // alumno no cambia: esto no pinta nada.
+  useAbandono(results, gameOver);
   const [isReviewing, setIsReviewing] = useState(false);
   const [showFeedback, setShowFeedback] = useState<null | "correct" | "wrong">(
     null,
@@ -166,10 +172,10 @@ export default function TriadsGame() {
   };
 
   return (
-    <div
-      className="relative min-h-screen flex flex-col bg-slate-900 bg-cover bg-center font-sans overflow-x-hidden"
-      style={{ backgroundImage: "url('/assets/background.jpeg')" }}
-    >
+    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+      <Backdrop />
+
+      <div className="relative z-10 min-h-screen flex flex-col">
       <GameChrome>
         ¿Qué tipo de{" "}
         <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
@@ -317,6 +323,7 @@ export default function TriadsGame() {
       {gameOver && (
         <GameOverModal correct={correctCount} total={totalQuestions} />
       )}
+      </div>
     </div>
   );
 }

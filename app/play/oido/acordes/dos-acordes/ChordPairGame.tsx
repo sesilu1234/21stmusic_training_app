@@ -14,8 +14,8 @@ import {
   findQuality,
   pairChords,
   PAIR_DISTANCES,
-  PAIR_LEVEL,
   PAIR_QUALITIES,
+  type PairLevel,
   type PairQuestion,
 } from "@/lib/chordPair";
 import { ROUND_LENGTH } from "@/lib/roundLength";
@@ -35,8 +35,8 @@ interface Round {
   answers: (Answer | null)[];
 }
 
-const createRound = (): Round => ({
-  questions: buildPairQuiz(ROUND_LENGTH),
+const createRound = (level: PairLevel): Round => ({
+  questions: buildPairQuiz(ROUND_LENGTH, level.firstVariable),
   answers: Array<Answer | null>(ROUND_LENGTH).fill(null),
 });
 
@@ -50,7 +50,23 @@ const secondName = (question: PairQuestion) => {
   return `${noteName(root)} ${findQuality(question.qualityId).label.toLowerCase()}`;
 };
 
-export default function ChordPairGame({ backHref }: { backHref: string }) {
+/**
+ * Cuánto más suena la fundamental de cada acorde que el resto de sus notas.
+ *
+ * 2.2 son unos +7 dB. El primer intento se quedó en 1.4 y no se distinguía: una
+ * nota grave compite con tres agudas encima, y el oído se va a las de arriba.
+ * Aquí la fundamental no es una nota más, es contra la que se mide todo, así
+ * que tiene que destacar de verdad y no solo "estar".
+ */
+const BASS_BOOST = 2.2;
+
+export default function ChordPairGame({
+  level,
+  backHref,
+}: {
+  level: PairLevel;
+  backHref: string;
+}) {
   const { playSequence } = useAudio();
 
   const [round, setRound] = useState<Round | null>(null);
@@ -72,9 +88,9 @@ export default function ChordPairGame({ backHref }: { backHref: string }) {
   // que armarla en el render del servidor daría otra distinta al hidratar.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRound(createRound());
+    setRound(createRound(level));
     autoPlayRef.current = true;
-  }, []);
+  }, [level]);
 
   const clearFlashTimers = () => {
     flashTimersRef.current.forEach((id) => window.clearTimeout(id));
@@ -112,7 +128,13 @@ export default function ChordPairGame({ backHref }: { backHref: string }) {
         window.setTimeout(() => setPlayFlash(0), GAP_MS + TAIL_MS),
       );
 
-      playSequence(pairChords(target), GAP_MS, presetIdx);
+      // El bajo, un poco por encima del resto. Aquí hay que sacar de oído dos
+      // cosas a la vez —la distancia entre los dos acordes y de qué tipo es el
+      // segundo— y la distancia se mide entre las fundamentales. Con las cuatro
+      // notas al mismo volumen la de abajo se pierde entre las de arriba y no
+      // queda de dónde agarrarse. No es subir el volumen: es que se distinga
+      // cuál es la nota de referencia.
+      playSequence(pairChords(target), GAP_MS, presetIdx, BASS_BOOST);
     },
     [playSequence, presetIdx],
   );
@@ -216,7 +238,7 @@ export default function ChordPairGame({ backHref }: { backHref: string }) {
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[960px] flex-col px-4 pb-5 pt-16 md:px-8 md:pb-7 md:pt-20">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[960px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href={backHref}
@@ -234,7 +256,7 @@ export default function ChordPairGame({ backHref }: { backHref: string }) {
               ¿Qué <span className="text-violet-300">DISTANCIA</span> hay?
             </h1>
             <p className="mt-1 truncate text-[9px] font-black uppercase tracking-[0.28em] text-white/35">
-              {PAIR_LEVEL.badge} · {PAIR_LEVEL.title}
+              {level.badge} · {level.title}
             </p>
           </div>
 
@@ -282,8 +304,10 @@ export default function ChordPairGame({ backHref }: { backHref: string }) {
                     <span className="text-xl font-black italic md:text-2xl">
                       {noteName(question.root)}
                     </span>
+                    {/* Ya no es siempre "mayor": en el nivel 7 el primero
+                        también puede ser menor, y se dice cuál es. */}
                     <span className="text-[9px] font-bold uppercase tracking-[0.18em]">
-                      mayor
+                      {findQuality(question.firstQualityId).label.toLowerCase()}
                     </span>
                   </div>
                 </div>

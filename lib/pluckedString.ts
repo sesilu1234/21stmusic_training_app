@@ -1,5 +1,7 @@
 "use client";
 
+import { outputNode } from "./audioContext";
+
 /**
  * Cuerda pulsada, por Karplus-Strong.
  *
@@ -253,6 +255,8 @@ export const playPluckedString = (
   freq: number,
   params: PluckParams,
   when: number,
+  /** Dónde enchufar la nota. Por defecto, la salida de la app. */
+  out: AudioNode = outputNode(ctx),
 ) => {
   const source = ctx.createBufferSource();
   source.buffer = getPluckedBuffer(ctx, freq, params);
@@ -263,7 +267,7 @@ export const playPluckedString = (
   const body = createGuitarBody(ctx);
   source.connect(level);
   level.connect(body.input);
-  body.output.connect(ctx.destination);
+  body.output.connect(out);
 
   source.start(when);
   return source;

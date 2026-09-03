@@ -11,9 +11,9 @@ export async function generateMetadata({
   params: Promise<{ pagina: string }>;
 }) {
   const page = findPage((await params).pagina);
-  if (!page) return { title: "Guía · 21st Century Music" };
+  if (!page) return { title: "Guía" };
   return {
-    title: `${page.title} · Guía · 21st Century Music`,
+    title: `${page.title} · Guía`,
     description: page.summary,
   };
 }
