@@ -1,5 +1,20 @@
 import type { NextConfig } from "next";
 
+/**
+ * El dominio de verdad y el que reparte Vercel.
+ *
+ * Vercel le pone a cada proyecto una dirección `*.vercel.app` que sirve la
+ * misma app que el dominio bueno. Para Google eso son dos webs idénticas, y
+ * acabó indexando las dos: buscando la escuela salían resultados apuntando a
+ * `21stmusic-training-app.vercel.app`, que ni es la marca ni es lo que se
+ * quiere enseñar. Abajo se arregla de dos maneras distintas y a propósito.
+ */
+const VERCEL_ALIAS = "21stmusic-training-app.vercel.app";
+const DOMINIO = "https://www.21stcenturymusic.app";
+
+/** Escapa los puntos: el `value` de un `has` es una expresión regular. */
+const comoRegex = (host: string) => host.replace(/\./g, "\\.");
+
 const nextConfig: NextConfig = {
   /**
    * `/sobre` y `/contacto` pasaron a llamarse `/about` y `/contact`. Estas dos
@@ -40,6 +55,24 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
         ],
       },
+      /**
+       * Que no se indexe NADA de lo que se sirva por un `*.vercel.app`.
+       *
+       * Esto cubre las vistas previas: cada rama y cada despliegue tienen su
+       * propia dirección de Vercel, y son copias enteras de la web con textos
+       * a medio hacer. La de producción, además, se redirige (abajo), así que
+       * en la práctica esta cabecera es la red para las demás.
+       *
+       * Va como cabecera y no como `Disallow` en el robots.txt por el mismo
+       * motivo que se explica en `app/robots.ts`: prohibir el rastreo no
+       * despinta de Google lo que ya esté dentro; `noindex` sí, pero hay que
+       * dejar entrar a leerlo.
+       */
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: ".*\\.vercel\\.app" }],
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
     ];
   },
 
@@ -47,6 +80,25 @@ const nextConfig: NextConfig = {
     return [
       { source: "/sobre", destination: "/about", permanent: true },
       { source: "/contacto", destination: "/contact", permanent: true },
+      /**
+       * La dirección de Vercel de producción manda al dominio de verdad.
+       *
+       * Es la forma fuerte de quitar el duplicado: un 308 no solo saca de
+       * Google las URLs de `vercel.app`, sino que le pasa al dominio bueno lo
+       * que hubieran acumulado. La etiqueta canónica del layout ya lo pedía,
+       * pero una canónica es una sugerencia y esto no.
+       *
+       * El host va exacto y no como `*.vercel.app` a propósito: las vistas
+       * previas de cada rama también son `.vercel.app` y tienen que seguir
+       * abriéndose, o no habría manera de probar nada antes de publicarlo.
+       * Para esas está la cabecera `X-Robots-Tag` de arriba.
+       */
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: comoRegex(VERCEL_ALIAS) }],
+        destination: `${DOMINIO}/:path*`,
+        permanent: true,
+      },
     ];
   },
 };
