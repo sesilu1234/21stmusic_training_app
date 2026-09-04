@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
 import GameChrome from "@/app/components/GameChrome";
+import { barajar } from "@/lib/barajar";
 import { ROUND_LENGTH } from "@/lib/roundLength";
 import { diapason_data } from "./diapason_data";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
@@ -49,8 +50,7 @@ export default function DiapasonGame() {
 
   // 2. Initialize the game only on the client
   useEffect(() => {
-    const shuffled = [...diapason_data]
-      .sort(() => Math.random() - 0.5)
+    const shuffled = barajar(diapason_data)
       .slice(0, ROUND_LENGTH);
     setQuizList(shuffled);
     setResults(Array(shuffled.length).fill(null));

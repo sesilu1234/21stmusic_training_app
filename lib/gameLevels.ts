@@ -27,6 +27,7 @@ import { PIANO_NOTE_LEVELS } from "./pianoNotes";
 import { RHYTHM_LEVELS } from "./rhythm";
 import { CHORD_NAME_LEVELS, CHORD_SPELL_LEVELS } from "./staffChords";
 import { TRIVIA_TOPICS } from "./trivia";
+import { CLAVE_LEVELS } from "@/app/play/armadura/notes_images";
 
 const slugs = (levels: { slug: string }[]) => levels.map((level) => level.slug);
 
@@ -44,6 +45,11 @@ export const GAME_LEVELS: Record<string, string[]> = {
 
   // Dos pantallas hermanas, sin niveles dentro de cada una.
   "/play/intervalos": ["diapason", "pentagrama"],
+
+  // Tres, por la clave con la que se juega. Antes la clave se elegía con un
+  // botón sin cambiar de dirección, así que las tres partidas se guardaban
+  // como el mismo nivel y una sola perfecta daba el modo por dominado.
+  "/play/armadura": CLAVE_LEVELS.map((level) => level.slug),
 
   "/play/ritmo": slugs(RHYTHM_LEVELS),
   "/play/oido/acordes": [...slugs(CHORD_LEVELS), ...slugs(PAIR_LEVELS)],

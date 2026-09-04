@@ -7,6 +7,7 @@
 import { getSupabaseAdmin } from "./supabaseAdmin";
 import { ROUND_LENGTH } from "./roundLength";
 import { TRIVIA_GENERAL, type TriviaQuestion } from "./trivia";
+import { barajar } from "./barajar";
 
 interface TriviaRow {
   pregunta: string;
@@ -16,24 +17,6 @@ interface TriviaRow {
   opcion_4: string;
   correcta: number;
 }
-
-/**
- * Baraja de verdad (Fisher-Yates).
- *
- * El `sort(() => Math.random() - 0.5)` que había antes en la pantalla del
- * trivial no baraja: el resultado depende del algoritmo de ordenación y deja
- * los elementos cerca de donde estaban. Aquí importa el doble, porque si la
- * opción correcta tiende a quedarse donde la escribieron, y quien las escribe
- * tiende a poner la buena la primera, se aprende el patrón sin saber nada.
- */
-const barajar = <T>(list: T[]): T[] => {
-  const out = [...list];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-};
 
 const toQuestion = (row: TriviaRow): TriviaQuestion => {
   const opciones = [row.opcion_1, row.opcion_2, row.opcion_3, row.opcion_4];

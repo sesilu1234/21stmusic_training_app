@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
 import GameChrome from "@/app/components/GameChrome";
+import { barajar } from "@/lib/barajar";
 import { ROUND_LENGTH } from "@/lib/roundLength";
 import { chords_images } from "./chords_images";
 import {
@@ -42,8 +43,7 @@ export default function TriadsGame() {
   );
 
   useEffect(() => {
-    const shuffled = [...chords_images]
-      .sort(() => Math.random() - 0.5)
+    const shuffled = barajar(chords_images)
       .slice(0, ROUND_LENGTH);
     setQuizList(shuffled);
     setResults(Array(shuffled.length).fill(null));

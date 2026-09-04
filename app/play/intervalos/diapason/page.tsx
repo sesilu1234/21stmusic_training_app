@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
 import GameChrome from "@/app/components/GameChrome";
+import { barajar } from "@/lib/barajar";
 import { ROUND_LENGTH } from "@/lib/roundLength";
 import { intervalos_data } from "./intervalos_data";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -47,8 +48,7 @@ export default function IntervalosGame() {
 
   // Initialize Game on Client
   useEffect(() => {
-    const shuffled = [...intervalos_data]
-      .sort(() => Math.random() - 0.5)
+    const shuffled = barajar(intervalos_data)
       .slice(0, ROUND_LENGTH);
     setQuizList(shuffled);
     setResults(Array(shuffled.length).fill(null));

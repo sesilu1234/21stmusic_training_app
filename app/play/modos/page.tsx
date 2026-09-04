@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import GameChrome from "@/app/components/GameChrome";
+import { barajar } from "@/lib/barajar";
 import { ROUND_LENGTH } from "@/lib/roundLength";
 import { modes_images } from "./modes_images";
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
@@ -64,8 +65,7 @@ export default function ChordsGame() {
   );
 
   useEffect(() => {
-    const shuffled = [...modes_images]
-      .sort(() => Math.random() - 0.5)
+    const shuffled = barajar(modes_images)
       .slice(0, ROUND_LENGTH);
     setQuizList(shuffled);
     setResults(Array(shuffled.length).fill(null));
