@@ -15,11 +15,30 @@ export default function ChordsGame() {
   // "Mayor 7", que según a quién preguntes es maj7 o es dominante: el mismo
   // lío que teníamos con las mayúsculas. `answer` es el id de la imagen y no
   // se toca.
+  /**
+   * Los cuatro botones.
+   *
+   * `answer` TIENE QUE COINCIDIR LETRA POR LETRA con lo que trae
+   * `chords_images.tsx`, que a su vez es el nombre de la carpeta donde vive
+   * cada imagen: "maj7", "min7", "7" y "min7b5". Aqui ponia "min 7" y
+   * "min 7 b5", con espacios, y ningun acorde menor septima ni
+   * semidisminuido podia acertarse jamas: la mitad justa de las 96 preguntas
+   * salia en rojo aunque estuviera bien.
+   *
+   * Y de paso tampoco se veia cual era la buena. La solucion se busca con
+   * `find(opcion => opcion.answer === currentQuestion.answer)`; al no casar
+   * ninguna, devolvia `undefined` y ni se pintaba de verde el boton correcto
+   * ni salia el cartel de la solucion. De ahi lo de "a veces, cuando fallo,
+   * no me dice cual era".
+   *
+   * `symbol` es lo que se lee en el boton y sale de lib/chordNames.ts; no
+   * tiene por que ser igual que `answer`, que es el nombre de la carpeta.
+   */
   const opcionesSeptimas = [
     { symbol: "maj7", word: "séptima mayor", answer: "maj7" },
-    { symbol: "m7", word: "séptima menor", answer: "min 7" },
+    { symbol: "m7", word: "séptima menor", answer: "min7" },
     { symbol: "7", word: "dominante", answer: "7" },
-    { symbol: "m7b5", word: "semidisminuido", answer: "min 7 b5" },
+    { symbol: "m7b5", word: "semidisminuido", answer: "min7b5" },
   ];
 
   // Hydration fix: Mezclar en el cliente

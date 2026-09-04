@@ -36,8 +36,39 @@ export const ALTERED_ANSWERS = [
   "Sib",
 ];
 
+/**
+ * Los diecisiete botones en orden cromático: cada tecla negra va justo detrás
+ * de la natural de la que sube.
+ *
+ * Antes iban las siete naturales seguidas y luego las diez alteradas en otro
+ * bloque, así que Do# quedaba a ocho botones de Do y había que recorrer la
+ * rejilla entera para encontrar lo que se quería pulsar. Puestos en orden de
+ * semitonos, el sitio de cada nota es el que el alumno ya tiene en la cabeza
+ * del teclado del piano, y las dos escrituras de la misma tecla —Do# y Reb—
+ * salen juntas, que es justo la pareja que hay que aprender a distinguir.
+ */
+export const CHROMATIC_ANSWERS = [
+  "Do",
+  "Do#",
+  "Reb",
+  "Re",
+  "Re#",
+  "Mib",
+  "Mi",
+  "Fa",
+  "Fa#",
+  "Solb",
+  "Sol",
+  "Sol#",
+  "Lab",
+  "La",
+  "La#",
+  "Sib",
+  "Si",
+];
+
 export const answersFor = (level: NoteReadingLevel) =>
-  level.accidentals ? [...NATURAL_ANSWERS, ...ALTERED_ANSWERS] : NATURAL_ANSWERS;
+  level.accidentals ? CHROMATIC_ANSWERS : NATURAL_ANSWERS;
 
 /**
  * Tramo que se lee en cada clave sin pasar de una línea adicional.

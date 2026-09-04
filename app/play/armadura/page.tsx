@@ -78,10 +78,10 @@ export default function ArmadurasGame() {
   };
 
   const currentQuestion = quizList[step];
-  const esPreguntaMayor = currentQuestion?.image.includes("M.png");
-  const respuestaCorrecta = esPreguntaMayor
-    ? currentQuestion?.mayor
-    : currentQuestion?.menor;
+  // Solo se pregunta por la tonalidad mayor. La relativa menor comparte
+  // armadura, asi que con la imagen delante no habia nada que leer: ver
+  // `notes_images.tsx`.
+  const respuestaCorrecta = currentQuestion?.mayor;
 
   /**
    * La nota de la respuesta tal y como aparece en los botones. Los datos la
@@ -163,7 +163,7 @@ export default function ArmadurasGame() {
       <GameChrome>
         ¿Qué tonalidad
         <span className="text-black mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
-        {esPreguntaMayor ? "MAYOR" : "MENOR"}
+          MAYOR
         </span>
         es?
       </GameChrome>

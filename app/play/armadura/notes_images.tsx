@@ -1,52 +1,49 @@
 export interface ArmaduraData {
   image: string;
-  mayor: string; //RespuestacorrectacolumnaMayor
-  menor: string; //RespuestacorrectacolumnaMenor
+  mayor: string; // Respuesta correcta
 }
 
 export type Clave = "sol" | "fa";
 
-// Datos base: el nombre del archivo es idéntico para clave de Sol y de Fa,
-// solo cambia la carpeta. La tonalidad (mayor/menor) es la misma en ambas claves.
+/**
+ * Las quince armaduras, solo en su version MAYOR.
+ *
+ * Antes habia treinta entradas: las mismas quince armaduras dos veces, una
+ * preguntando por la tonalidad mayor y otra por su relativa menor. Se ha
+ * quitado la mitad menor. La armadura de Do mayor y la de La menor son el
+ * mismo pentagrama vacio, asi que preguntar "que tonalidad menor es" con la
+ * imagen delante no distingue nada: o el alumno se sabe la relativa de
+ * memoria, o esta adivinando. Las relativas menores se trabajan en clase, no
+ * aqui.
+ *
+ * El nombre del archivo es identico para clave de Sol y de Fa; lo unico que
+ * cambia es la carpeta.
+ */
 interface ArmaduraBase {
   file: string;
   mayor: string;
-  menor: string;
 }
 
 const armaduras_base: ArmaduraBase[] = [
-  { file: "Lamen.png", mayor: "Do", menor: "La" },
-  { file: "Mimen.png", mayor: "Sol", menor: "Mi" },
-  { file: "Simen.png", mayor: "Re", menor: "Si" },
-  { file: "Fasmen.png", mayor: "La", menor: "Fas" },
-  { file: "Dosmen.png", mayor: "Mi", menor: "Dos" },
-  { file: "Solsmen.png", mayor: "Si", menor: "Sols" },
-  { file: "Resmen.png", mayor: "Fas", menor: "Res" },
-  { file: "Lasmen.png", mayor: "Dos", menor: "Las" },
-  { file: "Remen.png", mayor: "Fa", menor: "Re" },
-  { file: "Solmen.png", mayor: "Sib", menor: "Sol" },
-  { file: "Domen.png", mayor: "Mib", menor: "Do" },
-  { file: "Famen.png", mayor: "Lab", menor: "Fa" },
-  { file: "Sibmen.png", mayor: "Reb", menor: "Sib" },
-  { file: "Mibmen.png", mayor: "Solb", menor: "Mib" },
-  { file: "Labmen.png", mayor: "Dob", menor: "Lab" },
+  { file: "DoM.png", mayor: "Do" },
 
-  { file: "DoM.png", mayor: "Do", menor: "La" },
-  { file: "SolM.png", mayor: "Sol", menor: "Mi" },
-  { file: "ReM.png", mayor: "Re", menor: "Si" },
-  { file: "LaM.png", mayor: "La", menor: "Fas" },
-  { file: "MiM.png", mayor: "Mi", menor: "Dos" },
-  { file: "SiM.png", mayor: "Si", menor: "Sols" },
-  { file: "FasM.png", mayor: "Fas", menor: "Res" },
-  { file: "DosM.png", mayor: "Dos", menor: "Las" },
+  // Sostenidos, en el orden en que se van sumando.
+  { file: "SolM.png", mayor: "Sol" },
+  { file: "ReM.png", mayor: "Re" },
+  { file: "LaM.png", mayor: "La" },
+  { file: "MiM.png", mayor: "Mi" },
+  { file: "SiM.png", mayor: "Si" },
+  { file: "FasM.png", mayor: "Fas" },
+  { file: "DosM.png", mayor: "Dos" },
 
-  { file: "FaM.png", mayor: "Fa", menor: "Re" },
-  { file: "SibM.png", mayor: "Sib", menor: "Sol" },
-  { file: "MibM.png", mayor: "Mib", menor: "Do" },
-  { file: "LabM.png", mayor: "Lab", menor: "Fa" },
-  { file: "RebM.png", mayor: "Reb", menor: "Sib" },
-  { file: "SolbM.png", mayor: "Solb", menor: "Mib" },
-  { file: "DobM.png", mayor: "Dob", menor: "Lab" },
+  // Bemoles.
+  { file: "FaM.png", mayor: "Fa" },
+  { file: "SibM.png", mayor: "Sib" },
+  { file: "MibM.png", mayor: "Mib" },
+  { file: "LabM.png", mayor: "Lab" },
+  { file: "RebM.png", mayor: "Reb" },
+  { file: "SolbM.png", mayor: "Solb" },
+  { file: "DobM.png", mayor: "Dob" },
 ];
 
 const CARPETAS: Record<Clave, string> = {
@@ -58,7 +55,6 @@ function buildData(clave: Clave): ArmaduraData[] {
   return armaduras_base.map((a) => ({
     image: `${CARPETAS[clave]}/${a.file}`,
     mayor: a.mayor,
-    menor: a.menor,
   }));
 }
 
