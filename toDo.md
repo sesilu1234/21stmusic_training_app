@@ -64,3 +64,4 @@ Mejorar sonido de guitarra
 - capar algo mas o algo menos de la web para no loggeados 
 
 
+- añadir google analytics para que el papá lo veo tambiém
