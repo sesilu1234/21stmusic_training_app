@@ -1,7 +1,7 @@
 @AGENTS.md
 
 
-
+- nunca pushes ni commitees sin mi permiso o a menos que te lo pida explicitamente
 
 for you information :  
 
