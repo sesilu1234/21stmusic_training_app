@@ -27,35 +27,21 @@ export const metadata: Metadata = {
 };
 
 /**
- * Los logotipos que hay en `public/assets`, para verlos juntos.
+ * Los logotipos, para verlos juntos.
  *
- * Existe por lo mismo que el resto de la pagina: son cuatro archivos parecidos
+ * Existe por lo mismo que el resto de la pagina: son varios archivos parecidos
  * con nombres que no dicen cual es cual, y cada vez que hace falta uno hay que
- * abrirlos de uno en uno para acordarse. Aqui se ven a la vez, y sobre todo se
- * ven a los tamanos pequenos a los que se usan de verdad, que es donde un logo
- * lleno de detalle se convierte en una mancha.
+ * abrirlos de uno en uno para acordarse.
+ *
+ * `/icon.png` no esta en public: es el favicon, y en Next vive en `app/` y lo
+ * sirve el propio framework en esa ruta.
  */
 const LOGOS = [
-  {
-    src: "/assets/logo21stCM_no_white_1.png",
-    nombre: "no_white_1",
-    nota: "Cromado sin fondo, 1600x1600. El que se usa para generar el favicon.",
-  },
-  {
-    src: "/assets/logo21stCM_no_white_1-192.png",
-    nombre: "no_white_1-192",
-    nota: "El mismo a 192px. Es el que sale en la cabecera y en la pantalla de acceso.",
-  },
-  {
-    src: "/assets/logo21stCM_reducido.jpeg",
-    nombre: "reducido",
-    nota: "El cartel a color, con el fondo de rayos. 1242x864.",
-  },
-  {
-    src: "/assets/logo21stCM.jpeg",
-    nombre: "logo21stCM",
-    nota: "El cromado sobre blanco, en plano. 1600x1600.",
-  },
+  "/icon.png",
+  "/assets/logo21stCM_no_white_1.png",
+  "/assets/logo21stCM_no_white_1-192.png",
+  "/assets/logo21stCM_reducido.jpeg",
+  "/assets/logo21stCM.jpeg",
 ];
 
 /** Nombres inventados, solo para ver el reparto. No son alumnos. */
@@ -92,67 +78,11 @@ export default async function MuestrarioPage() {
             Muestrario
           </h1>
           <p className="mt-2 text-sm text-white/45">
-            Los {LOGOS.length} logotipos, el avatar en uso, los {ANIMALS.length} animales
-            que ya no se usan y {Object.keys(gameIcons).length} iconos de juego.
-            Página de trabajo, solo para administración.
+            El avatar en uso, los {ANIMALS.length} animales que ya no se usan,{" "}
+            {Object.keys(gameIcons).length} iconos de juego y los {LOGOS.length}{" "}
+            logotipos. Página de trabajo, solo para administración.
           </p>
         </header>
-
-        {/* --- Logotipos ------------------------------------------------ */}
-        <section className="mb-14">
-          <h2 className="mb-1 text-[11px] font-black uppercase tracking-[0.24em] text-white/70">
-            Logotipos
-          </h2>
-          <p className="mb-4 text-xs text-white/40">
-            Los archivos que hay en <code>public/assets</code>. La fila de abajo
-            es a 16, 24, 32 y 40px: los tamaños a los que se usan de verdad en la
-            pestaña del navegador y en la cabecera.
-          </p>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {LOGOS.map((logo) => (
-              <div
-                key={logo.src}
-                className="rounded-2xl border border-white/10 bg-slate-900/45 p-4"
-              >
-                {/* Sobre blanco a proposito: dos de los cuatro llevan fondo
-                    transparente y sobre la tarjeta oscura no se distingue si el
-                    fondo es del archivo o de la pagina. */}
-                <div className="grid h-32 place-items-center overflow-hidden rounded-xl bg-white p-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={logo.src}
-                    alt={logo.nombre}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-
-                <div className="mt-3 flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-black tracking-tight">
-                    {logo.nombre}
-                  </span>
-                  <span className="text-[10px] font-black tracking-wider text-white/30">
-                    {logo.src.split("/").pop()}
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] leading-snug text-white/40">{logo.nota}</p>
-
-                <div className="mt-3 flex items-end gap-3 border-t border-white/10 pt-3">
-                  {[16, 24, 32, 40].map((px) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={px}
-                      src={logo.src}
-                      alt=""
-                      style={{ height: px }}
-                      className="w-auto"
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
 
         {/* --- El avatar en uso ----------------------------------------- */}
         {/* Nombres de mentira, solo para ver cómo reparte el hash: lo que se
@@ -295,7 +225,7 @@ export default async function MuestrarioPage() {
         </section>
 
         {/* --- Iconos de juego ------------------------------------------ */}
-        <section>
+        <section className="mb-14">
           <h2 className="mb-4 text-[11px] font-black uppercase tracking-[0.24em] text-white/70">
             Iconos de juego
           </h2>
@@ -310,6 +240,29 @@ export default async function MuestrarioPage() {
                 <span className="text-center text-[10px] font-bold tracking-wide text-white/40">
                   {name}
                 </span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* --- Logotipos ------------------------------------------------ */}
+        {/* Sobre blanco a proposito: dos de ellos llevan fondo transparente y
+            sobre la tarjeta oscura no se distingue si el fondo es del archivo
+            o de la pagina. */}
+        <section>
+          <h2 className="mb-4 text-[11px] font-black uppercase tracking-[0.24em] text-white/70">
+            Logotipos
+          </h2>
+
+          <div className="flex flex-wrap gap-3">
+            {LOGOS.map((src) => (
+              <div
+                key={src}
+                title={src}
+                className="grid h-24 w-32 place-items-center rounded-xl bg-white p-2"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" className="max-h-full max-w-full object-contain" />
               </div>
             ))}
           </div>
