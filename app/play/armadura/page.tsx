@@ -27,12 +27,21 @@ export default function ArmadurasMenuPage() {
 
         <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-5xl mx-auto">
           <div className="mb-10 text-center">
-            <h2
+            {/*
+              Es <h1> y no <h2>, que es lo que era. Se ve exactamente igual —no
+              cambia ni una clase—, pero esta pantalla no tenía encabezado de
+              nivel 1 en ninguna parte: `GameChrome` pone el <h1> solo cuando se
+              le pasa un enunciado, y aquí se le pasa vacío a propósito porque
+              la pregunta vive en la pantalla de juego, no en el menú. El
+              resultado era una página del sitemap sin titular. Este texto ya
+              era el título de la página; solo faltaba decirlo.
+            */}
+            <h1
               className="text-white text-2xl md:text-4xl font-black italic tracking-tighter leading-tight"
               style={{ fontFamily: "Chaney, sans-serif" }}
             >
               Armaduras
-            </h2>
+            </h1>
             <p className="text-white/60 text-xs md:text-sm font-bold uppercase tracking-[0.25em] mt-3">
               Elige con qué clave quieres jugar
             </p>

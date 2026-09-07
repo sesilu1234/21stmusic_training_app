@@ -81,6 +81,35 @@ const nextConfig: NextConfig = {
       { source: "/sobre", destination: "/about", permanent: true },
       { source: "/contacto", destination: "/contact", permanent: true },
       /**
+       * Las dos pantallas de "Acordes en el mástil" estaban en `/play/acordes/`,
+       * fuera del árbol de su propio modo, y eso rompía dos cosas a la vez:
+       *
+       *  · No guardaban partidas. Todo el progreso se resuelve por la ruta
+       *    (`gameFromPath`), que busca el modo por prefijo entre los slugs del
+       *    catálogo. Ningún slug empieza por `/play/acordes/`, así que devolvía
+       *    null y tanto `saveAttempt` como `/api/abandon` se iban en silencio:
+       *    el modo marcaba 0% para todo el mundo desde siempre.
+       *
+       *  · Le decían a Google que eran la portada. Al no tener `layout.tsx`
+       *    propio, heredaban los metadatos del layout raíz —título y etiqueta
+       *    canónica incluidos—, y una canónica que apunta a otra página es
+       *    pedir que no te indexen.
+       *
+       * Ahora cuelgan de `/play/diapason_acordes/`, que es su modo, y las dos
+       * cosas se arreglan solas: `gameFromPath` las reconoce como niveles y los
+       * metadatos los pone el layout del modo.
+       */
+      {
+        source: "/play/acordes/diapason_triadas",
+        destination: "/play/diapason_acordes/triadas",
+        permanent: true,
+      },
+      {
+        source: "/play/acordes/diapason_septimas",
+        destination: "/play/diapason_acordes/septimas",
+        permanent: true,
+      },
+      /**
        * La dirección de Vercel de producción manda al dominio de verdad.
        *
        * Es la forma fuerte de quitar el duplicado: un 308 no solo saca de

@@ -90,9 +90,36 @@ export default function DiapasonGame() {
   const totalQuestions = quizList.length || 24;
 
 
+  /**
+   * El enunciado, en una constante porque se pinta dos veces: en la pantalla de
+   * carga y en la partida. Lo primero es lo nuevo y va a propósito.
+   *
+   * `GameChrome` es quien pone el <h1> de la pantalla, y aquí abajo se devolvía
+   * un div vacío mientras la baraja no estuviera hecha. Como barajar es cosa
+   * del cliente, ese div vacío era TODO lo que recibía quien pidiera la página
+   * sin ejecutar JavaScript: un buscador se llevaba ocho palabras y ningún
+   * encabezado, y esta ruta está en el sitemap. Ahora la cabecera va desde el
+   * primer pintado, que además es lo que se quiere para quien entra con mala
+   * conexión: ve de qué va la pantalla en vez de un rectángulo negro.
+   */
+  const enunciado = (
+    <GameChrome>
+      ¿<span className="uppercase">Q</span>ué{" "}
+      <span className="text-black mx-1 md:mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
+        NOTA
+      </span>{" "}
+      es?
+    </GameChrome>
+  );
+
   // Prevent rendering until mounted to avoid mismatch
   if (!isMounted || quizList.length === 0) {
-    return <div className="min-h-screen bg-slate-900" />;
+    return (
+      <div className="relative min-h-screen flex flex-col overflow-x-hidden font-sans text-white">
+        <Backdrop />
+        <div className="relative z-10 min-h-screen flex flex-col">{enunciado}</div>
+      </div>
+    );
   }
 
   const handleAnswer = (nota: string) => {
@@ -148,13 +175,7 @@ export default function DiapasonGame() {
       <Backdrop />
 
       <div className="relative z-10 min-h-screen flex flex-col">
-      <GameChrome>
-        ¿<span className="uppercase">Q</span>ué{" "}
-        <span className="text-black mx-1 md:mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
-        NOTA
-        </span>{" "}
-        es?
-      </GameChrome>
+      {enunciado}
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-6xl mx-auto">
 

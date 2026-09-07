@@ -14,24 +14,32 @@ import { SITE_URL } from "@/lib/seo";
  * Los niveles de cada modo NO entran, aunque tengan URL propia. Son la misma
  * pantalla con otro contenido, y meter cien direcciones casi iguales diluye
  * las veinte que sí dicen algo.
+ *
+ * Aquí va SOLO la URL, y las tres cosas que se han quitado se quitaron por
+ * motivos distintos:
+ *
+ *  · `lastModified` era `new Date()`, o sea la hora de generar el sitemap. Eso
+ *    le decía a Google que las veintidós páginas se habían modificado hoy, y se
+ *    lo decía otra vez mañana. Google descarta el `lastmod` de un sitio entero
+ *    en cuanto ve ese patrón, porque es la firma de una fecha automática. Una
+ *    fecha falsa es peor que ninguna: no gana rastreo y quema la credibilidad
+ *    del campo. Para ponerla de verdad haría falta saber cuándo cambió cada
+ *    página, y eso aquí no se sabe.
+ *
+ *  · `priority` y `changeFrequency` los ignora Google por completo, y lo dice
+ *    él, no es una interpretación. Solo eran dos números que mantener.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-
   const paginas = [
-    { url: SITE_URL, priority: 1, changeFrequency: "weekly" as const },
-    { url: `${SITE_URL}/about`, priority: 0.6, changeFrequency: "monthly" as const },
-    { url: `${SITE_URL}/contact`, priority: 0.5, changeFrequency: "yearly" as const },
-    { url: `${SITE_URL}/privacidad`, priority: 0.2, changeFrequency: "yearly" as const },
+    SITE_URL,
+    `${SITE_URL}/about`,
+    `${SITE_URL}/contact`,
+    `${SITE_URL}/privacidad`,
   ];
 
   const juegos = GAMES.filter((game) => !game.studentsOnly && !game.comingSoon).map(
-    (game) => ({
-      url: `${SITE_URL}${game.slug}`,
-      priority: 0.8,
-      changeFrequency: "monthly" as const,
-    }),
+    (game) => `${SITE_URL}${game.slug}`,
   );
 
-  return [...paginas, ...juegos].map((pagina) => ({ ...pagina, lastModified: now }));
+  return [...paginas, ...juegos].map((url) => ({ url }));
 }

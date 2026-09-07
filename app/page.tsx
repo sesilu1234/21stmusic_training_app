@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Flame, Hammer, Lock, Medal } from "lucide-react";
 import AppShell from "./components/AppShell";
@@ -5,6 +6,21 @@ import { gameIcons } from "./components/gameIcons";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
 import { getProgress, type GameProgress } from "@/lib/progress";
+import { SITE_URL } from "@/lib/seo";
+
+/**
+ * La canónica de la portada, que antes estaba en el layout raíz.
+ *
+ * Ahí valía para esta página y mentía en todas las demás, porque los metadatos
+ * se heredan: cualquier ruta sin `alternates` propio salía diciendo que la
+ * página buena era esta. Puesta aquí solo habla de quien la declara.
+ *
+ * Título y descripción no hacen falta: los del layout raíz ya son los de la
+ * portada, que es de donde salen los valores por defecto.
+ */
+export const metadata: Metadata = {
+  alternates: { canonical: SITE_URL },
+};
 
 /**
  * Tarjeta de modo. Si el modo es de alumnos y no hay sesión, sigue siendo un

@@ -32,7 +32,24 @@ export const metadata: Metadata = {
     "oído, ritmo, lectura, guitarra y piano desde el navegador.",
 
   applicationName: "21st Century Music",
-  alternates: { canonical: SITE_URL },
+
+  /**
+   * AQUÍ NO VA `alternates`, y no es un olvido.
+   *
+   * Los metadatos de Next se heredan campo a campo: una página que no declara
+   * `alternates` se queda con el de su layout. Aquí estaba puesta la canónica
+   * de la portada, así que toda página que no pusiera la suya le decía a Google
+   * "la buena de verdad es la portada" — que es la manera exacta de pedir que
+   * no te indexen.
+   *
+   * No era teoría: `/play/acordes/diapason_triadas` y su hermana de séptimas
+   * salían del build con `<link rel="canonical" href="https://www.21stcenturymusic.app">`
+   * y con el título de la portada. Dos juegos enteros pidiendo no existir.
+   *
+   * La canónica de la portada vive ahora en `app/page.tsx`, que es su página.
+   * Así una ruta que se olvide de declararla no sale con una mentira: sale sin
+   * canónica, que es un problema mucho más pequeño y encima se ve.
+   */
   keywords: [
     "entrenamiento musical",
     "ejercicios de oído",

@@ -36,6 +36,8 @@ export default function robots(): MetadataRoute.Robots {
       disallow: ["/api/"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    // `host` estaba aquí y se ha quitado: es una directiva de Yandex que Google
+    // y Bing ignoran, y lo que hacía —decir cuál de los dominios es el bueno—
+    // ya lo dicen el 308 del apex hacia www y las etiquetas canónicas.
   };
 }

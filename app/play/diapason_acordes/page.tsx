@@ -14,14 +14,14 @@ export default function AcordesMenuPage() {
         {
           title: "Tríadas",
           description: "Mayores, menores, aumentados y disminuidos.",
-          href: "/play/acordes/diapason_triadas",
+          href: "/play/diapason_acordes/triadas",
           Icon: Grip,
           badge: "Inicial",
         },
         {
           title: "Séptimas",
           description: "Maj7, m7, dominante 7 y semidisminuido.",
-          href: "/play/acordes/diapason_septimas",
+          href: "/play/diapason_acordes/septimas",
           Icon: Layers,
           badge: "Avanzado",
         },

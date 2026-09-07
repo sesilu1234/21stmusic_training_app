@@ -4,24 +4,45 @@ import GameChrome from "@/app/components/GameChrome";
 import { barajar } from "@/lib/barajar";
 import { ROUND_LENGTH } from "@/lib/roundLength";
 import { chords_images } from "./chords_images";
-import {
-  CheckCircle2,
-  XCircle,
-  ArrowLeft,
-  ArrowRight,
-  Home,
-} from "lucide-react";
+import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import LoadingBars from "@/app/components/LoadingBars";
 import Backdrop from "@/app/components/Backdrop";
 
-export default function TriadsGame() {
+export default function ChordsGame() {
 
-  // Los nombres que se leen son los de lib/chordNames.ts: en el papel un
-  // acorde pone "dim" y "aug", no "Disminuido" y "Aumentado".
-  const opcionesAcordes = ["Mayor", "Menor", "aug", "dim"];
+  // El cifrado manda y el nombre hablado va debajo. Antes los botones decían
+  // "Mayor 7", que según a quién preguntes es maj7 o es dominante: el mismo
+  // lío que teníamos con las mayúsculas. `answer` es el id de la imagen y no
+  // se toca.
+  /**
+   * Los cuatro botones.
+   *
+   * `answer` TIENE QUE COINCIDIR LETRA POR LETRA con lo que trae
+   * `chords_images.tsx`, que a su vez es el nombre de la carpeta donde vive
+   * cada imagen: "maj7", "min7", "7" y "min7b5". Aqui ponia "min 7" y
+   * "min 7 b5", con espacios, y ningun acorde menor septima ni
+   * semidisminuido podia acertarse jamas: la mitad justa de las 96 preguntas
+   * salia en rojo aunque estuviera bien.
+   *
+   * Y de paso tampoco se veia cual era la buena. La solucion se busca con
+   * `find(opcion => opcion.answer === currentQuestion.answer)`; al no casar
+   * ninguna, devolvia `undefined` y ni se pintaba de verde el boton correcto
+   * ni salia el cartel de la solucion. De ahi lo de "a veces, cuando fallo,
+   * no me dice cual era".
+   *
+   * `symbol` es lo que se lee en el boton y sale de lib/chordNames.ts; no
+   * tiene por que ser igual que `answer`, que es el nombre de la carpeta.
+   */
+  const opcionesSeptimas = [
+    { symbol: "maj7", word: "séptima mayor", answer: "maj7" },
+    { symbol: "m7", word: "séptima menor", answer: "min7" },
+    { symbol: "7", word: "dominante", answer: "7" },
+    { symbol: "m7b5", word: "semidisminuido", answer: "min7b5" },
+  ];
 
+  // Hydration fix: Mezclar en el cliente
   const [quizList, setQuizList] = useState<typeof chords_images>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [step, setStep] = useState(0);
@@ -57,7 +78,7 @@ export default function TriadsGame() {
     if (quizList.length > 0) {
       quizList.forEach((q) => {
         const img = new Image();
-        img.src = `/assets/diapason_triadas/${q.image}`;
+        img.src = `/assets/diapason_septimas/${q.image}`;
       });
     }
   }, [quizList]);
@@ -66,7 +87,7 @@ export default function TriadsGame() {
     if (currentQuestion) {
       setIsImageLoading(true);
       const img = new Image();
-      img.src = `/assets/diapason_triadas/${currentQuestion.image}`;
+      img.src = `/assets/diapason_septimas/${currentQuestion.image}`;
       if (img.complete) setIsImageLoading(false);
       img.onload = () => setIsImageLoading(false);
     }
@@ -83,34 +104,44 @@ export default function TriadsGame() {
   const totalQuestions = quizList.length || 24;
 
 
+  /**
+   * El enunciado, en una constante porque ahora se pinta dos veces: en la
+   * pantalla de carga y en la partida. Lo segundo es lo nuevo, y va a propósito.
+   *
+   * `GameChrome` es quien pone el <h1> de la pantalla, y aquí abajo se devolvía
+   * un div vacío mientras `isMounted` fuera false. Como la baraja se hace en el
+   * cliente, ese div vacío era TODO lo que se llevaba quien pidiera la página
+   * sin ejecutar JavaScript —un buscador, sin ir más lejos—: seis palabras y
+   * ningún encabezado. Ahora la cabecera está desde el primer pintado, que
+   * además es lo que se quiere para quien entra con mala conexión.
+   *
+   * Dice SÉPTIMA y no ACORDE, que es lo que ponía, porque la pantalla de
+   * tríadas tenía este mismo texto palabra por palabra: dos ejercicios
+   * distintos con el mismo titular.
+   */
+  const enunciado = (
+    <GameChrome>
+      ¿Qué tipo de{" "}
+      <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
+        SÉPTIMA
+      </span>{" "}
+      es?
+    </GameChrome>
+  );
+
   if (!isMounted || !currentQuestion)
-    return <div className="min-h-screen bg-slate-900" />;
+    return (
+      <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+        <Backdrop />
+        <div className="relative z-10 min-h-screen flex flex-col">{enunciado}</div>
+      </div>
+    );
 
-  // A la izquierda, el texto del botón; a la derecha, la etiqueta con la que
-  // están marcadas las imágenes en chords_images.ts. No se tocan las de la
-  // derecha: son datos, no texto que se lea.
-  const mapping: Record<string, string> = {
-    Mayor: "Mayores",
-    Menor: "Menores",
-    aug: "aug",
-    dim: "dim",
-  };
-
-  const reverseMapping: Record<string, string> = {
-    Mayores: "Mayor",
-    Menores: "Menor",
-    aug: "aug",
-    dim: "dim",
-  };
-
-  // Opción correcta expresada como texto de botón ("Mayor", "Menor"...)
-  const correctOption = reverseMapping[currentQuestion.answer] || "";
-
-  const handleAnswer = (notaSeleccionada: string) => {
+  const handleAnswer = (opcion: (typeof opcionesSeptimas)[number]) => {
     if (userAnswers[step] !== null || gameOver || !!showFeedback) return;
     setIsReviewing(false);
 
-    const isCorrect = mapping[notaSeleccionada] === currentQuestion.answer;
+    const isCorrect = opcion.answer === currentQuestion.answer;
     setShowFeedback(isCorrect ? "correct" : "wrong");
 
     const newResults = [...results];
@@ -118,7 +149,7 @@ export default function TriadsGame() {
     setResults(newResults);
 
     const newAnswers = [...userAnswers];
-    newAnswers[step] = notaSeleccionada;
+    newAnswers[step] = opcion.symbol;
     setUserAnswers(newAnswers);
 
     setTimeout(
@@ -130,7 +161,7 @@ export default function TriadsGame() {
           setGameOver(true);
         }
       },
-      isCorrect ? 300 : 700,
+      isCorrect ? 900 : 1800,
     );
   };
 
@@ -147,53 +178,22 @@ export default function TriadsGame() {
     if (nextStep >= progresoMaximo) setIsReviewing(false);
   };
 
-  const getSolucionTexto = () => reverseMapping[currentQuestion.answer] || "";
-
-  // Calcula el estilo de cada botón según el estado actual
-  const getButtonStyle = (nota: string) => {
-    const isAnswered = userAnswers[step] !== null;
-    const isThisCorrect = nota === correctOption;
-    const isThisSelected = nota === userAnswers[step];
-
-    // Justo después de responder (showFeedback activo): marca correcto en verde y error en rojo
-    if (showFeedback) {
-      if (isThisCorrect)
-        return "bg-green-500/30 border-green-400 text-white scale-[1.02]";
-      if (isThisSelected && showFeedback === "wrong")
-        return "bg-red-500/30 border-red-400 text-white";
-      return "opacity-30 border-white/10 bg-white/5 text-white";
-    }
-
-    // Revisando una pregunta ya contestada: muestra correcto en verde y el error en rojo
-    if (isReviewing && isAnswered) {
-      if (isThisCorrect) return "bg-green-500/30 border-green-400 text-white";
-      if (isThisSelected && results[step] === "wrong")
-        return "bg-red-500/20 border-red-400/60 text-white";
-      return "opacity-30 border-white/10 bg-white/5 text-white";
-    }
-
-    // Estado normal (sin responder aún)
-    return "border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black";
-  };
+  const getSolucion = () =>
+    opcionesSeptimas.find((opcion) => opcion.answer === currentQuestion.answer);
 
   return (
     <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
       <Backdrop />
 
       <div className="relative z-10 min-h-screen flex flex-col">
-      <GameChrome>
-        ¿Qué tipo de{" "}
-        <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
-        ACORDE
-        </span>{" "}
-        es?
-      </GameChrome>
+      {/* HEADER / NAVIGATION */}
+      {enunciado}
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-5xl mx-auto">
-        {/* TÍTULO */}
+        {/* TITULO */}
 
         {/* CARTA DE PREGUNTA */}
-        <div className="relative flex flex-col items-center w-full max-w-sm md:max-w-md mb-10">
+        <div className="relative flex flex-col items-center w-full max-w-lg md:max-w-xl mb-10">
           <div
             className={`bg-white p-2 md:p-2 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl w-full h-44 md:h-52 flex items-center justify-center border-4 relative overflow-hidden transition-all duration-300 ${
               showFeedback === "correct"
@@ -225,56 +225,74 @@ export default function TriadsGame() {
 
             <img
               key={currentQuestion.image}
-              src={`/assets/diapason_triadas/${currentQuestion.image}`}
+              src={`/assets/diapason_septimas/${currentQuestion.image}`}
               alt="Acorde"
-              className={`max-h-full max-w-full object-contain transition-all duration-300 ${isImageLoading ? "opacity-0" : "opacity-100"}`}
+              className={`max-h-full max-w-full object-contain transition-all duration-300  ${isImageLoading ? "opacity-0" : "opacity-100"}`}
             />
           </div>
 
-          {/* BADGE DE SOLUCIÓN (Solo en revisión o error) */}
+          {/* SOLUCIÓN BADGE */}
           <div
-            className={`absolute -bottom-8 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 transform ${
-              (isReviewing || showFeedback === "wrong") &&
-              userAnswers[step] !== null
-                ? "translate-y-0 opacity-100"
-                : "translate-y-4 opacity-0 pointer-events-none"
-            }`}
+            className={`absolute -bottom-8 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 transform ${(isReviewing || showFeedback === "wrong") && userAnswers[step] !== null ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"}`}
           >
             <div className="px-6 py-2 rounded-2xl border-2 border-amber-400/50 bg-black/90 backdrop-blur-xl flex flex-col items-center shadow-2xl min-w-[140px]">
               <span className="text-[7px] text-amber-400 uppercase font-black tracking-widest">
                 Solución
               </span>
-              {/* normal-case y no `uppercase`: la solución ahora puede ser
-                  "dim" o "aug", y en mayúsculas se leerían como siglas. Ver
-                  lib/chordNames.ts. */}
-              <span className="text-xs md:text-sm font-bold text-white normal-case italic">
-                {getSolucionTexto()}
+              {/* normal-case: el cifrado distingue mayúsculas de minúsculas,
+                  y "m7b5" en mayúsculas se lee "M7B5", que es otro acorde.
+                  Ver lib/chordNames.ts. */}
+              <span className="text-sm md:text-base font-bold text-white italic normal-case">
+                {getSolucion()?.symbol}
+              </span>
+              <span className="text-[8px] text-white/40 uppercase tracking-wider">
+                {getSolucion()?.word}
               </span>
             </div>
           </div>
         </div>
 
-        {/* BOTONES DE RESPUESTA GRID */}
+        {/* GRID DE BOTONES RESPONSIVE */}
         <div
-          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-all ${
-            showFeedback ? "pointer-events-none" : ""
-          }`}
+          className={`bg-black/40 p-3 md:p-5 rounded-[1.75rem] md:rounded-[2.5rem] border border-white/10 w-full backdrop-blur-md transition-all ${userAnswers[step] !== null || showFeedback ? "pointer-events-none" : ""}`}
         >
-          <div className="grid grid-cols-2 gap-3 md:gap-4">
-            {opcionesAcordes.map((nota) => (
-              <button
-                key={nota}
-                disabled={userAnswers[step] !== null || !!showFeedback}
-                onClick={() => handleAnswer(nota)}
-                className={`py-4 md:py-6 rounded-xl border transition-all active:scale-95 shadow-sm ${getButtonStyle(nota)}`}
-              >
-                <span className="text-xs md:text-sm font-bold">{nota}</span>
-              </button>
-            ))}
+          <div className="grid grid-cols-2 gap-2.5 md:gap-3">
+            {opcionesSeptimas.map((opcion) => {
+              // Corregida: verde la buena y rojo la que pulsaste si fallaste,
+              // como en el resto de modos.
+              const contestada = userAnswers[step];
+              const esSolucion = opcion.answer === currentQuestion.answer;
+              const laPulsaste = contestada === opcion.symbol;
+
+              const estado =
+                contestada === null
+                  ? "border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black"
+                  : esSolucion
+                    ? "border-emerald-400 bg-emerald-400/25 text-emerald-100"
+                    : laPulsaste
+                      ? "border-rose-400 bg-rose-500/25 text-rose-100"
+                      : "border-white/5 bg-white/5 text-white/25";
+
+              return (
+                <button
+                  key={opcion.symbol}
+                  disabled={contestada !== null || !!showFeedback}
+                  onClick={() => handleAnswer(opcion)}
+                  className={`group py-2.5 md:py-3.5 rounded-xl border transition-all active:scale-95 disabled:cursor-default ${estado}`}
+                >
+                  <span className="block text-sm md:text-base font-black">
+                    {opcion.symbol}
+                  </span>
+                  <span className="mt-0.5 block text-[8px] md:text-[9px] font-bold uppercase tracking-wider opacity-50 group-hover:opacity-70">
+                    {opcion.word}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* PROGRESO Y CONTROLES */}
+        {/* NAVEGACIÓN Y PROGRESO */}
         <div className="w-full mt-10 md:mt-16 flex flex-col items-center gap-6">
           <div className="flex items-center justify-between w-full max-w-md gap-4">
             <button
@@ -311,11 +329,7 @@ export default function TriadsGame() {
 
             <button
               onClick={goNext}
-              className={`p-3 bg-amber-500 text-black rounded-full shadow-lg transition-all ${
-                isReviewing || (userAnswers[step] !== null && !showFeedback)
-                  ? "opacity-100"
-                  : "opacity-0 pointer-events-none"
-              }`}
+              className={`p-3 bg-amber-500 text-black rounded-full shadow-lg transition-all ${isReviewing || (userAnswers[step] !== null && !showFeedback) ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             >
               <ArrowRight size={20} />
             </button>
@@ -327,7 +341,7 @@ export default function TriadsGame() {
         </footer>
       </div>
 
-      {/* MODAL GAME OVER */}
+      {/* MODAL FINAL */}
       {gameOver && (
         <GameOverModal correct={correctCount} total={totalQuestions} />
       )}

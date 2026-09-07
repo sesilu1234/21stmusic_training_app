@@ -46,6 +46,12 @@ export const GAME_LEVELS: Record<string, string[]> = {
   // Dos pantallas hermanas, sin niveles dentro de cada una.
   "/play/intervalos": ["diapason", "pentagrama"],
 
+  // Igual que intervalos: dos pantallas y ya. Faltaba, y no por olvido: sus dos
+  // pantallas vivían en /play/acordes/, fuera del árbol del modo, así que
+  // `gameFromPath` no las reconocía y sus partidas no se guardaban. Al no
+  // llegar ninguna a la base de datos, el modo parecía de una sola pantalla.
+  "/play/diapason_acordes": ["triadas", "septimas"],
+
   // Tres, por la clave con la que se juega. Antes la clave se elegía con un
   // botón sin cambiar de dirección, así que las tres partidas se guardaban
   // como el mismo nivel y una sola perfecta daba el modo por dominado.
