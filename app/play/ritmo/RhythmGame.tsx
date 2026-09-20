@@ -20,18 +20,13 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
   const [flash, setFlash] = useState(false);
   const [showScore, setShowScore] = useState(false);
 
-  const [scoreData, setScoreData] = useState({
-    hits: 0,
-    misses: 0,
-    percentage: 0,
-  });
+  const [scoreData, setScoreData] = useState({ hits: 0, misses: 0 });
 
   const [bpm, setBpm] = useState(level.defaultBpm);
   const [localBpm, setLocalBpm] = useState(level.defaultBpm);
   const [measures, setMeasures] = useState(preferredMeasures(measureOptions));
   const [currentTick, setCurrentTick] = useState(1);
 
-  const tapsRef = useRef<{ id: number; time: number }[]>([]);
   const musicRef = useRef<MusicRef>(null);
 
   const bpmRef = useRef<number>(level.defaultBpm);
@@ -42,18 +37,15 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
 
     if (endType == "reset") return;
 
-    const played = (data.correct_notes ?? 0) + (data.failed_notes ?? 0);
-
+    // El marcador son los compases, y quien decide si un compás está bien es
+    // la partitura (`MusicDisplay`): tiene que estar entero y sin pulsaciones
+    // de más. Aquí hubo un cálculo de porcentaje que intentaba castigar las
+    // pulsaciones sobrantes dividiendo por la media de golpes por nota, pero
+    // no se pintaba en ningún sitio ni se guardaba, así que aporrear la barra
+    // seguía dando pleno.
     setScoreData({
       hits: data.correct_measures ?? 0,
       misses: data.failed_measures ?? 0,
-      percentage:
-        played === 0
-          ? 0
-          : Math.round(
-              (((data.correct_notes ?? 0) / played) * 100) /
-                Math.max(1, tapsRef.current.length / played),
-            ),
     });
 
     setShowScore(true);
@@ -79,13 +71,11 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
 
     if (!isPlaying) {
       setIsPlaying(true);
-      tapsRef.current = [];
       musicRef.current?.handleStart(isPlaying);
       return;
     }
     musicRef.current?.handleStart(isPlaying);
     const tapTime = ctx.currentTime;
-    tapsRef.current.push({ id: tapsRef.current.length + 1, time: tapTime });
     playTapSound(tapTime);
     setFlash(true);
     setTimeout(() => setFlash(false), 100);

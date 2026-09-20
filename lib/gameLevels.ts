@@ -21,6 +21,7 @@ import { CHORD_LEVELS, PROGRESSION_LEVELS } from "./chordEar";
 import { PAIR_LEVELS } from "./chordPair";
 import { MELODY_LEVELS } from "./melodyEar";
 import { NOTE_READING_LEVELS } from "./noteReading";
+import { ACORDE_NIVELES, ESCALA_NIVELES } from "./noteSpelling";
 import { CHORD_BUILD_LEVELS, SCALE_BUILD_LEVELS } from "./pianoBuild";
 import { PIANO_INTERVAL_LEVELS } from "./pianoIntervals";
 import { PIANO_NOTE_LEVELS } from "./pianoNotes";
@@ -45,6 +46,10 @@ export const GAME_LEVELS: Record<string, string[]> = {
 
   // Dos pantallas hermanas, sin niveles dentro de cada una.
   "/play/intervalos": ["diapason", "pentagrama"],
+
+  // Construye el intervalo no sale aquí: es una pantalla sola, sin niveles.
+  "/play/construye-escalas": slugs(ESCALA_NIVELES),
+  "/play/construye-acordes": slugs(ACORDE_NIVELES),
 
   // Igual que intervalos: dos pantallas y ya. Faltaba, y no por olvido: sus dos
   // pantallas vivían en /play/acordes/, fuera del árbol del modo, así que

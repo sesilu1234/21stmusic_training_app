@@ -94,7 +94,19 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
     const gameRef = useRef<ReturnType<typeof createGameState> | null>(null);
 
-    const TAP_RUN_TIMES = useRef<number[]>([]);
+    /**
+     * Todo lo que se ha pulsado, no sólo lo que ha acertado.
+     *
+     * Guardar únicamente las que caían dentro de una nota era lo que dejaba
+     * pasar la trampa: aporreando la barra espaciadora todas las notas
+     * acababan teniendo una pulsación dentro de su ventana, y la partida salía
+     * perfecta. Ahora cada pulsación se apunta con su momento (`time`, en
+     * segundos desde el arranque) y con si sobraba o no (`extra`), y al acabar
+     * las que sobran tumban el compás en el que cayeron.
+     */
+    const TAP_RUN_TIMES = useRef<{ x: number; time: number; extra: boolean }[]>(
+      [],
+    );
 
     const notFirstTime = useRef<boolean>(false);
 
@@ -463,10 +475,12 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         ctx.stroke();
       });
 
-      TAP_RUN_TIMES.current.forEach((tapX) => {
+      // Las que sobran salen en rojo: si un compás se ha caído por aporrear,
+      // se ve dónde. Las demás siguen siendo el punto de siempre.
+      TAP_RUN_TIMES.current.forEach((tap) => {
         ctx.beginPath();
-        ctx.arc(tapX, midY + 30, 4, 0, Math.PI * 2);
-        ctx.fillStyle = "#7a6e33";
+        ctx.arc(tap.x, midY + 30, 4, 0, Math.PI * 2);
+        ctx.fillStyle = tap.extra ? "#c2410c" : "#7a6e33";
         ctx.fill();
       });
       ctx.fillStyle = "#111";
@@ -534,8 +548,15 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           setShowDrag(true);
 
           if (onComplete) {
-            const bag: ScoreItem[][] = [];
+            // Los compases, cada uno con sus notas y con el trozo de tiempo
+            // que ocupa. El tiempo hace falta para saber en qué compás cayó
+            // cada pulsación de más: sin eso, un compás aporreado no se
+            // distingue de uno tocado.
+            const secondsPerTick = 60 / BPM.current / TPQ;
+            const bag: { notes: ScoreItem[]; start: number }[] = [];
             let bag_aux: ScoreItem[] = [];
+            let measureStart = 0;
+            let acc = 0;
 
             let correct_notes = 0;
             let failed_notes = 0;
@@ -547,30 +568,66 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
               }
 
               if (ele.kind === "barline") {
-                bag.push([...bag_aux]);
+                bag.push({ notes: [...bag_aux], start: measureStart });
                 bag_aux = [];
-              } else if (ele.kind === "note") {
-                bag_aux.push(ele);
+                measureStart = acc * secondsPerTick;
+              } else {
+                if (ele.kind === "note") bag_aux.push(ele);
+                acc += ele.ticks;
               }
             }
 
-            if (bag_aux.length > 0) bag.push(bag_aux);
+            if (bag_aux.length > 0) {
+              bag.push({ notes: bag_aux, start: measureStart });
+            }
 
-            const measures_scores = bag.filter((group) => group.length > 0);
+            // Los compases que se puntúan son los que tienen notas, y eso deja
+            // fuera la entradilla: `createRhythmScore` la escribe como un
+            // compás más, de silencios, y contarla convertía una partida de 24
+            // en una de 26 (son dos grupos vacíos: el de antes de su barra y el
+            // de sus cuatro silencios).
+            const measures_scores = bag.filter((group) => group.notes.length > 0);
+
+            // Las pulsaciones que sobran, repartidas por compases. Una que se
+            // adelanta al primer tiempo del compás siguiente cuenta en ese, no
+            // en el que acaba: por eso el margen de la ventana de acierto.
+            //
+            // Las de antes del primer compás no cuentan para nadie: son las de
+            // la entradilla, y llevar el pulso mientras te cuentan no es un
+            // fallo.
+            const extras = measures_scores.map(() => 0);
+            TAP_RUN_TIMES.current.forEach((tap) => {
+              if (!tap.extra) return;
+              for (let m = measures_scores.length - 1; m >= 0; m--) {
+                if (tap.time >= measures_scores[m].start - HIT_MAX) {
+                  extras[m]++;
+                  return;
+                }
+              }
+            });
 
             let correct_measures = 0;
             let failed_measures = 0;
 
-            for (const measure of measures_scores) {
-              if (measure.every((item) => item.status === 0)) correct_measures++;
-              else failed_measures++;
-            }
+            // Un compás vale cuando están todas sus notas Y no hay nada de
+            // más: cuatro negras se tocan con cuatro golpes, no con quince.
+            measures_scores.forEach((measure, index) => {
+              if (
+                extras[index] === 0 &&
+                measure.notes.every((item) => item.status === 0)
+              ) {
+                correct_measures++;
+              } else {
+                failed_measures++;
+              }
+            });
 
             onComplete("end", {
               correct_notes,
               failed_notes,
               correct_measures,
               failed_measures,
+              extra_taps: extras.reduce((sum, count) => sum + count, 0),
             });
           }
           return;
@@ -625,16 +682,21 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           const note = game.TIME_LINE_NOTES[currentNoteIndex.current];
           const currentTapTime = getCtx().currentTime - startTimeRef.current;
 
-          if (
-            note &&
+          const hit =
+            !!note &&
             currentTapTime >= note.time - note.early &&
-            currentTapTime <= note.time + note.late
-          ) {
-            game.score[note.index].status = 0;
+            currentTapTime <= note.time + note.late;
+
+          if (hit) {
+            game.score[note!.index].status = 0;
             currentNoteIndex.current++;
           }
 
-          TAP_RUN_TIMES.current.push(scrollX.current + LEFT_PAD);
+          TAP_RUN_TIMES.current.push({
+            x: scrollX.current + LEFT_PAD,
+            time: currentTapTime,
+            extra: !hit,
+          });
         }
       },
       handleBPMChange: (bpm: number) => {

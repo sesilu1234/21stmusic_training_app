@@ -18,7 +18,10 @@ export type GameIcon =
   | "Lightbulb"
   | "Music2"
   | "Mic"
-  | "BookOpen";
+  | "BookOpen"
+  | "Spline"
+  | "MoveVertical"
+  | "Blocks";
 
 export type CategoryId =
   | "lenguaje"
@@ -174,6 +177,38 @@ export const GAMES: GameMode[] = [
     desc: "La distancia entre dos notas.",
     slug: "/play/intervalos",
     icon: "ArrowUpDown",
+    category: "lenguaje",
+    scored: true,
+  },
+  // Los tres van en singular —"la escala", "el acorde"— y no en plural por un
+  // motivo que no es de estilo: "Construye escalas" y "Construye acordes" son
+  // los dos modos de piano, y `name` es la clave con la que se guardan las
+  // partidas. Dos modos con el mismo nombre se pisan en `GAME_BY_STORED_NAME`,
+  // y el panel de progreso le colgaría a uno las partidas del otro.
+  {
+    name: "Construye el intervalo",
+    label: "Construye el intervalo",
+    desc: "«Sube una 3ª menor desde Sib»: di qué nota sale.",
+    slug: "/play/construye-intervalos",
+    icon: "MoveVertical",
+    category: "lenguaje",
+    scored: true,
+  },
+  {
+    name: "Construye la escala",
+    label: "Construye la escala",
+    desc: "Sale el nombre de una escala y la dices nota a nota.",
+    slug: "/play/construye-escalas",
+    icon: "Spline",
+    category: "lenguaje",
+    scored: true,
+  },
+  {
+    name: "Construye el acorde",
+    label: "Construye el acorde",
+    desc: "Sale el cifrado de un acorde y lo deletreas de abajo arriba.",
+    slug: "/play/construye-acordes",
+    icon: "Blocks",
     category: "lenguaje",
     scored: true,
   },

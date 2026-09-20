@@ -1,5 +1,6 @@
 import {
   ArrowUpDown,
+  Blocks,
   BookOpen,
   Drum,
   Ear,
@@ -11,7 +12,9 @@ import {
   ListMusic,
   Mic,
   Music2,
+  MoveVertical,
   Piano,
+  Spline,
   Waypoints,
 } from "lucide-react";
 import type { GameIcon } from "@/lib/games";
@@ -31,4 +34,7 @@ export const gameIcons: Record<GameIcon, React.ElementType<{ size?: number; clas
   Music2,
   Mic,
   BookOpen,
+  Spline,
+  MoveVertical,
+  Blocks,
 };
