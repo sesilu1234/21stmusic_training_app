@@ -82,7 +82,10 @@ export interface PianoNoteQuestion {
   preferFlat: boolean;
 }
 
-/** Preguntas de una partida, sin repetir la misma dos veces seguidas. */
+/**
+ * Preguntas de una partida, cada nota al azar. Puede salir la misma dos veces
+ * seguidas: si no, la pregunta anterior descartaría una respuesta.
+ */
 export const buildPianoNoteQuiz = (
   level: PianoNoteLevel,
   count: number,
@@ -90,14 +93,8 @@ export const buildPianoNoteQuiz = (
   const questions: PianoNoteQuestion[] = [];
 
   for (let i = 0; i < count; i++) {
-    const previous = questions[i - 1]?.semitone;
-    const pool =
-      level.notes.length > 1
-        ? level.notes.filter((note) => note !== previous)
-        : level.notes;
-
     questions.push({
-      semitone: pool[Math.floor(Math.random() * pool.length)],
+      semitone: level.notes[Math.floor(Math.random() * level.notes.length)],
       // Las teclas negras salen unas veces como sostenido y otras como bemol,
       // que es como se las va a encontrar en una partitura de verdad.
       preferFlat: Math.random() < 0.5,

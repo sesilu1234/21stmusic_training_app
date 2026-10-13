@@ -277,25 +277,18 @@ export interface ChordQuestion {
 }
 
 /**
- * Construye la secuencia de una pregunta. No se repite el mismo acorde dos
- * veces seguidas dentro de la progresión: sonaría como si no hubiera cambiado
- * nada y la pregunta se volvería tramposa.
+ * Construye la secuencia de una pregunta, cada acorde al azar.
+ *
+ * Puede repetirse un acorde, dentro de la progresión y de una pregunta a la
+ * siguiente, a propósito. Antes se evitaba y eso daba pistas: con dos opciones
+ * (Mayor o menor) las preguntas alternaban siempre y se acertaba sin escuchar,
+ * y con tres la anterior ya descartaba una.
  */
-const buildSequence = (level: ChordLevel): ChordOption[] => {
-  const sequence: ChordOption[] = [];
-
-  for (let i = 0; i < level.length; i++) {
-    const previous = sequence[i - 1]?.id;
-    const pool =
-      level.options.length > 1
-        ? level.options.filter((option) => option.id !== previous)
-        : level.options;
-
-    sequence.push(pool[Math.floor(Math.random() * pool.length)]);
-  }
-
-  return sequence;
-};
+const buildSequence = (level: ChordLevel): ChordOption[] =>
+  Array.from(
+    { length: level.length },
+    () => level.options[Math.floor(Math.random() * level.options.length)],
+  );
 
 /** Una de las formas posibles de la opción; casi siempre solo hay una. */
 const pickShape = (option: ChordOption) =>
@@ -303,27 +296,12 @@ const pickShape = (option: ChordOption) =>
     ? option.variants[Math.floor(Math.random() * option.variants.length)]
     : option.shape;
 
-/** Lista de preguntas sin repetir la misma dos veces seguidas. */
+/** Lista de preguntas, cada una al azar (ver `buildSequence`). */
 export const buildChordQuiz = (level: ChordLevel, count: number): ChordQuestion[] => {
   const questions: ChordQuestion[] = [];
 
-  const signature = (options: ChordOption[]) => options.map((o) => o.id).join("-");
-
   for (let i = 0; i < count; i++) {
-    const previous = questions[i - 1];
-    let options = buildSequence(level);
-
-    // Con pocas combinaciones posibles no siempre hay alternativa, así que se
-    // intenta unas cuantas veces y se acepta lo que salga.
-    for (
-      let attempt = 0;
-      attempt < 8 &&
-      previous &&
-      signature(options) === signature(previous.options);
-      attempt++
-    ) {
-      options = buildSequence(level);
-    }
+    const options = buildSequence(level);
 
     questions.push({
       options,

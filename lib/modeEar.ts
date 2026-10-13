@@ -59,14 +59,15 @@ export const droneNote = (question: ModeQuestion) => question.root - 12;
  */
 const randomRoot = () => Math.floor(Math.random() * 8) - 2;
 
-/** Preguntas de una ronda, sin repetir modo dos veces seguidas. */
+/**
+ * Preguntas de una ronda, cada modo al azar. Puede salir el mismo dos veces
+ * seguidas: si no, la pregunta anterior descartaría una respuesta.
+ */
 export const buildModeQuiz = (count: number): ModeQuestion[] => {
   const questions: ModeQuestion[] = [];
 
   for (let i = 0; i < count; i++) {
-    const previous = questions[i - 1]?.modeId;
-    const pool = EAR_MODES.filter((mode) => mode.id !== previous);
-    const mode = pool[Math.floor(Math.random() * pool.length)];
+    const mode = EAR_MODES[Math.floor(Math.random() * EAR_MODES.length)];
     questions.push({ modeId: mode.id, root: randomRoot() });
   }
 

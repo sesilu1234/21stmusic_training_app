@@ -153,7 +153,10 @@ export const noteLabel = (question: NoteReadingQuestion) => {
   return letter;
 };
 
-/** Preguntas de una partida, sin repetir la misma nota dos veces seguidas. */
+/**
+ * Preguntas de una partida, cada nota al azar. Puede salir la misma dos veces
+ * seguidas: si no, la pregunta anterior descartaría una respuesta.
+ */
 export const buildNoteReadingQuiz = (
   level: NoteReadingLevel,
   count: number,
@@ -165,14 +168,9 @@ export const buildNoteReadingQuiz = (
       level.clef === "ambas" ? (Math.random() < 0.5 ? "sol" : "fa") : level.clef;
 
     const notes = notesFor(clef, level.accidentals);
-    const previous = questions[i - 1];
-    const pool =
-      previous && previous.clef === clef && notes.length > 1
-        ? notes.filter((note) => note !== previous.semitone)
-        : notes;
 
     questions.push({
-      semitone: pool[Math.floor(Math.random() * pool.length)],
+      semitone: notes[Math.floor(Math.random() * notes.length)],
       clef,
       // Las teclas negras salen unas veces como sostenido y otras como bemol,
       // que es como se las va a encontrar en una partitura de verdad.

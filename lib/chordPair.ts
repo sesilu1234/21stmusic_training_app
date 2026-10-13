@@ -129,7 +129,10 @@ const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
  */
 const randomRoot = () => Math.floor(Math.random() * 12) - 12;
 
-/** Preguntas de una ronda, sin repetir la misma distancia dos veces seguidas. */
+/**
+ * Preguntas de una ronda, todo al azar. Puede repetirse la distancia dos veces
+ * seguidas: si no, la pregunta anterior descartaría una respuesta.
+ */
 export const buildPairQuiz = (
   count: number,
   /** Si el primer acorde puede salir menor. Lo dice el nivel. */
@@ -138,18 +141,9 @@ export const buildPairQuiz = (
   const questions: PairQuestion[] = [];
 
   for (let i = 0; i < count; i++) {
-    let distance = pick(PAIR_DISTANCES);
-    for (
-      let attempt = 0;
-      attempt < 8 && distance.id === questions[i - 1]?.distanceId;
-      attempt++
-    ) {
-      distance = pick(PAIR_DISTANCES);
-    }
-
     questions.push({
       root: randomRoot(),
-      distanceId: distance.id,
+      distanceId: pick(PAIR_DISTANCES).id,
       qualityId: pick(PAIR_QUALITIES).id,
       firstQualityId: firstVariable ? pick(PAIR_QUALITIES).id : "M",
     });

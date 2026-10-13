@@ -51,14 +51,10 @@ export default function IntervalosAuditivos() {
       setResults(Array(total).fill(null));
       setUserAnswers(Array(total).fill(null));
       const list: typeof INTERVALS = [];
+      // Each one at random, repeats allowed: banning the previous one would
+      // give away an answer.
       for (let i = 0; i < total; i++) {
-        const previous = list[i - 1];
-        const availableIntervals = previous
-          ? INTERVALS.filter((interval) => interval.name !== previous.name)
-          : INTERVALS;
-        list.push(
-          availableIntervals[Math.floor(Math.random() * availableIntervals.length)],
-        );
+        list.push(INTERVALS[Math.floor(Math.random() * INTERVALS.length)]);
       }
       setQuizList(list);
       setIsMounted(true);

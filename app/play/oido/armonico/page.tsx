@@ -49,10 +49,10 @@ export default function IntervalosArmonicos() {
       const list: typeof INTERVALS = [];
       // No unísono in harmonic mode: two simultaneous equal notes are indistinguishable.
       const pool = INTERVALS.filter((iv) => iv.semitones > 0);
+      // Each one at random, repeats allowed: banning the previous one would
+      // give away an answer.
       for (let i = 0; i < total; i++) {
-        const previous = list[i - 1];
-        const available = previous ? pool.filter((iv) => iv.name !== previous.name) : pool;
-        list.push(available[Math.floor(Math.random() * available.length)]);
+        list.push(pool[Math.floor(Math.random() * pool.length)]);
       }
       setQuizList(list);
       setIsMounted(true);
