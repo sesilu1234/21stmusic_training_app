@@ -93,10 +93,13 @@ const GameCard = ({
     <Link
       href={locked ? "/login" : game.slug}
       aria-label={locked ? `${game.label} — solo para alumnos` : game.label}
-      className={`group relative block rounded-2xl border p-4 shadow-lg transition duration-200 md:p-5 ${
+      /* Sube con `top` y no con translate: un transform pasa la tarjeta a su
+         propia capa y el navegador suaviza el texto de otra forma, con lo que el
+         número grabado de la medalla adelgaza y pierde el relieve en el hover. */
+      className={`group relative top-0 block rounded-2xl border p-4 shadow-lg transition-all duration-200 md:p-5 ${
         locked
           ? "border-white/[0.06] bg-slate-950/40 hover:border-amber-300/30 hover:bg-slate-950/60"
-          : `border-white/10 bg-slate-950/70 hover:-translate-y-0.5 hover:bg-slate-950/85 ${category.hoverBorder}`
+          : `border-white/10 bg-slate-950/70 hover:-top-0.5 hover:bg-slate-950/85 ${category.hoverBorder}`
       }`}
     >
       {/* El galardón: cuántos niveles del modo llevas clavados del todo (pleno
