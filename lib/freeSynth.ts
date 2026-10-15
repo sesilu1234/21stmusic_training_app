@@ -271,8 +271,9 @@ const spawnPlucked = (
   ctx: AudioContext,
   semitone: number,
   voice: PluckedVoice,
+  when: number,
 ): HeldNote => {
-  playPluckedString(ctx, semitoneToFreq(semitone), voice.pluck, ctx.currentTime);
+  playPluckedString(ctx, semitoneToFreq(semitone), voice.pluck, when);
 
   // La cuerda trae su propia caída dentro de la muestra, así que no hay nada
   // que soltar: levantar el dedo de una guitarra no corta la nota.
@@ -286,16 +287,20 @@ const spawnPlucked = (
  * programado desde el principio (piano, campana, pizzicato…) y no hay nada más
  * que hacer; con `true` se queda en el nivel de sostenido indefinidamente y no
  * se apaga hasta que alguien llama a `release`, que es como funciona un órgano.
+ *
+ * `when` es el momento del reloj del audio en el que empieza; sin él, ya. Si
+ * llega uno que ya ha pasado, se toca ya: el audio no puede volver atrás.
  */
 const spawn = (
   ctx: AudioContext,
   semitone: number,
   voice: Voice,
   hold: boolean,
+  when?: number,
 ): HeldNote => {
-  if (voice.engine === "plucked") return spawnPlucked(ctx, semitone, voice);
+  const now = Math.max(when ?? 0, ctx.currentTime);
+  if (voice.engine === "plucked") return spawnPlucked(ctx, semitone, voice, now);
 
-  const now = ctx.currentTime;
   const freq = semitoneToFreq(semitone);
   const end = now + voice.duration;
 
@@ -407,19 +412,20 @@ const spawn = (
  *
  * Va aparte de `spawn` a propósito — no tiene envolvente ni armónicos, y sobre
  * todo no debe pasar por la lista de notas mantenidas: el metrónomo no se
- * suelta ni lo apaga un `releaseAll`.
+ * suelta ni lo apaga un `releaseAll`. `when` funciona igual que en `spawn`.
  */
-const tick = (ctx: AudioContext, accent: boolean) => {
-  const now = ctx.currentTime;
+const tick = (ctx: AudioContext, accent: boolean, when?: number) => {
+  const now = Math.max(when ?? 0, ctx.currentTime);
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
 
   osc.type = "square";
   osc.frequency.setValueAtTime(accent ? 1800 : 1200, now);
 
-  // Muy por debajo del piano: tiene que marcar el pulso, no taparlo.
+  // Antes iba muy por debajo del piano (0.09 / 0.05) y con alguien cantando
+  // encima no se oía. Ahora marca el pulso claro sin llegar a tapar el piano.
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.linearRampToValueAtTime(accent ? 0.09 : 0.05, now + 0.001);
+  gain.gain.linearRampToValueAtTime(accent ? 0.35 : 0.24, now + 0.001);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
 
   osc.connect(gain);
@@ -494,6 +500,22 @@ export function useFreeSynth() {
     heldRef.current.clear();
   }, []);
 
+  /**
+   * Despierta el audio y avisa cuando ya puede sonar. Hay que llamarlo en el
+   * propio clic de "play", antes de arrancar ningún reloj.
+   *
+   * El navegador crea el audio dormido hasta que el usuario hace algo, y la
+   * primera vez tarda un momento en despertarlo. Si el reloj del ejercicio
+   * arrancaba sin esperar, las notas de ese rato se quedaban en cola y al
+   * despertar salían todas de golpe: un amontonamiento de notas el primer
+   * segundo. Llamándolo dentro del clic, además, el navegador lo deja
+   * despertar sin ponerse estricto.
+   */
+  const prime = useCallback((): Promise<void> => {
+    const ctx = getCtx();
+    return ctx.state === "running" ? Promise.resolve() : ctx.resume();
+  }, []);
+
   /** Un golpe de metrónomo. `accent` marca el principio de cada vuelta. */
   const click = useCallback((accent = false) => {
     const ctx = getCtx();
@@ -503,5 +525,24 @@ export function useFreeSynth() {
     else start();
   }, []);
 
-  return { play, press, release, releaseAll, click };
+  /**
+   * Para los ejercicios con reloj (Vocalizaciones y Rockschool): la nota y el
+   * golpe de metrónomo se programan para un instante exacto del reloj del
+   * audio, que va por su cuenta y no se retrasa aunque la página esté ocupada.
+   * Lanzarlos "ya" desde un temporizador hacía que, si la página iba cargada
+   * (la primera vez, sobre todo), varias notas atrasadas salieran seguidas.
+   * Solo valen con el audio ya despierto (`prime`).
+   */
+  const playAt = useCallback((semitone: number, voice: Voice, when: number) => {
+    spawn(getCtx(), semitone, voice, false, when);
+  }, []);
+
+  const clickAt = useCallback((accent: boolean, when: number) => {
+    tick(getCtx(), accent, when);
+  }, []);
+
+  /** La hora del reloj del audio, en segundos. */
+  const audioTime = useCallback(() => getCtx().currentTime, []);
+
+  return { play, press, release, releaseAll, click, prime, playAt, clickAt, audioTime };
 }

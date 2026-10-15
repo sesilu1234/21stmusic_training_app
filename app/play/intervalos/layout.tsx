@@ -9,10 +9,6 @@ import { gameMetadata } from "@/lib/seo";
  * pueden exportar `metadata`. Los textos no se escriben aquí: salen del
  * catálogo de `lib/games.ts`, que ya es donde vive el nombre y la frase de
  * cada modo.
- *
- * Los niveles que cuelgan de esta ruta heredan estos metadatos, y está bien
- * que sea así: son la misma pantalla con otro contenido, y la dirección
- * canónica que heredan apunta al modo, que es la página que se ofrece.
  */
 export const metadata: Metadata = gameMetadata("/play/intervalos");
 

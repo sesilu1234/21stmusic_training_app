@@ -1,29 +1,267 @@
 "use client";
+import { useState, useEffect, useMemo } from "react";
+import GameChrome from "@/app/components/GameChrome";
+import { barajar } from "@/lib/barajar";
+import { ROUND_LENGTH } from "@/lib/roundLength";
+import {
+  allStaffIntervalQuestions,
+  type StaffIntervalQuestion,
+} from "@/lib/staffIntervals";
+import { alterAccidental } from "@/lib/staff";
+import Staff from "@/app/components/Staff";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import GameOverModal from "@/app/components/GameOverModal";
+import { useAbandono } from "@/app/components/useAbandono";
+import Backdrop from "@/app/components/Backdrop";
 
-import { Guitar, Music2 } from "lucide-react";
-import SubMenu from "@/app/components/SubMenu";
+export default function IntervalosGame() {
 
-export default function IntervalosMenuPage() {
+  // Single array for a flexible grid
+  const todosBotones = [
+    "Unisono",
+    "b2",
+    "2",
+    "b3",
+    "3",
+    "4",
+    "#4",
+    "b5",
+    "5",
+    "#5",
+    "b6",
+    "6",
+    "b7",
+    "7",
+    "8",
+  ];
+
+  const [quizList, setQuizList] = useState<StaffIntervalQuestion[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+  const [step, setStep] = useState(0);
+  const [results, setResults] = useState<(null | "correct" | "wrong")[]>(
+    Array(24).fill(null),
+  );
+  const [userAnswers, setUserAnswers] = useState<(string | null)[]>(
+    Array(24).fill(null),
+  );
+  const [gameOver, setGameOver] = useState(false);
+
+  // Si se va a media partida, queda apuntada como abandonada. Lo que ve el
+  // alumno no cambia: esto no pinta nada.
+  useAbandono(results, gameOver);
+  const [isReviewing, setIsReviewing] = useState(false);
+
+  // Initialize Game on Client
+  useEffect(() => {
+    const shuffled = barajar(allStaffIntervalQuestions())
+      .slice(0, ROUND_LENGTH);
+    setQuizList(shuffled);
+    setResults(Array(shuffled.length).fill(null));
+    setUserAnswers(Array(shuffled.length).fill(null));
+    setIsMounted(true);
+  }, []);
+
+  const currentQuestion = quizList[step];
+
+  const progresoMaximo = useMemo(() => {
+    const firstEmpty = userAnswers.indexOf(null);
+    return firstEmpty === -1 ? quizList.length : firstEmpty;
+  }, [userAnswers, quizList]);
+  const correctCount = useMemo(
+    () => results.filter((r) => r === "correct").length,
+    [results],
+  );
+  const totalQuestions = quizList.length || 24;
+
+
+  if (!isMounted || !currentQuestion) {
+    return <div className="min-h-screen bg-slate-900" />;
+  }
+
+  const handleAnswer = (val: string) => {
+    if (userAnswers[step] !== null || gameOver) return;
+    setIsReviewing(false);
+
+    const isCorrect = val === currentQuestion.answer;
+
+    const newResults = [...results];
+    newResults[step] = isCorrect ? "correct" : "wrong";
+    setResults(newResults);
+
+    const newAnswers = [...userAnswers];
+    newAnswers[step] = val;
+    setUserAnswers(newAnswers);
+
+    // Acertando se pasa rapido, que no hay nada que mirar. Fallando hay que
+    // dar tiempo a ver cual era la buena: es el unico momento en el que se
+    // aprende algo.
+    const pause = isCorrect ? 700 : 1600;
+
+    if (step < quizList.length - 1) {
+      setTimeout(() => setStep(step + 1), pause);
+    } else {
+      setTimeout(() => setGameOver(true), pause + 400);
+    }
+  };
+
+  const goBack = () => {
+    setIsReviewing(true);
+    setStep((prev) => Math.max(0, prev - 1));
+  };
+
+  const goNext = () => {
+    const nextStep = step + 1;
+    if (nextStep <= progresoMaximo) {
+      setStep(nextStep);
+      setIsReviewing(nextStep < progresoMaximo);
+    }
+  };
+
+  /** Lo contestado en esta pregunta, o null si todavia esta en juego. */
+  const answeredHere = userAnswers[step];
+  /** El boton que era el bueno. */
+  const solutionButton = currentQuestion.answer;
+
   return (
-    <SubMenu
-      eyebrow="Intervalos"
-      title="Elige dónde leerlos"
-      intro="El mismo intervalo, visto de dos maneras distintas."
-      category="lenguaje"
-      options={[
-        {
-          title: "En el diapasón",
-          description: "Identifica el intervalo viendo las dos posiciones en el mástil.",
-          href: "/play/intervalos/diapason",
-          Icon: Guitar,
-        },
-        {
-          title: "En el pentagrama",
-          description: "Reconoce el intervalo leyendo las dos notas escritas.",
-          href: "/play/intervalos/pentagrama",
-          Icon: Music2,
-        },
-      ]}
-    />
+    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+      <Backdrop />
+
+      <div className="relative z-10 min-h-screen flex flex-col">
+      <GameChrome>
+        ¿Qué{" "}
+        <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
+        INTERVALO
+        </span>{" "}
+        es?
+      </GameChrome>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-5xl mx-auto">
+        {/* TITLE */}
+
+        {/* QUESTION IMAGE */}
+        <div className="relative flex flex-col items-center w-full max-w-sm md:max-w-md mb-8">
+          <div className="bg-white p-0 md:p-0 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl w-full h-40 md:h-48 flex items-center justify-center border-4 border-white relative overflow-hidden">
+            <div className="absolute top-3 right-5 text-black/10 font-black italic text-lg">
+              #{step + 1}
+            </div>
+
+            {/* Las dos notas a la vez, en redonda, como en las fichas de papel.
+                Con menos margen que en los otros modos: aqui las notas no se
+                alejan tanto del pentagrama y asi se ve mas grande. */}
+            <div className="h-full py-2 md:py-3">
+              <Staff
+                padding={2.2}
+                fit="height"
+                label="Intervalo en el pentagrama"
+                columns={[
+                  [currentQuestion.lower, currentQuestion.upper].map((note) => ({
+                    degree: note.degree,
+                    accidental: alterAccidental(note.alter),
+                  })),
+                ]}
+              />
+            </div>
+          </div>
+
+          {/* SOLUTION BADGE */}
+          <div
+            className={`absolute -bottom-8 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 transform ${isReviewing && userAnswers[step] !== null ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"}`}
+          >
+            <div className="px-6 py-2 rounded-xl border border-amber-400/50 bg-black/90 backdrop-blur-xl flex flex-col items-center shadow-2xl min-w-[140px]">
+              <span className="text-[7px] text-amber-400 uppercase font-black tracking-widest">
+                Solución
+              </span>
+              <span className="text-sm font-bold text-white uppercase">
+                {currentQuestion.answer}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* RESPONSIVE BUTTON GRID */}
+        <div
+          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-all ${answeredHere !== null ? "pointer-events-none" : ""}`}
+        >
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 gap-2 md:gap-3">
+            {todosBotones.map((btn) => {
+              const isSolution = btn === solutionButton;
+              const isMistake = btn === answeredHere && !isSolution;
+
+              return (
+                <button
+                  key={btn}
+                  onClick={() => handleAnswer(btn)}
+                  className={`flex items-center justify-center h-12 md:h-14 rounded-lg md:rounded-xl border transition-all active:scale-90 ${btn === "Unisono" ? "col-span-2 md:col-span-1" : ""} ${
+                    answeredHere === null
+                      ? "border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black"
+                      : isSolution
+                        ? "border-green-400 bg-green-500/80 text-white"
+                        : isMistake
+                          ? "border-red-400 bg-red-500/80 text-white"
+                          : "border-white/5 bg-white/5 text-white/20"
+                  }`}
+                >
+                  <span className="text-[10px] md:text-sm font-bold">{btn}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* NAVIGATION & PROGRESS */}
+        <div className="w-full mt-10 md:mt-16 flex flex-col items-center gap-6">
+          <div className="flex items-center justify-between w-full max-w-md gap-4">
+            <button
+              onClick={goBack}
+              className={`p-3 bg-white/5 border border-white/10 text-white rounded-full transition-all ${step === 0 ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+            >
+              <ArrowLeft size={18} />
+            </button>
+
+            <div className="flex flex-wrap justify-center gap-1 p-2 bg-black/20 rounded-2xl border border-white/5 max-w-[240px] md:max-w-none">
+              {results.map((res, i) => (
+                <div
+                  key={i}
+                  onClick={() => {
+                    if (userAnswers[i] !== null) {
+                      setIsReviewing(true);
+                      setStep(i);
+                    }
+                  }}
+                  className={`w-5 h-5 md:w-6 md:h-6 rounded-md border flex items-center justify-center text-[7px] font-black cursor-pointer transition-all ${
+                    res === "correct"
+                      ? "bg-green-500 text-white border-green-400"
+                      : res === "wrong"
+                        ? "bg-red-500 text-white border-red-400"
+                        : i === step
+                          ? "border-amber-400 bg-white/20 text-white scale-110 shadow-[0_0_10px_rgba(251,191,36,0.4)]"
+                          : "border-white/5 text-white/5"
+                  }`}
+                >
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={goNext}
+              className={`p-3 bg-amber-500 text-black rounded-full shadow-lg transition-all ${isReviewing ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            >
+              <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+
+        <footer className="mt-auto py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
+          © 2026 21st Century Music
+        </footer>
+      </div>
+
+      {/* FINAL MODAL */}
+      {gameOver && (
+        <GameOverModal correct={correctCount} total={totalQuestions} />
+      )}
+      </div>
+    </div>
   );
 }

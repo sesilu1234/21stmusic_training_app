@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Flame, Hammer, Lock, Medal } from "lucide-react";
+import { Flame, Hammer, Lock } from "lucide-react";
 import AppShell from "./components/AppShell";
 import { gameIcons } from "./components/gameIcons";
+import { MedalAward } from "./components/MedalBadge";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
 import { getProgress, type GameProgress } from "@/lib/progress";
@@ -77,6 +78,8 @@ const GameCard = ({
     );
   }
 
+  const hasAward = !locked && stat !== undefined && stat.medals > 0;
+
   return (
     <Link
       href={locked ? "/login" : game.slug}
@@ -87,6 +90,17 @@ const GameCard = ({
           : `border-white/10 bg-slate-950/70 hover:-translate-y-0.5 hover:bg-slate-950/85 ${category.hoverBorder}`
       }`}
     >
+      {/* El galardón: cuántos niveles del modo llevas clavados del todo (pleno
+          en partida larga), arriba a la derecha como un sello. Es un contador
+          y no un sí/no porque una medalla no se pierde: si mañana el modo
+          estrena un nivel, lo ganado sigue ganado y solo hay uno más al que
+          llegar. Con todos, brilla. */}
+      {hasAward && (
+        <span className="absolute right-3 top-2.5">
+          <MedalAward id={game.name} count={stat.medals} total={stat.medalsTotal} />
+        </span>
+      )}
+
       {locked && (
         <span
           title="Solo para alumnos de la escuela"
@@ -96,7 +110,11 @@ const GameCard = ({
         </span>
       )}
 
-      <div className={`flex items-start gap-3.5 ${locked ? "opacity-45 grayscale" : ""}`}>
+      <div
+        className={`flex items-start gap-3.5 ${locked ? "opacity-45 grayscale" : ""} ${
+          hasAward ? "pr-9" : ""
+        }`}
+      >
         <span
           className={`grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl transition-transform duration-200 ${
             locked ? "" : "group-hover:scale-105"
@@ -133,28 +151,6 @@ const GameCard = ({
           <span className="flex-shrink-0 text-[9px] font-black tracking-wider text-white/40">
             {stat.mastery}%
           </span>
-          {/* Cuántos niveles del modo llevas clavados del todo (pleno en
-              partida larga). Es un contador y no un icono suelto porque una
-              medalla no se pierde: si mañana el modo estrena un nivel, lo que ya
-              está ganado sigue ganado y solo hay uno más al que llegar.
-
-              Cuando están todas, el chip se enciende: el modo rematado merece
-              notarse, que es lo único bueno que tenía la medalla de sí o no. */}
-          {stat.medals > 0 && (
-          <span
-  className={`flex flex-shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none tabular-nums ${
-    stat.hasMedal
-      ? "bg-amber-400/20 text-amber-200"
-      : "text-amber-300/60"
-  }`}
-  title={`${stat.medals} de ${stat.medalsTotal} ${
-    stat.medalsTotal === 1 ? "nivel clavado" : "niveles clavados"
-  }`}
->
-  <span className="leading-none pt-[2px]">{stat.medals}</span>
-  <Medal size={11} className="shrink-0" />
-</span>
-          )}
         </span>
       )}
 

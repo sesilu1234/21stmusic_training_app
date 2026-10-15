@@ -30,8 +30,14 @@ export type Resultado = boolean | "correct" | "wrong" | null;
 
 const esAcierto = (result: Resultado) => result === true || result === "correct";
 
-export function useAbandono(results: readonly Resultado[], terminada: boolean) {
-  const pathname = usePathname();
+export function useAbandono(
+  results: readonly Resultado[],
+  terminada: boolean,
+  /** Igual que `savePath` en `GameOverModal`: la ruta si no es la de la página. */
+  savePath?: string,
+) {
+  const currentPath = usePathname();
+  const pathname = savePath ?? currentPath;
 
   /**
    * Lo último que se sabe de la partida, en una ref y no en el estado.

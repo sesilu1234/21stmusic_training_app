@@ -38,12 +38,15 @@ export default function SubMenu({
   intro,
   category,
   options,
+  beforeOptions,
 }: {
   eyebrow: string;
   title: string;
   intro?: string;
   category: CategoryId;
   options: SubMenuOption[];
+  /** Algo que va entre la introducción y las tarjetas, como un selector de nivel. */
+  beforeOptions?: React.ReactNode;
 }) {
   const palette = categoryOf(category);
 
@@ -73,6 +76,8 @@ export default function SubMenu({
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/50">{intro}</p>
             )}
           </div>
+
+          {beforeOptions}
 
           <div className="grid gap-3.5 sm:grid-cols-2">
             {options.map(({ title: optionTitle, description, href, Icon, badge, locked }) => (

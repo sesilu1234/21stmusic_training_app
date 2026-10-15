@@ -7,6 +7,7 @@ import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import StaffNote from "@/app/components/StaffNote";
+import StaffCard from "@/app/components/StaffCard";
 import {
   answersFor,
   buildNoteReadingQuiz,
@@ -150,14 +151,14 @@ export default function NoteReadingGame({ level }: { level: NoteReadingLevel }) 
 
         <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
           <div className="mb-7 flex justify-center">
-            <div className="w-full max-w-[330px] rounded-3xl border-4 border-white/15 bg-slate-950/70 px-4 py-3 shadow-2xl backdrop-blur-sm">
+            <StaffCard>
               <StaffNote
                 semitone={question.semitone}
                 clef={question.clef}
                 preferFlat={question.preferFlat}
                 state={answered === null ? "idle" : isCorrect ? "correct" : "wrong"}
               />
-            </div>
+            </StaffCard>
           </div>
 
           <div className="mx-auto w-full max-w-[720px] rounded-[2rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md md:p-6">

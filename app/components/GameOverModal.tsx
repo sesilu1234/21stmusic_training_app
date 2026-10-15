@@ -13,6 +13,12 @@ interface Props {
   total: number;
   /** Por defecto recarga la página */
   onRestart?: () => void;
+  /**
+   * La ruta con la que se guarda la partida, si no es la de la página. Para los
+   * modos que llevan el nivel en `?nivel=`, que la ruta no ve: se guarda como
+   * si el nivel fuera un trozo más de ella.
+   */
+  savePath?: string;
 }
 
 const SPARKLES = [
@@ -23,13 +29,14 @@ const SPARKLES = [
   { top: "0%", left: "58%", size: 9, delay: "1.6s" },
 ];
 
-export default function GameOverModal({ correct, total, onRestart }: Props) {
+export default function GameOverModal({ correct, total, onRestart, savePath }: Props) {
   const safeTotal = Math.max(1, total);
   const perfect = correct === total && total > 0;
   const pct = Math.round((correct / safeTotal) * 100);
   const restart = onRestart || (() => window.location.reload());
 
-  const pathname = usePathname();
+  const currentPath = usePathname();
+  const pathname = savePath ?? currentPath;
   const [saved, setSaved] = useState<SaveResult | null>(null);
   /** El modal se monta una vez por partida, pero en dev React lo monta dos. */
   const sentRef = useRef(false);

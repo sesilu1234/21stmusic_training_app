@@ -204,10 +204,19 @@ export default function ArmadurasGame({ claves }: { claves: Clave[] }) {
       <div className="relative z-10 min-h-screen flex flex-col">
       {/* Top Navigation */}
       <GameChrome>
-        ¿Qué tonalidad
-        <span className="text-black mx-2 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)] uppercase">
+        ¿Qué tonalidad{" "}
+        {/* Lo único del enunciado que cambia de una pregunta a otra, y lo que
+            decide la respuesta. En negro sobre el fondo oscuro no se veía y se
+            leía "¿Qué tonalidad es?", así que ahora va en una etiqueta de
+            color, y de un color distinto para cada una: ámbar la mayor, azul
+            la menor. */}
+        <span
+          className={`mx-1 inline-block rounded-lg px-2 py-0.5 text-black uppercase md:mx-2 md:px-3 ${
+            esPreguntaMayor ? "bg-amber-400" : "bg-sky-400"
+          }`}
+        >
           {esPreguntaMayor ? "MAYOR" : "MENOR"}
-        </span>
+        </span>{" "}
         es?
       </GameChrome>
 

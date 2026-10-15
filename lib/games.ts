@@ -174,7 +174,7 @@ export const GAMES: GameMode[] = [
   {
     name: "Intervalos",
     label: "Intervalos",
-    desc: "La distancia entre dos notas.",
+    desc: "Dos notas en el pentagrama: di qué intervalo es.",
     slug: "/play/intervalos",
     icon: "ArrowUpDown",
     category: "lenguaje",
@@ -289,6 +289,18 @@ export const GAMES: GameMode[] = [
     desc: "Encuentra cualquier nota sin pensarla.",
     slug: "/play/diapason",
     icon: "Guitar",
+    category: "guitarra",
+    scored: true,
+  },
+  // Antes era la mitad de "Intervalos", con el pentagrama, detrás de un menú de
+  // elegir dónde leerlos. Pero leer un intervalo en el mástil es cosa de
+  // guitarra, no de lenguaje musical, y ahora es su propio modo aquí.
+  {
+    name: "Intervalos en el mástil",
+    label: "Intervalos en el mástil",
+    desc: "Dos posiciones en el diapasón: di qué intervalo es.",
+    slug: "/play/diapason_intervalos",
+    icon: "ArrowUpDown",
     category: "guitarra",
     scored: true,
   },

@@ -120,6 +120,7 @@ export const GLYPH = {
   gClef: "\uE050",
   fClef: "\uE062",
   noteheadBlack: "\uE0A4",
+  noteheadWhole: "\uE0A2",
   sharp: "\uE262",
   flat: "\uE260",
   natural: "\uE261",

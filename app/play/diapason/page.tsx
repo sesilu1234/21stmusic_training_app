@@ -8,6 +8,8 @@ import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
+import HandToggle from "@/app/components/HandToggle";
+import { fretboardFlipClass, useLeftHanded } from "@/lib/handedness";
 
 export default function DiapasonGame() {
 
@@ -29,6 +31,7 @@ export default function DiapasonGame() {
   // 1. We start with state for the quiz list to avoid hydration mismatch
   const [quizList, setQuizList] = useState<typeof diapason_data>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [leftHanded, setLeftHanded] = useLeftHanded();
 
   const [step, setStep] = useState(0);
   const [results, setResults] = useState<(null | "correct" | "wrong")[]>(
@@ -180,6 +183,10 @@ export default function DiapasonGame() {
       <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-6xl mx-auto">
 
         <div className="relative flex flex-col items-center w-full max-w-md md:max-w-2xl mb-6 md:mb-10">
+          <div className="mb-2 flex w-full justify-end">
+            <HandToggle leftHanded={leftHanded} onChange={setLeftHanded} />
+          </div>
+
           <div
             className={`bg-white p-4 md:p-6 rounded-[2rem] md:rounded-[3.5rem] shadow-2xl w-full h-52 md:h-64 flex items-center justify-center border-4 relative overflow-hidden transition-all duration-150 ${
               showFeedback === "correct"
@@ -209,7 +216,7 @@ export default function DiapasonGame() {
                 src={encodeURI(currentQuestion.image)}
                 alt="Nota"
                 onLoad={() => setIsImageLoading(false)}
-                className={`max-h-full max-w-full object-contain transition-opacity duration-100 ${isImageLoading ? "opacity-0" : "opacity-100"}`}
+                className={`${fretboardFlipClass(leftHanded)} max-h-full max-w-full object-contain transition-opacity duration-100 ${isImageLoading ? "opacity-0" : "opacity-100"}`}
               />
             )}
           </div>

@@ -35,15 +35,24 @@ import {
  * también en los silencios — que es justo donde hace falta.
  */
 
-/** El piano toca el patrón; el golpe de tónica suena a cuerdas, más redondo. */
-const PATTERN_VOICE = findVoice("piano");
-const CUE_VOICE = findVoice("cuerdas");
+/**
+ * Todo suena a piano, también la nota de entrada de "Muestra y suelta" y "Solo
+ * el bajo": antes esa iba a cuerdas y sonaba a sintetizador. Un poco más fuerte
+ * que el piano por defecto (0.55), que se quedaba bajo con alguien cantando
+ * encima.
+ */
+const PIANO = { ...findVoice("piano"), peak: 0.85 };
+
+/** Cuánto por delante se programa el sonido, en segundos. */
+const LOOKAHEAD = 0.15;
+/** Margen entre pulsar play y la primera nota, en segundos. */
+const START_DELAY = 0.12;
 
 const MIN_BPM = 40;
 const MAX_BPM = 200;
 
 export default function VocalizacionesPage() {
-  const { play, click, releaseAll } = useFreeSynth();
+  const { releaseAll, prime, playAt, clickAt, audioTime } = useFreeSynth();
 
   const [group, setGroup] = useState<VocalGroupId>("calentamiento");
   const [exercise, setExercise] = useState<VocalExercise>(VOCAL_EXERCISES[0]);
@@ -74,22 +83,33 @@ export default function VocalizacionesPage() {
   metronomeRef.current = metronome;
 
   const timerRef = useRef<number | null>(null);
-  const tickTimerRef = useRef<number | null>(null);
-  /** Próximo evento y próximo golpe de metrónomo por disparar. */
+  const audioTimerRef = useRef<number | null>(null);
+  /** Próximo evento por enseñar en pantalla. */
   const indexRef = useRef(0);
+  /** Próximo evento y próximo golpe de metrónomo por programar en el audio. */
+  const audioIndexRef = useRef(0);
   const tickRef = useRef(0);
-  /** Momento real en el que empezó (o se reanudó) la cuenta. */
+  /** Momento real (reloj de la página) en el que empezó la cuenta. */
   const originRef = useRef(0);
+  /** El mismo momento, pero en el reloj del audio (segundos). */
+  const audioOriginRef = useRef(0);
+  /**
+   * Cuenta los arranques. Entre pulsar play y que el audio esté despierto pasa
+   * un instante; si en ese rato se para o se cambia un ajuste, el arranque que
+   * estaba esperando ya no vale y no debe empezar.
+   */
+  const startRef = useRef(0);
 
   const clearTimers = () => {
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-    if (tickTimerRef.current !== null) window.clearTimeout(tickTimerRef.current);
+    if (audioTimerRef.current !== null) window.clearInterval(audioTimerRef.current);
     timerRef.current = null;
-    tickTimerRef.current = null;
+    audioTimerRef.current = null;
   };
 
   /** Deja el ejercicio parado y al principio. */
   const stop = useCallback(() => {
+    startRef.current += 1;
     clearTimers();
     indexRef.current = 0;
     tickRef.current = 0;
@@ -97,26 +117,43 @@ export default function VocalizacionesPage() {
     setPlaying(false);
   }, []);
 
-  /** Suena un evento: el golpe de tónica lleva también su octava grave. */
-  const fire = useCallback(
-    (index: number) => {
-      const event = planRef.current.events[index];
-      setCursor(index);
-      if (!event.audible) return;
+  /**
+   * El sonido. Cada 25 ms mira qué notas y golpes de metrónomo tocan en los
+   * próximos 150 ms y los deja programados en el reloj del audio para su
+   * instante exacto. Así suenan a tiempo aunque la página vaya cargada: antes
+   * cada nota se lanzaba "ya" desde un temporizador, y si este llegaba tarde
+   * (la primera vez, sobre todo) varias notas atrasadas salían seguidas.
+   *
+   * La nota de entrada de "Muestra y suelta" y "Solo el bajo" suena igual que
+   * cualquier otra: antes llevaba además su octava grave y se oía con
+   * demasiado bajo, distinta del piano del resto del ejercicio.
+   */
+  const pumpAudio = useCallback(() => {
+    const { events, ticks } = planRef.current;
+    const horizon = audioTime() + LOOKAHEAD;
+    const timeOf = (at: number) => audioOriginRef.current + at / 1000;
 
-      if (event.cue) {
-        play(event.semitone - 12, CUE_VOICE);
-        play(event.semitone, CUE_VOICE);
-      } else {
-        play(event.semitone, PATTERN_VOICE);
-      }
-    },
-    [play],
-  );
+    while (audioIndexRef.current < events.length) {
+      const event = events[audioIndexRef.current];
+      if (timeOf(event.at) > horizon) break;
+      if (event.audible) playAt(event.semitone, PIANO, timeOf(event.at));
+      audioIndexRef.current += 1;
+    }
+
+    while (tickRef.current < ticks.length) {
+      const next = ticks[tickRef.current];
+      if (timeOf(next.at) > horizon) break;
+      // Se mira aquí, al programarlo: encender o apagar el metrónomo a media
+      // vuelta hace efecto enseguida, sin rehacer el plan ni parar nada.
+      if (metronomeRef.current) clickAt(next.accent, timeOf(next.at));
+      tickRef.current += 1;
+    }
+  }, [audioTime, playAt, clickAt]);
 
   /**
-   * El reloj. Cada paso mira cuánto falta de verdad para el evento siguiente,
-   * así que un retraso puntual no arrastra a los que vienen detrás.
+   * Lo que se ve: la nota que toca, encendida en el teclado. Va con su propio
+   * temporizador sobre el mismo origen que el sonido; si se retrasa un poco,
+   * solo se retrasa el dibujo, el sonido ya está programado aparte.
    */
   const schedule = useCallback(() => {
     const { events, duration } = planRef.current;
@@ -133,53 +170,54 @@ export default function VocalizacionesPage() {
 
     timerRef.current = window.setTimeout(
       () => {
-        fire(indexRef.current);
+        setCursor(indexRef.current);
         indexRef.current += 1;
         schedule();
       },
       Math.max(0, wait),
     );
-  }, [fire, stop]);
-
-  /** El pulso, en su propia cola. Mismo origen, así que van a la par. */
-  const scheduleTicks = useCallback(() => {
-    const { ticks } = planRef.current;
-    if (tickRef.current >= ticks.length) return;
-
-    const next = ticks[tickRef.current];
-    const wait = next.at - (performance.now() - originRef.current);
-
-    tickTimerRef.current = window.setTimeout(
-      () => {
-        if (metronomeRef.current) click(next.accent);
-        tickRef.current += 1;
-        scheduleTicks();
-      },
-      Math.max(0, wait),
-    );
-  }, [click]);
+  }, [stop]);
 
   const toggle = useCallback(() => {
     if (playing) {
+      startRef.current += 1;
       clearTimers();
       setPlaying(false);
       return;
     }
 
-    const { events, ticks } = planRef.current;
-    if (indexRef.current >= events.length) indexRef.current = 0;
-    // Se retrocede el origen hasta donde se quedó: reanudar no vuelve a empezar.
-    const at = events[indexRef.current].at;
-    originRef.current = performance.now() - at;
-    // El metrónomo se reengancha donde toque, no donde se quedó: si se pausó a
-    // mitad de un pulso, el golpe de ese pulso ya ha pasado.
-    tickRef.current = ticks.findIndex((tick) => tick.at >= at);
-    if (tickRef.current < 0) tickRef.current = ticks.length;
-
     setPlaying(true);
-    schedule();
-    scheduleTicks();
-  }, [playing, schedule, scheduleTicks]);
+    const start = startRef.current + 1;
+    startRef.current = start;
+
+    // Primero se despierta el audio, y el reloj no arranca hasta que puede
+    // sonar: si no, la primera vez las notas se amontonaban al principio.
+    const begin = () => {
+      if (startRef.current !== start) return;
+
+      const { events, ticks } = planRef.current;
+      if (indexRef.current >= events.length) indexRef.current = 0;
+      // Se retrocede el origen hasta donde se quedó: reanudar no vuelve a empezar.
+      // Y se deja un margen corto antes de la primera nota, para que el audio
+      // la tenga programada con tiempo en vez de llegar justo.
+      const at = events[indexRef.current].at;
+      originRef.current = performance.now() + START_DELAY * 1000 - at;
+      audioOriginRef.current = audioTime() + START_DELAY - at / 1000;
+      audioIndexRef.current = indexRef.current;
+      // El metrónomo se reengancha donde toque, no donde se quedó: si se pausó a
+      // mitad de un pulso, el golpe de ese pulso ya ha pasado.
+      tickRef.current = ticks.findIndex((tick) => tick.at >= at);
+      if (tickRef.current < 0) tickRef.current = ticks.length;
+
+      pumpAudio();
+      audioTimerRef.current = window.setInterval(pumpAudio, 25);
+      schedule();
+    };
+
+    // Si el navegador no deja despertarlo, se arranca igual: mejor que sonar
+    // con un tropiezo que no sonar.
+    prime().then(begin, begin);
+  }, [playing, prime, audioTime, pumpAudio, schedule]);
 
   // Tocar cualquier ajuste cambia el plan entero, así que lo que estuviera
   // sonando ya no valdría: se para y se vuelve al principio.
@@ -382,8 +420,10 @@ export default function VocalizacionesPage() {
                 </div>
 
                 {/* Dónde estamos: nota, tónica y vuelta. */}
+                {/* Anchos fijos: los nombres de nota no miden lo mismo ("Do4" y
+                    "Sol#4"), y sin esto lo de la derecha bailaba con cada nota. */}
                 <div className="mt-4 flex flex-wrap items-end gap-x-7 gap-y-3">
-                  <div>
+                  <div className="w-32 shrink-0">
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">
                       Suena
                     </p>
@@ -399,7 +439,7 @@ export default function VocalizacionesPage() {
                       {current ? fullNoteName(current.semitone) : "—"}
                     </p>
                   </div>
-                  <div>
+                  <div className="w-20 shrink-0">
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">
                       Tónica
                     </p>
@@ -513,15 +553,6 @@ export default function VocalizacionesPage() {
                   </Field>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="Sube">
-                      <Stepper
-                        value={`${up} st`}
-                        onDown={() => setUp((value) => Math.max(0, value - 1))}
-                        onUp={() => setUp((value) => Math.min(24, value + 1))}
-                        downLabel="Subir menos"
-                        upLabel="Subir más"
-                      />
-                    </Field>
                     <Field label="Baja">
                       <Stepper
                         value={`${down} st`}
@@ -529,6 +560,15 @@ export default function VocalizacionesPage() {
                         onUp={() => setDown((value) => Math.min(24, value + 1))}
                         downLabel="Bajar menos"
                         upLabel="Bajar más"
+                      />
+                    </Field>
+                    <Field label="Sube">
+                      <Stepper
+                        value={`${up} st`}
+                        onDown={() => setUp((value) => Math.max(0, value - 1))}
+                        onUp={() => setUp((value) => Math.min(24, value + 1))}
+                        downLabel="Subir menos"
+                        upLabel="Subir más"
                       />
                     </Field>
                   </div>

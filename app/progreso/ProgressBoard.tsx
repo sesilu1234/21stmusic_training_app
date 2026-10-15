@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Flame, Medal, Target, Trophy } from "lucide-react";
 import { gameIcons } from "@/app/components/gameIcons";
+import { LevelMedal, MedalAward } from "@/app/components/MedalBadge";
 import { CATEGORIES, categoryOf, labelForStoredName } from "@/lib/games";
 import { dayKey, FORM_WINDOW, type GameProgress, type Progress } from "@/lib/progress";
 
@@ -79,14 +80,24 @@ const GameRow = ({ entry }: { entry: GameProgress }) => {
   // mismo peso que los demás el panel sería una lista de ceros en la que no se
   // distingue lo que llevas de lo que te queda.
   const untouched = entry.attempts === 0;
+  const hasAward = entry.medals > 0;
 
   return (
     <li
-      className={`rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3.5 ${
+      className={`relative rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3.5 ${
         untouched ? "opacity-50" : ""
       }`}
     >
-      <div className="flex items-start gap-3">
+      {/* El galardón del modo, arriba a la derecha como un sello: las medallas
+          son las de sus niveles, contadas, y cuando están todas brilla. Cuáles
+          son se ve abajo, en la lista de niveles. */}
+      {hasAward && (
+        <div className="absolute right-3 top-2.5">
+          <MedalAward id={entry.game.name} count={entry.medals} total={entry.medalsTotal} />
+        </div>
+      )}
+
+      <div className={`flex items-start gap-3 ${hasAward ? "pr-10" : ""}`}>
         <span
           className={`grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl ${palette.iconBg}`}
         >
@@ -101,22 +112,6 @@ const GameRow = ({ entry }: { entry: GameProgress }) => {
             >
               {entry.game.label}
             </Link>
-            {/* Las medallas del modo son las de sus niveles, contadas. Cuando
-                están todas el chip se enciende. Cuáles son se ve abajo, en la
-                lista de niveles. */}
-            {entry.medals > 0 && (
-              <span
-                className={`flex flex-shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-black ${
-                  entry.hasMedal
-                    ? "bg-amber-400/20 text-amber-200"
-                    : "text-amber-300/60"
-                }`}
-                aria-label={`${entry.medals} de ${entry.medalsTotal} niveles clavados`}
-              >
-                {entry.medals}
-                <Medal size={11} />
-              </span>
-            )}
           </div>
 
           {/* La barra dice cuánto llevas dominado del modo: la suma de los
@@ -196,11 +191,7 @@ const GameRow = ({ entry }: { entry: GameProgress }) => {
                       {/* Medalla del nivel: pleno en partida larga, el mismo
                           listón que la del modo. */}
                       {level.hasMedal && (
-                        <Medal
-                          size={10}
-                          className="flex-shrink-0 text-amber-300"
-                          aria-label="Pleno en este nivel"
-                        />
+                        <LevelMedal id={`${entry.game.name}-${level.slug}`} />
                       )}
                     </span>
                     <span className="flex w-14 items-center justify-end gap-1.5">
