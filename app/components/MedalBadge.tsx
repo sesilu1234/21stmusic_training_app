@@ -12,6 +12,20 @@ const safeId = (value: string) => value.replace(/[^a-zA-Z0-9_-]/g, "");
 /** Outfit, cargada en el layout (`medalFont` en app/fonts.ts). */
 const MEDAL_FONT = { fontFamily: "var(--font-medal), sans-serif" };
 
+/**
+ * Lo que va dentro del disco parece acuñado en el oro: color de bronce oscuro,
+ * un filo claro debajo (la luz que pilla el borde inferior del hueco) y una
+ * sombra fina arriba (el borde superior, que queda a la sombra).
+ */
+const ENGRAVED_COLOR = "#78350f";
+const ENGRAVED_TEXT = {
+  color: ENGRAVED_COLOR,
+  textShadow:
+    "0 1px 0 rgba(254,243,199,0.75), 0 -0.5px 0 rgba(69,26,3,0.45)",
+};
+const ENGRAVED_FILTER =
+  "drop-shadow(0 1px 0 rgba(254,243,199,0.75)) drop-shadow(0 -0.5px 0 rgba(69,26,3,0.45))";
+
 function MedalSvg({
   id,
   size,
@@ -70,9 +84,15 @@ function MedalSvg({
 const STAR =
   "12,3.2 14.4,8.6 20.3,9.1 15.8,13 17.2,18.8 12,15.7 6.8,18.8 8.2,13 3.7,9.1 9.6,8.6";
 
-const Star = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-    <polygon points={STAR} fill="#78350f" />
+const Star = ({ size, engraved = false }: { size: number; engraved?: boolean }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    style={engraved ? { filter: ENGRAVED_FILTER } : undefined}
+    aria-hidden
+  >
+    <polygon points={STAR} fill={ENGRAVED_COLOR} />
   </svg>
 );
 
@@ -139,13 +159,13 @@ export function MedalAward({
         <DiscContent>
           {total > 1 ? (
             <span
-              className="text-[13px] font-semibold leading-none tabular-nums text-amber-950"
-              style={MEDAL_FONT}
+              className="text-[13px] font-bold leading-none tabular-nums"
+              style={{ ...MEDAL_FONT, ...ENGRAVED_TEXT }}
             >
               {count}
             </span>
           ) : (
-            <Star size={13} />
+            <Star size={13} engraved />
           )}
         </DiscContent>
       </span>
