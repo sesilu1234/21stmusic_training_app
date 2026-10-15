@@ -51,7 +51,9 @@ export default function AppShell({
 
   // La guía tiene rutas hijas (/guia/notas), así que ahí no vale el igual.
   const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+    href === "/"
+      ? pathname === "/"
+      : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
@@ -62,7 +64,10 @@ export default function AppShell({
             propio contexto de apilado) tapan el desplegable del usuario. */}
         <header className="relative z-50 px-3 pt-3 md:px-6 md:pt-5">
           <nav className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-xl md:px-5 md:py-3">
-            <Link href="/" className="flex min-w-0 items-center gap-2.5 md:gap-3.5">
+            <Link
+              href="/"
+              className="flex min-w-0 items-center gap-2.5 md:gap-3.5"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/assets/logo21stCM_no_white_1-192.png"
@@ -90,10 +95,12 @@ export default function AppShell({
                     <Link
                       key={href}
                       href={href}
-                      title={locked ? "Solo para alumnos de la escuela" : undefined}
-                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[10px] font-black uppercase tracking-wider transition-colors ${
+                      title={
+                        locked ? "Solo para alumnos de la escuela" : undefined
+                      }
+                      className={`relative flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[10px] font-black uppercase tracking-wider transition-colors ${
                         isActive(href)
-                          ? "bg-amber-300 text-slate-950"
+                          ? "text-white"
                           : locked
                             ? "text-white/25 hover:bg-white/5 hover:text-white/45"
                             : "text-white/55 hover:bg-white/10 hover:text-white"
@@ -101,7 +108,14 @@ export default function AppShell({
                     >
                       <Icon size={14} strokeWidth={2} />
                       {label}
-                      {locked && <Lock size={10} strokeWidth={2.5} className="ml-0.5" />}
+                      {locked && (
+                        <Lock size={10} strokeWidth={2.5} className="ml-0.5" />
+                      )}
+                      {/* El activo lleva solo una raya debajo, de punta a punta
+                          (icono y nombre), en vez de una píldora rellena. */}
+                      {isActive(href) && (
+                        <span className="absolute inset-x-3 bottom-0.5 h-0.5 rounded-full bg-amber-300/90" />
+                      )}
                     </Link>
                   );
                 })}
@@ -112,7 +126,9 @@ export default function AppShell({
           </nav>
         </header>
 
-        <main className="flex-1 px-4 py-6 pb-28 md:px-8 md:py-9 md:pb-14">{children}</main>
+        <main className="flex-1 px-4 py-6 pb-28 md:px-8 md:py-9 md:pb-14">
+          {children}
+        </main>
 
         <SiteFooter className="pb-24 md:pb-6" />
 
@@ -132,7 +148,11 @@ export default function AppShell({
                   key={href}
                   href={href}
                   className={`relative flex flex-1 flex-col items-center gap-1 py-2.5 text-[9px] font-black uppercase tracking-wider transition-colors ${
-                    active ? "text-amber-300" : locked ? "text-white/25" : "text-white/45"
+                    active
+                      ? "text-amber-300"
+                      : locked
+                        ? "text-white/25"
+                        : "text-white/45"
                   }`}
                 >
                   <span

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Flame, Home, Medal, RotateCcw } from "lucide-react";
+import { Flame, Home, Medal, Repeat, RotateCcw, X } from "lucide-react";
 import Crown from "./Crown";
 import { saveAttempt } from "@/app/progreso/actions";
 import type { SaveResult } from "@/lib/progress";
@@ -19,6 +19,16 @@ interface Props {
    * si el nivel fuera un trozo más de ella.
    */
   savePath?: string;
+  /**
+   * Si se pasa, el panel lleva una X (y se cierra con Escape) para quitarlo de
+   * en medio y ver el ejercicio ya terminado: dónde se ha fallado.
+   */
+  onClose?: () => void;
+  /**
+   * Si se pasa, sale "Repetir el mismo": volver a hacer exactamente el mismo
+   * ejercicio, para insistir justo en lo que ha salido mal.
+   */
+  onReplay?: () => void;
 }
 
 const SPARKLES = [
@@ -29,7 +39,14 @@ const SPARKLES = [
   { top: "0%", left: "58%", size: 9, delay: "1.6s" },
 ];
 
-export default function GameOverModal({ correct, total, onRestart, savePath }: Props) {
+export default function GameOverModal({
+  correct,
+  total,
+  onRestart,
+  savePath,
+  onClose,
+  onReplay,
+}: Props) {
   const safeTotal = Math.max(1, total);
   const perfect = correct === total && total > 0;
   const pct = Math.round((correct / safeTotal) * 100);
@@ -53,6 +70,15 @@ export default function GameOverModal({ correct, total, onRestart, savePath }: P
       .catch(() => setSaved(null));
   }, [pathname, correct, total]);
 
+  useEffect(() => {
+    if (!onClose) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   // El velo tapaba demasiado: iba a media opacidad y con 24px de desenfoque, y
   // detrás no se veía nada. Ahora es lo justo para que la tarjeta se despegue
   // del fondo y se siga viendo dónde estabas.
@@ -63,6 +89,17 @@ export default function GameOverModal({ correct, total, onRestart, savePath }: P
       )}
 
       <div className="rise-in relative w-full max-w-sm rounded-[2.5rem] border border-white/15 bg-slate-950/80 p-8 text-center shadow-[0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl md:p-10">
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar y ver el ejercicio"
+            title="Cerrar y ver el ejercicio"
+            className="absolute right-5 top-5 z-10 grid h-9 w-9 place-items-center rounded-full text-white/40 transition hover:bg-white/10 hover:text-white"
+          >
+            <X size={18} strokeWidth={2.25} />
+          </button>
+        )}
         {perfect ? (
           <>
             <div className="relative mx-auto mb-6 h-32 w-40">
@@ -182,6 +219,16 @@ export default function GameOverModal({ correct, total, onRestart, savePath }: P
             <RotateCcw size={14} />
             Reiniciar
           </button>
+
+          {onReplay && (
+            <button
+              onClick={onReplay}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-300/30 py-3 text-[10px] font-black uppercase tracking-widest text-amber-200 transition hover:border-amber-300/60 hover:text-white"
+            >
+              <Repeat size={13} />
+              Repetir el mismo
+            </button>
+          )}
 
           <Link
             href="/"

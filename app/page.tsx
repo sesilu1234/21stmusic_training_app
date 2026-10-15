@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Flame, Hammer, Lock } from "lucide-react";
 import AppShell from "./components/AppShell";
-import { gameIcons } from "./components/gameIcons";
+import GamePreview from "./components/GamePreview";
 import { MedalAward } from "./components/MedalBadge";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
@@ -24,6 +24,20 @@ export const metadata: Metadata = {
 };
 
 /**
+ * La miniatura del modo, en el sitio donde iba el icono: un trocito del
+ * ejercicio dibujado en tinta sobre papel (ver `GamePreview`).
+ */
+const Thumb = ({ name, hover = false }: { name: string; hover?: boolean }) => (
+  <span
+    className={`block aspect-[2/1] w-24 flex-shrink-0 overflow-hidden rounded-lg bg-[#f4efe4] transition-transform duration-200 ${
+      hover ? "group-hover:scale-105" : ""
+    }`}
+  >
+    <GamePreview name={name} className="h-full w-full" />
+  </span>
+);
+
+/**
  * Tarjeta de modo. Si el modo es de alumnos y no hay sesión, sigue siendo un
  * enlace (para que se pueda ver de qué va y ofrecer entrar), pero se enseña
  * apagada y con candado: se ve que existe, se ve que está cerrada.
@@ -39,7 +53,6 @@ const GameCard = ({
   stat?: GameProgress;
 }) => {
   const category = categoryOf(game.category);
-  const Icon = gameIcons[game.icon];
 
   // Sin construir todavía: se enseña, pero no lleva a ningún sitio.
   if (game.comingSoon) {
@@ -56,11 +69,7 @@ const GameCard = ({
         </span>
 
         <div className="flex items-start gap-3.5 opacity-35 grayscale">
-          <span
-            className={`grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl ${category.iconBg}`}
-          >
-            <Icon size={22} className={category.accent} strokeWidth={1.75} />
-          </span>
+          <Thumb name={game.name} />
           <span className="min-w-0 flex-1">
             <span className="block text-base font-black uppercase italic leading-tight tracking-tight text-white">
               {game.label}
@@ -115,13 +124,7 @@ const GameCard = ({
           hasAward ? "pr-9" : ""
         }`}
       >
-        <span
-          className={`grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl transition-transform duration-200 ${
-            locked ? "" : "group-hover:scale-105"
-          } ${category.iconBg}`}
-        >
-          <Icon size={22} className={category.accent} strokeWidth={1.75} />
-        </span>
+        <Thumb name={game.name} hover={!locked} />
         <span className="min-w-0 flex-1">
           <span className="block text-base font-black uppercase italic leading-tight tracking-tight text-white">
             {game.label}
@@ -179,7 +182,7 @@ export default async function HomePage() {
         {progress && progress.attempts > 0 && (
           <Link
             href="/progreso"
-            className="mb-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-lg transition hover:border-amber-300/40"
+            className="group mb-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-lg transition hover:border-amber-300/40"
           >
             <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-orange-400/15">
               <Flame size={17} className="text-orange-300" strokeWidth={1.75} />
@@ -198,7 +201,7 @@ export default async function HomePage() {
                   : "Con una partida de hoy la mantienes viva"}
               </span>
             </span>
-            <span className="flex-shrink-0 text-[9px] font-black uppercase tracking-[0.18em] text-white/30">
+            <span className="flex-shrink-0 text-[9px] font-black uppercase tracking-[0.18em] text-white/30 transition-colors group-hover:text-white/70">
               Ver progreso
             </span>
           </Link>

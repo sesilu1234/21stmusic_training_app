@@ -59,6 +59,10 @@ export interface MusicRef {
   handleStart: (isPlaying: boolean) => void;
   handleBPMChange: (bpm: number) => void;
   handleMeasuresChange: () => void;
+  /** Para el ejercicio donde esté, sin puntuar. No se puede seguir. */
+  stop: () => void;
+  /** Deja la MISMA partitura limpia, esperando a que se pulse para empezar. */
+  replay: () => void;
 }
 
 interface SimpleMovingScoreProps {
@@ -85,6 +89,12 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     const startTimeRef = useRef<number>(0);
     const beforeStart = useRef<number>(0.5);
     const requestRef = useRef<number>(0);
+    /**
+     * Si la partitura está corriendo. Parar o repetir lo bajan, y el bucle de
+     * animación lo mira en cada fotograma: así no queda un fotograma colgado
+     * que vuelva a pintar o a terminar la partida después de parar.
+     */
+    const runningRef = useRef(false);
 
     const ctxCanvasRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -280,7 +290,26 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
 
     function initGame() {
       gameRef.current = createGameState(BPM.current);
+      rewindRun();
+    }
 
+    /**
+     * Vuelve al principio de la partitura que ya hay, sin sacar otra: quita
+     * los aciertos, los fallos y las pulsaciones, y rehace los tiempos con el
+     * tempo de ahora por si se ha cambiado. Es lo que usa "Repetir el mismo".
+     */
+    function rewindGame() {
+      const game = gameRef.current!;
+      game.score.forEach((item) => {
+        item.status = 2;
+      });
+      const { TIME_LINE, TIME_LINE_NOTES } = computeTimeline(game.score, BPM.current);
+      game.TIME_LINE = TIME_LINE;
+      game.TIME_LINE_NOTES = TIME_LINE_NOTES;
+      rewindRun();
+    }
+
+    function rewindRun() {
       currentNoteIndex.current = 0;
       posIndex.current = 0;
 
@@ -432,6 +461,25 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           // Va unida a otras: cabeza y plica a mano, la barra va aparte.
           ctx.fillText(G.noteheadBlack, x, midY);
           ctx.fillRect(stemLeftOf(item), midY - STEM_LEN, STEM_W, STEM_LEN);
+        } else if (item.value === "h" || item.value === "w") {
+          // Blanca y redonda: la cabeza es hueca y la línea del pentagrama le
+          // pasaba por dentro, así que con el contorno fino se veían grises,
+          // como tachadas. Se tapa el hueco en blanco antes de pintarla y se
+          // repasa el contorno para que pese lo mismo que una negra.
+          const headWidth =
+            item.value === "w" ? ctx.measureText(G.noteWhole).width : headWidthRef.current;
+          ctx.save();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath();
+          ctx.ellipse(x + headWidth / 2, midY, headWidth / 2 - 1, SP * 0.4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          ctx.fillText(NOTE_GLYPH[item.value], x, midY);
+          ctx.save();
+          ctx.strokeStyle = "#111";
+          ctx.lineWidth = 0.7;
+          ctx.strokeText(NOTE_GLYPH[item.value], x, midY);
+          ctx.restore();
         } else {
           ctx.fillText(NOTE_GLYPH[item.value], x, midY);
         }
@@ -508,6 +556,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     // ---------------------------------------------------------------------
 
     const animate = () => {
+      if (!runningRef.current) return;
       const ctx = ctxCanvasRef.current;
       if (!ctx) return;
 
@@ -541,6 +590,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         if (posIndex.current >= TIME_LINE.length) {
           scrollX.current = LENGTH_LINE[LENGTH_LINE.length - 1];
 
+          runningRef.current = false;
           cancelAnimationFrame(requestRef.current);
           draw(ctx, scrollX.current, viewWidth());
           metronomeRef.current?.stop();
@@ -676,7 +726,8 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           setShowReset(true);
           setShowDrag(false);
 
-          requestAnimationFrame(animate);
+          runningRef.current = true;
+          requestRef.current = requestAnimationFrame(animate);
         } else {
           const game = gameRef.current!;
           const note = game.TIME_LINE_NOTES[currentNoteIndex.current];
@@ -713,6 +764,8 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
         const ctx = ctxCanvasRef.current;
         if (ctx) draw(ctx, 0, viewWidth());
       },
+      stop: () => handleStop(),
+      replay: () => handleReplay(),
     }));
 
     useEffect(() => {
@@ -835,6 +888,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       initGame();
       notFirstTime.current = false;
 
+      runningRef.current = false;
       cancelAnimationFrame(requestRef.current);
       metronomeRef.current?.stop();
       startTimeRef.current = 0;
@@ -848,6 +902,63 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
       setShowReset(false);
     };
 
+    /**
+     * Parar: la partitura se queda quieta donde iba, con lo marcado hasta ahí,
+     * y no se puntúa ni se guarda. No se puede reanudar; se puede arrastrar
+     * para revisarla, repetirla o pulsar para empezar otra.
+     */
+    const handleStop = () => {
+      runningRef.current = false;
+      cancelAnimationFrame(requestRef.current);
+      metronomeRef.current?.stop();
+
+      setShowReset(false);
+      setShowDrag(true);
+      onComplete?.("stop", {});
+    };
+
+    /**
+     * Repetir el mismo ejercicio. Se queda esperando a que se pulse, igual que
+     * al entrar, y `notFirstTime` a false es lo que hace que ese arranque no
+     * saque una partitura nueva.
+     */
+    const handleReplay = () => {
+      runningRef.current = false;
+      cancelAnimationFrame(requestRef.current);
+      metronomeRef.current?.stop();
+      startTimeRef.current = 0;
+
+      rewindGame();
+      notFirstTime.current = false;
+
+      onComplete?.("reset", {});
+      setBeat?.(1);
+
+      const ctx = ctxCanvasRef.current;
+      if (ctx) draw(ctx, 0, viewWidth());
+
+      setShowReset(false);
+      setShowDrag(false);
+    };
+
+    /**
+     * Los botones van encima de la partitura y la barra espaciadora es la de
+     * tocar: si el botón se quedara con el foco, el siguiente espacio lo
+     * volvería a pulsar en vez de contar como golpe. Por eso sueltan el foco.
+     */
+    const overlayButton = (label: string, onClick: () => void) => (
+      <button
+        type="button"
+        onClick={(event) => {
+          event.currentTarget.blur();
+          onClick();
+        }}
+        className="bg-black/40 px-2 py-1 rounded-lg text-white text-xs backdrop-blur-sm hover:bg-black/60 cursor-pointer"
+      >
+        {label}
+      </button>
+    );
+
     return (
       <div className="w-full min-w-0" style={{ background: "transparent" }}>
         {!fontLoaded ? null : (
@@ -859,20 +970,17 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
             />
 
             {showDrag && (
-              <div className="absolute lg:-top-5 right-5 flex items-center justify-center pointer-events-none animate-pulse">
-                <div className="bg-black/35 px-2 py-1 rounded-lg text-white text-xs backdrop-blur-sm">
+              <div className="absolute lg:-top-5 right-5 flex items-center justify-center gap-2">
+                {overlayButton("Repetir el mismo", handleReplay)}
+                <div className="bg-black/35 px-2 py-1 rounded-lg text-white text-xs backdrop-blur-sm pointer-events-none animate-pulse">
                   Drag for review
                 </div>
               </div>
             )}
             {showReset && (
-              <div
-                className="absolute -top-5 right-5 flex items-center justify-center cursor-pointer"
-                onClick={handleReset}
-              >
-                <div className="bg-black/40 px-2 py-1 rounded-lg text-white text-xs backdrop-blur-sm hover:bg-black/60">
-                  Reset
-                </div>
+              <div className="absolute -top-5 right-5 flex items-center justify-center gap-2">
+                {overlayButton("Parar", handleStop)}
+                {overlayButton("Reset", handleReset)}
               </div>
             )}
           </div>

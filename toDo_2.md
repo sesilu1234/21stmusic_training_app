@@ -32,3 +32,5 @@
 - cuando vuelves atras en oido toca algo diferente
 
 - y ademas se lagea a veces el odio intervalo y otros dde oido, al principio -->
+
+<!-- - que se pueda ver o volver o repteir el missmo ejercicio en lectura ritmica -->
