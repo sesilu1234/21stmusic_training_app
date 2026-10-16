@@ -3,6 +3,7 @@
 import { currentStudent } from "@/lib/session";
 import { gameFromPath } from "@/lib/games";
 import { getProgress, recordAttempt, type SaveResult } from "@/lib/progress";
+import { forgetHonorBoard } from "@/lib/honor";
 
 const NOT_SAVED: SaveResult = { saved: false, newMedal: false, streak: 0 };
 
@@ -29,13 +30,18 @@ export const saveAttempt = async (input: {
   if (!found) return NOT_SAVED;
 
   try {
-    return await recordAttempt({
+    const result = await recordAttempt({
       email: student.email,
       gameName: found.game.name,
       levelSlug: found.levelSlug,
       correct: Number(input.correct),
       total: Number(input.total),
     });
+    // Que la partida cuente ya en el cuadro de honor, no dentro de cinco
+    // minutos. Lo de quien no sale ahí no lo cambia, así que solo se tira por
+    // quien sí.
+    if (result.saved && student.showInHonor) forgetHonorBoard();
+    return result;
   } catch (error) {
     // Que se caiga la base de datos no puede estropear el final de la partida:
     // el alumno ve su resultado igual, simplemente no queda guardado.

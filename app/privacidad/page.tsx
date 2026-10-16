@@ -70,6 +70,15 @@ export default function PrivacidadPage() {
         </p>
 
         <p>
+          <Lead>El cuadro de honor.</Lead> Solo sales en él si lo activas tú,
+          y lo puedes quitar cuando quieras. Si sales, los demás alumnos con
+          cuenta ven tu nombre y la inicial de tu apellido cuando estás entre
+          los primeros, con la cifra por la que sales (partidas, rachas o
+          medallas). Nunca tu correo, y nunca fuera de la app: sin cuenta no
+          se ve.
+        </p>
+
+        <p>
           <Lead>Si nos escribes.</Lead> Del formulario de contacto guardamos tu
           correo y tu mensaje, y sirven para contestarte. No pedimos teléfono ni
           dirección, no hay pagos y la app no usa el micrófono.

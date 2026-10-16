@@ -3,10 +3,12 @@ import Link from "next/link";
 import { Flame, Hammer, Lock } from "lucide-react";
 import AppShell from "./components/AppShell";
 import GamePreview from "./components/GamePreview";
+import HonorStrip from "./components/HonorStrip";
 import { MedalSticker } from "./components/MedalBadge";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
 import { getProgress, type GameProgress } from "@/lib/progress";
+import { getHonorBoard, HONOR_MIN_PARTICIPANTS } from "@/lib/honor";
 import { SITE_URL } from "@/lib/seo";
 
 /**
@@ -173,7 +175,14 @@ export default async function HomePage() {
 
   // El progreso es un extra: si la consulta falla, el menú tiene que salir
   // igual, solo que sin las marcas de cada tarjeta.
-  const progress = student ? await getProgress(student.email).catch(() => null) : null;
+  // Lo mismo con el cuadro de honor, que además solo se enseña con sesión:
+  // son nombres de alumnos.
+  const [progress, honor] = student
+    ? await Promise.all([
+        getProgress(student.email).catch(() => null),
+        getHonorBoard(student.email).catch(() => null),
+      ])
+    : [null, null];
   const statOf = (name: string) =>
     progress?.games.find((entry) => entry.game.name === name);
 
@@ -207,6 +216,11 @@ export default async function HomePage() {
               Ver progreso
             </span>
           </Link>
+        )}
+
+        {/* Con un solo apuntado la franja sería tu nombre y nada más. */}
+        {student && honor && honor.participants >= HONOR_MIN_PARTICIPANTS && (
+          <HonorStrip board={honor} showInHonor={student.showInHonor} />
         )}
 
         <div className="space-y-8 md:space-y-9">

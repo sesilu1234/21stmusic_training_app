@@ -206,7 +206,14 @@ export function MedalAward({
  */
 export function MedalSticker(props: { id: string; count: number; total: number }) {
   return (
-    <span className="pointer-events-none absolute -right-3 -top-4 z-10">
+    // Al pasar por la tarjeta crece un poco. La tarjeta tiene que llevar
+    // `group`, que es de donde sale el hover.
+    //
+    // Mientras anima, el número grabado cambia un poco de luz: el navegador
+    // pasa la medalla a otra capa y suaviza el texto de otra forma. Crecer
+    // cambiando el ancho en vez de con `scale` lo quitaba, pero la animación
+    // quedaba peor, y ni con `will-change` fijo se iba. Se acepta.
+    <span className="pointer-events-none absolute -right-3 -top-4 z-10 transition-transform duration-200 ease-out group-hover:scale-110">
       <MedalAward {...props} size={42} sticker />
     </span>
   );
