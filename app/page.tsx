@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Flame, Hammer, Lock } from "lucide-react";
 import AppShell from "./components/AppShell";
 import GamePreview from "./components/GamePreview";
-import { MedalAward } from "./components/MedalBadge";
+import { MedalSticker } from "./components/MedalBadge";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
 import { getProgress, type GameProgress } from "@/lib/progress";
@@ -103,14 +103,13 @@ const GameCard = ({
       }`}
     >
       {/* El galardón: cuántos niveles del modo llevas clavados del todo (pleno
-          en partida larga), arriba a la derecha como un sello. Es un contador
+          en partida larga), pegado encima de la esquina de arriba a la derecha
+          y saliéndose de ella, como una pegatina. Es un contador
           y no un sí/no porque una medalla no se pierde: si mañana el modo
           estrena un nivel, lo ganado sigue ganado y solo hay uno más al que
           llegar. Con todos, brilla. */}
       {hasAward && (
-        <span className="absolute right-3 top-2.5">
-          <MedalAward id={game.name} count={stat.medals} total={stat.medalsTotal} />
-        </span>
+        <MedalSticker id={game.name} count={stat.medals} total={stat.medalsTotal} />
       )}
 
       {locked && (
@@ -124,7 +123,7 @@ const GameCard = ({
 
       <div
         className={`flex items-start gap-3.5 ${locked ? "opacity-45 grayscale" : ""} ${
-          hasAward ? "pr-9" : ""
+          hasAward ? "pr-7" : ""
         }`}
       >
         <Thumb name={game.name} hover={!locked} />

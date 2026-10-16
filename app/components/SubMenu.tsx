@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import Backdrop from "./Backdrop";
+import { MedalSticker } from "./MedalBadge";
+import { useLevelMedals } from "./useLevelMedals";
 import SiteFooter from "./SiteFooter";
 import { categoryOf, type CategoryId } from "@/lib/games";
 
@@ -49,6 +51,7 @@ export default function SubMenu({
   beforeOptions?: React.ReactNode;
 }) {
   const palette = categoryOf(category);
+  const hasMedal = useLevelMedals();
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
@@ -80,17 +83,28 @@ export default function SubMenu({
           {beforeOptions}
 
           <div className="grid gap-3.5 sm:grid-cols-2">
-            {options.map(({ title: optionTitle, description, href, Icon, badge, locked }) => (
+            {options.map(({ title: optionTitle, description, href, Icon, badge, locked }) => {
+              const medal = !locked && hasMedal(href);
+              return (
               <Link
                 key={href}
                 href={locked ? "/login" : href}
                 aria-label={locked ? `${optionTitle} — solo para alumnos` : optionTitle}
+                /* Con medalla va por encima de las demás: la medalla se sale de
+                   la tarjeta, y el desenfoque del fondo hace de cada tarjeta su
+                   propia capa, así que la siguiente la taparía. */
                 className={`group relative flex min-h-[132px] flex-col rounded-2xl border p-5 shadow-xl backdrop-blur-sm transition duration-200 ${
+                  medal ? "z-10" : ""
+                } ${
                   locked
                     ? "border-white/[0.06] bg-slate-950/40 hover:border-amber-300/30 hover:bg-slate-950/60"
                     : `border-white/10 bg-slate-950/70 hover:-translate-y-0.5 hover:bg-slate-950/85 ${palette.hoverBorder}`
                 }`}
               >
+                {/* Pleno en partida larga en este nivel: la misma medalla del
+                    menú principal, pegada en la esquina. */}
+                {medal && <MedalSticker id={href} count={1} total={1} />}
+
                 {locked && (
                   <span
                     title="Solo para alumnos de la escuela"
@@ -113,7 +127,11 @@ export default function SubMenu({
                     <Icon size={22} className={palette.accent} strokeWidth={1.75} />
                   </span>
                   {badge && !locked && (
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/50">
+                    <span
+                      className={`rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/50 ${
+                        medal ? "mr-6" : ""
+                      }`}
+                    >
                       {badge}
                     </span>
                   )}
@@ -144,7 +162,8 @@ export default function SubMenu({
                   </span>
                 )}
               </Link>
-            ))}
+              );
+            })}
           </div>
         </main>
 

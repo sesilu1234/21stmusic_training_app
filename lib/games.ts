@@ -153,6 +153,17 @@ export const GAMES: GameMode[] = [
     category: "lenguaje",
     scored: true,
   },
+  // Justo después de leer notas: un intervalo son dos notas leídas, y los
+  // acordes y las armaduras se apoyan en él.
+  {
+    name: "Intervalos",
+    label: "Intervalos",
+    desc: "Dos notas en el pentagrama: di qué intervalo es.",
+    slug: "/play/intervalos",
+    icon: "ArrowUpDown",
+    category: "lenguaje",
+    scored: true,
+  },
   {
     name: "Acordes en el pentagrama",
     label: "Acordes en el pentagrama",
@@ -168,15 +179,6 @@ export const GAMES: GameMode[] = [
     desc: "Tonalidades y alteraciones al vuelo.",
     slug: "/play/armadura",
     icon: "Hash",
-    category: "lenguaje",
-    scored: true,
-  },
-  {
-    name: "Intervalos",
-    label: "Intervalos",
-    desc: "Dos notas en el pentagrama: di qué intervalo es.",
-    slug: "/play/intervalos",
-    icon: "ArrowUpDown",
     category: "lenguaje",
     scored: true,
   },

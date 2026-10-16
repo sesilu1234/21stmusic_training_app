@@ -136,11 +136,17 @@ export function MedalAward({
   id,
   count,
   total,
+  size = 32,
+  sticker = false,
 }: {
   id: string;
   count: number;
   total: number;
+  size?: number;
+  /** Para `MedalSticker`: el "/8" va en una pastilla, que se lea sobre lo que caiga. */
+  sticker?: boolean;
 }) {
+  const scale = size / 32;
   const complete = count >= total;
   const label = `${count} de ${total} ${total === 1 ? "nivel clavado" : "niveles clavados"}`;
 
@@ -149,7 +155,7 @@ export function MedalAward({
       <span className="relative inline-flex">
         <MedalSvg
           id={id}
-          size={32}
+          size={size}
           className={
             complete
               ? "drop-shadow-[0_0_10px_rgba(251,191,36,0.7)]"
@@ -159,13 +165,13 @@ export function MedalAward({
         <DiscContent>
           {total > 1 ? (
             <span
-              className="text-[13px] font-bold leading-none tabular-nums"
-              style={{ ...MEDAL_FONT, ...ENGRAVED_TEXT }}
+              className="font-bold leading-none tabular-nums"
+              style={{ ...MEDAL_FONT, ...ENGRAVED_TEXT, fontSize: 13 * scale }}
             >
               {count}
             </span>
           ) : (
-            <Star size={13} engraved />
+            <Star size={13 * scale} engraved />
           )}
         </DiscContent>
       </span>
@@ -173,7 +179,11 @@ export function MedalAward({
       {total > 1 && (
         <span
           className={`mt-0.5 text-[9px] font-bold leading-none tabular-nums ${
-            complete ? "text-amber-200" : "text-white/45"
+            complete ? "text-amber-200" : sticker ? "text-white/70" : "text-white/45"
+          } ${
+            sticker
+              ? "rounded-full bg-slate-950/90 px-1.5 py-[3px] shadow-[0_2px_4px_rgba(0,0,0,0.5)] ring-1 ring-amber-300/30"
+              : ""
           }`}
           style={MEDAL_FONT}
         >
@@ -181,6 +191,23 @@ export function MedalAward({
         </span>
       )}
       <span className="sr-only">{label}</span>
+    </span>
+  );
+}
+
+/**
+ * El galardón como pegatina: sobresale por la esquina de arriba a la derecha
+ * de la tarjeta, como algo que se ha ganado y se le ha pegado
+ * encima, no como parte del dibujo de la tarjeta.
+ *
+ * Va con `absolute`, así que la tarjeta tiene que ser `relative`. Y no lleva
+ * eventos de ratón: tapa un trozo de la tarjeta y el clic tiene que seguir
+ * llegando al enlace.
+ */
+export function MedalSticker(props: { id: string; count: number; total: number }) {
+  return (
+    <span className="pointer-events-none absolute -right-3 -top-4 z-10">
+      <MedalAward {...props} size={42} sticker />
     </span>
   );
 }

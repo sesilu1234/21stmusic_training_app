@@ -2,7 +2,7 @@
 
 import { currentStudent } from "@/lib/session";
 import { gameFromPath } from "@/lib/games";
-import { recordAttempt, type SaveResult } from "@/lib/progress";
+import { getProgress, recordAttempt, type SaveResult } from "@/lib/progress";
 
 const NOT_SAVED: SaveResult = { saved: false, newMedal: false, streak: 0 };
 
@@ -46,5 +46,42 @@ export const saveAttempt = async (input: {
     // despliegue y no en la consola del alumno.
     console.error("[progreso] no se ha podido guardar la partida:", error);
     return NOT_SAVED;
+  }
+};
+
+/**
+ * Las rutas de los niveles con medalla, para pintarla en los submenús.
+ *
+ * Van como ruta entera ("/play/construye-escalas/mayores") porque así es como
+ * las tienen los enlaces de cada tarjeta, y el submenú solo tiene que
+ * compararlas. `levels` son todos los niveles que existen, con o sin medalla:
+ * hacen falta para las tarjetas que agrupan varios (Nombrar / Escribir en el
+ * pentagrama), que llevan medalla cuando están todos los de dentro.
+ *
+ * Sin sesión, o si la consulta falla, no hay medallas y ya está: el menú sale
+ * igual.
+ */
+export const getLevelMedals = async (): Promise<{
+  medals: string[];
+  levels: string[];
+}> => {
+  const student = await currentStudent();
+  if (!student) return { medals: [], levels: [] };
+
+  try {
+    const progress = await getProgress(student.email);
+    const levels = progress.games.flatMap((entry) =>
+      entry.levels.map((level) => ({
+        path: `${entry.game.slug}/${level.slug}`,
+        hasMedal: level.hasMedal,
+      })),
+    );
+    return {
+      medals: levels.filter((level) => level.hasMedal).map((level) => level.path),
+      levels: levels.map((level) => level.path),
+    };
+  } catch (error) {
+    console.error("[progreso] no se han podido leer las medallas:", error);
+    return { medals: [], levels: [] };
   }
 };
