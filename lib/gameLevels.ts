@@ -18,7 +18,6 @@
 // `level_slug`, y para ellos la barra es sencillamente su récord.
 
 import { CHORD_LEVELS, PROGRESSION_LEVELS } from "./chordEar";
-import { earLevelSlugs } from "./earIntervals";
 import { PAIR_LEVELS } from "./chordPair";
 import { MELODY_LEVELS } from "./melodyEar";
 import { NOTE_READING_LEVELS } from "./noteReading";
@@ -28,6 +27,7 @@ import { PIANO_INTERVAL_LEVELS } from "./pianoIntervals";
 import { PIANO_NOTE_LEVELS } from "./pianoNotes";
 import { RHYTHM_LEVELS } from "./rhythm";
 import { CHORD_NAME_LEVELS, CHORD_SPELL_LEVELS } from "./staffChords";
+import { STAFF_INTERVAL_LEVELS } from "./staffIntervals";
 import { TRIVIA_TOPICS } from "./trivia";
 import { CLAVE_LEVELS } from "@/app/play/armadura/notes_images";
 
@@ -36,6 +36,10 @@ const slugs = (levels: { slug: string }[]) => levels.map((level) => level.slug);
 /** Modo → niveles que tiene, en el orden en que se ofrecen. */
 export const GAME_LEVELS: Record<string, string[]> = {
   "/play/lectura-notas": slugs(NOTE_READING_LEVELS),
+
+  // Hasta octubre de 2026 era una pantalla sola; sus partidas de entonces
+  // están en el nivel 2, que es lo mismo que se jugaba (db/intervalos_niveles.sql).
+  "/play/intervalos": slugs(STAFF_INTERVAL_LEVELS),
 
   // Dos submodos, cada uno con sus niveles, y las partidas se guardan con el
   // submodo delante. Cuentan todos: dominar el modo es saber leer los acordes
@@ -62,11 +66,10 @@ export const GAME_LEVELS: Record<string, string[]> = {
 
   "/play/ritmo": slugs(RHYTHM_LEVELS),
 
-  // Melódicos y armónicos, con los mismos niveles cada uno. Se guardan con la
-  // pantalla delante ("intervalos/nivel-2", "armonico/nivel-2") porque las dos
-  // cuelgan de /play/oido. El nivel va en `?nivel=`, que la ruta no ve: lo
-  // añade el propio juego al guardar (ver `earLevelPath`).
-  "/play/oido": [...earLevelSlugs("intervalos"), ...earLevelSlugs("armonico")],
+  // Melódicos y armónicos, con todos los intervalos: lo elegido a mano es
+  // práctica y no se guarda (lib/earIntervals.ts). Hasta octubre de 2026
+  // tenían cuatro niveles cada uno (db/oido_sin_niveles.sql).
+  "/play/oido": ["intervalos", "armonico"],
   "/play/oido/acordes": [...slugs(CHORD_LEVELS), ...slugs(PAIR_LEVELS)],
   "/play/oido/progresiones": slugs(PROGRESSION_LEVELS),
   "/play/oido/dictado": slugs(MELODY_LEVELS),

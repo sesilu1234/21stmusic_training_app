@@ -316,7 +316,7 @@ export default function RockschoolPage() {
           className="absolute left-4 top-3.5 z-20 inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-3.5 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-slate-300/40 hover:text-white md:left-7 md:top-4"
         >
           <ArrowLeft size={12} />
-
+          <span className="hidden md:inline">Menú</span>
         </Link>
 
         <div className="absolute right-4 top-3.5 z-20 md:right-7 md:top-4">

@@ -35,6 +35,8 @@ export function useAbandono(
   terminada: boolean,
   /** Igual que `savePath` en `GameOverModal`: la ruta si no es la de la página. */
   savePath?: string,
+  /** false = partida de práctica, que no se guarda: tampoco se avisa si se deja. */
+  activo = true,
 ) {
   const currentPath = usePathname();
   const pathname = savePath ?? currentPath;
@@ -47,7 +49,7 @@ export function useAbandono(
    * de limpieza podría mandar el beacon a mitad de partida. La ref se actualiza
    * aparte, sin tocar el listener.
    */
-  const estado = useRef({ contestadas: 0, aciertos: 0, terminada, pathname });
+  const estado = useRef({ contestadas: 0, aciertos: 0, terminada, pathname, activo });
 
   // Se escribe en un efecto sin lista de dependencias —o sea, después de cada
   // render— y no en el cuerpo de la función: escribir una ref mientras React
@@ -59,6 +61,7 @@ export function useAbandono(
       aciertos: results.filter(esAcierto).length,
       terminada,
       pathname,
+      activo,
     };
   });
 
@@ -67,8 +70,8 @@ export function useAbandono(
 
   useEffect(() => {
     const avisar = () => {
-      const { contestadas, aciertos, terminada: fin, pathname: ruta } = estado.current;
-      if (enviado.current || fin || contestadas < 1) return;
+      const { contestadas, aciertos, terminada: fin, pathname: ruta, activo: cuenta } = estado.current;
+      if (enviado.current || fin || !cuenta || contestadas < 1) return;
       enviado.current = true;
 
       try {

@@ -6,9 +6,9 @@ import { getLevelMedals } from "@/app/progreso/actions";
 /**
  * La ruta con la que se guarda un nivel, a partir del enlace de su tarjeta.
  *
- * Casi siempre es el propio enlace. La excepción son los intervalos al oído,
- * que llevan el nivel en `?nivel=2` y se guardan como "/nivel-2" (ver
- * `earLevelPath`).
+ * Casi siempre es el propio enlace, sin lo que vaya detrás del `?` (los
+ * intervalos elegidos a mano en /play/oido, por ejemplo). Un `?nivel=` se
+ * guarda como "/nivel-N".
  */
 const savedPathOf = (href: string) => {
   const [path, query = ""] = href.split("?");

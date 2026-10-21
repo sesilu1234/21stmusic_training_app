@@ -21,6 +21,12 @@ export interface SubMenuOption {
   description: string;
   href: string;
   Icon: IconComponent;
+  /**
+   * Una imagen en lugar del icono, en el mismo sitio y a la misma altura. Para
+   * los modos en los que lo que distingue un nivel se ve mejor que se dice
+   * (las claves de Armaduras).
+   */
+  image?: React.ReactNode;
   /** Etiqueta corta opcional: "Nivel 1", "Nuevo"… */
   badge?: string;
   /**
@@ -43,6 +49,7 @@ export default function SubMenu({
   category,
   options,
   beforeOptions,
+  compact = false,
 }: {
   eyebrow: string;
   title: string;
@@ -51,6 +58,11 @@ export default function SubMenu({
   options: SubMenuOption[];
   /** Algo que va entre la introducción y las tarjetas, como un selector de nivel. */
   beforeOptions?: React.ReactNode;
+  /**
+   * Tarjetas más apretadas y en tres columnas. Para menús con pocas opciones
+   * y textos cortos (Armaduras), donde la tarjeta normal deja mucho hueco.
+   */
+  compact?: boolean;
 }) {
   const palette = categoryOf(category);
   const hasMedal = useLevelMedals();
@@ -88,8 +100,8 @@ export default function SubMenu({
 
           {beforeOptions}
 
-          <div className="grid gap-3.5 sm:grid-cols-2">
-            {options.map(({ title: optionTitle, description, href, Icon, badge, locked }) => {
+          <div className={`grid gap-3.5 sm:grid-cols-2 ${compact ? "lg:grid-cols-3" : ""}`}>
+            {options.map(({ title: optionTitle, description, href, Icon, image, badge, locked }) => {
               const medal = !locked && hasMedal(href);
               return (
               <Link
@@ -99,7 +111,7 @@ export default function SubMenu({
                 /* Con medalla va por encima de las demás: la medalla se sale de
                    la tarjeta, y el desenfoque del fondo hace de cada tarjeta su
                    propia capa, así que la siguiente la taparía. */
-                className={`group relative flex min-h-[132px] flex-col rounded-2xl border p-5 shadow-xl backdrop-blur-sm transition duration-200 ${
+                className={`group relative flex flex-col rounded-2xl border shadow-xl ${compact ? "p-4" : "min-h-[132px] p-5"} backdrop-blur-sm transition duration-200 ${
                   medal ? "z-10" : ""
                 } ${
                   locked
@@ -121,10 +133,21 @@ export default function SubMenu({
                 )}
 
                 <div
-                  className={`mb-4 flex items-center justify-between gap-3 ${
+                  className={`${compact ? "mb-3" : "mb-4"} flex items-center justify-between gap-3 ${
                     locked ? "opacity-45 grayscale" : ""
                   }`}
                 >
+                  {/* La imagen va donde iría el icono y a la misma altura: es
+                      un icono más, no una portada de la tarjeta. */}
+                  {image ? (
+                    <span
+                      className={`flex h-12 items-center gap-1 rounded-xl bg-white px-1.5 py-1 transition-transform duration-200 ${
+                        locked ? "" : "group-hover:scale-105"
+                      }`}
+                    >
+                      {image}
+                    </span>
+                  ) : (
                   <span
                     className={`grid h-12 w-12 place-items-center rounded-xl transition-transform duration-200 ${
                       locked ? "" : "group-hover:scale-105"
@@ -132,9 +155,10 @@ export default function SubMenu({
                   >
                     <Icon size={22} className={palette.accent} strokeWidth={1.75} />
                   </span>
+                  )}
                   {badge && !locked && (
                     <span
-                      className={`rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/50 ${
+                      className={`shrink-0 whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/50 ${
                         medal ? "mr-6" : ""
                       }`}
                     >
@@ -144,24 +168,26 @@ export default function SubMenu({
                 </div>
 
                 <h2
-                  className={`text-xl font-black italic leading-tight tracking-tight md:text-2xl ${
+                  className={`font-black italic leading-tight tracking-tight ${
+                    compact ? "text-lg md:text-xl" : "text-xl md:text-2xl"
+                  } ${
                     locked ? "text-white/70" : "text-white"
                   }`}
                 >
                   {optionTitle}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-white/45 transition-colors group-hover:text-white/65">
+                <p className={`text-sm text-white/45 ${compact ? "mt-1 leading-5" : "mt-2 leading-6"} transition-colors group-hover:text-white/65`}>
                   {description}
                 </p>
 
                 {locked ? (
-                  <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 transition-colors group-hover:text-amber-300/70">
+                  <span className={`mt-auto inline-flex items-center gap-1.5 ${compact ? "pt-3" : "pt-4"} text-[10px] font-black uppercase tracking-[0.2em] text-white/30 transition-colors group-hover:text-amber-300/70`}>
                     Solo alumnos
                     <ArrowRight size={13} />
                   </span>
                 ) : (
                   <span
-                    className={`mt-auto inline-flex items-center gap-1.5 pt-4 text-[10px] font-black uppercase tracking-[0.2em] opacity-0 transition-opacity group-hover:opacity-100 ${palette.accent}`}
+                    className={`mt-auto inline-flex items-center gap-1.5 ${compact ? "pt-3" : "pt-4"} text-[10px] font-black uppercase tracking-[0.2em] opacity-0 transition-opacity group-hover:opacity-100 ${palette.accent}`}
                   >
                     Empezar
                     <ArrowRight size={13} />

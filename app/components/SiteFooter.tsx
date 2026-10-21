@@ -17,14 +17,23 @@ export default function SiteFooter({ className = "" }: { className?: string }) {
         <nav className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/45 md:gap-y-1">
           {FOOTER_LINKS.map((link, index) => (
             <Fragment key={link.href}>
-              {index > 0 && <span aria-hidden className="text-white/15">·</span>}
-              <Link href={link.href} className="transition-colors hover:text-amber-300">
+              {index > 0 && (
+                <span aria-hidden className="text-white/15">
+                  ·
+                </span>
+              )}
+              <Link
+                href={link.href}
+                className="transition-colors hover:text-amber-300"
+              >
                 {link.label}
               </Link>
             </Fragment>
           ))}
 
-          <span aria-hidden className="hidden text-white/15 md:inline">·</span>
+          <span aria-hidden className="hidden text-white/15 md:inline">
+            ·
+          </span>
 
           {/* En móvil salta a su propia línea: apretado entre los legales se leía mal. */}
           <a
@@ -39,6 +48,10 @@ export default function SiteFooter({ className = "" }: { className?: string }) {
 
         <p className="text-[8px] uppercase tracking-[0.4em] text-white/25">
           © 2026 {SITE.name}
+          <span aria-hidden className="mx-2 text-white/15">
+            ·
+          </span>
+          Desarrollado por Ulises Pla
         </p>
       </div>
     </footer>

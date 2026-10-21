@@ -1,18 +1,18 @@
 import ArmonicoGame from "./ArmonicoGame";
-import { earLevelFromParam } from "@/lib/earIntervals";
+import { earSetFromParam, earSetKey } from "@/lib/earIntervals";
 
 /**
- * Intervalos armónicos. El nivel llega en la dirección (?nivel=2), elegido en
- * /play/oido; si no viene, o no es ninguno de los que hay, el nivel 1.
+ * Intervalos armónicos. Los intervalos llegan en la dirección (?iv=3,5,b7),
+ * elegidos en /play/oido; si no vienen, o no valen, todos.
  */
 export default async function Page({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const level = earLevelFromParam((await searchParams).nivel);
+  const set = earSetFromParam((await searchParams).iv);
 
-  // El `key` hace que otro nivel sea una partida nueva entera, y no la
+  // El `key` hace que otra selección sea una partida nueva entera, y no la
   // anterior a medias con otros botones.
-  return <ArmonicoGame key={level.id} level={level} />;
+  return <ArmonicoGame key={earSetKey(set)} level={set} />;
 }

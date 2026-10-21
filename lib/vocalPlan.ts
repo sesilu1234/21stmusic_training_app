@@ -88,6 +88,12 @@ export interface VocalEvent {
   audible: boolean;
   /** true si es la nota que da el piano para que entres: la primera de la vuelta. */
   cue: boolean;
+  /**
+   * true = un silencio dentro del patrón: ocupa su pulso, pero no suena ni
+   * enciende tecla. Va como evento y no como hueco para que la pantalla deje
+   * de enseñar la nota anterior mientras dura.
+   */
+  rest?: boolean;
 }
 
 /** Un golpe de metrónomo. `accent` cae en el primer pulso de cada vuelta. */
@@ -109,8 +115,8 @@ export interface Plan {
 }
 
 export interface PlanOptions {
-  /** El patrón, en semitonos desde su nota de partida. */
-  pattern: number[];
+  /** El patrón, en semitonos desde su nota de partida. `null` = un pulso de silencio. */
+  pattern: (number | null)[];
   /** Alturas por las que pasa, en semitonos absolutos. */
   roots: number[];
   bpm: number;
@@ -147,6 +153,10 @@ export const buildPlan = ({
   const ticks: Tick[] = [];
   let at = 0;
 
+  const sounding = pattern.filter((offset): offset is number => offset !== null);
+  /** La primera nota de verdad: es la que da el piano para entrar, aunque haya un silencio antes. */
+  const firstStep = pattern.findIndex((offset) => offset !== null);
+
   roots.forEach((root, repetition) => {
     // El primer pulso de la vuelta va acentuado: es la única manera de saber
     // por dónde vas cuando el piano ya no toca.
@@ -160,19 +170,23 @@ export const buildPlan = ({
     pattern.forEach((offset, step) => {
       // Cuando el piano no guía la vuelta, da la primera nota y calla. Ocupa
       // el primer tiempo del ejercicio, no un pulso de más antes de empezar.
-      const lead = !guided && step === 0;
+      const lead = !guided && step === firstStep;
 
       if (step === pattern.length - 1) lastAt = (at - repetitionStart) / beat;
 
-      events.push({
-        at,
-        repetition,
-        root,
-        step,
-        semitone: root + offset,
-        audible: guided || lead,
-        cue: lead,
-      });
+      events.push(
+        offset === null
+          ? { at, repetition, root, step, semitone: root, audible: false, cue: false, rest: true }
+          : {
+              at,
+              repetition,
+              root,
+              step,
+              semitone: root + offset,
+              audible: guided || lead,
+              cue: lead,
+            },
+      );
       at += beat * (step === pattern.length - 1 ? lastBeats : noteBeats);
     });
 
@@ -202,8 +216,8 @@ export const buildPlan = ({
     ticks,
     duration: at,
     roots,
-    lowest: Math.min(...roots) + Math.min(...pattern),
-    highest: Math.max(...roots) + Math.max(...pattern),
+    lowest: Math.min(...roots) + Math.min(...sounding),
+    highest: Math.max(...roots) + Math.max(...sounding),
   };
 };
 

@@ -30,6 +30,12 @@ interface Props {
    * ejercicio, para insistir justo en lo que ha salido mal.
    */
   onReplay?: () => void;
+  /**
+   * Si se pasa, la partida es de práctica: no se guarda, así que no cuenta ni
+   * para el progreso ni para la medalla. El texto dice por qué, en la fila
+   * donde saldría lo guardado.
+   */
+  practice?: string;
 }
 
 const SPARKLES = [
@@ -47,6 +53,7 @@ export default function GameOverModal({
   savePath,
   onClose,
   onReplay,
+  practice,
 }: Props) {
   const safeTotal = Math.max(1, total);
   const perfect = correct === total && total > 0;
@@ -64,13 +71,13 @@ export default function GameOverModal({
   // así que es aquí donde se guarda la partida. Si no hay sesión, la acción
   // contesta "no guardado" y no se enseña nada: sin cuenta no hay progreso.
   useEffect(() => {
-    if (sentRef.current) return;
+    if (sentRef.current || practice) return;
     sentRef.current = true;
 
     saveAttempt({ pathname, correct, total })
       .then(setSaved)
       .catch(() => setSaved(null));
-  }, [pathname, correct, total]);
+  }, [pathname, correct, total, practice]);
 
   useEffect(() => {
     if (!onClose) return;
@@ -184,7 +191,9 @@ export default function GameOverModal({
             se guarda hay un hueco del mismo alto con dos placeholders latiendo,
             y al llegar la respuesta solo cambia el contenido, no el tamaño. */}
         <div className="mt-6 flex h-[30px] flex-wrap items-center justify-center gap-2">
-          {saved === null ? (
+          {practice ? (
+            <span className="text-[10px] font-bold leading-4 text-white/45">{practice}</span>
+          ) : saved === null ? (
             <>
               <span className="skeleton-pill h-[30px] w-32 rounded-full bg-white/[0.07]" />
               <span className="skeleton-pill h-[30px] w-24 rounded-full bg-white/[0.07]" />

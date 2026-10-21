@@ -27,7 +27,8 @@ export type VocalGroupId =
   | "escalas"
   | "arpegios"
   | "septimas"
-  | "agilidad";
+  | "agilidad"
+  | "melodias";
 
 export interface VocalGroup {
   id: VocalGroupId;
@@ -63,6 +64,11 @@ export const VOCAL_GROUPS: VocalGroup[] = [
     label: "Agilidad",
     hint: "Rápido y ligero. Aquí importa más el movimiento que la potencia.",
   },
+  {
+    id: "melodias",
+    label: "Melodías",
+    hint: "Canciones conocidas para cantar. Las tuyas van en «Mis melodías».",
+  },
 ];
 
 export interface VocalExercise {
@@ -71,8 +77,8 @@ export interface VocalExercise {
   /** Una línea de qué se trabaja. */
   desc: string;
   group: VocalGroupId;
-  /** El patrón, en semitonos desde la tónica. */
-  pattern: number[];
+  /** El patrón, en semitonos desde la tónica. `null` = un pulso de silencio (solo en las melodías propias). */
+  pattern: (number | null)[];
   /** Sílaba sugerida para cantarlo. */
   syllable: string;
   /** Pulsos por minuto a los que se propone. El usuario puede cambiarlo. */
@@ -314,6 +320,38 @@ export const VOCAL_EXERCISES: VocalExercise[] = [
     syllable: "la",
     bpm: 152,
   },
+
+  // --- Melodías --------------------------------------------------------
+  // Pocas a propósito: son la muestra de lo que se puede hacer, y las que
+  // importan son las que crea cada uno (lib/melodies.ts). Todas de dominio
+  // público y escritas en Do, todas las notas de un pulso.
+  {
+    slug: "estrellita",
+    name: "Estrellita",
+    desc: "La primera frase. Saltos cortos y vuelta a casa.",
+    group: "melodias",
+    pattern: [0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0],
+    syllable: "la",
+    bpm: 96,
+  },
+  {
+    slug: "himno-alegria",
+    name: "Himno de la alegría",
+    desc: "Beethoven. Casi todo por grados seguidos: ideal para afinar.",
+    group: "melodias",
+    pattern: [4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 4, 2, 2],
+    syllable: "la",
+    bpm: 104,
+  },
+  {
+    slug: "martinillo",
+    name: "Martinillo",
+    desc: "Frases que se repiten. Se aprende a la segunda vuelta.",
+    group: "melodias",
+    pattern: [0, 2, 4, 0, 0, 2, 4, 0, 4, 5, 7, 4, 5, 7],
+    syllable: "la",
+    bpm: 108,
+  },
 ];
 
 export const exercisesOfGroup = (group: VocalGroupId) =>
@@ -323,8 +361,10 @@ export const findExercise = (slug: string) =>
   VOCAL_EXERCISES.find((exercise) => exercise.slug === slug) ?? VOCAL_EXERCISES[0];
 
 /** Cuánto se separan la nota más grave y la más aguda del patrón. */
-export const exerciseSpan = (exercise: VocalExercise) =>
-  Math.max(...exercise.pattern) - Math.min(...exercise.pattern);
+export const exerciseSpan = (exercise: VocalExercise) => {
+  const notes = exercise.pattern.filter((offset): offset is number => offset !== null);
+  return Math.max(...notes) - Math.min(...notes);
+};
 
 // --- Tesituras ---------------------------------------------------------
 
@@ -341,12 +381,17 @@ export interface VoiceRange {
 /**
  * Puntos de partida razonables por tipo de voz. No son límites: son el sitio
  * donde a esa voz le resulta cómodo empezar a calentar.
+ *
+ * Por defecto sube cinco veces y vuelve a donde empezó, sin pasarse por
+ * debajo: subir una octava entera y luego bajar otras cinco era un ejercicio
+ * larguísimo para cantarlo de una tirada. Quien quiera más lo sube con "Sube" y
+ * "Baja".
  */
 export const VOICE_RANGES: VoiceRange[] = [
-  { id: "soprano", label: "Soprano", start: 0, up: 12, down: 5 },
-  { id: "mezzo", label: "Mezzo / Contralto", start: -5, up: 12, down: 5 },
-  { id: "tenor", label: "Tenor", start: -12, up: 12, down: 5 },
-  { id: "baritono", label: "Barítono / Bajo", start: -17, up: 12, down: 5 },
+  { id: "soprano", label: "Soprano", start: 0, up: 5, down: 0 },
+  { id: "mezzo", label: "Mezzo / Contralto", start: -5, up: 5, down: 0 },
+  { id: "tenor", label: "Tenor", start: -12, up: 5, down: 0 },
+  { id: "baritono", label: "Barítono / Bajo", start: -17, up: 5, down: 0 },
 ];
 
 export const findVoiceRange = (id: string) =>
@@ -354,10 +399,41 @@ export const findVoiceRange = (id: string) =>
 
 // --- Plan -------------------------------------------------------------
 
+/** Lo que dura la última nota de cada vuelta, en pulsos. */
+const LAST_BEATS = 2;
+/**
+ * Pulsos mínimos de espera después de la última nota, contando desde el
+ * siguiente a ella. El segundo pulso de la última nota cuenta como espera: es
+ * como lo cuenta quien canta, porque ahí ya no entra nada nuevo.
+ */
+const MIN_REST_BEATS = 3;
+
+/**
+ * El silencio entre vueltas. Cada vuelta dura un número par de pulsos (una por
+ * nota más la espera), con al menos tres de espera; si con tres sale impar,
+ * cuatro. Una vuelta de 7 pulsos se oía coja, porque el metrónomo y el cuerpo
+ * cuentan de dos en dos. Así, la quinta abierta (3 notas) dura 6 y una de 4
+ * notas dura 8.
+ */
+const gapBeatsFor = (notes: number) => {
+  const rest = MIN_REST_BEATS + ((notes + MIN_REST_BEATS) % 2);
+  // Lo que `buildPlan` llama silencio va después de los LAST_BEATS de la
+  // última nota, que ya se comen uno de la espera.
+  return rest - (LAST_BEATS - 1);
+};
+
 /** El plan de un ejercicio: el motor es el mismo que usa Rockschool. */
 export const buildVocalPlan = (
   exercise: VocalExercise,
   roots: number[],
   bpm: number,
   mode: AccompanimentMode,
-) => buildPlan({ pattern: exercise.pattern, roots, bpm, mode });
+) =>
+  buildPlan({
+    pattern: exercise.pattern,
+    roots,
+    bpm,
+    mode,
+    lastBeats: LAST_BEATS,
+    gapBeats: gapBeatsFor(exercise.pattern.length),
+  });

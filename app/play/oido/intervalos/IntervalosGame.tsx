@@ -13,10 +13,10 @@ import {
 import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
-import { earButtonGrid, earLevelPath, type EarIntervalLevel } from "@/lib/earIntervals";
+import { PRACTICE_NOTE, earButtonGrid, type EarIntervalSet } from "@/lib/earIntervals";
 
 
-export default function IntervalosAuditivos({ level }: { level: EarIntervalLevel }) {
+export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }) {
 
   const totalQuestions = ROUND_LENGTH;
   const [quizList, setQuizList]       = useState<typeof INTERVALS>([]);
@@ -28,8 +28,8 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalLevel
 
   // Si se va a media partida, queda apuntada como abandonada. Lo que ve el
   // alumno no cambia: esto no pinta nada.
-  const savePath = earLevelPath("/play/oido/intervalos", level);
-  useAbandono(results, gameOver, savePath);
+  const savePath = "/play/oido/intervalos";
+  useAbandono(results, gameOver, savePath, !level.custom);
   const [isMounted, setIsMounted]     = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [solutionStep, setSolutionStep] = useState<number | null>(null);
@@ -59,7 +59,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalLevel
       setResults(Array(total).fill(null));
       setUserAnswers(Array(total).fill(null));
       const list: typeof INTERVALS = [];
-      // Solo los del nivel.
+      // Solo los elegidos.
       const pool = INTERVALS.filter((iv) => level.intervals.includes(iv.name));
       // Each one at random, repeats allowed: banning the previous one would
       // give away an answer.
@@ -75,7 +75,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalLevel
   }, [level]);
 
   const currentInterval = quizList[step];
-  /** Solo los botones de lo que puede sonar en este nivel. */
+  /** Solo los botones de lo que puede sonar. */
   const buttonLabels = BUTTON_LABELS.filter((label) => level.intervals.includes(label));
   const correctCount    = results.filter(r => r === "correct").length;
   const progresoMaximo = userAnswers.indexOf(null) === -1 ? totalQuestions : userAnswers.indexOf(null);
@@ -163,7 +163,12 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalLevel
 
       {/* GAME OVER OVERLAY — blur only, no black */}
       {gameOver && (
-        <GameOverModal correct={correctCount} total={totalQuestions} savePath={savePath} />
+        <GameOverModal
+          correct={correctCount}
+          total={totalQuestions}
+          savePath={savePath}
+          practice={level.custom ? PRACTICE_NOTE : undefined}
+        />
       )}
 
       {/* CONTENT */}
@@ -265,7 +270,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalLevel
                   disabled={answered}
                   className={`
                     flex items-center justify-center h-12 md:h-14 rounded-xl border transition-all duration-150 active:scale-90
-                    ${btn === "Unísono" ? "col-span-2 md:col-span-1" : ""}
+                    ${btn === "Unísono" && buttonLabels.length === BUTTON_LABELS.length ? "col-span-2 md:col-span-1" : ""}
                     ${isCorrectBtn
                       ? "border-emerald-400 bg-emerald-500 text-white font-black shadow-[3px_3px_0px_rgba(0,0,0,0.4)]"
                       : isWrongBtn
