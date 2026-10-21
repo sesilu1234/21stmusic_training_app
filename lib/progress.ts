@@ -131,6 +131,8 @@ export interface GameProgress {
   medalsTotal: number;
   /** true cuando están todas: el modo está rematado. */
   hasMedal: boolean;
+  /** Cuántas de sus medallas se estrenaron en los últimos siete días. */
+  weekMedals: number;
   /** Lo mismo, partido por niveles. Vacío en los modos que no tienen. */
   levels: {
     slug: string;
@@ -140,6 +142,8 @@ export interface GameProgress {
     lastPlayedAt: string | null;
     /** Pleno en partida larga en este nivel. */
     hasMedal: boolean;
+    /** Cuándo se sacó la medalla por primera vez, o null si no la tiene. */
+    medalAt: string | null;
   }[];
   /** Cuántos niveles del modo se han tocado alguna vez. */
   levelsPlayed: number;
@@ -167,6 +171,12 @@ export interface Progress {
   weekAccuracy: number;
   weekCorrect: number;
   weekQuestions: number;
+  /** Partidas terminadas en los últimos siete días. */
+  weekAttempts: number;
+  /** De los últimos siete días, en cuántos ha jugado (de 0 a 7). */
+  weekDays: number;
+  /** Medallas estrenadas en los últimos siete días. */
+  weekMedals: number;
   /** true si en los últimos siete días no ha jugado nada. */
   weekEmpty: boolean;
   medals: number;
@@ -322,6 +332,26 @@ export const getProgress = async (email: string): Promise<Progress> => {
 
   // Los modos salen en el orden del catálogo, y solo los que se han jugado
   // alguna vez o tienen medalla: un panel lleno de ceros no dice nada.
+  // Los siete días naturales que cuentan como "esta semana", hoy incluido.
+  const weekKeys = new Set(
+    Array.from({ length: WEEK_DAYS }, (_, index) => {
+      const date = new Date();
+      date.setDate(date.getDate() - index);
+      return dayKey(date);
+    }),
+  );
+  const inWeek = (iso: string | null) => !!iso && weekKeys.has(dayKey(new Date(iso)));
+
+  // Cuándo se estrenó una medalla: la partida perfecta más VIEJA de la lista,
+  // que viene de la más nueva a la más vieja. Si la primera de todas se ha
+  // salido por abajo de la ventana (DETAIL_LIMIT), esto da una más nueva; con
+  // 2000 partidas de ventana no pasa en la práctica.
+  const firstMedalAt = (list: Attempt[]) =>
+    list.findLast(
+      (attempt) =>
+        attempt.correct === attempt.total && attempt.total >= MEDAL_MIN_TOTAL,
+    )?.createdAt ?? null;
+
   const games: GameProgress[] = GAMES.map((game) => {
     // Por el modo resuelto y no por el texto: así una partida guardada con el
     // nombre viejo cuenta en el modo que le toca.
@@ -373,6 +403,7 @@ export const getProgress = async (email: string): Promise<Progress> => {
               attempt.correct === attempt.total &&
               attempt.total >= MEDAL_MIN_TOTAL,
           ),
+          medalAt: firstMedalAt(ofLevel),
         };
       });
 
@@ -432,6 +463,9 @@ export const getProgress = async (email: string): Promise<Progress> => {
       lastPlayedAt: mine[0]?.createdAt ?? null,
       medals: medalCount,
       medalsTotal: medalTotal,
+      weekMedals: levels.length
+        ? levels.filter((level) => inWeek(level.medalAt)).length
+        : Number(inWeek(firstMedalAt(mine))),
       hasMedal: medalCount > 0 && medalCount === medalTotal,
       levels,
       /** Cuántos niveles tiene el modo y cuántos llevas tocados. */
@@ -453,14 +487,6 @@ export const getProgress = async (email: string): Promise<Progress> => {
   const correct = attempts.reduce((sum, attempt) => sum + attempt.correct, 0);
   const questions = attempts.reduce((sum, attempt) => sum + attempt.total, 0);
 
-  // Los siete días naturales que cuentan como "esta semana", hoy incluido.
-  const weekKeys = new Set(
-    Array.from({ length: WEEK_DAYS }, (_, index) => {
-      const date = new Date();
-      date.setDate(date.getDate() - index);
-      return dayKey(date);
-    }),
-  );
   const week = attempts.filter((attempt) =>
     weekKeys.has(dayKey(new Date(attempt.createdAt))),
   );
@@ -474,6 +500,9 @@ export const getProgress = async (email: string): Promise<Progress> => {
     weekAccuracy: percent(weekCorrect, weekQuestions),
     weekCorrect,
     weekQuestions,
+    weekAttempts: week.length,
+    weekDays: new Set(week.map((attempt) => dayKey(new Date(attempt.createdAt)))).size,
+    weekMedals: games.reduce((sum, entry) => sum + entry.weekMedals, 0),
     weekEmpty: week.length === 0,
     // La suma de las de cada modo, que a su vez son las de sus niveles. Es el
     // mismo número que sale de sumar lo que se ve en las tarjetas.

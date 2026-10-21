@@ -110,6 +110,21 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       /**
+       * "Intervalos" tenía un menú para elegir entre pentagrama y diapasón.
+       * Ahora el pentagrama es el modo entero y el diapasón es su propio modo
+       * en Guitarra, así que las dos direcciones viejas mandan a las nuevas.
+       */
+      {
+        source: "/play/intervalos/pentagrama",
+        destination: "/play/intervalos",
+        permanent: true,
+      },
+      {
+        source: "/play/intervalos/diapason",
+        destination: "/play/diapason_intervalos",
+        permanent: true,
+      },
+      /**
        * La dirección de Vercel de producción manda al dominio de verdad.
        *
        * Es la forma fuerte de quitar el duplicado: un 308 no solo saca de

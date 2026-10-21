@@ -9,7 +9,18 @@ import { useStoredThemeMode } from "@/lib/themeMode";
  * Cada uno lleva su color (ámbar el sol, índigo la luna) para que el estado se
  * lea de un vistazo sin tener que leer la etiqueta.
  */
-export default function ThemeToggle({ withLabel = false }: { withLabel?: boolean }) {
+export default function ThemeToggle({
+  withLabel = false,
+  onPhoto = false,
+}: {
+  withLabel?: boolean;
+  /**
+   * Para cuando va suelto sobre la foto del fondo (la barra de los ejercicios)
+   * y no dentro de la cabecera: el mismo cristal oscuro que el botón de volver,
+   * que con el `bg-white/5` de siempre en modo claro no se veía.
+   */
+  onPhoto?: boolean;
+}) {
   const [isDarkMode, setIsDarkMode] = useStoredThemeMode();
 
   const iconClass = (visible: boolean) =>
@@ -25,7 +36,9 @@ export default function ThemeToggle({ withLabel = false }: { withLabel?: boolean
       className={
         withLabel
           ? "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-bold text-white/70 transition hover:bg-white/10 hover:text-white"
-          : "group grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/5 transition hover:border-amber-300/40 hover:bg-white/10"
+          : onPhoto
+            ? "group grid h-9 w-9 flex-shrink-0 place-items-center rounded-full border border-white/15 bg-black/40 backdrop-blur-sm transition hover:border-amber-300/50"
+            : "group grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/5 transition hover:border-amber-300/40 hover:bg-white/10"
       }
     >
       <span className="grid place-items-center">

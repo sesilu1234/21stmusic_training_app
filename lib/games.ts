@@ -153,6 +153,17 @@ export const GAMES: GameMode[] = [
     category: "lenguaje",
     scored: true,
   },
+  // Justo después de leer notas: un intervalo son dos notas leídas, y los
+  // acordes y las armaduras se apoyan en él.
+  {
+    name: "Intervalos",
+    label: "Intervalos",
+    desc: "Dos notas en el pentagrama: di qué intervalo es.",
+    slug: "/play/intervalos",
+    icon: "ArrowUpDown",
+    category: "lenguaje",
+    scored: true,
+  },
   {
     name: "Acordes en el pentagrama",
     label: "Acordes en el pentagrama",
@@ -168,15 +179,6 @@ export const GAMES: GameMode[] = [
     desc: "Tonalidades y alteraciones al vuelo.",
     slug: "/play/armadura",
     icon: "Hash",
-    category: "lenguaje",
-    scored: true,
-  },
-  {
-    name: "Intervalos",
-    label: "Intervalos",
-    desc: "La distancia entre dos notas.",
-    slug: "/play/intervalos",
-    icon: "ArrowUpDown",
     category: "lenguaje",
     scored: true,
   },
@@ -289,6 +291,18 @@ export const GAMES: GameMode[] = [
     desc: "Encuentra cualquier nota sin pensarla.",
     slug: "/play/diapason",
     icon: "Guitar",
+    category: "guitarra",
+    scored: true,
+  },
+  // Antes era la mitad de "Intervalos", con el pentagrama, detrás de un menú de
+  // elegir dónde leerlos. Pero leer un intervalo en el mástil es cosa de
+  // guitarra, no de lenguaje musical, y ahora es su propio modo aquí.
+  {
+    name: "Intervalos en el mástil",
+    label: "Intervalos en el mástil",
+    desc: "Dos posiciones en el diapasón: di qué intervalo es.",
+    slug: "/play/diapason_intervalos",
+    icon: "ArrowUpDown",
     category: "guitarra",
     scored: true,
   },
@@ -471,6 +485,21 @@ export const gameFromPath = (pathname: string) => {
 
   const rest = pathname.slice(game.slug.length).replace(/^\/+|\/+$/g, "");
   return { game, levelSlug: rest || null };
+};
+
+/**
+ * A dónde lleva "volver" desde una ruta: un paso atrás, no a la portada.
+ *
+ * La entrada de un modo (su slug, la tarjeta del menú principal) vuelve a la
+ * portada. Cualquier cosa por debajo sube un tramo: de un nivel a su submenú,
+ * de un submenú al del modo. Así se puede pasar a otro nivel u otro modo sin
+ * tener que entrar otra vez desde el principio.
+ */
+export const backPathFor = (pathname: string) => {
+  const path = pathname.replace(/\/+$/, "");
+  const match = gameFromPath(path);
+  if (!match || path === match.game.slug) return "/";
+  return path.slice(0, path.lastIndexOf("/")) || "/";
 };
 
 /**

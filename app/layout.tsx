@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import { chaney } from "./fonts";
+import { chaney, medalFont } from "./fonts";
 import { SITE_URL } from "@/lib/seo";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -113,7 +113,7 @@ export default function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${chaney.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${chaney.variable} ${medalFont.variable} h-full antialiased`}
     >
       <head>
         {/*

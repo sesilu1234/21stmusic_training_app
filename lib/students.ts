@@ -44,6 +44,11 @@ export interface Student {
   lastLoginAt: string | null;
   firstLoginAt: string | null;
   loginCount: number;
+  /**
+   * Si ha pedido salir en el cuadro de honor. false hasta que él lo cambie, y
+   * también si la columna todavía no existe (db/honor.sql).
+   */
+  showInHonor: boolean;
 }
 
 interface StudentRow {
@@ -56,6 +61,7 @@ interface StudentRow {
   last_login_at?: string | null;
   first_login_at?: string | null;
   login_count?: number | null;
+  show_in_honor?: boolean | null;
 }
 
 const toStudent = (row: StudentRow): Student => ({
@@ -70,6 +76,7 @@ const toStudent = (row: StudentRow): Student => ({
   lastLoginAt: row.last_login_at ?? null,
   firstLoginAt: row.first_login_at ?? null,
   loginCount: row.login_count ?? 0,
+  showInHonor: row.show_in_honor === true,
 });
 
 const BASE_COLUMNS = "email, display_name, username, is_active, created_at";
@@ -95,6 +102,7 @@ const OPTIONAL_GROUPS = {
     columns: ["last_login_at", "first_login_at", "login_count"],
     sql: "db/last_login.sql",
   },
+  honor: { columns: ["show_in_honor"], sql: "db/honor.sql" },
 } as const;
 
 type OptionalGroup = keyof typeof OPTIONAL_GROUPS;
@@ -106,7 +114,7 @@ type OptionalGroup = keyof typeof OPTIONAL_GROUPS;
  * alguna de sus columnas, y ya no se vuelve a pedir mientras dure el proceso.
  * Al ejecutar la migración y reiniciar, vuelve a arrancar en true y se queda.
  */
-const enabled: Record<OptionalGroup, boolean> = { role: true, login: true };
+const enabled: Record<OptionalGroup, boolean> = { role: true, login: true, honor: true };
 
 const UNDEFINED_COLUMN = "42703";
 
@@ -125,16 +133,20 @@ const columns = () =>
  * exist"), así que se busca ahí. Si no se reconoce ninguna —otra versión de
  * PostgREST, otro texto—, se apaga el primer grupo que siga encendido: es
  * preferible perder un dato de adorno a dejar la app sin poder leer alumnos.
+ *
+ * El grupo nombrado se busca entre TODOS, también los ya apagados. Si solo se
+ * buscara entre los encendidos, dos consultas que fallan a la vez por la misma
+ * columna se pisaban: la primera apagaba su grupo, y la segunda, al no
+ * encontrarlo ya encendido, culpaba al primero de la lista —los roles— y la
+ * app dejaba de saber quién es profesor o admin hasta reiniciar el servidor.
  */
 const groupToBlame = (message: string): OptionalGroup | null => {
-  const groups = (Object.keys(OPTIONAL_GROUPS) as OptionalGroup[]).filter(
-    (group) => enabled[group],
-  );
+  const all = Object.keys(OPTIONAL_GROUPS) as OptionalGroup[];
   return (
-    groups.find((group) =>
+    all.find((group) =>
       OPTIONAL_GROUPS[group].columns.some((column) => message.includes(column)),
     ) ??
-    groups[0] ??
+    all.find((group) => enabled[group]) ??
     null
   );
 };
@@ -161,6 +173,12 @@ const withOptionalColumns = async <T>(
 
     const group = groupToBlame(result.error.message);
     if (!group) return result;
+
+    // Ya lo apagó otra consulta que falló a la vez: basta con repetir esta.
+    if (!enabled[group]) {
+      result = await run(columns());
+      continue;
+    }
 
     console.warn(
       `[alumnos] faltan columnas en la base de datos: ejecuta ${OPTIONAL_GROUPS[group].sql}. ` +
@@ -293,4 +311,60 @@ export const touchLogin = (email: unknown): void => {
       // Se avisa pero no se levanta: lo normal es que falte pasar la migración.
       if (error) console.warn("[alumnos] no se ha apuntado la entrada:", error.message);
     });
+};
+
+/**
+ * Los alumnos que han pedido salir en el cuadro de honor.
+ *
+ * Solo activos, y de cualquier rol: quien se apunta, sale. El profesorado que
+ * no quiera mezclar sus partidas de prueba con las de los alumnos no tiene
+ * más que no apuntarse.
+ *
+ * Si la columna no existe todavía, no hay nadie: es lo mismo que "nadie lo ha
+ * pedido", que es como empieza todo el mundo.
+ */
+export const listHonorStudents = async (): Promise<Student[]> => {
+  if (!enabled.honor) return [];
+
+  // Sin `withOptionalColumns`: aquí la columna también va en el filtro, y si
+  // faltara, el reintento seguiría fallando por el filtro y acabaría apagando
+  // grupos que no tienen la culpa (los roles, las entradas).
+  const { data, error } = await getSupabaseAdmin()
+    .from("students")
+    .select(columns())
+    .eq("is_active", true)
+    .eq("show_in_honor", true)
+    .returns<StudentRow[]>();
+
+  if (error?.code === UNDEFINED_COLUMN && error.message.includes("show_in_honor")) {
+    console.warn("[alumnos] falta la columna show_in_honor: ejecuta db/honor.sql.");
+    enabled.honor = false;
+    return [];
+  }
+  if (error) throw new Error(`No se ha podido leer el cuadro de honor: ${error.message}`);
+
+  return (data ?? []).map(toStudent);
+};
+
+/**
+ * Cambia si un alumno sale o no en el cuadro de honor. El email lo pone el
+ * servidor desde la sesión, nunca el navegador.
+ */
+export const setShowInHonor = async (email: unknown, value: boolean) => {
+  const cleanEmail = normalizeEmail(email);
+  if (!cleanEmail) throw new Error("Sin alumno");
+
+  const { error } = await getSupabaseAdmin()
+    .from("students")
+    .update({ show_in_honor: value })
+    .eq("email", cleanEmail);
+
+  if (error) {
+    // En un update, PostgREST no llega a Postgres: contesta PGRST204 (columna
+    // que no está en su caché del esquema) en vez del 42703.
+    if (error.code === UNDEFINED_COLUMN || error.code === "PGRST204") {
+      throw new Error("Falta ejecutar db/honor.sql en la base de datos.");
+    }
+    throw new Error(`No se ha podido guardar: ${error.message}`);
+  }
 };

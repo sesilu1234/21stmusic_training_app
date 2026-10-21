@@ -424,3 +424,26 @@ select:autofill {
     animation: none;
   }
 }
+
+/* --- Aviso de "arrastra para revisar" (lectura rítmica) --------------- */
+/* El icono de las flechas va y viene de lado a lado, que es justo el gesto que
+   se pide. Solo se mueve el icono: el texto quieto se lee mejor. */
+.drag-nudge {
+  animation: drag-nudge 1.6s ease-in-out infinite;
+}
+
+@keyframes drag-nudge {
+  0%,
+  100% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drag-nudge {
+    animation: none;
+  }
+}

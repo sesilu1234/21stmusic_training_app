@@ -13,6 +13,17 @@ import {
 } from "next/font/google";
 import localFont from "next/font/local";
 
+/**
+ * La letra de los números de las medallas (home y progreso). Outfit es
+ * redonda y limpia, y a 12px se lee mejor que la sans de la app en negrita.
+ * Solo el peso que se usa.
+ */
+export const medalFont = Outfit({
+  subsets: ["latin"],
+  weight: ["700"],
+  variable: "--font-medal",
+});
+
 export const chaney = localFont({
   src: "./fonts/chaney-bold-italic.ttf",
   weight: "700",

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import GameChrome from "@/app/components/GameChrome";
 import Backdrop from "@/app/components/Backdrop";
+import { MedalSticker } from "@/app/components/MedalBadge";
+import { useLevelMedals } from "@/app/components/useLevelMedals";
 import { CLAVE_LEVELS } from "./notes_images";
 
 /**
@@ -18,6 +20,8 @@ import { CLAVE_LEVELS } from "./notes_images";
  * partidas se guarden por separado.
  */
 export default function ArmadurasMenuPage() {
+  const hasMedal = useLevelMedals();
+
   return (
     <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
       <Backdrop />
@@ -48,12 +52,16 @@ export default function ArmadurasMenuPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 w-full">
-            {CLAVE_LEVELS.map((op) => (
+            {CLAVE_LEVELS.map((op) => {
+              const href = `/play/armadura/${op.slug}`;
+              const medal = hasMedal(href);
+              return (
               <Link
                 key={op.slug}
-                href={`/play/armadura/${op.slug}`}
-                className="group flex flex-col items-center gap-4 bg-black/40 hover:bg-amber-500 p-6 md:p-8 rounded-[2rem] border border-white/10 hover:border-amber-400 backdrop-blur-md transition-all active:scale-95 shadow-xl"
+                href={href}
+                className={`group relative ${medal ? "z-10" : ""} flex flex-col items-center gap-4 bg-black/40 hover:bg-amber-500 p-6 md:p-8 rounded-[2rem] border border-white/10 hover:border-amber-400 backdrop-blur-md transition-all active:scale-95 shadow-xl`}
               >
+                {medal && <MedalSticker id={href} count={1} total={1} />}
                 <div className="bg-white rounded-2xl w-full h-28 md:h-32 flex items-center justify-center gap-2 p-3 overflow-hidden">
                   {op.imgs.map((src) => (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -74,7 +82,8 @@ export default function ArmadurasMenuPage() {
                   </div>
                 </div>
               </Link>
-            ))}
+              );
+            })}
           </div>
         </div>
 

@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, RotateCcw } from "lucide-react";
+import ThemeToggle from "@/app/components/ThemeToggle";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import Staff, { type StaffColumn } from "@/app/components/Staff";
+import StaffCard from "@/app/components/StaffCard";
 import { alterAccidental } from "@/lib/staff";
 import {
   ANSWER_NAMES,
@@ -193,14 +195,16 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
             </p>
           </div>
 
-          <span aria-hidden className="w-[42px] md:w-[92px]" />
+          <div className="flex w-[42px] md:w-[92px] flex-shrink-0 justify-end">
+            <ThemeToggle onPhoto />
+          </div>
         </div>
 
         <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
           <div className="mb-5 flex justify-center">
-            <div className="w-full max-w-[330px] rounded-3xl border-4 border-white/15 bg-slate-950/70 px-4 py-3 shadow-2xl backdrop-blur-sm">
+            <StaffCard>
               <Staff clef={question.clef} columns={columns} label="Acorde en el pentagrama" />
-            </div>
+            </StaffCard>
           </div>
 
           {/* Una casilla por nota que hay que decir. */}

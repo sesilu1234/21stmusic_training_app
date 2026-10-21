@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Flame, Home, Medal, RotateCcw } from "lucide-react";
+import { ArrowLeft, Eye, Flame, Home, Medal, Repeat, RotateCcw } from "lucide-react";
 import Crown from "./Crown";
+import { useBackHref } from "./useBackHref";
 import { saveAttempt } from "@/app/progreso/actions";
 import type { SaveResult } from "@/lib/progress";
 
@@ -13,6 +14,22 @@ interface Props {
   total: number;
   /** Por defecto recarga la página */
   onRestart?: () => void;
+  /**
+   * La ruta con la que se guarda la partida, si no es la de la página. Para los
+   * modos que llevan el nivel en `?nivel=`, que la ruta no ve: se guarda como
+   * si el nivel fuera un trozo más de ella.
+   */
+  savePath?: string;
+  /**
+   * Si se pasa, el panel lleva una X (y se cierra con Escape) para quitarlo de
+   * en medio y ver el ejercicio ya terminado: dónde se ha fallado.
+   */
+  onClose?: () => void;
+  /**
+   * Si se pasa, sale "Repetir el mismo": volver a hacer exactamente el mismo
+   * ejercicio, para insistir justo en lo que ha salido mal.
+   */
+  onReplay?: () => void;
 }
 
 const SPARKLES = [
@@ -23,13 +40,22 @@ const SPARKLES = [
   { top: "0%", left: "58%", size: 9, delay: "1.6s" },
 ];
 
-export default function GameOverModal({ correct, total, onRestart }: Props) {
+export default function GameOverModal({
+  correct,
+  total,
+  onRestart,
+  savePath,
+  onClose,
+  onReplay,
+}: Props) {
   const safeTotal = Math.max(1, total);
   const perfect = correct === total && total > 0;
   const pct = Math.round((correct / safeTotal) * 100);
   const restart = onRestart || (() => window.location.reload());
 
-  const pathname = usePathname();
+  const currentPath = usePathname();
+  const back = useBackHref();
+  const pathname = savePath ?? currentPath;
   const [saved, setSaved] = useState<SaveResult | null>(null);
   /** El modal se monta una vez por partida, pero en dev React lo monta dos. */
   const sentRef = useRef(false);
@@ -46,6 +72,15 @@ export default function GameOverModal({ correct, total, onRestart }: Props) {
       .catch(() => setSaved(null));
   }, [pathname, correct, total]);
 
+  useEffect(() => {
+    if (!onClose) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   // El velo tapaba demasiado: iba a media opacidad y con 24px de desenfoque, y
   // detrás no se veía nada. Ahora es lo justo para que la tarjeta se despegue
   // del fondo y se siga viendo dónde estabas.
@@ -56,6 +91,19 @@ export default function GameOverModal({ correct, total, onRestart }: Props) {
       )}
 
       <div className="rise-in relative w-full max-w-sm rounded-[2.5rem] border border-white/15 bg-slate-950/80 p-8 text-center shadow-[0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl md:p-10">
+        {/* Con una X a secas no se entendía que debajo seguía el ejercicio
+            para mirarlo: parecía solo "cerrar". Con la palabra se ve a qué se va. */}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            title="Cerrar y revisar el ejercicio"
+            className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/70 transition hover:border-amber-300/50 hover:bg-white/10 hover:text-white"
+          >
+            <Eye size={13} strokeWidth={2.25} />
+            Revisar
+          </button>
+        )}
         {perfect ? (
           <>
             <div className="relative mx-auto mb-6 h-32 w-40">
@@ -176,12 +224,22 @@ export default function GameOverModal({ correct, total, onRestart }: Props) {
             Reiniciar
           </button>
 
+          {onReplay && (
+            <button
+              onClick={onReplay}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-300/30 py-3 text-[10px] font-black uppercase tracking-widest text-amber-200 transition hover:border-amber-300/60 hover:text-white"
+            >
+              <Repeat size={13} />
+              Repetir el mismo
+            </button>
+          )}
+
           <Link
-            href="/"
+            href={back.href}
             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 py-3 text-[10px] font-black uppercase tracking-widest text-white/60 transition hover:text-white"
           >
-            <Home size={13} />
-            Menú
+            {back.href === "/" ? <Home size={13} /> : <ArrowLeft size={13} />}
+            {back.label}
           </Link>
         </div>
       </div>

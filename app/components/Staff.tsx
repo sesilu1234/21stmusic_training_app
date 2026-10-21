@@ -27,11 +27,6 @@ import {
 /** Espacio entre líneas del pentagrama, en unidades del viewBox. */
 const SPACE = 12;
 const STAFF_HEIGHT = SPACE * 4;
-/** Margen arriba y abajo para las líneas adicionales. */
-const PAD_Y = SPACE * 4;
-const HEIGHT = STAFF_HEIGHT + PAD_Y * 2;
-/** Y de la línea inferior del pentagrama. */
-const BOTTOM_Y = PAD_Y + STAFF_HEIGHT;
 
 const CLEF_X = 16;
 /** X de la alteración de la primera columna. La cabeza va 28 más a la derecha. */
@@ -39,18 +34,35 @@ const FIRST_COLUMN_X = 100;
 const HEAD_OFFSET = 28;
 /** Separación entre columnas cuando hay varias notas seguidas. */
 const COLUMN_GAP = 56;
-/** Ancho de una cabeza de nota, para desplazar segundas y apilar alteraciones. */
-const HEAD_WIDTH = 13;
+/**
+ * Ancho de una cabeza de nota, para desplazar segundas y alargar las líneas
+ * adicionales. La redonda es bastante más ancha que la negra.
+ */
+const HEAD_WIDTH = { black: 13, whole: 19 } as const;
 const ACCIDENTAL_SLOT = 15;
 const TAIL_X = 62;
 
 export type NoteState = "idle" | "correct" | "wrong" | "hint";
 
-const STATE_COLOR: Record<NoteState, string> = {
-  idle: "#ffffff",
-  correct: "#34d399",
-  wrong: "#fb7185",
-  hint: "#7dd3fc",
+/**
+ * Dos tintas. "dark" es la de una partitura de papel, negro sobre blanco, y es
+ * la que usan todos los modos (ver `StaffCard`); los colores de acierto y fallo
+ * van oscurecidos para que se lean sobre el blanco. "light" es la de antes,
+ * blanco sobre fondo oscuro, por si algún sitio la necesita.
+ */
+type Ink = "light" | "dark";
+
+const INK: Record<Ink, { line: string; clef: string; state: Record<NoteState, string> }> = {
+  light: {
+    line: "rgba(255,255,255,0.55)",
+    clef: "rgba(255,255,255,0.9)",
+    state: { idle: "#ffffff", correct: "#34d399", wrong: "#fb7185", hint: "#7dd3fc" },
+  },
+  dark: {
+    line: "#000000",
+    clef: "#000000",
+    state: { idle: "#000000", correct: "#059669", wrong: "#e11d48", hint: "#0284c7" },
+  },
 };
 
 export interface StaffGlyph {
@@ -114,24 +126,48 @@ export default function Staff({
   clef = "sol",
   className = "",
   label = "Notas en el pentagrama",
+  ink = "dark",
+  head = "whole",
+  padding = 3.5,
+  fit = "width",
 }: {
   columns: StaffColumn[];
   clef?: Clef;
   className?: string;
   label?: string;
+  /** "dark" para la tarjeta blanca (lo normal), "light" para un fondo oscuro. */
+  ink?: Ink;
+  /** Negras o redondas. Las redondas son las de los ejercicios de papel. */
+  head?: "black" | "whole";
+  /**
+   * Margen arriba y abajo, en espacios. Con 3.5 caben dos líneas adicionales
+   * con su alteración; si las notas no se salen tanto, menos margen deja el
+   * pentagrama más grande en la misma caja.
+   */
+  padding?: number;
+  /** Qué manda en el tamaño: el ancho de la caja (lo normal) o su alto. */
+  fit?: "width" | "height";
 }) {
+  const colors = INK[ink];
+  const headWidth = HEAD_WIDTH[head];
+  const headGlyph = head === "whole" ? GLYPH.noteheadWhole : GLYPH.noteheadBlack;
+
+  const padY = SPACE * padding;
+  const height = STAFF_HEIGHT + padY * 2;
+  /** Y de la línea inferior del pentagrama. */
+  const bottomY = padY + STAFF_HEIGHT;
   const bottom = bottomLineDegree(clef);
 
   /** Y de un grado diatónico: cada grado sube medio espacio. */
-  const degreeY = (value: number) => BOTTOM_Y - (value - bottom) * (SPACE / 2);
+  const degreeY = (value: number) => bottomY - (value - bottom) * (SPACE / 2);
 
   const columnX = (index: number) => FIRST_COLUMN_X + index * COLUMN_GAP;
   const width = columnX(Math.max(0, columns.length - 1)) + HEAD_OFFSET + TAIL_X;
 
   return (
     <svg
-      viewBox={`0 0 ${width} ${HEIGHT}`}
-      className={`w-full ${className}`}
+      viewBox={`0 0 ${width} ${height}`}
+      className={`${fit === "width" ? "w-full" : "h-full"} ${className}`}
       role="img"
       aria-label={label}
     >
@@ -141,9 +177,9 @@ export default function Staff({
           key={line}
           x1={4}
           x2={width - 4}
-          y1={PAD_Y + line * SPACE}
-          y2={PAD_Y + line * SPACE}
-          stroke="rgba(255,255,255,0.55)"
+          y1={padY + line * SPACE}
+          y2={padY + line * SPACE}
+          stroke={colors.line}
           strokeWidth={1.3}
         />
       ))}
@@ -153,7 +189,7 @@ export default function Staff({
         y={degreeY(clefAnchorDegree(clef))}
         fontFamily="Bravura"
         fontSize={SPACE * 4}
-        fill="rgba(255,255,255,0.9)"
+        fill={colors.clef}
       >
         {clef === "sol" ? GLYPH.gClef : GLYPH.fClef}
       </text>
@@ -180,18 +216,18 @@ export default function Staff({
             {[...ledgers].map(([value, offset]) => (
               <line
                 key={value}
-                x1={headX - HEAD_WIDTH}
-                x2={headX + HEAD_WIDTH + offset * HEAD_WIDTH}
+                x1={headX - headWidth}
+                x2={headX + headWidth + offset * headWidth}
                 y1={degreeY(value)}
                 y2={degreeY(value)}
-                stroke="rgba(255,255,255,0.55)"
+                stroke={colors.line}
                 strokeWidth={1.3}
               />
             ))}
 
             {sorted.map((note, noteIndex) => {
               const y = degreeY(note.degree);
-              const color = STATE_COLOR[note.state ?? "idle"];
+              const color = colors.state[note.state ?? "idle"];
 
               return (
                 <g key={`${note.degree}-${noteIndex}`}>
@@ -208,14 +244,14 @@ export default function Staff({
                   )}
 
                   <text
-                    x={headX + offsets[noteIndex] * HEAD_WIDTH}
+                    x={headX + offsets[noteIndex] * headWidth}
                     y={y}
                     fontFamily="Bravura"
                     fontSize={SPACE * 4}
                     fill={color}
                     textAnchor="middle"
                   >
-                    {GLYPH.noteheadBlack}
+                    {headGlyph}
                   </text>
                 </g>
               );

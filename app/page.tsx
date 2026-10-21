@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Flame, Hammer, Lock, Medal } from "lucide-react";
+import { Flame, Hammer, Lock } from "lucide-react";
 import AppShell from "./components/AppShell";
-import { gameIcons } from "./components/gameIcons";
+import GamePreview from "./components/GamePreview";
+import HonorStrip from "./components/HonorStrip";
+import { MedalSticker } from "./components/MedalBadge";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
 import { getProgress, type GameProgress } from "@/lib/progress";
+import { getHonorBoard, HONOR_MIN_PARTICIPANTS } from "@/lib/honor";
+import { HONOR_ENABLED } from "@/lib/site";
 import { SITE_URL } from "@/lib/seo";
 
 /**
@@ -23,6 +27,20 @@ export const metadata: Metadata = {
 };
 
 /**
+ * La miniatura del modo, en el sitio donde iba el icono: un trocito del
+ * ejercicio dibujado en tinta sobre papel (ver `GamePreview`).
+ */
+const Thumb = ({ name, hover = false }: { name: string; hover?: boolean }) => (
+  <span
+    className={`block aspect-[2/1] w-24 flex-shrink-0 overflow-hidden rounded-lg bg-[#f4efe4] transition-transform duration-200 ${
+      hover ? "group-hover:scale-105" : ""
+    }`}
+  >
+    <GamePreview name={name} className="h-full w-full" />
+  </span>
+);
+
+/**
  * Tarjeta de modo. Si el modo es de alumnos y no hay sesión, sigue siendo un
  * enlace (para que se pueda ver de qué va y ofrecer entrar), pero se enseña
  * apagada y con candado: se ve que existe, se ve que está cerrada.
@@ -38,7 +56,6 @@ const GameCard = ({
   stat?: GameProgress;
 }) => {
   const category = categoryOf(game.category);
-  const Icon = gameIcons[game.icon];
 
   // Sin construir todavía: se enseña, pero no lleva a ningún sitio.
   if (game.comingSoon) {
@@ -55,11 +72,7 @@ const GameCard = ({
         </span>
 
         <div className="flex items-start gap-3.5 opacity-35 grayscale">
-          <span
-            className={`grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl ${category.iconBg}`}
-          >
-            <Icon size={22} className={category.accent} strokeWidth={1.75} />
-          </span>
+          <Thumb name={game.name} />
           <span className="min-w-0 flex-1">
             <span className="block text-base font-black uppercase italic leading-tight tracking-tight text-white">
               {game.label}
@@ -77,16 +90,31 @@ const GameCard = ({
     );
   }
 
+  const hasAward = !locked && stat !== undefined && stat.medals > 0;
+
   return (
     <Link
       href={locked ? "/login" : game.slug}
       aria-label={locked ? `${game.label} — solo para alumnos` : game.label}
-      className={`group relative block rounded-2xl border p-4 shadow-lg transition duration-200 md:p-5 ${
+      /* Sube con `top` y no con translate: un transform pasa la tarjeta a su
+         propia capa y el navegador suaviza el texto de otra forma, con lo que el
+         número grabado de la medalla adelgaza y pierde el relieve en el hover. */
+      className={`group relative top-0 block rounded-2xl border p-4 shadow-lg transition-all duration-200 md:p-5 ${
         locked
           ? "border-white/[0.06] bg-slate-950/40 hover:border-amber-300/30 hover:bg-slate-950/60"
-          : `border-white/10 bg-slate-950/70 hover:-translate-y-0.5 hover:bg-slate-950/85 ${category.hoverBorder}`
+          : `border-white/10 bg-slate-950/70 hover:-top-0.5 hover:bg-slate-950/85 ${category.hoverBorder}`
       }`}
     >
+      {/* El galardón: cuántos niveles del modo llevas clavados del todo (pleno
+          en partida larga), pegado encima de la esquina de arriba a la derecha
+          y saliéndose de ella, como una pegatina. Es un contador
+          y no un sí/no porque una medalla no se pierde: si mañana el modo
+          estrena un nivel, lo ganado sigue ganado y solo hay uno más al que
+          llegar. Con todos, brilla. */}
+      {hasAward && (
+        <MedalSticker id={game.name} count={stat.medals} total={stat.medalsTotal} />
+      )}
+
       {locked && (
         <span
           title="Solo para alumnos de la escuela"
@@ -96,14 +124,12 @@ const GameCard = ({
         </span>
       )}
 
-      <div className={`flex items-start gap-3.5 ${locked ? "opacity-45 grayscale" : ""}`}>
-        <span
-          className={`grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl transition-transform duration-200 ${
-            locked ? "" : "group-hover:scale-105"
-          } ${category.iconBg}`}
-        >
-          <Icon size={22} className={category.accent} strokeWidth={1.75} />
-        </span>
+      <div
+        className={`flex items-start gap-3.5 ${locked ? "opacity-45 grayscale" : ""} ${
+          hasAward ? "pr-7" : ""
+        }`}
+      >
+        <Thumb name={game.name} hover={!locked} />
         <span className="min-w-0 flex-1">
           <span className="block text-base font-black uppercase italic leading-tight tracking-tight text-white">
             {game.label}
@@ -133,28 +159,6 @@ const GameCard = ({
           <span className="flex-shrink-0 text-[9px] font-black tracking-wider text-white/40">
             {stat.mastery}%
           </span>
-          {/* Cuántos niveles del modo llevas clavados del todo (pleno en
-              partida larga). Es un contador y no un icono suelto porque una
-              medalla no se pierde: si mañana el modo estrena un nivel, lo que ya
-              está ganado sigue ganado y solo hay uno más al que llegar.
-
-              Cuando están todas, el chip se enciende: el modo rematado merece
-              notarse, que es lo único bueno que tenía la medalla de sí o no. */}
-          {stat.medals > 0 && (
-          <span
-  className={`flex flex-shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none tabular-nums ${
-    stat.hasMedal
-      ? "bg-amber-400/20 text-amber-200"
-      : "text-amber-300/60"
-  }`}
-  title={`${stat.medals} de ${stat.medalsTotal} ${
-    stat.medalsTotal === 1 ? "nivel clavado" : "niveles clavados"
-  }`}
->
-  <span className="leading-none pt-[2px]">{stat.medals}</span>
-  <Medal size={11} className="shrink-0" />
-</span>
-          )}
         </span>
       )}
 
@@ -172,7 +176,14 @@ export default async function HomePage() {
 
   // El progreso es un extra: si la consulta falla, el menú tiene que salir
   // igual, solo que sin las marcas de cada tarjeta.
-  const progress = student ? await getProgress(student.email).catch(() => null) : null;
+  // Lo mismo con el cuadro de honor, que además solo se enseña con sesión:
+  // son nombres de alumnos.
+  const [progress, honor] = student
+    ? await Promise.all([
+        getProgress(student.email).catch(() => null),
+        HONOR_ENABLED ? getHonorBoard(student.email).catch(() => null) : null,
+      ])
+    : [null, null];
   const statOf = (name: string) =>
     progress?.games.find((entry) => entry.game.name === name);
 
@@ -183,7 +194,7 @@ export default async function HomePage() {
         {progress && progress.attempts > 0 && (
           <Link
             href="/progreso"
-            className="mb-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-lg transition hover:border-amber-300/40"
+            className="group mb-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-lg transition hover:border-amber-300/40"
           >
             <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-orange-400/15">
               <Flame size={17} className="text-orange-300" strokeWidth={1.75} />
@@ -202,10 +213,15 @@ export default async function HomePage() {
                   : "Con una partida de hoy la mantienes viva"}
               </span>
             </span>
-            <span className="flex-shrink-0 text-[9px] font-black uppercase tracking-[0.18em] text-white/30">
+            <span className="flex-shrink-0 text-[9px] font-black uppercase tracking-[0.18em] text-white/30 transition-colors group-hover:text-white/70">
               Ver progreso
             </span>
           </Link>
+        )}
+
+        {/* Con un solo apuntado la franja sería tu nombre y nada más. */}
+        {student && honor && honor.participants >= HONOR_MIN_PARTICIPANTS && (
+          <HonorStrip board={honor} showInHonor={student.showInHonor} />
         )}
 
         <div className="space-y-8 md:space-y-9">

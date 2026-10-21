@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
+import { useBackHref } from "./useBackHref";
 
 /**
  * Barra superior de los ejercicios: volver al menú, el enunciado y el logo,
@@ -12,14 +14,16 @@ import { ArrowLeft } from "lucide-react";
  * una franja muerta. Subiéndolo aquí, esa franja pasa a ser la propia pregunta.
  */
 export default function GameChrome({ children }: { children?: React.ReactNode }) {
+  const back = useBackHref();
+
   return (
     <div className="relative z-30 grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 pt-3 md:gap-5 md:px-6 md:pt-4">
       <Link
-        href="/"
+        href={back.href}
         className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-black/40 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/60 backdrop-blur-sm transition hover:border-amber-300/50 hover:text-white md:px-4"
       >
         <ArrowLeft size={14} />
-        <span className="hidden sm:inline">Menú</span>
+        <span className="hidden sm:inline">{back.label}</span>
       </Link>
 
       {children ? (
@@ -33,13 +37,16 @@ export default function GameChrome({ children }: { children?: React.ReactNode })
         <span />
       )}
 
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/assets/logo21stCM_no_white_1-192.png"
-        alt=""
-        aria-hidden="true"
-        className="h-8 w-auto flex-shrink-0 opacity-40 drop-shadow-2xl md:h-12"
-      />
+      <div className="flex flex-shrink-0 items-center gap-2 md:gap-3">
+        <ThemeToggle onPhoto />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/logo21stCM_no_white_1-192.png"
+          alt=""
+          aria-hidden="true"
+          className="h-8 w-auto flex-shrink-0 opacity-40 drop-shadow-2xl md:h-12"
+        />
+      </div>
     </div>
   );
 }

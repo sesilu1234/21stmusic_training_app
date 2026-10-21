@@ -18,6 +18,7 @@
 // `level_slug`, y para ellos la barra es sencillamente su récord.
 
 import { CHORD_LEVELS, PROGRESSION_LEVELS } from "./chordEar";
+import { earLevelSlugs } from "./earIntervals";
 import { PAIR_LEVELS } from "./chordPair";
 import { MELODY_LEVELS } from "./melodyEar";
 import { NOTE_READING_LEVELS } from "./noteReading";
@@ -44,9 +45,6 @@ export const GAME_LEVELS: Record<string, string[]> = {
     ...CHORD_SPELL_LEVELS.map((level) => `escribir/${level.slug}`),
   ],
 
-  // Dos pantallas hermanas, sin niveles dentro de cada una.
-  "/play/intervalos": ["diapason", "pentagrama"],
-
   // Construye el intervalo no sale aquí: es una pantalla sola, sin niveles.
   "/play/construye-escalas": slugs(ESCALA_NIVELES),
   "/play/construye-acordes": slugs(ACORDE_NIVELES),
@@ -63,6 +61,12 @@ export const GAME_LEVELS: Record<string, string[]> = {
   "/play/armadura": CLAVE_LEVELS.map((level) => level.slug),
 
   "/play/ritmo": slugs(RHYTHM_LEVELS),
+
+  // Melódicos y armónicos, con los mismos niveles cada uno. Se guardan con la
+  // pantalla delante ("intervalos/nivel-2", "armonico/nivel-2") porque las dos
+  // cuelgan de /play/oido. El nivel va en `?nivel=`, que la ruta no ve: lo
+  // añade el propio juego al guardar (ver `earLevelPath`).
+  "/play/oido": [...earLevelSlugs("intervalos"), ...earLevelSlugs("armonico")],
   "/play/oido/acordes": [...slugs(CHORD_LEVELS), ...slugs(PAIR_LEVELS)],
   "/play/oido/progresiones": slugs(PROGRESSION_LEVELS),
   "/play/oido/dictado": slugs(MELODY_LEVELS),

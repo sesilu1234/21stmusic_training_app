@@ -35,7 +35,8 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
   const onGameEnd = useCallback((endType: string, data: Record<string, number> = {}) => {
     setIsPlaying(false);
 
-    if (endType == "reset") return;
+    // Reset, parar y repetir no son partidas acabadas: ni marcador ni guardado.
+    if (endType == "reset" || endType == "stop") return;
 
     // El marcador son los compases, y quien decide si un compás está bien es
     // la partitura (`MusicDisplay`): tiene que estar entero y sin pulsaciones
@@ -115,6 +116,11 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
           correct={scoreData.hits}
           total={scoreData.hits + scoreData.misses}
           onRestart={() => setShowScore(false)}
+          onClose={() => setShowScore(false)}
+          onReplay={() => {
+            setShowScore(false);
+            musicRef.current?.replay();
+          }}
         />
       )}
 

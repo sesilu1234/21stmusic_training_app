@@ -121,6 +121,15 @@ export interface PlanOptions {
   lastBeats?: number;
   /** Silencio entre una vuelta y la siguiente. */
   gapBeats?: number;
+  /**
+   * Pulsos por compás. Si se da, el metrónomo acentúa el primer pulso de cada
+   * compás (cada 3 en un 3/4, cada 4 en un 4/4). Si la última nota cae en el
+   * 1 de un compás, de ahí al final de la vuelta se cuenta en compases de 4:
+   * es el compás de 4/4 con el que Rockschool cierra también los de 3/4. Sin
+   * `meter` solo se acentúa el primer pulso de cada vuelta, que es lo que hace
+   * Vocalizaciones.
+   */
+  meter?: number;
 }
 
 export const buildPlan = ({
@@ -131,6 +140,7 @@ export const buildPlan = ({
   noteBeats = 1,
   lastBeats = 2,
   gapBeats = 2,
+  meter,
 }: PlanOptions): Plan => {
   const beat = 60000 / bpm;
   const events: VocalEvent[] = [];
@@ -144,10 +154,15 @@ export const buildPlan = ({
     // En "muestra" solo se toca de verdad la primera vuelta; en "bajo", nunca.
     const guided = mode === "guia" || (mode === "muestra" && repetition === 0);
 
+    /** Cuántos pulsos después del principio de la vuelta entra la última nota. */
+    let lastAt = 0;
+
     pattern.forEach((offset, step) => {
       // Cuando el piano no guía la vuelta, da la primera nota y calla. Ocupa
       // el primer tiempo del ejercicio, no un pulso de más antes de empezar.
       const lead = !guided && step === 0;
+
+      if (step === pattern.length - 1) lastAt = (at - repetitionStart) / beat;
 
       events.push({
         at,
@@ -163,10 +178,22 @@ export const buildPlan = ({
 
     at += beat * gapBeats;
 
+    // ¿La última nota cae en el 1 de un compás? Se redondea porque con
+    // corcheas los pulsos llevan decimales.
+    const lastBeat = Math.round(lastAt * 1000) / 1000;
+    const tailOnBar = meter !== undefined && Number.isInteger(lastBeat) && lastBeat % meter === 0;
+
     // El pulso corre entero, silencios incluidos: si el metrónomo se callara
     // en los huecos habría que volver a cogerlo en cada vuelta.
-    for (let time = repetitionStart; time < at - 1; time += beat) {
-      ticks.push({ at: time, accent: time === repetitionStart });
+    for (let index = 0; repetitionStart + index * beat < at - 1; index += 1) {
+      ticks.push({
+        at: repetitionStart + index * beat,
+        accent: !meter
+          ? index === 0
+          : tailOnBar && index >= lastBeat
+            ? (index - lastBeat) % 4 === 0
+            : index % meter === 0,
+      });
     }
   });
 

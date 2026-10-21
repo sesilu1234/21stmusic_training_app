@@ -8,6 +8,10 @@ export const SITE = {
   privacyUpdatedAt: "3 de septiembre de 2026",
 } as const;
 
+// El cuadro de honor, apagado por ahora: sin portada, sin menú y /honor da 404.
+// Para volver a enseñarlo basta con ponerlo a true.
+export const HONOR_ENABLED = false;
+
 export const FOOTER_LINKS = [
   { href: "/guia", label: "Guía" },
   { href: "/contact", label: "Contacto" },

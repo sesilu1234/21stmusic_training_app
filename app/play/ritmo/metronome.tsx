@@ -28,8 +28,10 @@ export function createMetronome(bpm: number) {
 
     osc.frequency.value = 800;
 
+    // A la par del golpe del alumno (1.2, en RhythmGame). Con 0.5 el clic se
+    // quedaba en menos de la mitad y costaba seguirlo mientras se toca.
     gain.gain.setValueAtTime(0.0001, time);
-    gain.gain.exponentialRampToValueAtTime(0.5, time + 0.005);
+    gain.gain.exponentialRampToValueAtTime(1.3, time + 0.005);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.06);
 
     osc.start(time);

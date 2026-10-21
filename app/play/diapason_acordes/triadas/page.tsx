@@ -15,6 +15,8 @@ import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import LoadingBars from "@/app/components/LoadingBars";
 import Backdrop from "@/app/components/Backdrop";
+import HandToggle from "@/app/components/HandToggle";
+import { fretboardFlipClass, useLeftHanded } from "@/lib/handedness";
 
 export default function TriadsGame() {
 
@@ -24,6 +26,7 @@ export default function TriadsGame() {
 
   const [quizList, setQuizList] = useState<typeof chords_images>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [leftHanded, setLeftHanded] = useLeftHanded();
   const [step, setStep] = useState(0);
   const [results, setResults] = useState<(null | "correct" | "wrong")[]>(
     Array(24).fill(null),
@@ -218,6 +221,10 @@ export default function TriadsGame() {
 
         {/* CARTA DE PREGUNTA */}
         <div className="relative flex flex-col items-center w-full max-w-sm md:max-w-md mb-10">
+          <div className="mb-2 flex w-full justify-end">
+            <HandToggle leftHanded={leftHanded} onChange={setLeftHanded} />
+          </div>
+
           <div
             className={`bg-white p-2 md:p-2 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl w-full h-44 md:h-52 flex items-center justify-center border-4 relative overflow-hidden transition-all duration-300 ${
               showFeedback === "correct"
@@ -251,7 +258,7 @@ export default function TriadsGame() {
               key={currentQuestion.image}
               src={`/assets/diapason_triadas/${currentQuestion.image}`}
               alt="Acorde"
-              className={`max-h-full max-w-full object-contain transition-all duration-300 ${isImageLoading ? "opacity-0" : "opacity-100"}`}
+              className={`${fretboardFlipClass(leftHanded)} max-h-full max-w-full object-contain transition-all duration-300 ${isImageLoading ? "opacity-0" : "opacity-100"}`}
             />
           </div>
 

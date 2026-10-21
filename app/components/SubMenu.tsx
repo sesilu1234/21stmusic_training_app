@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import Backdrop from "./Backdrop";
+import { MedalSticker } from "./MedalBadge";
+import { useLevelMedals } from "./useLevelMedals";
+import ThemeToggle from "./ThemeToggle";
+import { useBackHref } from "./useBackHref";
 import SiteFooter from "./SiteFooter";
 import { categoryOf, type CategoryId } from "@/lib/games";
 
@@ -38,27 +42,35 @@ export default function SubMenu({
   intro,
   category,
   options,
+  beforeOptions,
 }: {
   eyebrow: string;
   title: string;
   intro?: string;
   category: CategoryId;
   options: SubMenuOption[];
+  /** Algo que va entre la introducción y las tarjetas, como un selector de nivel. */
+  beforeOptions?: React.ReactNode;
 }) {
   const palette = categoryOf(category);
+  const hasMedal = useLevelMedals();
+  const back = useBackHref();
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       <div className="relative z-10 flex min-h-screen flex-col px-4 py-5 md:px-8 md:py-7">
-        <Link
-          href="/"
-          className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-amber-300/40 hover:text-white"
-        >
-          <ArrowLeft size={14} />
-          Menú principal
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href={back.href}
+            className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-amber-300/40 hover:text-white"
+          >
+            <ArrowLeft size={14} />
+            {back.href === "/" ? "Menú principal" : "Atrás"}
+          </Link>
+          <ThemeToggle onPhoto />
+        </div>
 
         <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-start py-9 md:py-10">
           <div className="mb-6 md:mb-7">
@@ -74,18 +86,31 @@ export default function SubMenu({
             )}
           </div>
 
+          {beforeOptions}
+
           <div className="grid gap-3.5 sm:grid-cols-2">
-            {options.map(({ title: optionTitle, description, href, Icon, badge, locked }) => (
+            {options.map(({ title: optionTitle, description, href, Icon, badge, locked }) => {
+              const medal = !locked && hasMedal(href);
+              return (
               <Link
                 key={href}
                 href={locked ? "/login" : href}
                 aria-label={locked ? `${optionTitle} — solo para alumnos` : optionTitle}
+                /* Con medalla va por encima de las demás: la medalla se sale de
+                   la tarjeta, y el desenfoque del fondo hace de cada tarjeta su
+                   propia capa, así que la siguiente la taparía. */
                 className={`group relative flex min-h-[132px] flex-col rounded-2xl border p-5 shadow-xl backdrop-blur-sm transition duration-200 ${
+                  medal ? "z-10" : ""
+                } ${
                   locked
                     ? "border-white/[0.06] bg-slate-950/40 hover:border-amber-300/30 hover:bg-slate-950/60"
                     : `border-white/10 bg-slate-950/70 hover:-translate-y-0.5 hover:bg-slate-950/85 ${palette.hoverBorder}`
                 }`}
               >
+                {/* Pleno en partida larga en este nivel: la misma medalla del
+                    menú principal, pegada en la esquina. */}
+                {medal && <MedalSticker id={href} count={1} total={1} />}
+
                 {locked && (
                   <span
                     title="Solo para alumnos de la escuela"
@@ -108,7 +133,11 @@ export default function SubMenu({
                     <Icon size={22} className={palette.accent} strokeWidth={1.75} />
                   </span>
                   {badge && !locked && (
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/50">
+                    <span
+                      className={`rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/50 ${
+                        medal ? "mr-6" : ""
+                      }`}
+                    >
                       {badge}
                     </span>
                   )}
@@ -139,7 +168,8 @@ export default function SubMenu({
                   </span>
                 )}
               </Link>
-            ))}
+              );
+            })}
           </div>
         </main>
 
