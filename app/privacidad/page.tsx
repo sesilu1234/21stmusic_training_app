@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/seo";
 import Link from "next/link";
 import PaperShell, { DISPLAY_FONT } from "../components/PaperShell";
-import { SITE } from "@/lib/site";
+import { HONOR_ENABLED, SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacidad",
@@ -69,14 +69,16 @@ export default function PrivacidadPage() {
           más. Escribe con la misma confianza que en una libreta.
         </p>
 
-        <p>
-          <Lead>El cuadro de honor.</Lead> Solo sales en él si lo activas tú,
-          y lo puedes quitar cuando quieras. Si sales, los demás alumnos con
-          cuenta ven tu nombre y la inicial de tu apellido cuando estás entre
-          los primeros, con la cifra por la que sales (partidas, rachas o
-          medallas). Nunca tu correo, y nunca fuera de la app: sin cuenta no
-          se ve.
-        </p>
+        {HONOR_ENABLED && (
+          <p>
+            <Lead>El cuadro de honor.</Lead> Solo sales en él si lo activas tú,
+            y lo puedes quitar cuando quieras. Si sales, los demás alumnos con
+            cuenta ven tu nombre y la inicial de tu apellido cuando estás entre
+            los primeros, con la cifra por la que sales (partidas, rachas o
+            medallas). Nunca tu correo, y nunca fuera de la app: sin cuenta no
+            se ve.
+          </p>
+        )}
 
         <p>
           <Lead>Si nos escribes.</Lead> Del formulario de contacto guardamos tu

@@ -7,6 +7,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
+import { MoveHorizontal } from "lucide-react";
 
 import { createMetronome, getCtx } from "./metronome";
 import {
@@ -972,8 +973,14 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
             {showDrag && (
               <div className="absolute lg:-top-5 right-5 flex items-center justify-center gap-2">
                 {overlayButton("Repetir el mismo", handleReplay)}
-                <div className="bg-black/35 px-2 py-1 rounded-lg text-white text-xs backdrop-blur-sm pointer-events-none animate-pulse">
-                  Drag for review
+                {/* Antes era un "Drag for review" gris y latiendo que se
+                    confundía con la partitura. Ahora va en ámbar, en castellano
+                    y con las flechas moviéndose, para que se lea como lo que
+                    es: una instrucción. */}
+                <div className="pointer-events-none flex items-center gap-1.5 rounded-lg border border-amber-300/60 bg-amber-400 px-2.5 py-1 text-xs font-black text-black shadow-lg shadow-amber-500/30">
+                  <MoveHorizontal size={15} strokeWidth={2.5} className="drag-nudge" />
+                  <span className="sm:hidden">Arrastra para revisar</span>
+                  <span className="hidden sm:inline">Arrastra la partitura para revisarla</span>
                 </div>
               </div>
             )}

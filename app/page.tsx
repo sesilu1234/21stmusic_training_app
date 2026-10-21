@@ -9,6 +9,7 @@ import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
 import { getProgress, type GameProgress } from "@/lib/progress";
 import { getHonorBoard, HONOR_MIN_PARTICIPANTS } from "@/lib/honor";
+import { HONOR_ENABLED } from "@/lib/site";
 import { SITE_URL } from "@/lib/seo";
 
 /**
@@ -180,7 +181,7 @@ export default async function HomePage() {
   const [progress, honor] = student
     ? await Promise.all([
         getProgress(student.email).catch(() => null),
-        getHonorBoard(student.email).catch(() => null),
+        HONOR_ENABLED ? getHonorBoard(student.email).catch(() => null) : null,
       ])
     : [null, null];
   const statOf = (name: string) =>

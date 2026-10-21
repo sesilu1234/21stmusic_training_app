@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, ChevronDown, ChevronUp, Waves } from "lucide-react";
 import Backdrop from "@/app/components/Backdrop";
+import ThemeToggle from "@/app/components/ThemeToggle";
 import SiteFooter from "@/app/components/SiteFooter";
 import PianoKeyboard, { noteName, type KeyMark } from "@/app/components/PianoKeyboard";
 import RotateToLandscape from "@/app/components/RotateToLandscape";
@@ -217,8 +218,12 @@ export default function PianoLibrePage() {
           className="absolute left-4 top-5 z-20 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-slate-300/40 hover:text-white md:left-8 md:top-7"
         >
           <ArrowLeft size={14} />
-          
+
         </Link>
+
+        <div className="absolute right-4 top-5 z-20 md:right-8 md:top-7">
+          <ThemeToggle onPhoto />
+        </div>
 
         <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col justify-center pb-8 pt-2">
           <div className="mb-7 text-center">

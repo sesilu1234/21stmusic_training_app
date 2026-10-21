@@ -488,6 +488,21 @@ export const gameFromPath = (pathname: string) => {
 };
 
 /**
+ * A dónde lleva "volver" desde una ruta: un paso atrás, no a la portada.
+ *
+ * La entrada de un modo (su slug, la tarjeta del menú principal) vuelve a la
+ * portada. Cualquier cosa por debajo sube un tramo: de un nivel a su submenú,
+ * de un submenú al del modo. Así se puede pasar a otro nivel u otro modo sin
+ * tener que entrar otra vez desde el principio.
+ */
+export const backPathFor = (pathname: string) => {
+  const path = pathname.replace(/\/+$/, "");
+  const match = gameFromPath(path);
+  if (!match || path === match.game.slug) return "/";
+  return path.slice(0, path.lastIndexOf("/")) || "/";
+};
+
+/**
  * ¿Esta ruta es de un modo restringido? Se compara por prefijo porque los
  * modos con submenú viven en rutas hijas (/play/oido/progresiones/i-iv-v).
  */

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Volume2 } from "lucide-react";
+import ThemeToggle from "@/app/components/ThemeToggle";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
@@ -194,21 +195,24 @@ export default function PianoRecognizeGame({ level }: { level: PianoIntervalLeve
             </p>
           </div>
 
-          <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-            {PRESETS.map((preset, index) => (
-              <button
-                key={preset.label}
-                type="button"
-                onClick={() => setPresetIdx(index)}
-                title={preset.label}
-                aria-label={preset.label}
-                className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                  presetIdx === index ? "bg-emerald-400/25" : "opacity-40 hover:opacity-80"
-                }`}
-              >
-                {PRESET_ICONS[index]}
-              </button>
-            ))}
+          <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
+            <ThemeToggle onPhoto />
+            <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
+              {PRESETS.map((preset, index) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => setPresetIdx(index)}
+                  title={preset.label}
+                  aria-label={preset.label}
+                  className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
+                    presetIdx === index ? "bg-emerald-400/25" : "opacity-40 hover:opacity-80"
+                  }`}
+                >
+                  {PRESET_ICONS[index]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

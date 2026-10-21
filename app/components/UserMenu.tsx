@@ -8,6 +8,7 @@ import BarsAvatar from "./BarsAvatar";
 import ThemeToggle from "./ThemeToggle";
 import { logout } from "@/app/actions";
 import { canSeeAlumnario, canSeeMuestrario, roleLabel } from "@/lib/roles";
+import { HONOR_ENABLED } from "@/lib/site";
 import type { StudentRole } from "@/lib/students";
 
 /**
@@ -129,13 +130,15 @@ export default function UserMenu({
             </Link>
 
             {/* Aquí también se decide si sales o no en él. */}
-            <Link
-              href="/honor"
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
-            >
-              <Trophy size={16} strokeWidth={1.75} />
-              Cuadro de honor
-            </Link>
+            {HONOR_ENABLED && (
+              <Link
+                href="/honor"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
+              >
+                <Trophy size={16} strokeWidth={1.75} />
+                Cuadro de honor
+              </Link>
+            )}
 
             {canSeeAlumnario(role) && (
               <Link

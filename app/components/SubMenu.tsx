@@ -5,6 +5,8 @@ import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import Backdrop from "./Backdrop";
 import { MedalSticker } from "./MedalBadge";
 import { useLevelMedals } from "./useLevelMedals";
+import ThemeToggle from "./ThemeToggle";
+import { useBackHref } from "./useBackHref";
 import SiteFooter from "./SiteFooter";
 import { categoryOf, type CategoryId } from "@/lib/games";
 
@@ -52,19 +54,23 @@ export default function SubMenu({
 }) {
   const palette = categoryOf(category);
   const hasMedal = useLevelMedals();
+  const back = useBackHref();
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       <div className="relative z-10 flex min-h-screen flex-col px-4 py-5 md:px-8 md:py-7">
-        <Link
-          href="/"
-          className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-amber-300/40 hover:text-white"
-        >
-          <ArrowLeft size={14} />
-          Menú principal
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href={back.href}
+            className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-white/60 backdrop-blur-sm transition hover:border-amber-300/40 hover:text-white"
+          >
+            <ArrowLeft size={14} />
+            {back.href === "/" ? "Menú principal" : "Atrás"}
+          </Link>
+          <ThemeToggle onPhoto />
+        </div>
 
         <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-start py-9 md:py-10">
           <div className="mb-6 md:mb-7">

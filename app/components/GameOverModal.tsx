@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Flame, Home, Medal, Repeat, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, Eye, Flame, Home, Medal, Repeat, RotateCcw } from "lucide-react";
 import Crown from "./Crown";
+import { useBackHref } from "./useBackHref";
 import { saveAttempt } from "@/app/progreso/actions";
 import type { SaveResult } from "@/lib/progress";
 
@@ -53,6 +54,7 @@ export default function GameOverModal({
   const restart = onRestart || (() => window.location.reload());
 
   const currentPath = usePathname();
+  const back = useBackHref();
   const pathname = savePath ?? currentPath;
   const [saved, setSaved] = useState<SaveResult | null>(null);
   /** El modal se monta una vez por partida, pero en dev React lo monta dos. */
@@ -89,15 +91,17 @@ export default function GameOverModal({
       )}
 
       <div className="rise-in relative w-full max-w-sm rounded-[2.5rem] border border-white/15 bg-slate-950/80 p-8 text-center shadow-[0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl md:p-10">
+        {/* Con una X a secas no se entendía que debajo seguía el ejercicio
+            para mirarlo: parecía solo "cerrar". Con la palabra se ve a qué se va. */}
         {onClose && (
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar y ver el ejercicio"
-            title="Cerrar y ver el ejercicio"
-            className="absolute right-5 top-5 z-10 grid h-9 w-9 place-items-center rounded-full text-white/40 transition hover:bg-white/10 hover:text-white"
+            title="Cerrar y revisar el ejercicio"
+            className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/70 transition hover:border-amber-300/50 hover:bg-white/10 hover:text-white"
           >
-            <X size={18} strokeWidth={2.25} />
+            <Eye size={13} strokeWidth={2.25} />
+            Revisar
           </button>
         )}
         {perfect ? (
@@ -231,11 +235,11 @@ export default function GameOverModal({
           )}
 
           <Link
-            href="/"
+            href={back.href}
             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 py-3 text-[10px] font-black uppercase tracking-widest text-white/60 transition hover:text-white"
           >
-            <Home size={13} />
-            Menú
+            {back.href === "/" ? <Home size={13} /> : <ArrowLeft size={13} />}
+            {back.label}
           </Link>
         </div>
       </div>

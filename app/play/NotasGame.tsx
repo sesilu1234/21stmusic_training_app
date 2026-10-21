@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, RotateCcw, Volume2 } from "lucide-react";
+import ThemeToggle from "@/app/components/ThemeToggle";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
@@ -234,7 +235,9 @@ export default function NotasGame({
           </div>
 
           {/* Hueco al otro lado para que el titular quede centrado de verdad. */}
-          <div className="w-10 md:w-20" />
+          <div className="flex w-10 md:w-20 flex-shrink-0 justify-end">
+            <ThemeToggle onPhoto />
+          </div>
         </div>
 
         <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">

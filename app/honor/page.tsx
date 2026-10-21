@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import AppShell from "../components/AppShell";
 import StudentsOnlyGate from "../components/StudentsOnlyGate";
 import HonorToggle from "./HonorToggle";
 import HonorView from "./HonorView";
 import { PRIVADO } from "@/lib/seo";
+import { HONOR_ENABLED } from "@/lib/site";
 import { currentStudent } from "@/lib/session";
 import { categoryOf } from "@/lib/games";
 import { getProgress } from "@/lib/progress";
@@ -34,6 +36,8 @@ const weekLabel = (from: string, to: string) => {
 };
 
 export default async function HonorPage() {
+  if (!HONOR_ENABLED) notFound();
+
   const student = await currentStudent();
 
   // Los nombres de los alumnos solo los ven otros alumnos.

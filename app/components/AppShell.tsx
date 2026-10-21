@@ -23,6 +23,8 @@ import type { StudentRole } from "@/lib/students";
  * "Mis notas" no está aquí: vive en el desplegable de la cuenta, que es donde
  * se busca algo que es tuyo y solo tuyo.
  */
+const ACADEMY_URL = "https://escuelademusicamoderna.com/";
+
 const links = [
   { href: "/", label: "Juegos", Icon: Gamepad2, guest: "abierto" },
   { href: "/guia", label: "Guía", Icon: BookMarked, guest: "candado" },
@@ -64,8 +66,14 @@ export default function AppShell({
             propio contexto de apilado) tapan el desplegable del usuario. */}
         <header className="relative z-50 px-3 pt-3 md:px-6 md:pt-5">
           <nav className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2.5 shadow-2xl backdrop-blur-xl md:px-5 md:py-3">
+            {/* En la portada, el logo lleva a la web de la escuela (en otra
+                pestaña, para no perder la app). En el resto, a la portada. */}
             <Link
-              href="/"
+              href={pathname === "/" ? ACADEMY_URL : "/"}
+              {...(pathname === "/" && {
+                target: "_blank",
+                rel: "noopener noreferrer",
+              })}
               className="flex min-w-0 items-center gap-2.5 md:gap-3.5"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
