@@ -1,96 +1,50 @@
 "use client";
 
-import Link from "next/link";
-import GameChrome from "@/app/components/GameChrome";
-import Backdrop from "@/app/components/Backdrop";
-import { MedalSticker } from "@/app/components/MedalBadge";
-import { useLevelMedals } from "@/app/components/useLevelMedals";
-import { CLAVE_LEVELS } from "./notes_images";
+import { KeyRound } from "lucide-react";
+import SubMenu from "@/app/components/SubMenu";
+import { CLAVE_LEVELS, type ClaveLevel } from "./notes_images";
+
+/**
+ * La imagen de cada tarjeta, donde en los demás submenús va el icono: a su
+ * tamaño natural para esa altura. En "Ambas" van las dos, una al lado de la
+ * otra e iguales que en las otras tarjetas.
+ */
+const ClaveImages = ({ level }: { level: ClaveLevel }) => (
+  <>
+    {level.imgs.map((src) => (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img key={src} src={encodeURI(src)} alt="" className="h-full w-auto" />
+    ))}
+  </>
+);
 
 /**
  * El menú del modo: con qué clave se juega.
  *
- * Aquí NO va el titular de la pregunta. Estaba puesto y decía "¿Qué tonalidad
- * MAYOR es?" encima de "Elige con qué clave quieres jugar", y además alternaba
- * entre mayor y menor según lo que hubiera tocado en la ronda anterior. El
- * titular vive ahora en la pantalla de juego, que es donde hay una pregunta
- * que responder.
+ * Es el mismo submenú que el resto de modos con niveles. Antes era una
+ * pantalla hecha aparte, con otra cabecera, otras tarjetas y otro fondo al
+ * pasar por encima, y se notaba que era de otra app.
  *
- * Y son enlaces, no botones: cada clave tiene su ruta, y de ahí sale que las
- * partidas se guarden por separado.
+ * Aquí NO va el titular de la pregunta: vive en la pantalla de juego, que es
+ * donde hay una pregunta que responder. Y cada clave es un enlace con su ruta,
+ * de ahí que las partidas se guarden por separado.
  */
 export default function ArmadurasMenuPage() {
-  const hasMedal = useLevelMedals();
-
   return (
-    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
-      <Backdrop />
-
-      <div className="relative z-10 min-h-screen flex flex-col">
-        <GameChrome />
-
-        <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-5xl mx-auto">
-          <div className="mb-10 text-center">
-            {/*
-              Es <h1> y no <h2>, que es lo que era. Se ve exactamente igual —no
-              cambia ni una clase—, pero esta pantalla no tenía encabezado de
-              nivel 1 en ninguna parte: `GameChrome` pone el <h1> solo cuando se
-              le pasa un enunciado, y aquí se le pasa vacío a propósito porque
-              la pregunta vive en la pantalla de juego, no en el menú. El
-              resultado era una página del sitemap sin titular. Este texto ya
-              era el título de la página; solo faltaba decirlo.
-            */}
-            <h1
-              className="text-white text-2xl md:text-4xl font-black italic tracking-tighter leading-tight"
-              style={{ fontFamily: "Chaney, sans-serif" }}
-            >
-              Armaduras
-            </h1>
-            <p className="text-white/60 text-xs md:text-sm font-bold uppercase tracking-[0.25em] mt-3">
-              Elige con qué clave quieres jugar
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 w-full">
-            {CLAVE_LEVELS.map((op) => {
-              const href = `/play/armadura/${op.slug}`;
-              const medal = hasMedal(href);
-              return (
-              <Link
-                key={op.slug}
-                href={href}
-                className={`group relative ${medal ? "z-10" : ""} flex flex-col items-center gap-4 bg-black/40 hover:bg-amber-500 p-6 md:p-8 rounded-[2rem] border border-white/10 hover:border-amber-400 backdrop-blur-md transition-all active:scale-95 shadow-xl`}
-              >
-                {medal && <MedalSticker id={href} count={1} total={1} />}
-                <div className="bg-white rounded-2xl w-full h-28 md:h-32 flex items-center justify-center gap-2 p-3 overflow-hidden">
-                  {op.imgs.map((src) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={src}
-                      src={encodeURI(src)}
-                      alt=""
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  ))}
-                </div>
-                <div className="text-center">
-                  <div className="text-white group-hover:text-black text-base md:text-lg font-black italic uppercase tracking-tight transition-colors">
-                    {op.titulo}
-                  </div>
-                  <div className="text-white/50 group-hover:text-black/70 text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors">
-                    {op.sub}
-                  </div>
-                </div>
-              </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <footer className="py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase z-10">
-          © 2026 21st Century Music
-        </footer>
-      </div>
-    </div>
+    <SubMenu
+      eyebrow="Lenguaje musical"
+      title="Armaduras"
+      intro="Sale una armadura y dices de qué tonalidad es, mayor o menor. Elige con qué clave quieres jugar."
+      category="lenguaje"
+      compact
+      options={CLAVE_LEVELS.map((level) => ({
+        title: level.titulo,
+        description: level.sub,
+        href: `/play/armadura/${level.slug}`,
+        Icon: KeyRound,
+        image: <ClaveImages level={level} />,
+        badge: level.badge,
+      }))}
+    />
   );
 }

@@ -9,6 +9,13 @@ import type { RhythmLevel } from "@/lib/rhythm";
 import Backdrop from "@/app/components/Backdrop";
 import { outputNode } from "@/lib/audioContext";
 
+/**
+ * Por debajo de esto la partida es de práctica y no se guarda. Con 4 compases
+ * bordados el nivel salía al 100% en el progreso, y eso no es dominarlo: igual
+ * que la medalla, el progreso pide la partida larga.
+ */
+const MIN_COUNTED_MEASURES = 24;
+
 /** Compases con los que arranca la sesión, si el nivel los ofrece. */
 const preferredMeasures = (options: number[]) =>
   options.includes(24) ? 24 : options[options.length - 1];
@@ -115,6 +122,11 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
         <GameOverModal
           correct={scoreData.hits}
           total={scoreData.hits + scoreData.misses}
+          practice={
+            measures < MIN_COUNTED_MEASURES
+              ? `Práctica: solo cuentan las partidas de ${MIN_COUNTED_MEASURES} compases o más.`
+              : undefined
+          }
           onRestart={() => setShowScore(false)}
           onClose={() => setShowScore(false)}
           onReplay={() => {
@@ -159,6 +171,14 @@ export default function RhythmGame({ level }: { level: RhythmLevel }) {
                 <span>{localBpm} BPM</span>
                 <span className="text-black opacity-60">·</span>
                 <span>{measures} Measures</span>
+                {measures < MIN_COUNTED_MEASURES && (
+                  <>
+                    <span className="text-black opacity-60">·</span>
+                    <span title={`Solo cuentan las partidas de ${MIN_COUNTED_MEASURES} compases o más`}>
+                      Práctica
+                    </span>
+                  </>
+                )}
               </div>
 
               <div className="bg-black/60 backdrop-blur-xl px-4 py-3 rounded-3xl border border-white/5">

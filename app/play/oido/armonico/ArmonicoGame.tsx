@@ -13,10 +13,10 @@ import {
 import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
-import { earButtonGrid, earLevelPath, type EarIntervalLevel } from "@/lib/earIntervals";
+import { PRACTICE_NOTE, earButtonGrid, type EarIntervalSet } from "@/lib/earIntervals";
 
 
-export default function IntervalosArmonicos({ level }: { level: EarIntervalLevel }) {
+export default function IntervalosArmonicos({ level }: { level: EarIntervalSet }) {
 
   const totalQuestions = ROUND_LENGTH;
   const [quizList, setQuizList]       = useState<typeof INTERVALS>([]);
@@ -27,8 +27,8 @@ export default function IntervalosArmonicos({ level }: { level: EarIntervalLevel
 
   // Si se va a media partida, queda apuntada como abandonada. Lo que ve el
   // alumno no cambia: esto no pinta nada.
-  const savePath = earLevelPath("/play/oido/armonico", level);
-  useAbandono(results, gameOver, savePath);
+  const savePath = "/play/oido/armonico";
+  useAbandono(results, gameOver, savePath, !level.custom);
   const [isMounted, setIsMounted]     = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [solutionStep, setSolutionStep] = useState<number | null>(null);
@@ -55,7 +55,7 @@ export default function IntervalosArmonicos({ level }: { level: EarIntervalLevel
       setResults(Array(total).fill(null));
       setUserAnswers(Array(total).fill(null));
       const list: typeof INTERVALS = [];
-      // Solo los del nivel. Y nunca el unísono en armónico: dos notas iguales
+      // Solo los elegidos. Y nunca el unísono en armónico: dos notas iguales
       // a la vez no se distinguen de una sola.
       const pool = INTERVALS.filter(
         (iv) => iv.semitones > 0 && level.intervals.includes(iv.name),
@@ -74,7 +74,7 @@ export default function IntervalosArmonicos({ level }: { level: EarIntervalLevel
   }, [level]);
 
   const currentInterval = quizList[step];
-  /** Solo los botones de lo que puede sonar en este nivel (sin unísono). */
+  /** Solo los botones de lo que puede sonar (sin unísono). */
   const buttonLabels = BUTTON_LABELS.filter(
     (label) => label !== "Unísono" && level.intervals.includes(label),
   );
@@ -157,7 +157,12 @@ export default function IntervalosArmonicos({ level }: { level: EarIntervalLevel
 
       {/* GAME OVER OVERLAY */}
       {gameOver && (
-        <GameOverModal correct={correctCount} total={totalQuestions} savePath={savePath} />
+        <GameOverModal
+          correct={correctCount}
+          total={totalQuestions}
+          savePath={savePath}
+          practice={level.custom ? PRACTICE_NOTE : undefined}
+        />
       )}
 
       {/* CONTENT */}
