@@ -33,3 +33,8 @@
           <!-- - [ ] Para intervalos lenguaje musical, hacer subniveles. Intervalos lenguaje musical con clave de fa también -->
         <!-- - [ ] En armaduras los subniveles tienen distinta pinta que en el resto, queda raro, cambiarlo. -->
       <!-- - [ ] Poner mi nombre. -->
+
+juego de , para aparte reto del dia :
+
+memoria melodica
+rapidez en identificar intervalo
