@@ -38,3 +38,9 @@ juego de , para aparte reto del dia :
 
 memoria melodica
 rapidez en identificar intervalo
+
+o sino uno de los que ya estan , hecho de manera aleatoria pero igual para todo el mundo
+
+aunque tambien , dicho por claude y es verdad : mete ruiddo
+
+modo examen
