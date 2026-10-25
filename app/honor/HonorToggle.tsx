@@ -1,18 +1,35 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { toggleHonor } from "./actions";
+import { useEffect, useState, useTransition } from "react";
+import { Trophy } from "lucide-react";
+import { getHonorSetting, toggleHonor } from "./actions";
 
 /**
- * Salir o no en el cuadro de honor. Es un ajuste, así que va en una línea al
- * pie y no encima del cuadro: lo primero que se ve es la clasificación.
+ * "Aparecer en el cuadro de honor", en el menú de usuario.
+ *
+ * El menú se pinta en todas las páginas y no trae este dato de serie, así que
+ * se pregunta al abrirlo. Hasta que llega, el interruptor sale apagado y
+ * quieto: mejor un instante sin poder tocarlo que enseñar algo que no es.
  */
-export default function HonorToggle({ initial, name }: { initial: boolean; name: string }) {
-  const [on, setOn] = useState(initial);
+export default function HonorToggle() {
+  const [on, setOn] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  useEffect(() => {
+    let alive = true;
+    getHonorSetting()
+      .then((result) => {
+        if (alive && result.ok) setOn(result.on);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const change = () => {
+    if (on === null) return;
     const next = !on;
     setOn(next);
     setError(null);
@@ -25,27 +42,32 @@ export default function HonorToggle({ initial, name }: { initial: boolean; name:
     });
   };
 
-  const button = (label: string) => (
-    <button
-      type="button"
-      onClick={change}
-      disabled={pending}
-      className="font-bold text-amber-300 underline decoration-amber-300/40 underline-offset-2 transition-colors hover:text-amber-200 disabled:opacity-60"
-    >
-      {label}
-    </button>
-  );
-
   return (
-    <p className="text-xs text-white/60">
-      {on ? (
-        <>
-          Sales como <span className="font-bold text-white">{name}</span> · {button("Dejar de salir")}
-        </>
-      ) : (
-        <>No sales en el cuadro · {button(`Salir como ${name}`)}</>
-      )}
-      {error && <span className="ml-2 text-rose-300">{error}</span>}
-    </p>
+    <div className="px-3 py-2">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on === true}
+        onClick={change}
+        disabled={on === null || pending}
+        className="flex w-full items-center gap-3 text-left text-xs font-bold text-white/50 transition hover:text-white disabled:cursor-default"
+      >
+        <Trophy size={16} strokeWidth={1.75} className="flex-shrink-0" />
+        <span className="min-w-0 flex-1 leading-tight">Aparecer en el cuadro de honor</span>
+        <span
+          aria-hidden
+          className={`relative h-5 w-9 flex-shrink-0 rounded-full transition-colors ${
+            on ? "bg-amber-400" : "bg-white/15"
+          } ${on === null ? "opacity-40" : ""}`}
+        >
+          <span
+            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${
+              on ? "left-[1.125rem]" : "left-0.5"
+            }`}
+          />
+        </span>
+      </button>
+      {error && <p className="mt-1 pl-7 text-[11px] text-rose-300">{error}</p>}
+    </div>
   );
 }

@@ -72,6 +72,15 @@ interface SimpleMovingScoreProps {
   measures: React.MutableRefObject<number>;
   onComplete?: (endType: string, data: Record<string, number>) => void;
   setBeat?: (beat: number) => void;
+  /**
+   * Una partitura ya hecha en vez de sacar una nueva. Es para los exámenes,
+   * donde la partitura sale del servidor y todos tocan la misma.
+   */
+  fixedScore?: ScoreItem[];
+  /** Al acabar, todas las pulsaciones (segundos desde que arranca). La corrige el servidor. */
+  onTaps?: (times: number[]) => void;
+  /** false = sin "Repetir", "Parar" ni "Reset": en un examen se toca una vez. */
+  controls?: boolean;
 }
 
 // Ventana de acierto. Antes eran dos constantes fijas en segundos, así que a
@@ -82,7 +91,7 @@ const HIT_MIN = 0.04;
 const HIT_SHARE = 0.45;
 
 const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
-  ({ level, BPM, measures, onComplete, setBeat }, ref) => {
+  ({ level, BPM, measures, onComplete, setBeat, fixedScore, onTaps, controls = true }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [fontLoaded, setFontLoaded] = useState(false);
 
@@ -244,7 +253,10 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
     }
 
     function createGameState(bpm: number) {
-      const score = createRhythmScore(level, measures.current);
+      // Copia: el estado de cada nota (acertada, fallada) se escribe encima.
+      const score = fixedScore
+        ? fixedScore.map((item) => ({ ...item }))
+        : createRhythmScore(level, measures.current);
 
       let xi = 0;
       score.forEach((item) => {
@@ -597,6 +609,8 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
           metronomeRef.current?.stop();
           setShowReset(false);
           setShowDrag(true);
+
+          onTaps?.(TAP_RUN_TIMES.current.map((tap) => tap.time));
 
           if (onComplete) {
             // Los compases, cada uno con sus notas y con el trozo de tiempo
@@ -970,7 +984,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
               style={{ touchAction: "none" }}
             />
 
-            {showDrag && (
+            {controls && showDrag && (
               <div className="absolute lg:-top-5 right-5 flex items-center justify-center gap-2">
                 {overlayButton("Repetir el mismo", handleReplay)}
                 {/* Antes era un "Drag for review" gris y latiendo que se
@@ -984,7 +998,7 @@ const SimpleMovingScore = forwardRef<MusicRef, SimpleMovingScoreProps>(
                 </div>
               </div>
             )}
-            {showReset && (
+            {controls && showReset && (
               <div className="absolute -top-5 right-5 flex items-center justify-center gap-2">
                 {overlayButton("Parar", handleStop)}
                 {overlayButton("Reset", handleReset)}

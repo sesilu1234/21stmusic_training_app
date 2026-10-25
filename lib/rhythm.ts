@@ -450,3 +450,99 @@ export const createRhythmScore = (
   score.push(barline(true));
   return score;
 };
+
+// ---------------------------------------------------------------------------
+// Corrección fuera de la partitura
+// ---------------------------------------------------------------------------
+//
+// Es la misma cuenta que hace `MusicDisplay` mientras se toca, pero sin
+// pantalla: dadas las pulsaciones (en segundos desde que arranca la
+// partitura), dice cuántos compases están bien. La usa el servidor en los
+// exámenes, donde no vale fiarse de lo que diga el navegador.
+//
+// Las constantes y las reglas tienen que ser las de `MusicDisplay`: un compás
+// vale cuando todas sus notas tienen golpe dentro de su ventana Y no hay
+// ningún golpe de más.
+
+export const HIT_MAX = 0.13;
+export const HIT_MIN = 0.04;
+export const HIT_SHARE = 0.45;
+
+/** Cuándo cae cada nota y cuánto margen tiene por delante y por detrás. */
+export const rhythmTimeline = (score: ScoreItem[], bpm: number) => {
+  const secondsPerTick = 60 / bpm / TPQ;
+  let acc = 0;
+  const notes: { index: number; time: number }[] = [];
+
+  score.forEach((item, i) => {
+    if (item.ticks === 0) return;
+    if (item.kind === "note") notes.push({ index: i, time: acc * secondsPerTick });
+    acc += item.ticks;
+  });
+
+  const clamp = (v: number) => Math.min(HIT_MAX, Math.max(HIT_MIN, v));
+  return {
+    seconds: acc * secondsPerTick,
+    notes: notes.map((note, k) => ({
+      ...note,
+      early: k === 0 ? HIT_MAX : clamp(HIT_SHARE * (note.time - notes[k - 1].time)),
+      late:
+        k === notes.length - 1 ? HIT_MAX : clamp(HIT_SHARE * (notes[k + 1].time - note.time)),
+    })),
+  };
+};
+
+/** Corrige unas pulsaciones contra una partitura. */
+export const evaluateRhythmTaps = (score: ScoreItem[], bpm: number, taps: number[]) => {
+  const { notes } = rhythmTimeline(score, bpm);
+  const hitIndex = new Set<number>();
+  const extras: number[] = [];
+
+  let pending = 0;
+  for (const tap of [...taps].sort((a, b) => a - b)) {
+    // Las notas cuya ventana ya pasó se dan por falladas, como en la partitura.
+    while (pending < notes.length && tap > notes[pending].time + notes[pending].late) pending++;
+    const note = notes[pending];
+    if (note && tap >= note.time - note.early && tap <= note.time + note.late) {
+      hitIndex.add(note.index);
+      pending++;
+    } else {
+      extras.push(tap);
+    }
+  }
+
+  const secondsPerTick = 60 / bpm / TPQ;
+  const bags: { notes: number[]; start: number }[] = [];
+  let current: number[] = [];
+  let measureStart = 0;
+  let acc = 0;
+  score.forEach((item, i) => {
+    if (item.kind === "barline") {
+      bags.push({ notes: current, start: measureStart });
+      current = [];
+      measureStart = acc * secondsPerTick;
+    } else {
+      if (item.kind === "note") current.push(i);
+      acc += item.ticks;
+    }
+  });
+  if (current.length) bags.push({ notes: current, start: measureStart });
+
+  // La entradilla no puntúa: sus compases no tienen notas.
+  const measures = bags.filter((bag) => bag.notes.length > 0);
+  const extraPer = measures.map(() => 0);
+  extras.forEach((tap) => {
+    for (let m = measures.length - 1; m >= 0; m--) {
+      if (tap >= measures[m].start - HIT_MAX) {
+        extraPer[m]++;
+        return;
+      }
+    }
+  });
+
+  const correct = measures.filter(
+    (measure, m) => extraPer[m] === 0 && measure.notes.every((index) => hitIndex.has(index)),
+  ).length;
+
+  return { correctMeasures: correct, totalMeasures: measures.length };
+};

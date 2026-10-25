@@ -4,12 +4,16 @@ import { Flame, Hammer, Lock } from "lucide-react";
 import AppShell from "./components/AppShell";
 import GamePreview from "./components/GamePreview";
 import HonorStrip from "./components/HonorStrip";
+import HonorNotice from "./components/HonorNotice";
+import RetoCards from "./components/EcoCard";
 import { MedalSticker } from "./components/MedalBadge";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
 import { getProgress, type GameProgress } from "@/lib/progress";
-import { getHonorBoard, HONOR_MIN_PARTICIPANTS } from "@/lib/honor";
+import { getHonorBoard } from "@/lib/honor";
 import { HONOR_ENABLED } from "@/lib/site";
+import { madridDay } from "@/lib/madrid";
+import { retoStatuses } from "@/lib/ecoResult";
 import { SITE_URL } from "@/lib/seo";
 
 /**
@@ -178,12 +182,17 @@ export default async function HomePage() {
   // igual, solo que sin las marcas de cada tarjeta.
   // Lo mismo con el cuadro de honor, que además solo se enseña con sesión:
   // son nombres de alumnos.
-  const [progress, honor] = student
-    ? await Promise.all([
-        getProgress(student.email).catch(() => null),
-        HONOR_ENABLED ? getHonorBoard(student.email).catch(() => null) : null,
-      ])
-    : [null, null];
+  const day = madridDay();
+  const [progress, retos] = await Promise.all([
+    student ? getProgress(student.email).catch(() => null) : null,
+    retoStatuses(student, day),
+  ]);
+  // El cuadro va después del progreso porque, a quien no sale, se le calcula
+  // con el suyo el puesto que tendría.
+  const honor =
+    student && HONOR_ENABLED
+      ? await getHonorBoard(student.email, student.showInHonor ? null : progress).catch(() => null)
+      : null;
   const statOf = (name: string) =>
     progress?.games.find((entry) => entry.game.name === name);
 
@@ -191,6 +200,13 @@ export default async function HomePage() {
   return (
     <AppShell displayName={student?.displayName} role={student?.role}>
       <div className="mx-auto w-full max-w-5xl">
+        <RetoCards day={day} statuses={retos} />
+
+        {/* La primera vez: que nadie salga en el cuadro sin saberlo. */}
+        {HONOR_ENABLED && student?.showInHonor && !student.honorNoticeSeenAt && (
+          <HonorNotice name={student.displayName.trim()} />
+        )}
+
         {progress && progress.attempts > 0 && (
           <Link
             href="/progreso"
@@ -219,10 +235,7 @@ export default async function HomePage() {
           </Link>
         )}
 
-        {/* Con un solo apuntado la franja sería tu nombre y nada más. */}
-        {student && honor && honor.participants >= HONOR_MIN_PARTICIPANTS && (
-          <HonorStrip board={honor} showInHonor={student.showInHonor} />
-        )}
+        {student && honor && <HonorStrip board={honor} />}
 
         <div className="space-y-8 md:space-y-9">
           {gamesByCategory().map(({ category, games }) => (

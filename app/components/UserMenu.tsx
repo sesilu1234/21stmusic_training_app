@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, LogIn, LogOut, Palette, StickyNote, Trophy, Users } from "lucide-react";
+import { FileCheck2, GraduationCap, LogIn, LogOut, Palette, StickyNote, Trophy, Users } from "lucide-react";
 import BarsAvatar from "./BarsAvatar";
 import ThemeToggle from "./ThemeToggle";
+import HonorToggle from "@/app/honor/HonorToggle";
 import { logout } from "@/app/actions";
 import { canSeeAlumnario, canSeeMuestrario, roleLabel } from "@/lib/roles";
 import { HONOR_ENABLED } from "@/lib/site";
@@ -129,7 +130,15 @@ export default function UserMenu({
               Mis notas
             </Link>
 
-            {/* Aquí también se decide si sales o no en él. */}
+            {/* Cualquiera con sesión crea y hace exámenes: no hay roles. */}
+            <Link
+              href="/examenes"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
+            >
+              <FileCheck2 size={16} strokeWidth={1.75} />
+              Exámenes
+            </Link>
+
             {HONOR_ENABLED && (
               <Link
                 href="/honor"
@@ -138,6 +147,14 @@ export default function UserMenu({
                 <Trophy size={16} strokeWidth={1.75} />
                 Cuadro de honor
               </Link>
+            )}
+
+            {/* Salir o no en los rankings: es un ajuste de la cuenta, así que va
+                aquí y no escondido al pie del cuadro. */}
+            {HONOR_ENABLED && (
+              <div className="border-y border-white/5">
+                <HonorToggle />
+              </div>
             )}
 
             {canSeeAlumnario(role) && (

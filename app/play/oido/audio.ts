@@ -120,6 +120,44 @@ export const PRESET_ICONS = ["🎹", "🎸", "🪈", "🎛️"];
 
 export type Dyad = { root: number; semi: number };
 
+/**
+ * Nota tenida: entra, se queda y se va. Los PRESETS no valen para esto
+ * porque todos decaen en un par de segundos, y un pedal tiene que aguantar
+ * la escala entera por debajo.
+ */
+export const scheduleDrone = (
+  ctx: AudioContext,
+  semitone: number,
+  when: number,
+  seconds: number,
+) => {
+  const master = ctx.createGain();
+  master.connect(outputNode(ctx));
+  master.gain.setValueAtTime(0, when);
+  master.gain.linearRampToValueAtTime(0.17, when + 0.35);
+  master.gain.setValueAtTime(0.17, when + seconds - 0.5);
+  master.gain.exponentialRampToValueAtTime(0.001, when + seconds);
+
+  const freq = semitonesToFreq(semitone);
+  // Fundamental gorda y dos armónicos flojos: suficiente para que se oiga
+  // debajo sin taparle el sitio a la escala.
+  ([
+    [1, 0.5],
+    [2, 0.16],
+    [3, 0.06],
+  ] as const).forEach(([multiple, gain]) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq * multiple, when);
+    g.gain.setValueAtTime(gain, when);
+    osc.connect(g);
+    g.connect(master);
+    osc.start(when);
+    osc.stop(when + seconds + 0.1);
+  });
+};
+
 export function useAudio() {
   const ctxRef = useRef<AudioContext | null>(null);
   function getCtx(): AudioContext {
@@ -197,44 +235,6 @@ export function useAudio() {
     },
     [],
   );
-
-  /**
-   * Nota tenida: entra, se queda y se va. Los PRESETS no valen para esto
-   * porque todos decaen en un par de segundos, y un pedal tiene que aguantar
-   * la escala entera por debajo.
-   */
-  const scheduleDrone = (
-    ctx: AudioContext,
-    semitone: number,
-    when: number,
-    seconds: number,
-  ) => {
-    const master = ctx.createGain();
-    master.connect(outputNode(ctx));
-    master.gain.setValueAtTime(0, when);
-    master.gain.linearRampToValueAtTime(0.17, when + 0.35);
-    master.gain.setValueAtTime(0.17, when + seconds - 0.5);
-    master.gain.exponentialRampToValueAtTime(0.001, when + seconds);
-
-    const freq = semitonesToFreq(semitone);
-    // Fundamental gorda y dos armónicos flojos: suficiente para que se oiga
-    // debajo sin taparle el sitio a la escala.
-    ([
-      [1, 0.5],
-      [2, 0.16],
-      [3, 0.06],
-    ] as const).forEach(([multiple, gain]) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq * multiple, when);
-      g.gain.setValueAtTime(gain, when);
-      osc.connect(g);
-      g.connect(master);
-      osc.start(when);
-      osc.stop(when + seconds + 0.1);
-    });
-  };
 
   /**
    * Una melodía con un pedal de fondo. Lo usa el modo de modos griegos: sin

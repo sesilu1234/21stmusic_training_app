@@ -16,6 +16,7 @@ export default async function StudentsOnlyGate({
   backHref = "/",
   intro = "Este modo está reservado a los alumnos de 21st Century Music.",
   backLabel = "Ver los demás modos",
+  loginNext,
 }: {
   children: React.ReactNode;
   backHref?: string;
@@ -26,6 +27,8 @@ export default async function StudentsOnlyGate({
    */
   intro?: string;
   backLabel?: string;
+  /** A dónde volver después de entrar. Sirve para los enlaces que se comparten (un examen). */
+  loginNext?: string;
 }) {
   if (await currentStudent()) return <>{children}</>;
 
@@ -61,7 +64,7 @@ export default async function StudentsOnlyGate({
             </p>
 
             <Link
-              href="/login"
+              href={loginNext ? `/login?next=${encodeURIComponent(loginNext)}` : "/login"}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-400 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-950 transition hover:bg-amber-300"
             >
               <LogIn size={14} />
