@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Flame, Medal, Target, Trophy } from "lucide-react";
+import { Medal, Target, Trophy } from "lucide-react";
 import { gameIcons } from "@/app/components/gameIcons";
 import { LevelMedal, MedalAward } from "@/app/components/MedalBadge";
 import { CATEGORIES, categoryOf, labelForStoredName } from "@/lib/games";
@@ -49,13 +49,15 @@ const Tile = ({
   value,
   label,
   hint,
+  className = "",
 }: {
   icon: React.ReactNode;
   value: string;
   label: string;
   hint?: string;
+  className?: string;
 }) => (
-  <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur-sm">
+  <div className={`rounded-2xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur-sm ${className}`}>
     <div className="flex items-center gap-2 text-white/40">
       {icon}
       <span className="text-[9px] font-black uppercase tracking-[0.2em]">{label}</span>
@@ -247,7 +249,7 @@ export default function ProgressBoard({
         </h2>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/45">
           En cuanto termines una partida, aquí se irá guardando por dónde vas en
-          cada modo, cuántos días seguidos practicas y las medallas que sacas.
+          cada modo, qué días practicas y las medallas que sacas.
         </p>
         <Link
           href="/"
@@ -261,19 +263,7 @@ export default function ProgressBoard({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tile
-          icon={<Flame size={13} className="text-orange-300" />}
-          label="Racha"
-          value={`${streak.current} ${streak.current === 1 ? "día" : "días"}`}
-          hint={
-            streak.playedToday
-              ? `Récord: ${streak.best}`
-              : streak.current > 0
-                ? "Juega hoy para no perderla"
-                : "Empieza una hoy"
-          }
-        />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {/* De la última semana y no de siempre: la media de toda la vida
             castiga por haber empezado sin saber, y el alumno que ha mejorado
             no lo ve moverse en meses. */}
@@ -295,6 +285,7 @@ export default function ProgressBoard({
         />
         <Tile
           icon={<Medal size={13} className="text-amber-300" />}
+          className="col-span-2 sm:col-span-1"
           label="Medallas"
           value={String(progress.medals)}
           hint="Niveles clavados: partida larga sin fallar"

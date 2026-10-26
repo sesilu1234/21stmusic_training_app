@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Eye, Flame, Home, Medal, Repeat, RotateCcw } from "lucide-react";
+import { ArrowLeft, Eye, Home, Medal, Repeat, RotateCcw } from "lucide-react";
 import Crown from "./Crown";
 import { useBackHref } from "./useBackHref";
 import { saveAttempt } from "@/app/progreso/actions";
@@ -205,12 +205,6 @@ export default function GameOverModal({
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/15 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
                     <Medal size={12} />
                     Medalla nueva
-                  </span>
-                )}
-                {saved.streak > 1 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/60">
-                    <Flame size={12} className="text-orange-300" />
-                    {saved.streak} días seguidos
                   </span>
                 )}
                 <Link

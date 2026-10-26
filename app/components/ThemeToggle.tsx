@@ -12,8 +12,11 @@ import { useStoredThemeMode } from "@/lib/themeMode";
 export default function ThemeToggle({
   withLabel = false,
   onPhoto = false,
+  compact = false,
 }: {
   withLabel?: boolean;
+  /** Pequeño y sin marco, para el pie del menú de usuario. */
+  compact?: boolean;
   /**
    * Para cuando va suelto sobre la foto del fondo (la barra de los ejercicios)
    * y no dentro de la cabecera: el mismo cristal oscuro que el botón de volver,
@@ -34,7 +37,9 @@ export default function ThemeToggle({
       onClick={() => setIsDarkMode(!isDarkMode)}
       aria-label={isDarkMode ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
       className={
-        withLabel
+        compact
+          ? "group grid h-7 w-7 place-items-center rounded-lg transition hover:bg-white/10"
+          : withLabel
           ? "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-bold text-white/70 transition hover:bg-white/10 hover:text-white"
           : onPhoto
             ? "group grid h-9 w-9 flex-shrink-0 place-items-center rounded-full border border-white/15 bg-black/40 backdrop-blur-sm transition hover:border-amber-300/50"

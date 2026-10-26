@@ -69,7 +69,7 @@ export default async function HonorPage() {
   return (
     <AppShell displayName={student.displayName} role={student.role}>
       {board ? (
-        <HonorView board={board} retos={retos} />
+        <HonorView board={board} retos={retos} day={day} />
       ) : (
         <div className="mx-auto w-full max-w-3xl rounded-2xl border border-white/10 bg-slate-950/70 p-6 text-center text-sm text-white/60">
           Ahora mismo no se puede leer el cuadro de honor. Vuelve a probar en un rato.

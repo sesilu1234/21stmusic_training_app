@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileCheck2, GraduationCap, LogIn, LogOut, Palette, StickyNote, Trophy, Users } from "lucide-react";
+import { FileCheck2, LogIn, LogOut, Palette, StickyNote, Trophy, Users } from "lucide-react";
 import BarsAvatar from "./BarsAvatar";
 import ThemeToggle from "./ThemeToggle";
-import HonorToggle from "@/app/honor/HonorToggle";
+import HonorToggle, { prefetchHonorSetting } from "@/app/honor/HonorToggle";
 import { logout } from "@/app/actions";
 import { canSeeAlumnario, canSeeMuestrario, roleLabel } from "@/lib/roles";
 import { HONOR_ENABLED } from "@/lib/site";
@@ -45,6 +45,12 @@ export default function UserMenu({
     setLastPathname(pathname);
     setIsOpen(false);
   }
+
+  // El interruptor del cuadro se pide ya, con la página, y no al abrir el
+  // menú: así no salta un segundo después de abrirlo.
+  useEffect(() => {
+    if (displayName && HONOR_ENABLED) void prefetchHonorSetting(displayName);
+  }, [displayName]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -109,82 +115,56 @@ export default function UserMenu({
       {isOpen && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+0.6rem)] z-50 w-60 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 p-2 shadow-[0_24px_60px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 p-1.5 shadow-[0_18px_44px_rgba(0,0,0,0.55)] backdrop-blur-xl"
         >
-          <div className="border-b border-white/5 px-3 pb-3 pt-2">
-            <p className="truncate text-sm font-bold text-white">{displayName}</p>
-            <p className="mt-1 flex items-center gap-1.5 text-[11px] text-amber-300/85">
-              <GraduationCap size={12} />
-              {role ? roleLabel(role) : "Alumno de la escuela"}
-            </p>
+          <div className="flex items-center gap-2.5 px-2.5 pb-2.5 pt-2">
+            <span className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full">
+              <BarsAvatar name={displayName} className="h-full w-full" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[13px] font-bold leading-tight text-white">{displayName}</span>
+              <span className="block truncate text-[10px] leading-tight text-amber-300/80">
+                {role ? roleLabel(role) : "Alumno de la escuela"}
+              </span>
+            </span>
           </div>
 
-          <div className="mt-1.5 space-y-0.5">
-            {/* Las notas son del alumno y se guardan en su cuenta, así que se
-                buscan aquí y no en la barra de navegación. */}
-            <Link
-              href="/notas"
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
-            >
-              <StickyNote size={16} strokeWidth={1.75} />
-              Mis notas
-            </Link>
+          {/* Las notas son del alumno y se guardan en su cuenta, así que se
+              buscan aquí y no en la barra de navegación. Exámenes: cualquiera
+              con sesión los crea y los hace, no hay roles. */}
+          <MenuSection label="General">
+            <MenuLink href="/notas" Icon={StickyNote}>Mis notas</MenuLink>
+            <MenuLink href="/examenes" Icon={FileCheck2}>Exámenes</MenuLink>
+          </MenuSection>
 
-            {/* Cualquiera con sesión crea y hace exámenes: no hay roles. */}
-            <Link
-              href="/examenes"
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
-            >
-              <FileCheck2 size={16} strokeWidth={1.75} />
-              Exámenes
-            </Link>
+          {/* Salir o no en los rankings es un ajuste de la cuenta, así que va
+              aquí, junto al enlace, y no escondido al pie del cuadro. */}
+          {HONOR_ENABLED && (
+            <MenuSection label="Cuadro de honor">
+              <MenuLink href="/honor" Icon={Trophy}>Ver el cuadro</MenuLink>
+              <HonorToggle who={displayName} />
+            </MenuSection>
+          )}
 
-            {HONOR_ENABLED && (
-              <Link
-                href="/honor"
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
-              >
-                <Trophy size={16} strokeWidth={1.75} />
-                Cuadro de honor
-              </Link>
-            )}
+          {(canSeeAlumnario(role) || canSeeMuestrario(role)) && (
+            <MenuSection label="Profesorado">
+              {canSeeAlumnario(role) && (
+                <MenuLink href="/alumnario" Icon={Users}>Alumnario</MenuLink>
+              )}
+              {canSeeMuestrario(role) && (
+                <MenuLink href="/muestrario" Icon={Palette}>Muestrario</MenuLink>
+              )}
+            </MenuSection>
+          )}
 
-            {/* Salir o no en los rankings: es un ajuste de la cuenta, así que va
-                aquí y no escondido al pie del cuadro. */}
-            {HONOR_ENABLED && (
-              <div className="border-y border-white/5">
-                <HonorToggle />
-              </div>
-            )}
-
-            {canSeeAlumnario(role) && (
-              <Link
-                href="/alumnario"
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
-              >
-                <Users size={16} strokeWidth={1.75} />
-                Alumnario
-              </Link>
-            )}
-
-            {canSeeMuestrario(role) && (
-              <Link
-                href="/muestrario"
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white"
-              >
-                <Palette size={16} strokeWidth={1.75} />
-                Muestrario
-              </Link>
-            )}
-
-            <ThemeToggle withLabel />
-
+          <div className="mt-1 flex items-center justify-between gap-2 border-t border-white/5 px-1 pt-1.5">
+            <ThemeToggle compact />
             <form action={logout}>
               <button
                 type="submit"
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-white/50 transition hover:bg-rose-500/10 hover:text-rose-300"
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-white/45 transition hover:bg-rose-500/10 hover:text-rose-300"
               >
-                <LogOut size={16} strokeWidth={1.75} />
+                <LogOut size={13} strokeWidth={1.75} />
                 Cerrar sesión
               </button>
             </form>
@@ -194,3 +174,29 @@ export default function UserMenu({
     </div>
   );
 }
+
+const MenuSection = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="border-t border-white/5 py-1.5">
+    <p className="px-2.5 pb-1 text-[9px] font-black uppercase tracking-[0.2em] text-white/25">{label}</p>
+    {children}
+  </div>
+);
+
+const MenuLink = ({
+  href,
+  Icon,
+  children,
+}: {
+  href: string;
+  Icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  children: React.ReactNode;
+}) => (
+  <Link
+    href={href}
+    role="menuitem"
+    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white/60 transition hover:bg-white/5 hover:text-white"
+  >
+    <Icon size={14} strokeWidth={1.75} className="flex-shrink-0 text-white/35" />
+    {children}
+  </Link>
+);

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Flame, Hammer, Lock } from "lucide-react";
+import { ChevronRight, Hammer, Lock } from "lucide-react";
 import AppShell from "./components/AppShell";
 import GamePreview from "./components/GamePreview";
 import HonorStrip from "./components/HonorStrip";
@@ -212,26 +212,36 @@ export default async function HomePage() {
             href="/progreso"
             className="group mb-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-lg transition hover:border-amber-300/40"
           >
-            <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-orange-400/15">
-              <Flame size={17} className="text-orange-300" strokeWidth={1.75} />
+            {/* Un trozo de pentagrama con tres notas que suben: progresar,
+                dicho en música. */}
+            <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-amber-400/10">
+              <svg viewBox="0 0 24 20" className="h-5 w-6" aria-hidden>
+                {[2, 6, 10, 14, 18].map((y) => (
+                  <line key={y} x1="0" x2="24" y1={y} y2={y} stroke="currentColor" strokeWidth="0.8" className="text-white/20" />
+                ))}
+                {[
+                  { x: 5, y: 16 },
+                  { x: 12, y: 11 },
+                  { x: 19, y: 6 },
+                ].map(({ x, y }) => (
+                  <g key={x} className="text-amber-300">
+                    <ellipse cx={x} cy={y} rx="2.4" ry="1.8" transform={`rotate(-20 ${x} ${y})`} fill="currentColor" />
+                  </g>
+                ))}
+              </svg>
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-black tracking-tight text-white">
-                {progress.streak.current === 0
-                  ? "Vuelve a empezar una racha"
-                  : progress.streak.current === 1
-                    ? "1 día seguido"
-                    : `${progress.streak.current} días seguidos`}
+                Consulta tu progreso
               </span>
               <span className="block truncate text-[10px] text-white/35">
-                {progress.streak.playedToday
-                  ? `Hoy ya has practicado${progress.weekEmpty ? "" : ` · ${progress.weekAccuracy}% de aciertos esta semana`}`
-                  : "Con una partida de hoy la mantienes viva"}
+                Por dónde vas en cada modo y las medallas que llevas
               </span>
             </span>
-            <span className="flex-shrink-0 text-[9px] font-black uppercase tracking-[0.18em] text-white/30 transition-colors group-hover:text-white/70">
-              Ver progreso
-            </span>
+            <ChevronRight
+              size={16}
+              className="flex-shrink-0 text-white/30 transition-colors group-hover:text-white/70"
+            />
           </Link>
         )}
 

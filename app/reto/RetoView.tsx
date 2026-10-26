@@ -124,7 +124,7 @@ const ResultView = ({ result, onPractice }: { result: EcoResult; onPractice: () 
 const RULES: Record<RetoKind, string> = {
   eco: `Ronda 1, una nota; ronda 2, dos; y cada vez un poco más deprisa. Hasta la ronda ${ECO_VISUAL_ROUNDS} se ve qué suena; después, solo se oye. Sin prisa: entre nota y nota tienes todo el tiempo que quieras.`,
   pulso:
-    "Cuenta el metrónomo, suena un ritmo, vuelve a contar y lo repites tocando el botón (o la barra espaciadora). Lo que cuenta es el ritmo, no la hora exacta: da igual si llevas cascos con retraso.",
+    "Cuenta el metrónomo, suena un ritmo de caja, vuelve a contar y lo repites tocando el botón (o la barra espaciadora). Lo que cuenta es el ritmo, no la hora exacta: da igual si llevas cascos con retraso.",
 };
 
 type Mode = "intro" | "reto" | "practica" | "saving" | "practica-fin" | "result";
