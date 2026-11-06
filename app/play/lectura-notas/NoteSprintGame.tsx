@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Play, Timer } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Play, Timer } from "lucide-react";
 import ThemeToggle from "@/app/components/ThemeToggle";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
@@ -148,7 +148,13 @@ export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
     run?.notes.map((semitone, index) => {
       const { degree } = staffPosition(semitone, false);
       const state: NoteState =
-        index < done.length ? (done[index] ? "correct" : "wrong") : index === done.length ? "hint" : "idle";
+        index < done.length
+          ? done[index]
+            ? "correct"
+            : "wrong"
+          : index === done.length && phase === "running"
+            ? "hint"
+            : "idle";
       return [{ degree, state }];
     }) ?? [];
 
@@ -215,6 +221,33 @@ export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
             </section>
           ) : (
             <>
+              {phase === "done" ? (
+                // Terminada: en vez del reloj, flechas para repasar ristra a
+                // ristra lo que salió bien y lo que no.
+                <div className="mx-auto mb-5 flex w-full max-w-[640px] items-center justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setRunIndex(runIndex - 1)}
+                    disabled={runIndex === 0}
+                    aria-label="Ristra anterior"
+                    className="rounded-full border border-white/10 bg-white/5 p-2.5 text-white transition hover:bg-white/10 disabled:opacity-25"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <span className="min-w-[8rem] text-center text-[11px] font-black uppercase tracking-[0.2em] text-white/70">
+                    Ristra {runIndex + 1}/{SPRINT_RUNS}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setRunIndex(runIndex + 1)}
+                    disabled={runIndex >= SPRINT_RUNS - 1}
+                    aria-label="Ristra siguiente"
+                    className="rounded-full border border-white/10 bg-white/5 p-2.5 text-white transition hover:bg-white/10 disabled:opacity-25"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              ) : (
               <div className="mx-auto mb-5 flex w-full max-w-[640px] items-center gap-3">
                 <span className="text-sm font-black tabular-nums text-white">
                   {Math.min(runIndex + 1, SPRINT_RUNS)}/{SPRINT_RUNS}
@@ -232,10 +265,39 @@ export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
                   {seconds(elapsed)} s
                 </span>
               </div>
+              )}
 
               <div className="mx-auto mb-7 w-full max-w-[640px] rounded-[2.5rem] border-4 border-white bg-white px-6 py-2 shadow-2xl">
-                {run && <Staff clef={run.clef} columns={columns} label="Ristra de notas" pointer={done.length} />}
+                {run && (
+                  <Staff
+                    clef={run.clef}
+                    columns={columns}
+                    label="Ristra de notas"
+                    pointer={phase === "running" ? done.length : undefined}
+                  />
+                )}
               </div>
+
+              {/* Al repasar, qué nota era cada una: en verde las acertadas, en
+                  rojo las falladas y en gris las que no dio tiempo a leer. */}
+              {phase === "done" && run && (
+                <div className="mx-auto -mt-3 mb-6 flex w-full max-w-[640px] justify-center gap-2">
+                  {run.labels.map((label, index) => (
+                    <span
+                      key={index}
+                      className={`min-w-[3.25rem] rounded-xl border px-2 py-1.5 text-center text-sm font-black ${
+                        index >= done.length
+                          ? "border-white/10 bg-white/5 text-white/40"
+                          : done[index]
+                            ? "border-green-400/50 bg-green-500/20 text-green-200"
+                            : "border-red-400/50 bg-red-500/20 text-red-200"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               <div className="mx-auto w-full max-w-[720px] rounded-[2rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md md:p-6">
                 <div className="grid grid-cols-7 gap-1.5 md:gap-3">

@@ -77,7 +77,7 @@ poner que el pianao e insstrumentos sonidos suenen bien en oido.cambiar sonido g
 <!--
 lo de notas quitarlo? -->
 
-y poner tipo dropdowns , en vez de caards ahi to loco ?
+<!-- y poner tipo dropdowns , en vez de caards ahi to loco ? -->
 
 <!-- en algunos modos , poner que merdaallaa es con 12, 12 ejercicios literal, no 24 (modos por ejemplo) -->
 
@@ -88,6 +88,8 @@ que movida . estas en sonido de piano, y cambias aa guitarra y es otra pregunta.
 <!-- en cuadro de honor poder elegir el dia de calendario de mirar -->
 <!--
 miB no se ve bien, con sostenido sí, pero así no... -->
+
+<!-- en todos los niveles, poder pulsar x y comprobar todo -->
 
 no se ve superclaro los botones y los numeros http://localhost:3000/play/construye-escalas/raras y en similares
 http://localhost:3000/play/construye-acordes y http://localhost:3000/play/acordes-pentagrama es lo mismo bro...

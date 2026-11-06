@@ -8,6 +8,7 @@ import { useLevelMedals } from "./useLevelMedals";
 import ThemeToggle from "./ThemeToggle";
 import { useBackHref } from "./useBackHref";
 import SiteFooter from "./SiteFooter";
+import SubMenuLayoutView from "./SubMenuLayouts";
 import { categoryOf, type CategoryId } from "@/lib/games";
 
 type IconComponent = React.ElementType<{
@@ -35,7 +36,30 @@ export interface SubMenuOption {
    * login en vez de al nivel.
    */
   locked?: boolean;
+  /** A qué grupo va (el `id` de un `SubMenuGroup`), en los diseños que agrupan. */
+  group?: string;
 }
+
+/** Un bloque de opciones: "Contrarreloj", "Nombra el acorde"… */
+export interface SubMenuGroup {
+  id: string;
+  title: string;
+  description?: string;
+}
+
+/**
+ * Cómo se enseñan las opciones. "cards" es la rejilla de siempre; el resto
+ * están a prueba (ver `SubMenuLayouts`).
+ */
+export type SubMenuLayout =
+  | "cards"
+  | "accordion"
+  | "select"
+  | "tabs"
+  | "list"
+  | "timeline"
+  | "pills"
+  | "expand";
 
 /**
  * Menú de segundo nivel (Oído, Intervalos, Ritmo, Acordes…).
@@ -50,7 +74,12 @@ export default function SubMenu({
   options,
   beforeOptions,
   compact = false,
+  layout = "cards",
+  groups,
 }: {
+  layout?: SubMenuLayout;
+  /** Los grupos en que se reparten las opciones (acordeón, pestañas, desplegable). */
+  groups?: SubMenuGroup[];
   eyebrow: string;
   title: string;
   intro?: string;
@@ -84,7 +113,9 @@ export default function SubMenu({
           <ThemeToggle onPhoto />
         </div>
 
-        <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-start py-9 md:py-10">
+        {/* Los diseños en columna (acordeón, lista…) van en una columna estrecha y
+            centrada, título incluido; la rejilla de tarjetas necesita el ancho. */}
+        <main className={`mx-auto flex w-full ${layout === "cards" ? "max-w-4xl" : "max-w-2xl"} flex-1 flex-col justify-start py-9 md:py-10`}>
           <div className="mb-6 md:mb-7">
             <p
               className={`mb-2.5 flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.32em] ${palette.accent}`}
@@ -100,6 +131,15 @@ export default function SubMenu({
 
           {beforeOptions}
 
+          {layout !== "cards" ? (
+            <SubMenuLayoutView
+              layout={layout}
+              options={options}
+              groups={groups}
+              palette={palette}
+              hasMedal={hasMedal}
+            />
+          ) : (
           <div className={`grid gap-3.5 sm:grid-cols-2 ${compact ? "lg:grid-cols-3" : ""}`}>
             {options.map(({ title: optionTitle, description, href, Icon, image, badge, locked }) => {
               const medal = !locked && hasMedal(href);
@@ -197,6 +237,7 @@ export default function SubMenu({
               );
             })}
           </div>
+          )}
         </main>
 
         <SiteFooter />

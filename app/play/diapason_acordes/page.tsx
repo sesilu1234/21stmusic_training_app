@@ -10,6 +10,10 @@ export default function AcordesMenuPage() {
       title="Elige el tipo"
       intro="Reconoce el acorde por su forma sobre el diapasón."
       category="guitarra"
+      layout="accordion"
+      groups={[
+        { id: "tipo", title: "Tipo de acorde", description: "Tríadas para empezar, séptimas cuando ya salen solas." },
+      ]}
       options={[
         {
           title: "Tríadas",

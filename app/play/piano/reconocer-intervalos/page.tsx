@@ -13,12 +13,18 @@ export default function PianoReconocerMenuPage() {
       title="Elige el nivel"
       intro="Se encienden dos teclas del piano y tú dices qué distancia hay entre ellas. Es el modo de al lado dado la vuelta: aquí no buscas la tecla, la miras y la mides."
       category="piano"
+      layout="accordion"
+      groups={[
+        { id: "empezar", title: "Para empezar", description: "Pocos intervalos para coger el truco de medir semitonos." },
+        { id: "todos", title: "Todos los intervalos", description: "Toda la escala, y al final los doce." },
+      ]}
       options={PIANO_INTERVAL_LEVELS.map((level, index) => ({
         title: level.title,
         description: level.desc,
         href: `/play/piano/reconocer-intervalos/${level.slug}`,
         Icon: levelIcons[index] ?? Ear,
         badge: level.badge,
+        group: index < 2 ? "empezar" : "todos",
       }))}
     />
   );

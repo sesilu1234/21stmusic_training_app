@@ -45,6 +45,12 @@ export default function TriviaMenu({ counts }: { counts: Record<string, number> 
       title="Elige el tema"
       intro="Veinticuatro preguntas de un tema. Cada tema tiene su propia medalla, así que para rematar el trivial hay que bordarlos todos."
       category="extras"
+      layout="accordion"
+      groups={[
+        { id: "general", title: "General", description: "Un poco de cada tema." },
+        { id: "sonido", title: "Instrumentos y sonido", description: "Guitarra, teclados, orquesta, amplificación y grabación." },
+        { id: "cultura", title: "Teoría e historia", description: "Lenguaje musical, historia, géneros y España." },
+      ]}
       options={TRIVIA_TOPICS.map((topic) => {
         const total = counts[topic.slug] ?? 0;
 
@@ -53,6 +59,12 @@ export default function TriviaMenu({ counts }: { counts: Record<string, number> 
           description: topic.desc,
           href: `/play/trivia/${topic.slug}`,
           Icon: ICONS[topic.slug] ?? Music2,
+          group:
+            topic.slug === "general"
+              ? "general"
+              : ["lenguaje", "historia", "generos", "espana"].includes(topic.slug)
+                ? "cultura"
+                : "sonido",
           /*
             El número de preguntas se enseña solo cuando el tema todavía no
             llega para una partida entera. Si llega, el dato no le importa a

@@ -20,6 +20,10 @@ export default function OidoMenuPage() {
       title="Intervalos al oído"
       intro="Dos notas y una pregunta: qué distancia hay entre ellas."
       category="oido"
+      layout="accordion"
+      groups={[
+        { id: "tipo", title: "Cómo suenan", description: "Primero melódicos, una nota detrás de otra; después a la vez." },
+      ]}
       beforeOptions={<EarIntervalPicker marked={marked} set={set} onChange={setMarked} />}
       options={[
         {

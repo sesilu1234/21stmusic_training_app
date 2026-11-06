@@ -40,6 +40,8 @@ export interface Category {
   iconBg: string;
   hoverBorder: string;
   dot: string;
+  /** Relleno de los botones y pestañas activas de los submenús. */
+  solid: string;
 }
 
 /**
@@ -57,6 +59,7 @@ export const CATEGORIES: Category[] = [
     iconBg: "bg-amber-400/15",
     hoverBorder: "hover:border-amber-300/50",
     dot: "bg-amber-400",
+    solid: "bg-amber-400 text-slate-950",
   },
   {
     id: "oido",
@@ -66,6 +69,7 @@ export const CATEGORIES: Category[] = [
     iconBg: "bg-violet-400/15",
     hoverBorder: "hover:border-violet-300/50",
     dot: "bg-violet-400",
+    solid: "bg-violet-400 text-slate-950",
   },
   {
     id: "guitarra",
@@ -75,6 +79,7 @@ export const CATEGORIES: Category[] = [
     iconBg: "bg-sky-400/15",
     hoverBorder: "hover:border-sky-300/50",
     dot: "bg-sky-400",
+    solid: "bg-sky-400 text-slate-950",
   },
   {
     id: "piano",
@@ -84,6 +89,7 @@ export const CATEGORIES: Category[] = [
     iconBg: "bg-emerald-400/15",
     hoverBorder: "hover:border-emerald-300/50",
     dot: "bg-emerald-400",
+    solid: "bg-emerald-400 text-slate-950",
   },
   {
     id: "extras",
@@ -93,6 +99,7 @@ export const CATEGORIES: Category[] = [
     iconBg: "bg-rose-400/15",
     hoverBorder: "hover:border-rose-300/50",
     dot: "bg-rose-400",
+    solid: "bg-rose-400 text-slate-950",
   },
   {
     id: "herramientas",
@@ -102,6 +109,7 @@ export const CATEGORIES: Category[] = [
     iconBg: "bg-white/10",
     hoverBorder: "hover:border-white/30",
     dot: "bg-slate-400",
+    solid: "bg-slate-200 text-slate-950",
   },
 ];
 
