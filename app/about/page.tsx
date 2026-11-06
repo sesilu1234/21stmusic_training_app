@@ -84,6 +84,29 @@ export default function AboutPage() {
           Fundada por Jaume Pla Soler en 1998
         </p>
       </div>
+
+      {/* La licencia de los instrumentos grabados (CC BY) pide citar a los autores. */}
+      <p className="mt-10 text-xs leading-5 text-white/30">
+        Instrumentos grabados:{" "}
+        <a
+          href="https://archive.org/details/SalamanderGrandPianoV3"
+          target="_blank"
+          rel="noreferrer"
+          className="underline decoration-white/20 underline-offset-4 transition hover:text-white/60"
+        >
+          Salamander Grand Piano
+        </a>
+        , de Alexander Holm, y la guitarra de{" "}
+        <a
+          href="https://github.com/nbrosowsky/tonejs-instruments"
+          target="_blank"
+          rel="noreferrer"
+          className="underline decoration-white/20 underline-offset-4 transition hover:text-white/60"
+        >
+          tonejs-instruments
+        </a>
+        , de Nicholaus Brosowsky (CC BY 3.0).
+      </p>
     </PaperShell>
   );
 }

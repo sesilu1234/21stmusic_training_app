@@ -73,6 +73,37 @@ export const describeGiven = (question: ExamQuestion, given: GivenAnswer): strin
   return String(given);
 };
 
+/**
+ * En qué octava del teclado que se enseñó cae una tecla: "abajo", "arriba"…
+ * Con el nombre solo no basta cuando la octava cuenta.
+ */
+const octaveWord = (key: number, from: number, octaves: number) => {
+  const index = Math.floor((key - from) / 12);
+  if (octaves === 2) return index <= 0 ? "abajo" : "arriba";
+  if (octaves === 3) return index <= 0 ? "abajo" : index === 1 ? "en medio" : "arriba";
+  return `${index + 1}ª octava`;
+};
+
+/**
+ * Lo contestado y la solución, para la corrección. Normalmente es
+ * `describeGiven` y la solución guardada; pero si en el piano la octava
+ * cuenta y se tocaron las notas buenas en otra octava, las dos se leerían
+ * igual ("Tú: Mi · Era: Mi"). Entonces se dice en qué octava iba cada una.
+ */
+export const describeAnswer = (question: ExamQuestion, given: GivenAnswer) => {
+  const plain = { given: describeGiven(question, given), solution: question.solution };
+  const { input, answer } = question;
+  if (input.type !== "piano" || answer.type !== "piano" || !input.exactOctave) return plain;
+  if (plain.given !== plain.solution || isCorrect(question, given)) return plain;
+
+  const label = (key: number) =>
+    `${PIANO_NAMES[pitchClass(key)]} (${octaveWord(key, input.from, input.octaves)})`;
+  return {
+    given: asNumbers(given).map(label).join(" "),
+    solution: answer.keys.map(label).join(" "),
+  };
+};
+
 /** La nota sobre 10, con un decimal: 7,5. */
 export const gradeOf = (correct: number, total: number) =>
   total > 0 ? Math.round((correct / total) * 100) / 10 : 0;

@@ -1,11 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, ClipboardCheck, PenLine, Plus } from "lucide-react";
+import {
+  CalendarCheck,
+  ChevronRight,
+  ClipboardCheck,
+  Hourglass,
+  PenLine,
+  Play,
+  Plus,
+  UserRound,
+} from "lucide-react";
 import AppShell from "@/app/components/AppShell";
 import StudentsOnlyGate from "@/app/components/StudentsOnlyGate";
 import { PRIVADO } from "@/lib/seo";
 import { currentStudent } from "@/lib/session";
 import { formatDate } from "@/lib/format";
+import { barColor } from "@/lib/barColor";
+import { displayNamesOf } from "@/lib/students";
 import { formatGrade, gradeOf } from "@/lib/exams/check";
 import { listAttemptsByStudent, listExamsByCreator } from "@/lib/exams/db";
 import ShowMore from "./ShowMore";
@@ -35,6 +46,12 @@ export default async function ExamsPage() {
     listAttemptsByStudent(student.email).catch(() => null),
   ]);
 
+  const creators = await displayNamesOf(
+    (done ?? []).flatMap((item) => (item.creatorEmail ? [item.creatorEmail] : [])),
+  ).catch(() => new Map<string, string>());
+  const creatorOf = (email: string | null) =>
+    (email && creators.get(email)) ?? "alguien de la escuela";
+
   // Abiertos primero y, dentro de cada grupo, del más reciente al más antiguo
   // (ya vienen así de la base de datos; `sort` es estable).
   const mine = created ? [...created].sort((a, b) => Number(Boolean(a.closedAt)) - Number(Boolean(b.closedAt))) : null;
@@ -59,7 +76,7 @@ export default async function ExamsPage() {
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.24em] text-amber-300">
             <PenLine size={14} strokeWidth={2.25} />
-            Creados por mí
+            Creados por ti
           </h2>
           {!mine ? (
             <p className="text-sm text-white/50">Ahora mismo no se pueden leer. Prueba en un rato.</p>
@@ -93,7 +110,7 @@ export default async function ExamsPage() {
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.24em] text-sky-300">
             <ClipboardCheck size={14} strokeWidth={2.25} />
-            Hechos por mí
+            Hechos por ti
           </h2>
           {!done ? (
             <p className="text-sm text-white/50">Ahora mismo no se pueden leer. Prueba en un rato.</p>
@@ -106,17 +123,51 @@ export default async function ExamsPage() {
                 <li key={item.code}>
                   <Link
                     href={`/e/${item.code}`}
-                    className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 transition hover:border-amber-300/40"
+                    className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 transition hover:border-sky-300/35"
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-black text-white">{item.title}</span>
-                      <span className="mt-0.5 block text-[11px] text-white/55">
-                        {item.finishedAt ? formatDate(item.finishedAt) : "Sin terminar · sigue donde ibas"}
+                      <span className="block truncate text-[15px] font-black text-white">{item.title}</span>
+                      <span className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-[11px] text-white/45">
+                        <span className="inline-flex min-w-0 items-center gap-1.5">
+                          <UserRound size={12} className="flex-shrink-0 text-white/35" />
+                          <span className="truncate">
+                            <span className="font-semibold text-white/80">{creatorOf(item.creatorEmail)}</span>
+                            {" · "}creado el {formatDate(item.createdAt)}
+                          </span>
+                        </span>
+                        {item.finishedAt ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <CalendarCheck size={12} className="flex-shrink-0 text-sky-300/70" />
+                            hecho el <span className="font-semibold text-white/80">{formatDate(item.finishedAt)}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 font-semibold text-amber-200/90">
+                            <Hourglass size={12} className="flex-shrink-0" />
+                            Sin terminar · sigue donde ibas
+                          </span>
+                        )}
                       </span>
                     </span>
-                    {item.finishedAt && (
-                      <span className="flex-shrink-0 text-lg font-black tabular-nums text-amber-300">
-                        {formatGrade(gradeOf(item.correct, item.total))}
+
+                    {/* La nota, a la derecha y sin caja: el número con su color y,
+                        debajo, una barrita que se lee de un vistazo. */}
+                    {item.finishedAt ? (
+                      <span className="flex w-14 flex-shrink-0 flex-col items-end">
+                        <span className="text-xl font-black leading-none tabular-nums text-white">
+                          {formatGrade(gradeOf(item.correct, item.total))}
+                          <span className="ml-0.5 text-[10px] font-bold text-white/35">/10</span>
+                        </span>
+                        <span className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/10">
+                          <span
+                            className={`block h-full rounded-full ${barColor((item.correct / Math.max(1, item.total)) * 100)}`}
+                            style={{ width: `${(item.correct / Math.max(1, item.total)) * 100}%` }}
+                          />
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full border border-sky-300/30 px-3 py-1.5 text-[11px] font-bold text-sky-200 transition group-hover:bg-sky-300/10">
+                        <Play size={11} />
+                        Seguir
                       </span>
                     )}
                   </Link>

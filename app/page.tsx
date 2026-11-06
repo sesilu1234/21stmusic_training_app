@@ -6,14 +6,17 @@ import GamePreview from "./components/GamePreview";
 import HonorStrip from "./components/HonorStrip";
 import HonorNotice from "./components/HonorNotice";
 import RetoCards from "./components/EcoCard";
+import DailyExamCard from "./components/DailyExamCard";
+import { barColor } from "@/lib/barColor";
 import { MedalSticker } from "./components/MedalBadge";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
 import { getProgress, type GameProgress } from "@/lib/progress";
-import { getHonorBoard } from "@/lib/honor";
 import { HONOR_ENABLED } from "@/lib/site";
-import { madridDay } from "@/lib/madrid";
+import { madridDay, previousDay } from "@/lib/madrid";
 import { retoStatuses } from "@/lib/ecoResult";
+import { ECO_PULSO_PARKED } from "@/lib/reto";
+import { dailyExamStatus, getDayBoard } from "@/lib/exams/daily";
 import { SITE_URL } from "@/lib/seo";
 
 /**
@@ -150,13 +153,7 @@ const GameCard = ({
         <span className="mt-3 flex items-center gap-2">
           <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/10">
             <span
-              className={`block h-full rounded-full ${
-                stat.mastery >= 90
-                  ? "bg-emerald-400"
-                  : stat.mastery >= 60
-                    ? "bg-amber-400"
-                    : "bg-rose-400"
-              }`}
+              className={`block h-full rounded-full ${barColor(stat.mastery)}`}
               style={{ width: `${stat.mastery}%` }}
             />
           </span>
@@ -180,19 +177,17 @@ export default async function HomePage() {
 
   // El progreso es un extra: si la consulta falla, el menú tiene que salir
   // igual, solo que sin las marcas de cada tarjeta.
-  // Lo mismo con el cuadro de honor, que además solo se enseña con sesión:
-  // son nombres de alumnos.
+  // Lo mismo con el ranking del reto (hoy y ayer), que además solo se enseña
+  // con sesión: son nombres de alumnos.
   const day = madridDay();
-  const [progress, retos] = await Promise.all([
+  const ranked = Boolean(student && HONOR_ENABLED);
+  const [progress, retos, examen, today, yesterday] = await Promise.all([
     student ? getProgress(student.email).catch(() => null) : null,
-    retoStatuses(student, day),
+    ECO_PULSO_PARKED ? null : retoStatuses(student, day),
+    dailyExamStatus(student, day),
+    ranked ? getDayBoard(day, student!.email) : null,
+    ranked ? getDayBoard(previousDay(day), student!.email) : null,
   ]);
-  // El cuadro va después del progreso porque, a quien no sale, se le calcula
-  // con el suyo el puesto que tendría.
-  const honor =
-    student && HONOR_ENABLED
-      ? await getHonorBoard(student.email, student.showInHonor ? null : progress).catch(() => null)
-      : null;
   const statOf = (name: string) =>
     progress?.games.find((entry) => entry.game.name === name);
 
@@ -200,7 +195,24 @@ export default async function HomePage() {
   return (
     <AppShell displayName={student?.displayName} role={student?.role}>
       <div className="mx-auto w-full max-w-5xl">
-        <RetoCards day={day} statuses={retos} />
+        {/* El reto de hoy (1/3) y, al lado (2/3), su ranking y el de ayer (solo con sesión: son nombres de alumnos). */}
+        {student && ranked ? (
+          <div className="mb-7 grid gap-3 md:grid-cols-3">
+            <DailyExamCard day={day} status={examen} className="" tall />
+            <div className="grid grid-cols-2 gap-3 md:col-span-2">
+              <HonorStrip
+                board={today}
+                title="Hoy"
+                empty="Nadie todavía: el 1º está libre."
+                listed={student.showInHonor}
+              />
+              <HonorStrip board={yesterday} title="Ayer" empty="Ayer no lo acabó nadie." listed={student.showInHonor} />
+            </div>
+          </div>
+        ) : (
+          <DailyExamCard day={day} status={examen} />
+        )}
+        {retos && <RetoCards day={day} statuses={retos} />}
 
         {/* La primera vez: que nadie salga en el cuadro sin saberlo. */}
         {HONOR_ENABLED && student?.showInHonor && !student.honorNoticeSeenAt && (
@@ -244,8 +256,6 @@ export default async function HomePage() {
             />
           </Link>
         )}
-
-        {student && honor && <HonorStrip board={honor} />}
 
         <div className="space-y-8 md:space-y-9">
           {gamesByCategory().map(({ category, games }) => (

@@ -7,6 +7,7 @@ import SimpleMovingScore, { type MusicRef } from "@/app/play/ritmo/MusicDisplay"
 import { playNow } from "@/app/components/notePlayer";
 import { RHYTHM_LEVELS } from "@/lib/rhythm";
 import type { ExamInput } from "@/lib/exams/types";
+import { bemol } from "@/lib/bemol";
 
 type Submit = (given: string | string[] | number[] | null) => void;
 
@@ -30,7 +31,7 @@ const ChoiceInput = ({ options, onSubmit, disabled }: { options: string[]; onSub
               : "border-white/10 bg-white/5 text-white hover:border-amber-300/50 hover:bg-amber-400/15 disabled:opacity-50"
           }`}
         >
-          {option}
+          {bemol(option)}
         </button>
       ))}
     </div>
@@ -49,7 +50,7 @@ const Slots = ({ values, length, onUndo, disabled }: { values: string[]; length:
             : "border-dashed border-white/15 text-white/25"
         }`}
       >
-        {values[index] ?? index + 1}
+        {values[index] ? bemol(values[index]) : index + 1}
       </span>
     ))}
     <button
@@ -106,7 +107,7 @@ const SequenceInput = ({
                 onClick={() => press(value)}
                 className="rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-black text-white transition hover:border-amber-300/50 hover:bg-amber-400/20 active:scale-95 disabled:opacity-35"
               >
-                {value}
+                {bemol(value)}
               </button>
             ))}
           </div>

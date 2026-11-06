@@ -11,7 +11,7 @@ export default function EscalasMenuPage() {
     <SubMenu
       eyebrow="Construye la escala"
       title="Elige el nivel"
-      intro="Sale el nombre de una escala y la dices entera, subiendo desde la tónica. Siete notas y siete letras: cada letra se usa una vez, así que aquí Fa# y Solb no son la misma respuesta."
+      intro="Sale el nombre de una escala y la dices entera, subiendo desde la tónica. Siete notas y siete letras: cada letra se usa una vez, así que aquí Fa# y Sol♭ no son la misma respuesta."
       category="lenguaje"
       options={ESCALA_NIVELES.map((nivel, index) => ({
         title: nivel.title,

@@ -17,6 +17,7 @@ import {
   type NoteReadingQuestion,
 } from "@/lib/noteReading";
 import { ROUND_LENGTH } from "@/lib/roundLength";
+import { bemol } from "@/lib/bemol";
 
 interface Round {
   questions: NoteReadingQuestion[];
@@ -186,7 +187,7 @@ export default function NoteReadingGame({ level }: { level: NoteReadingLevel }) 
                             : "border-white/10 bg-white/5 text-white hover:border-amber-300/50 hover:bg-amber-400/20"
                     }`}
                   >
-                    {option}
+                    {bemol(option)}
                   </button>
                 );
               })}
@@ -204,7 +205,7 @@ export default function NoteReadingGame({ level }: { level: NoteReadingLevel }) 
                   isCorrect ? "text-emerald-300" : "text-rose-300"
                 }`}
               >
-                {isCorrect ? `¡Bien! Era ${solution}` : `Era ${solution}, no ${answered}`}
+                {bemol(isCorrect ? `¡Bien! Era ${solution}` : `Era ${solution}, no ${answered}`)}
               </p>
             )}
           </div>

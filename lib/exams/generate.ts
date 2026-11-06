@@ -75,6 +75,7 @@ import type {
   ExamQuestion,
   PromptPart,
 } from "./types";
+import { distinctFromPrevious } from "../noRepeat";
 
 /** Un error que se le puede enseñar tal cual a quien crea el examen. */
 export class ExamError extends Error {}
@@ -372,10 +373,17 @@ const ADAPTERS: Record<string, Adapter> = {
     const pool = ALL_EAR_INTERVALS.map((name, semitones) => ({ name, semitones })).filter(
       (interval) => !harmonic || interval.semitones > 0,
     );
+    let previous: { interval: (typeof pool)[number]; root: number } | undefined;
     return Array.from({ length: count }, () => {
-      const interval = pool[Math.floor(rng() * pool.length)];
-      // El mismo abanico que el juego: de Do a Sol.
-      const root = Math.floor(rng() * 8);
+      // El mismo abanico que el juego: de Fa a Do. Y nunca la misma pregunta
+      // calcada (mismo intervalo desde la misma nota) dos veces seguidas.
+      const drawn = distinctFromPrevious(
+        previous,
+        () => ({ interval: pool[Math.floor(rng() * pool.length)], root: 5 + Math.floor(rng() * 8) }),
+        (item) => `${item.interval.semitones}|${item.root}`,
+      );
+      previous = drawn;
+      const { interval, root } = drawn;
       const audio = harmonic
         ? sequenceAudio([[root, root + interval.semitones]], 0)
         : sequenceAudio([[root], [root + interval.semitones]], 0.9);
@@ -713,5 +721,6 @@ export const generateBlock = async (block: ExamBlock, rng: () => number): Promis
     answer: draft.answer,
     solution: draft.solution,
     summary: draft.detail ? `${summary} · ${draft.detail}` : summary,
+    ...(block.section ? { section: block.section } : {}),
   }));
 };

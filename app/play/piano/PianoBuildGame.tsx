@@ -15,7 +15,7 @@ import {
   type BuildLevel,
   type BuildQuestion,
 } from "@/lib/pianoBuild";
-import { ROUND_LENGTH } from "@/lib/roundLength";
+import { SHORT_ROUND_LENGTH } from "@/lib/roundLength";
 
 interface Round {
   questions: BuildQuestion[];
@@ -24,7 +24,8 @@ interface Round {
 }
 
 const createRound = (level: BuildLevel): Round => {
-  const total = ROUND_LENGTH;
+  // Partida corta (lib/roundLength.ts): montar una escala entera tecla a tecla es largo.
+  const total = SHORT_ROUND_LENGTH;
   return {
     questions: buildQuiz(level, total),
     answers: Array<number[] | null>(total).fill(null),

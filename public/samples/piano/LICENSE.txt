@@ -1,0 +1,9 @@
+Salamander Grand Piano V3 (Yamaha C5), by Alexander Holm.
+https://archive.org/details/SalamanderGrandPianoV3
+Licencia: Creative Commons Attribution 3.0 (CC BY 3.0)
+https://creativecommons.org/licenses/by/3.0/
+
+Muestras tomadas de la versión de Tone.js (https://tonejs.github.io/audio/salamander/),
+recortadas a 5 segundos con un fundido al final y sin el silencio inicial.
+Una nota cada tres semitonos (Do, Re#, Fa#, La) de Do2 a Do7: las de en medio
+se sacan reafinando la más cercana.

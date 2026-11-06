@@ -3,6 +3,7 @@
 import { currentStudent } from "@/lib/session";
 import { getAttempt, getExamByCode, normalizeCode } from "@/lib/exams/db";
 import { answer, begin, type ExamView } from "@/lib/exams/runner";
+import { madridDay } from "@/lib/madrid";
 
 type Result = { ok: true; view: ExamView } | { ok: false; error: string };
 
@@ -30,6 +31,10 @@ export const startExam = async (code: string): Promise<Result> => {
     }
     // Cerrado: nadie empieza ya. Quien estaba a medias sí puede terminar.
     if (exam.closedAt && !attempt) return { ok: false, error: "Este examen ya está cerrado." };
+    // El del día, solo su día: empezarlo luego sería colarse en un ranking ya cerrado.
+    if (exam.dailyDay && exam.dailyDay !== madridDay() && !attempt) {
+      return { ok: false, error: "Este examen del día ya ha pasado. Recarga para hacer el de hoy." };
+    }
     return { ok: true, view: await begin(exam, student.email, attempt) };
   } catch (error) {
     console.error("[examen] no se ha podido empezar:", error);

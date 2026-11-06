@@ -8,7 +8,7 @@ import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import PianoKeyboard, { noteName, type KeyMark } from "@/app/components/PianoKeyboard";
-import { PRESET_ICONS, PRESETS, useAudio } from "../audio";
+import { EAR_SOUNDS, useAudio, useEarSound } from "../audio";
 import {
   buildMelodyQuiz,
   melodyAnswer,
@@ -17,7 +17,7 @@ import {
   type MelodyLevel,
   type MelodyQuestion,
 } from "@/lib/melodyEar";
-import { ROUND_LENGTH } from "@/lib/roundLength";
+import { SHORT_ROUND_LENGTH } from "@/lib/roundLength";
 
 /** Hueco entre notas de la melodía. */
 const GAP_MS = 520;
@@ -38,8 +38,8 @@ interface Round {
 }
 
 const createRound = (level: MelodyLevel): Round => ({
-  questions: buildMelodyQuiz(level, ROUND_LENGTH),
-  answers: Array<number[] | null>(ROUND_LENGTH).fill(null),
+  questions: buildMelodyQuiz(level, SHORT_ROUND_LENGTH),
+  answers: Array<number[] | null>(SHORT_ROUND_LENGTH).fill(null),
 });
 
 /** Una melodía va en orden: aquí las notas se comparan una a una. */
@@ -54,7 +54,7 @@ export default function MelodyEarGame({
   level: MelodyLevel;
   backHref: string;
 }) {
-  const { playSequence } = useAudio();
+  const { playSequence, stop } = useAudio();
 
   const [round, setRound] = useState<Round | null>(null);
   const [step, setStep] = useState(0);
@@ -63,7 +63,7 @@ export default function MelodyEarGame({
   const [gameOver, setGameOver] = useState(false);
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
-  const [presetIdx, setPresetIdx] = useState(0);
+  const { soundIdx, setSoundIdx, preset: presetIdx, sampler } = useEarSound();
   /** Qué nota de la melodía va sonando: -1 = ninguna. */
   const [playIndex, setPlayIndex] = useState(-1);
 
@@ -113,9 +113,11 @@ export default function MelodyEarGame({
     (target?: MelodyQuestion) => {
       if (!target) return;
       clearFlashTimers();
+      // Lo que quedara sonando de antes (la cola del piano) se corta.
+      stop();
 
       const notes = melodyNotes(target);
-      playSequence([melodyTonicChord(target)], 0, presetIdx);
+      playSequence([melodyTonicChord(target)], 0, presetIdx, 1, sampler);
 
       flashTimersRef.current.push(
         window.setTimeout(() => {
@@ -123,6 +125,8 @@ export default function MelodyEarGame({
             notes.map((note) => [note]),
             GAP_MS,
             presetIdx,
+            1,
+            sampler,
           );
         }, TONIC_MS),
       );
@@ -136,7 +140,7 @@ export default function MelodyEarGame({
         window.setTimeout(() => setPlayIndex(-1), TONIC_MS + notes.length * GAP_MS),
       );
     },
-    [playSequence, presetIdx],
+    [playSequence, presetIdx, sampler, stop],
   );
 
   useEffect(() => {
@@ -179,7 +183,7 @@ export default function MelodyEarGame({
     const next = [...draft, semitone];
 
     // Se oye cada tecla al pulsarla: si no, se contesta a ciegas.
-    playSequence([[semitone]], 0, presetIdx);
+    playSequence([[semitone]], 0, presetIdx, 1, sampler);
 
     if (next.length < expected.length) {
       setDraft(next);
@@ -273,18 +277,18 @@ export default function MelodyEarGame({
           <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
             <ThemeToggle onPhoto />
             <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-              {PRESETS.map((preset, index) => (
+              {EAR_SOUNDS.map((preset, index) => (
                 <button
                   key={preset.label}
                   type="button"
-                  onClick={() => setPresetIdx(index)}
+                  onClick={() => setSoundIdx(index)}
                   title={preset.label}
                   aria-label={preset.label}
                   className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                    presetIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
+                    soundIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
                   }`}
                 >
-                  {PRESET_ICONS[index]}
+                  {preset.icon}
                 </button>
               ))}
             </div>

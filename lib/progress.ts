@@ -10,6 +10,7 @@
 // lib/students.ts. No se importa desde un componente de cliente.
 
 import { GAMES, gameByStoredName, type GameMode } from "./games";
+import { SHORT_ROUND_LENGTH, isShortRound } from "./roundLength";
 import { GAME_LEVELS, levelCountOf } from "./gameLevels";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 
@@ -67,8 +68,22 @@ const STREAK_ROW_LIMIT = 1200;
  *
  * Si valiera con 12, la medalla se sacaría en dos minutos y dejaría de
  * significar nada. La partida corta sigue sirviendo para practicar.
+ *
+ * Salvo en los modos de partida corta (lib/roundLength.ts): ahí cada pregunta
+ * es larga y dura, y con 12 ya es medalla.
  */
 export const MEDAL_MIN_TOTAL = 24;
+
+/** Cuántas preguntas hacen falta, como poco, para que un pleno sea medalla. */
+export const medalMinTotal = (gameName: string, levelSlug: string | null) =>
+  isShortRound(gameByStoredName(gameName)?.name ?? gameName, levelSlug)
+    ? SHORT_ROUND_LENGTH
+    : MEDAL_MIN_TOTAL;
+
+/** ¿Esta partida es un pleno que vale medalla? */
+const isMedalAttempt = (attempt: Pick<Attempt, "gameName" | "levelSlug" | "correct" | "total">) =>
+  attempt.correct === attempt.total &&
+  attempt.total >= medalMinTotal(attempt.gameName, attempt.levelSlug);
 
 /** La zona horaria de la escuela: es la que decide qué día es "hoy". */
 const TIME_ZONE = "Europe/Madrid";
@@ -186,7 +201,8 @@ export interface Progress {
 }
 
 const percent = (correct: number, total: number) =>
-  total > 0 ? Math.round((correct / total) * 100) : 0;
+  // Redondeado, pero sin llegar a 100 si no es pleno: 199 de 200 es 99, no 100.
+  total > 0 ? Math.min(correct < total ? 99 : 100, Math.round((correct / total) * 100)) : 0;
 
 /**
  * La media de las últimas `FORM_WINDOW` partidas de una lista que ya viene de
@@ -347,10 +363,7 @@ export const getProgress = async (email: string): Promise<Progress> => {
   // salido por abajo de la ventana (DETAIL_LIMIT), esto da una más nueva; con
   // 2000 partidas de ventana no pasa en la práctica.
   const firstMedalAt = (list: Attempt[]) =>
-    list.findLast(
-      (attempt) =>
-        attempt.correct === attempt.total && attempt.total >= MEDAL_MIN_TOTAL,
-    )?.createdAt ?? null;
+    list.findLast(isMedalAttempt)?.createdAt ?? null;
 
   const games: GameProgress[] = GAMES.map((game) => {
     // Por el modo resuelto y no por el texto: así una partida guardada con el
@@ -398,11 +411,7 @@ export const getProgress = async (email: string): Promise<Progress> => {
           lastPlayedAt: ofLevel[0]?.createdAt ?? null,
           // Pleno en partida larga en este nivel. Sale de las partidas y de
           // nada más: es el único sitio donde el dato es verdad por definición.
-          hasMedal: ofLevel.some(
-            (attempt) =>
-              attempt.correct === attempt.total &&
-              attempt.total >= MEDAL_MIN_TOTAL,
-          ),
+          hasMedal: ofLevel.some(isMedalAttempt),
           medalAt: firstMedalAt(ofLevel),
         };
       });
@@ -435,19 +444,18 @@ export const getProgress = async (email: string): Promise<Progress> => {
     //
     // Los modos de una sola pantalla no tienen niveles, así que su medalla sale
     // de sus propias partidas: o la tienen o no, y el total es uno.
-    const modeMedal = mine.some(
-      (attempt) =>
-        attempt.correct === attempt.total && attempt.total >= MEDAL_MIN_TOTAL,
-    );
+    const modeMedal = mine.some(isMedalAttempt);
     const medalCount = levels.length
       ? levels.filter((level) => level.hasMedal).length
       : Number(modeMedal);
     const medalTotal = levels.length || 1;
 
     const totalLevels = levelCountOf(game.slug);
+    // Igual que `percent`: el 100 solo si todos los niveles están a 100.
     const mastery = levels.length
-      ? Math.round(
-          levels.reduce((sum, level) => sum + level.best, 0) / levels.length,
+      ? Math.min(
+          levels.every((level) => level.best >= 100) ? 100 : 99,
+          Math.round(levels.reduce((sum, level) => sum + level.best, 0) / levels.length),
         )
       : best;
 
@@ -562,7 +570,8 @@ export const recordAttempt = async (input: {
   // esta partida: si se mirara después, la que se acaba de jugar ya estaría en
   // la tabla y toda medalla parecería vieja.
   const completed = input.completed !== false;
-  const isPerfect = completed && correct === total && total >= MEDAL_MIN_TOTAL;
+  const minTotal = medalMinTotal(game.name, input.levelSlug);
+  const isPerfect = completed && correct === total && total >= minTotal;
   let newMedal = false;
 
   if (isPerfect) {
@@ -591,7 +600,7 @@ export const recordAttempt = async (input: {
 
     newMedal = !(before ?? []).some(
       (row: { correct: number; total: number }) =>
-        row.correct === row.total && row.total >= MEDAL_MIN_TOTAL,
+        row.correct === row.total && row.total >= minTotal,
     );
   }
 

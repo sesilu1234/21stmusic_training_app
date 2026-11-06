@@ -30,7 +30,10 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export interface Exam {
   id: string;
   code: string;
-  creatorEmail: string;
+  /** null en el examen del día: no lo crea nadie. */
+  creatorEmail: string | null;
+  /** Solo en el examen del día: "2026-10-27". */
+  dailyDay: string | null;
   title: string;
   seed: number;
   blocks: ExamBlock[];
@@ -43,7 +46,8 @@ export interface Exam {
 interface ExamRow {
   id: string;
   code: string;
-  creator_email: string;
+  creator_email: string | null;
+  daily_day: string | null;
   title: string;
   seed: number;
   blocks: ExamBlock[];
@@ -54,12 +58,13 @@ interface ExamRow {
 }
 
 const EXAM_COLUMNS =
-  "id, code, creator_email, title, seed, blocks, questions, question_count, closed_at, created_at";
+  "id, code, creator_email, daily_day, title, seed, blocks, questions, question_count, closed_at, created_at";
 
 const toExam = (row: ExamRow): Exam => ({
   id: row.id,
   code: row.code,
   creatorEmail: row.creator_email,
+  dailyDay: row.daily_day,
   title: row.title,
   seed: Number(row.seed),
   blocks: row.blocks,
@@ -196,7 +201,56 @@ export const createExam = async (input: {
   throw new Error("No se ha podido dar un código al examen.");
 };
 
+/**
+ * Guarda el examen de un día (db/reto_examen.sql), ya sorteado. Si otro lo
+ * ha guardado a la vez, devuelve ese: los dos salen de la misma semilla, así
+ * que son el mismo examen.
+ */
+export const saveDailyExam = async (input: {
+  day: string;
+  title: string;
+  seed: number;
+  blocks: ExamBlock[];
+  questions: ExamQuestion[];
+}): Promise<Exam> => {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const { data, error } = await getSupabaseAdmin()
+      .from("exams")
+      .insert({
+        code: newCode(),
+        creator_email: null,
+        daily_day: input.day,
+        title: input.title,
+        seed: input.seed,
+        blocks: input.blocks,
+        questions: input.questions,
+        question_count: input.questions.length,
+      })
+      .select(EXAM_COLUMNS)
+      .single<ExamRow>();
+
+    if (!error && data) return toExam(data);
+    if (error?.code !== "23505") {
+      throw new Error(`No se ha podido guardar el examen del día: ${error?.message ?? "sin respuesta"}`);
+    }
+    // Choca el día (ya lo ha creado otro) o, casi imposible, el código.
+    const existing = await getDailyExam(input.day);
+    if (existing) return existing;
+  }
+  throw new Error("No se ha podido guardar el examen del día.");
+};
+
 // --- Leer ---------------------------------------------------------------
+
+export const getDailyExam = async (day: string): Promise<Exam | null> => {
+  const { data, error } = await getSupabaseAdmin()
+    .from("exams")
+    .select(EXAM_COLUMNS)
+    .eq("daily_day", day)
+    .maybeSingle<ExamRow>();
+  if (error) throw new Error(`No se ha podido leer el examen del día: ${error.message}`);
+  return data ? toExam(data) : null;
+};
 
 export const getExamByCode = async (code: string): Promise<Exam | null> => {
   if (!isValidCode(code)) return null;
@@ -276,13 +330,16 @@ export interface DoneItem {
   total: number;
   finishedAt: string | null;
   startedAt: string;
+  creatorEmail: string | null;
+  /** Cuándo se creó el examen. */
+  createdAt: string;
 }
 
 /** Los exámenes que ha hecho (o está haciendo) alguien. */
 export const listAttemptsByStudent = async (email: string): Promise<DoneItem[]> => {
   const { data, error } = await getSupabaseAdmin()
     .from("exam_attempts")
-    .select("correct_count, started_at, finished_at, exams(code, title, question_count)")
+    .select("correct_count, started_at, finished_at, exams(code, title, question_count, daily_day, creator_email, created_at)")
     .eq("student_email", email)
     .order("started_at", { ascending: false })
     .limit(200)
@@ -291,13 +348,21 @@ export const listAttemptsByStudent = async (email: string): Promise<DoneItem[]> 
         correct_count: number;
         started_at: string;
         finished_at: string | null;
-        exams: { code: string; title: string; question_count: number } | null;
+        exams: {
+          code: string;
+          title: string;
+          question_count: number;
+          daily_day: string | null;
+          creator_email: string | null;
+          created_at: string;
+        } | null;
       }[]
     >();
   if (error) throw new Error(`No se han podido leer tus exámenes: ${error.message}`);
 
+  // Los del día van aparte (/reto): aquí solo los que comparte alguien.
   return (data ?? []).flatMap((row) =>
-    row.exams
+    row.exams && !row.exams.daily_day
       ? [
           {
             code: row.exams.code,
@@ -306,6 +371,8 @@ export const listAttemptsByStudent = async (email: string): Promise<DoneItem[]> 
             total: row.exams.question_count,
             finishedAt: row.finished_at,
             startedAt: row.started_at,
+            creatorEmail: row.exams.creator_email,
+            createdAt: row.exams.created_at,
           },
         ]
       : [],

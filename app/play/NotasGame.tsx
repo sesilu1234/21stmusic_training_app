@@ -19,7 +19,8 @@ import {
   type Nota,
   type Pregunta,
 } from "@/lib/noteSpelling";
-import { ROUND_LENGTH } from "@/lib/roundLength";
+import { ROUND_LENGTH, SHORT_ROUND_LENGTH } from "@/lib/roundLength";
+import { bemol } from "@/lib/bemol";
 
 interface Ronda {
   preguntas: Pregunta[];
@@ -49,8 +50,9 @@ const acierta = (dadas: Nota[], esperadas: Nota[]) =>
  */
 const crearPreguntas = (tipo: TipoDeletreo, nivel?: DeletreoNivel) => {
   if (tipo === "intervalo") return intervaloQuiz(ROUND_LENGTH);
+  // Escalas y acordes, partida corta: deletrear hasta siete notas por pregunta.
   const quiz = tipo === "escala" ? escalaQuiz : acordeQuiz;
-  return quiz(nivel!, ROUND_LENGTH);
+  return quiz(nivel!, SHORT_ROUND_LENGTH);
 };
 
 export type TipoDeletreo = "escala" | "acorde" | "intervalo";
@@ -82,10 +84,11 @@ export default function NotasGame({
   useEffect(() => {
     // Las preguntas salen de Math.random(): sortearlas durante el render del
     // servidor daría unas distintas al hidratar.
+    const preguntas = crearPreguntas(tipo, nivel);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRonda({
-      preguntas: crearPreguntas(tipo, nivel),
-      respuestas: Array<Nota[] | null>(ROUND_LENGTH).fill(null),
+      preguntas,
+      respuestas: Array<Nota[] | null>(preguntas.length).fill(null),
     });
     setStep(0);
     setBorrador([]);
@@ -227,7 +230,7 @@ export default function NotasGame({
               {/* normal-case: el titular va en mayúsculas y el cifrado
                   distingue mayúsculas de minúsculas — "m7b5" en mayúsculas se
                   lee "M7B5", que es otro acorde. Ver lib/chordNames.ts. */}
-              <span className="normal-case text-amber-300">{pregunta.objeto}</span>
+              <span className="normal-case text-amber-300">{bemol(pregunta.objeto)}</span>
             </h1>
             <p className="mt-1 truncate text-[9px] font-black uppercase tracking-[0.28em] text-white/35">
               {subtitulo}
@@ -261,7 +264,7 @@ export default function NotasGame({
                           : "border-emerald-400/50 bg-emerald-400/15 text-emerald-100"
                   }`}
                 >
-                  {dada ? nombreNota(dada) : index + 1}
+                  {dada ? bemol(nombreNota(dada)) : index + 1}
                 </span>
               );
             })}
@@ -283,7 +286,7 @@ export default function NotasGame({
                         : "border-white/10 bg-white/[0.03] text-white/65"
                     } enabled:hover:border-amber-300/60 enabled:hover:bg-amber-400/15 enabled:hover:text-white enabled:active:scale-95 disabled:opacity-30`}
                   >
-                    {nombreNota(nota)}
+                    {bemol(nombreNota(nota))}
                   </button>
                 ))}
               </div>
@@ -332,7 +335,7 @@ export default function NotasGame({
                     quiere ver, y en las casillas está lo que se ha puesto. */}
                 {!bien && (
                   <p className="text-center text-sm font-black tracking-tight text-emerald-200/90">
-                    {esperadas.map(nombreNota).join("  ·  ")}
+                    {bemol(esperadas.map(nombreNota).join("  ·  "))}
                   </p>
                 )}
               </>

@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, Eye, RotateCcw, X } from "lucide-react";
 import { unlockAudio } from "@/app/components/notePlayer";
-import { describeGiven, formatGrade, gradeOf, isCorrect } from "@/lib/exams/check";
+import { describeAnswer, formatGrade, gradeOf, isCorrect } from "@/lib/exams/check";
 import type { ExamQuestion, GivenAnswer } from "@/lib/exams/types";
 import ExamPrompt from "@/app/e/[code]/ExamPrompt";
 import ExamInputView from "@/app/e/[code]/ExamInputs";
+import { bemol } from "@/lib/bemol";
 
 /**
  * El examen visto por su creador: las mismas preguntas y pantallas que verán
@@ -108,6 +109,7 @@ export default function ExamPreview({
         <ol className="mt-4 space-y-1.5">
           {results.map(({ question, given }, i) => {
             const right = isCorrect(question, given);
+            const described = describeAnswer(question, given);
             return (
               <li
                 key={i}
@@ -123,10 +125,10 @@ export default function ExamPreview({
                     {i + 1}. {question.summary}
                   </span>
                   <span className="mt-0.5 block text-white/60">
-                    Contestaste: <span className="font-bold text-white">{describeGiven(question, given)}</span>
+                    Contestaste: <span className="font-bold text-white">{bemol(described.given)}</span>
                     {!right && (
                       <>
-                        {" · "}Era: <span className="font-bold text-emerald-200">{question.solution}</span>
+                        {" · "}Era: <span className="font-bold text-emerald-200">{bemol(described.solution)}</span>
                       </>
                     )}
                   </span>
@@ -166,7 +168,7 @@ export default function ExamPreview({
         className="mb-6 text-balance text-center text-2xl font-black italic uppercase leading-tight tracking-tighter text-white md:text-3xl"
         style={{ fontFamily: "Chaney, sans-serif" }}
       >
-        <span className="normal-case">{question.title}</span>
+        <span className="normal-case">{bemol(question.title)}</span>
       </h1>
 
       {/* La clave cambia en cada pregunta y en cada vuelta: así todo lo de

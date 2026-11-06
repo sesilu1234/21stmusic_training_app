@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Check, ChevronDown, Lock, X } from "lucide-react";
 import { closeExamAction } from "./actions";
+import { bemol } from "@/lib/bemol";
 
 export interface ResultAnswer {
   summary: string;
@@ -78,10 +79,10 @@ const AnswerList = ({ answers }: { answers: ResultAnswer[] }) => (
             {index + 1}. {answer.summary}
           </span>
           <span className="mt-0.5 block text-white/60">
-            Contestó: <span className="font-bold text-white">{answer.timedOut ? "se le acabó el tiempo" : answer.given}</span>
+            Contestó: <span className="font-bold text-white">{answer.timedOut ? "se le acabó el tiempo" : bemol(answer.given)}</span>
             {!answer.correct && (
               <>
-                {" · "}Era: <span className="font-bold text-emerald-200">{answer.solution}</span>
+                {" · "}Era: <span className="font-bold text-emerald-200">{bemol(answer.solution)}</span>
               </>
             )}
           </span>
@@ -156,7 +157,7 @@ export default function ExamResults({ rows, stats }: { rows: ResultRow[]; stats:
               <span className="min-w-0 flex-1">
                 <span className="block text-sm text-white/85">{stat.summary}</span>
                 <span className="block text-[11px] text-white/50">
-                  Respuesta: <span className="font-bold text-white/75">{stat.solution}</span>
+                  Respuesta: <span className="font-bold text-white/75">{bemol(stat.solution)}</span>
                   {stat.answered > 0 && ` · ${stat.answered} ${stat.answered === 1 ? "respuesta" : "respuestas"}`}
                 </span>
               </span>

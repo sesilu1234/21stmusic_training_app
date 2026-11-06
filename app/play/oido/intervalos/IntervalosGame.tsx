@@ -6,13 +6,14 @@ import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
 import {
   INTERVALS,
   BUTTON_LABELS,
-  PRESETS,
-  PRESET_ICONS,
+  EAR_SOUNDS,
   useAudio,
+  useEarSound,
 } from "../audio";
 import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
+import { distinctFromPrevious } from "@/lib/noRepeat";
 import { PRACTICE_NOTE, earButtonGrid, type EarIntervalSet } from "@/lib/earIntervals";
 
 
@@ -34,7 +35,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
   const [isReviewing, setIsReviewing] = useState(false);
   const [solutionStep, setSolutionStep] = useState<number | null>(null);
 
-  const [presetIdx, setPresetIdx]     = useState(0);
+  const { soundIdx, setSoundIdx, preset, sampler } = useEarSound();
   const [speed, setSpeed]             = useState(0.25);
   const gapMs                         = Math.round(300 + speed * 1700);
 
@@ -66,8 +67,21 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
       for (let i = 0; i < total; i++) {
         list.push(pool[Math.floor(Math.random() * pool.length)]);
       }
-      // El mismo abanico que sorteaba `playInterval` al sonar: de Do a Sol.
-      rootsRef.current = list.map(() => Math.floor(Math.random() * 8));
+      // De Fa a Do (antes de Do a Sol): con el piano grabado, que suena una
+      // octava por debajo, la grave cae entre Fa3 y Do4. Si sale el mismo
+      // intervalo que en la anterior, desde otra nota: el mismo intervalo sí
+      // puede repetirse, la misma pregunta calcada no.
+      const roots: number[] = [];
+      list.forEach((interval, index) => {
+        const randomRoot = () => 5 + Math.floor(Math.random() * 8);
+        const sameAsBefore = index > 0 && list[index - 1] === interval;
+        roots.push(
+          sameAsBefore
+            ? distinctFromPrevious(roots[index - 1], randomRoot, String)
+            : randomRoot(),
+        );
+      });
+      rootsRef.current = roots;
       setQuizList(list);
       setIsMounted(true);
     };
@@ -86,7 +100,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
     if (finishTimerRef.current) window.clearTimeout(finishTimerRef.current);
     setIsPlaying(true);
     setNoteFlash(1);
-    playInterval(interval.semitones, gapMs, presetIdx, root);
+    playInterval(interval.semitones, gapMs, preset, root, sampler);
     flashTimerRef.current = window.setTimeout(() => setNoteFlash(2), gapMs);
     finishTimerRef.current = window.setTimeout(() => {
       setNoteFlash(0);
@@ -94,7 +108,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
       flashTimerRef.current = null;
       finishTimerRef.current = null;
     }, gapMs + 1400);
-  }, [isPlaying, gapMs, presetIdx, playInterval]);
+  }, [isPlaying, gapMs, preset, sampler, playInterval]);
 
   const handleAnswer = (label: string) => {
     if (userAnswers[step] !== null || gameOver) return;
@@ -228,17 +242,17 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
           </button>
 
           <div className="flex items-center bg-black/50 border border-white/10 rounded-md p-2 backdrop-blur-md gap-2">
-            {PRESETS.map((p, i) => (
+            {EAR_SOUNDS.map((p, i) => (
               <button
-                key={i}
-                onClick={() => setPresetIdx(i)}
+                key={p.label}
+                onClick={() => setSoundIdx(i)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all duration-100 border-2
-                  ${presetIdx === i
+                  ${soundIdx === i
                     ? "bg-amber-400 text-black border-black shadow-[4px_4px_0px_#000]"
                     : "bg-white/5 text-white/40 border-transparent hover:text-white/80 hover:bg-white/10"
                   }`}
               >
-                <span className="text-sm leading-none">{PRESET_ICONS[i]}</span>
+                <span className="text-sm leading-none">{p.icon}</span>
                 <span className="hidden sm:inline">{p.label}</span>
               </button>
             ))}

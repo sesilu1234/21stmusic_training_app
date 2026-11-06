@@ -12,6 +12,13 @@ export type RetoKind = "eco" | "pulso";
 
 export const RETO_KINDS: RetoKind[] = ["eco", "pulso"];
 
+/**
+ * Eco y Pulso están aparcados: el reto diario ahora es el examen del día
+ * (lib/retoExamen.ts). Todo su código sigue aquí; a false vuelven sus
+ * tarjetas, sus páginas y su sitio en el cuadro de honor.
+ */
+export const ECO_PULSO_PARKED = true;
+
 export const isRetoKind = (value: unknown): value is RetoKind => value === "eco" || value === "pulso";
 
 export const RETOS: Record<

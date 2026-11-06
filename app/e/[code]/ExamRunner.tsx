@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Clock, FileCheck2, Play } from "lucide-react";
 import { unlockAudio } from "@/app/components/notePlayer";
 import { formatGrade, gradeOf } from "@/lib/exams/check";
@@ -11,13 +12,19 @@ import type { ExamView } from "@/lib/exams/runner";
 import ExamPrompt from "./ExamPrompt";
 import ExamInputView from "./ExamInputs";
 import { answerExam, startExam } from "./actions";
+import { bemol } from "@/lib/bemol";
 
 export interface ExamCover {
   title: string;
-  creatorName: string;
+  /** La línea de debajo del título: "Creado por Ana". */
+  byline: string;
   questionCount: number;
   /** Cerrado y sin empezar: ya no se puede hacer. */
   closed: boolean;
+  /** Si va por secciones, sus nombres en orden (el reto diario). */
+  sections?: readonly string[];
+  /** Otro icono en vez del de examen (el reto diario lleva el suyo). */
+  icon?: React.ReactNode;
 }
 
 const seconds = (ms: number) => Math.max(0, Math.ceil(ms / 1000));
@@ -68,13 +75,29 @@ const QuestionScreen = ({
   }, [question.remainingMs, submit]);
 
   const fraction = Math.max(0, Math.min(1, left / question.limitMs));
+  const section = question.section;
   const urgent = left < 5000;
 
   return (
     <div className="mx-auto w-full max-w-4xl">
+      {section && (
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <span className="text-sm font-black text-amber-200">{section.name}</span>
+          <span className="flex items-center gap-1" aria-label={`Sección ${section.number + 1} de ${section.count}`}>
+            {Array.from({ length: section.count }, (_, index) => (
+              <span
+                key={index}
+                className={`h-1.5 w-6 rounded-full ${
+                  index < section.number ? "bg-amber-300/60" : index === section.number ? "bg-amber-300" : "bg-white/15"
+                }`}
+              />
+            ))}
+          </span>
+        </div>
+      )}
       <div className="mb-5 flex items-center gap-3">
         <span className="text-sm font-black tabular-nums text-white">
-          {question.index + 1}/{question.total}
+          {section ? `${section.index + 1}/${section.total}` : `${question.index + 1}/${question.total}`}
         </span>
         <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
           <span
@@ -94,7 +117,7 @@ const QuestionScreen = ({
         className="mb-6 text-balance text-center text-2xl font-black italic uppercase leading-tight tracking-tighter text-white md:text-3xl"
         style={{ fontFamily: "Chaney, sans-serif" }}
       >
-        <span className="normal-case">{question.title}</span>
+        <span className="normal-case">{bemol(question.title)}</span>
       </h1>
 
       <div className="mb-7">
@@ -110,13 +133,25 @@ export default function ExamRunner({
   code,
   cover,
   initialView,
+  refreshOnDone = false,
 }: {
   code: string;
   cover: ExamCover;
   /** null = todavía no lo ha empezado: se enseña la portada. */
   initialView: ExamView | null;
+  /**
+   * Al acabar, recargar la página en vez de enseñar la nota aquí: el examen
+   * del día pinta su propio resultado, con el ranking, desde el servidor.
+   */
+  refreshOnDone?: boolean;
 }) {
+  const router = useRouter();
   const [view, setView] = useState<ExamView | null>(initialView);
+  const done = view?.phase === "done";
+
+  useEffect(() => {
+    if (done && refreshOnDone) router.refresh();
+  }, [done, refreshOnDone, router]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -147,20 +182,40 @@ export default function ExamRunner({
     return (
       <div className="mx-auto w-full max-w-lg">
         <section className="rounded-[2rem] border border-white/10 bg-slate-950/75 p-7 text-center shadow-[0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-xl md:p-9">
-          <span className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl border border-amber-300/25 bg-amber-400/10">
-            <FileCheck2 size={24} strokeWidth={1.75} className="text-amber-300" />
-          </span>
+          {cover.icon ? (
+            <span className="mx-auto mb-5 flex w-fit justify-center">{cover.icon}</span>
+          ) : (
+            <span className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl border border-amber-300/25 bg-amber-400/10">
+              <FileCheck2 size={24} strokeWidth={1.75} className="text-amber-300" />
+            </span>
+          )}
           <h1 className="text-balance text-2xl font-black italic tracking-tight text-white md:text-3xl">{cover.title}</h1>
-          <p className="mt-2 text-sm text-white/60">Creado por {cover.creatorName}</p>
-          <p className="mt-1 text-sm font-bold text-white/80">
-            {cover.questionCount} {cover.questionCount === 1 ? "pregunta" : "preguntas"}
-          </p>
+          <p className="mt-2 text-sm text-white/60">{cover.byline}</p>
+          {cover.sections?.length ? (
+            <>
+              <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">
+                {cover.questionCount} preguntas en {cover.sections.length} partes
+              </p>
+              <ol className="mx-auto mt-2.5 grid max-w-sm gap-2" style={{ gridTemplateColumns: `repeat(${cover.sections.length}, minmax(0, 1fr))` }}>
+                {cover.sections.map((name) => (
+                  <li key={name} className="rounded-xl border border-white/10 bg-white/[0.04] px-2 py-2.5">
+                    <span className="block text-xs font-bold leading-4 text-white">{name}</span>
+                    <span className="mt-1 block text-[11px] tabular-nums text-white/50">
+                      {Math.round(cover.questionCount / cover.sections!.length)} preguntas
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </>
+          ) : (
+            <p className="mt-3 text-sm font-bold text-white/80">
+              {cover.questionCount} {cover.questionCount === 1 ? "pregunta" : "preguntas"}
+            </p>
+          )}
 
-          <ul className="mx-auto mt-6 max-w-xs space-y-1.5 text-left text-xs leading-5 text-white/55">
-            <li>· Una pregunta cada vez, con su tiempo. Si se acaba, cuenta como fallo.</li>
-            <li>· No se corrige hasta el final, y no se puede volver atrás.</li>
-            <li>· Un solo intento. Si se te cierra, sigues donde ibas.</li>
-          </ul>
+          <p className="mx-auto mt-5 max-w-xs text-xs leading-5 text-white/55">
+            Cada pregunta tiene su tiempo y no hay vuelta atrás. Solo tienes un intento.
+          </p>
 
           {cover.closed ? (
             <p className="mt-7 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/70">
@@ -181,6 +236,10 @@ export default function ExamRunner({
         </section>
       </div>
     );
+  }
+
+  if (view.phase === "done" && refreshOnDone) {
+    return <p className="mt-10 text-center text-sm font-bold text-white/70">Corrigiendo…</p>;
   }
 
   if (view.phase === "done") {

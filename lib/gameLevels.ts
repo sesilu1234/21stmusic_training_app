@@ -21,6 +21,7 @@ import { CHORD_LEVELS, PROGRESSION_LEVELS } from "./chordEar";
 import { PAIR_LEVELS } from "./chordPair";
 import { MELODY_LEVELS } from "./melodyEar";
 import { NOTE_READING_LEVELS } from "./noteReading";
+import { NOTE_SPRINT_LEVELS } from "./noteSprint";
 import { ACORDE_NIVELES, ESCALA_NIVELES } from "./noteSpelling";
 import { CHORD_BUILD_LEVELS, SCALE_BUILD_LEVELS } from "./pianoBuild";
 import { PIANO_INTERVAL_LEVELS } from "./pianoIntervals";
@@ -35,7 +36,8 @@ const slugs = (levels: { slug: string }[]) => levels.map((level) => level.slug);
 
 /** Modo → niveles que tiene, en el orden en que se ofrecen. */
 export const GAME_LEVELS: Record<string, string[]> = {
-  "/play/lectura-notas": slugs(NOTE_READING_LEVELS),
+  // Con los contrarreloj al final: también son niveles del modo, con su medalla.
+  "/play/lectura-notas": [...slugs(NOTE_READING_LEVELS), ...slugs(NOTE_SPRINT_LEVELS)],
 
   // Hasta octubre de 2026 era una pantalla sola; sus partidas de entonces
   // están en el nivel 2, que es lo mismo que se jugaba (db/intervalos_niveles.sql).

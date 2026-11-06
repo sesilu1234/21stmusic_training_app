@@ -7,7 +7,7 @@ import ThemeToggle from "@/app/components/ThemeToggle";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
-import { PRESET_ICONS, PRESETS, useAudio } from "../audio";
+import { EAR_SOUNDS, useAudio, useEarSound } from "../audio";
 import {
   buildModeQuiz,
   droneNote,
@@ -17,7 +17,7 @@ import {
   modeNotesRoundTrip,
   type ModeQuestion,
 } from "@/lib/modeEar";
-import { ROUND_LENGTH } from "@/lib/roundLength";
+import { SHORT_ROUND_LENGTH } from "@/lib/roundLength";
 
 /** Lo que tarda en pasar de una nota de la escala a la siguiente. */
 const GAP_MS = 430;
@@ -28,19 +28,19 @@ interface Round {
 }
 
 const createRound = (): Round => ({
-  questions: buildModeQuiz(ROUND_LENGTH),
-  answers: Array<string | null>(ROUND_LENGTH).fill(null),
+  questions: buildModeQuiz(SHORT_ROUND_LENGTH),
+  answers: Array<string | null>(SHORT_ROUND_LENGTH).fill(null),
 });
 
 export default function ModeEarGame() {
-  const { playOverDrone } = useAudio();
+  const { playOverDrone, stop } = useAudio();
 
   const [round, setRound] = useState<Round | null>(null);
   const [step, setStep] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
-  const [presetIdx, setPresetIdx] = useState(0);
+  const { soundIdx, setSoundIdx, preset: presetIdx, sampler } = useEarSound();
   /** Qué grado de la escala va sonando: -1 = ninguna. */
   const [playIndex, setPlayIndex] = useState(-1);
   /** Si va subiendo o bajando, para que la estela de barras siga a la nota. */
@@ -91,6 +91,8 @@ export default function ModeEarGame() {
     (target?: ModeQuestion) => {
       if (!target) return;
       clearFlashTimers();
+      // Lo que quedara sonando de antes (la cola del piano) se corta.
+      stop();
 
       const notes = roundTrip ? modeNotesRoundTrip(target) : modeNotes(target);
       // Bajando se repiten los mismos grados al revés, así que la nota que
@@ -110,9 +112,9 @@ export default function ModeEarGame() {
         window.setTimeout(() => setPlayIndex(-1), notes.length * GAP_MS),
       );
 
-      playOverDrone(notes, GAP_MS, presetIdx, droneNote(target));
+      playOverDrone(notes, GAP_MS, presetIdx, droneNote(target), sampler);
     },
-    [playOverDrone, presetIdx, roundTrip],
+    [playOverDrone, presetIdx, roundTrip, sampler, stop],
   );
 
   useEffect(() => {
@@ -213,18 +215,18 @@ export default function ModeEarGame() {
           <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
             <ThemeToggle onPhoto />
             <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-              {PRESETS.map((preset, index) => (
+              {EAR_SOUNDS.map((preset, index) => (
                 <button
                   key={preset.label}
                   type="button"
-                  onClick={() => setPresetIdx(index)}
+                  onClick={() => setSoundIdx(index)}
                   title={preset.label}
                   aria-label={preset.label}
                   className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                    presetIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
+                    soundIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
                   }`}
                 >
-                  {PRESET_ICONS[index]}
+                  {preset.icon}
                 </button>
               ))}
             </div>

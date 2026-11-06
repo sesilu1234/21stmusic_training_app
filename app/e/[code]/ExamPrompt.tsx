@@ -8,6 +8,7 @@ import PianoKeyboard, { type KeyMark } from "@/app/components/PianoKeyboard";
 import { fretboardFlipClass, useLeftHanded } from "@/lib/handedness";
 import { audioContext, playExamAudio } from "@/app/components/notePlayer";
 import type { ExamAudio, PromptPart } from "@/lib/exams/types";
+import { bemol } from "@/lib/bemol";
 
 /** Botón de escuchar. Suena solo una vez al llegar a la pregunta, y luego cuando se pida. */
 const AudioPart = ({ audio }: { audio: ExamAudio }) => {
@@ -56,13 +57,29 @@ const AudioPart = ({ audio }: { audio: ExamAudio }) => {
 const ImagePart = ({ src, fretboard, alt }: { src: string; fretboard?: boolean; alt: string }) => {
   const [leftHanded] = useLeftHanded();
   const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const img = useRef<HTMLImageElement>(null);
+
+  // Si la imagen ya había cargado antes de que React empezara a escuchar (al
+  // recargar a mitad de examen llega en el HTML), el onLoad no salta nunca y
+  // se quedaba invisible. Se mira a mano al montar.
+  useEffect(() => {
+    const element = img.current;
+    if (!element?.complete) return;
+    if (element.naturalWidth > 0) setLoaded(true);
+    else setFailed(true);
+  }, [src]);
+
   return (
     <div className="flex h-40 w-full max-w-md items-center justify-center overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-2xl md:h-48">
+      {failed && <p className="px-6 text-center text-sm font-bold text-slate-500">No se ha podido cargar la imagen.</p>}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        ref={img}
         src={src}
         alt={alt}
         onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
         className={`max-h-full max-w-full object-contain transition-opacity ${
           loaded ? "opacity-100" : "opacity-0"
         } ${fretboard ? fretboardFlipClass(leftHanded) : ""}`}
@@ -87,9 +104,9 @@ export default function ExamPrompt({
         if (part.type === "text") {
           return (
             <p key={index} className="text-balance text-center text-lg leading-snug text-white/80 md:text-xl">
-              {part.lead && <span>{part.lead} </span>}
-              {part.strong && <span className="font-black text-amber-300">{part.strong}</span>}
-              {part.tail && <span>{part.tail}</span>}
+              {part.lead && <span>{bemol(part.lead)} </span>}
+              {part.strong && <span className="font-black text-amber-300">{bemol(part.strong)}</span>}
+              {part.tail && <span>{bemol(part.tail)}</span>}
             </p>
           );
         }

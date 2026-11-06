@@ -5,7 +5,7 @@ import StudentsOnlyGate from "../../components/StudentsOnlyGate";
 import { PRIVADO } from "@/lib/seo";
 import { currentStudent } from "@/lib/session";
 import { madridDay } from "@/lib/madrid";
-import { RETOS, isRetoKind } from "@/lib/reto";
+import { ECO_PULSO_PARKED, RETOS, isRetoKind } from "@/lib/reto";
 import { getEcoPlay } from "@/lib/ecoDb";
 import { buildEcoResult } from "@/lib/ecoResult";
 import RetoView from "../RetoView";
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RetoPage({ params }: { params: Promise<{ reto: string }> }) {
   const { reto } = await params;
-  if (!isRetoKind(reto)) notFound();
+  if (!isRetoKind(reto) || ECO_PULSO_PARKED) notFound();
 
   const student = await currentStudent();
   if (!student) {

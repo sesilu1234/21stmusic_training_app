@@ -8,7 +8,7 @@ import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import { noteName } from "@/app/components/PianoKeyboard";
-import { PRESET_ICONS, PRESETS, useAudio } from "../../audio";
+import { EAR_SOUNDS, useAudio, useEarSound } from "../../audio";
 import {
   buildPairQuiz,
   findDistance,
@@ -19,7 +19,7 @@ import {
   type PairLevel,
   type PairQuestion,
 } from "@/lib/chordPair";
-import { ROUND_LENGTH } from "@/lib/roundLength";
+import { SHORT_ROUND_LENGTH } from "@/lib/roundLength";
 
 /** Hueco entre el primer acorde y el segundo. */
 const GAP_MS = 1150;
@@ -37,8 +37,8 @@ interface Round {
 }
 
 const createRound = (level: PairLevel): Round => ({
-  questions: buildPairQuiz(ROUND_LENGTH, level.firstVariable),
-  answers: Array<Answer | null>(ROUND_LENGTH).fill(null),
+  questions: buildPairQuiz(SHORT_ROUND_LENGTH, level.firstVariable),
+  answers: Array<Answer | null>(SHORT_ROUND_LENGTH).fill(null),
 });
 
 const isRight = (given: Answer, question: PairQuestion) =>
@@ -68,7 +68,7 @@ export default function ChordPairGame({
   level: PairLevel;
   backHref: string;
 }) {
-  const { playSequence } = useAudio();
+  const { playSequence, stop } = useAudio();
 
   const [round, setRound] = useState<Round | null>(null);
   const [step, setStep] = useState(0);
@@ -77,7 +77,7 @@ export default function ChordPairGame({
   const [gameOver, setGameOver] = useState(false);
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
-  const [presetIdx, setPresetIdx] = useState(0);
+  const { soundIdx, setSoundIdx, preset: presetIdx, sampler } = useEarSound();
   /** 0 = nada encendido, 1 = primer acorde, 2 = segundo. */
   const [playFlash, setPlayFlash] = useState(0);
 
@@ -120,6 +120,8 @@ export default function ChordPairGame({
     (target?: PairQuestion) => {
       if (!target) return;
       clearFlashTimers();
+      // Lo que quedara sonando de antes (la cola del piano) se corta.
+      stop();
 
       setPlayFlash(1);
       flashTimersRef.current.push(
@@ -135,9 +137,9 @@ export default function ChordPairGame({
       // notas al mismo volumen la de abajo se pierde entre las de arriba y no
       // queda de dónde agarrarse. No es subir el volumen: es que se distinga
       // cuál es la nota de referencia.
-      playSequence(pairChords(target), GAP_MS, presetIdx, BASS_BOOST);
+      playSequence(pairChords(target), GAP_MS, presetIdx, BASS_BOOST, sampler);
     },
-    [playSequence, presetIdx],
+    [playSequence, presetIdx, sampler, stop],
   );
 
   useEffect(() => {
@@ -264,18 +266,18 @@ export default function ChordPairGame({
           <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
             <ThemeToggle onPhoto />
             <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-              {PRESETS.map((preset, index) => (
+              {EAR_SOUNDS.map((preset, index) => (
                 <button
                   key={preset.label}
                   type="button"
-                  onClick={() => setPresetIdx(index)}
+                  onClick={() => setSoundIdx(index)}
                   title={preset.label}
                   aria-label={preset.label}
                   className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                    presetIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
+                    soundIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
                   }`}
                 >
-                  {PRESET_ICONS[index]}
+                  {preset.icon}
                 </button>
               ))}
             </div>

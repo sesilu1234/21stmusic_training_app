@@ -10,6 +10,8 @@
 // calidad) y no una lista de acordes en orden, que es lo único que sabe hacer
 // el motor de allí.
 
+import { distinctFromPrevious } from "./noRepeat";
+
 export interface PairLevel {
   slug: string;
   title: string;
@@ -121,13 +123,16 @@ const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)];
  * por altura, pero centrada: con el segundo acorde una 8ª por encima ya se sube
  * bastante.
  *
+ * Ahora de -7 a +4: el piano suena una octava por debajo de lo escrito, y una
+ * quinta más abajo que esto el primer acorde quedaba embarrado.
+ *
  * Iba de -5 a +6 semitonos respecto al Do central. Ahí el primer acorde caía
  * en la misma zona que el segundo y su fundamental quedaba enterrada entre las
  * notas de arriba, que es lo que hacía difícil medir el salto: la referencia
  * hay que oírla, no adivinarla. Bajando el rango una quinta el primero se
  * asienta debajo y se distingue del segundo por registro, no solo por orden.
  */
-const randomRoot = () => Math.floor(Math.random() * 12) - 12;
+const randomRoot = () => Math.floor(Math.random() * 12) - 7;
 
 /**
  * Preguntas de una ronda, todo al azar. Puede repetirse la distancia dos veces
@@ -141,12 +146,20 @@ export const buildPairQuiz = (
   const questions: PairQuestion[] = [];
 
   for (let i = 0; i < count; i++) {
-    questions.push({
-      root: randomRoot(),
-      distanceId: pick(PAIR_DISTANCES).id,
-      qualityId: pick(PAIR_QUALITIES).id,
-      firstQualityId: firstVariable ? pick(PAIR_QUALITIES).id : "M",
-    });
+    // Ni la misma pregunta calcada dos veces seguidas (ver lib/noRepeat).
+    questions.push(
+      distinctFromPrevious(
+        questions[i - 1],
+        () => ({
+          root: randomRoot(),
+          distanceId: pick(PAIR_DISTANCES).id,
+          qualityId: pick(PAIR_QUALITIES).id,
+          firstQualityId: firstVariable ? pick(PAIR_QUALITIES).id : "M",
+        }),
+        (question) =>
+          `${question.root}|${question.distanceId}|${question.qualityId}|${question.firstQualityId}`,
+      ),
+    );
   }
 
   return questions;

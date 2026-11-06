@@ -7,8 +7,9 @@ import ThemeToggle from "@/app/components/ThemeToggle";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
-import { PRESET_ICONS, PRESETS, useAudio } from "./audio";
+import { EAR_SOUNDS, useAudio, useEarSound } from "./audio";
 import {
+  PROGRESSION_LEVELS,
   buildChordQuiz,
   chordNotes,
   tonicChord,
@@ -16,7 +17,7 @@ import {
   type ChordOption,
   type ChordQuestion,
 } from "@/lib/chordEar";
-import { ROUND_LENGTH } from "@/lib/roundLength";
+import { ROUND_LENGTH, SHORT_ROUND_LENGTH } from "@/lib/roundLength";
 
 /** Hueco entre un acorde y el siguiente. */
 const GAP_MS = 1150;
@@ -30,7 +31,8 @@ interface Round {
 }
 
 const createRound = (level: ChordLevel): Round => {
-  const total = ROUND_LENGTH;
+  // Las progresiones, partida corta (lib/roundLength.ts).
+  const total = PROGRESSION_LEVELS.includes(level) ? SHORT_ROUND_LENGTH : ROUND_LENGTH;
   return {
     questions: buildChordQuiz(level, total),
     answers: Array<string[] | null>(total).fill(null),
@@ -48,7 +50,7 @@ export default function ChordEarGame({
   /** Menú de niveles del modo al que pertenece. */
   backHref: string;
 }) {
-  const { playSequence } = useAudio();
+  const { playSequence, stop } = useAudio();
 
   const [round, setRound] = useState<Round | null>(null);
   const [step, setStep] = useState(0);
@@ -57,7 +59,7 @@ export default function ChordEarGame({
   const [gameOver, setGameOver] = useState(false);
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
-  const [presetIdx, setPresetIdx] = useState(0);
+  const { soundIdx, setSoundIdx, preset: presetIdx, sampler } = useEarSound();
   /** 0 = nada encendido. 1 = tónica (o el acorde en modo calidad). 2… = acordes. */
   const [playFlash, setPlayFlash] = useState(0);
 
@@ -108,6 +110,8 @@ export default function ChordEarGame({
     (target?: ChordQuestion) => {
       if (!target) return;
       clearFlashTimers();
+      // Lo que quedara sonando de antes (la cola del piano) se corta.
+      stop();
 
       // Los acordes que suenan: en modo grado, primero la tónica de referencia.
       const sequence = target.options.map((option, index) =>
@@ -130,9 +134,9 @@ export default function ChordEarGame({
         ),
       );
 
-      playSequence(chords, GAP_MS, presetIdx);
+      playSequence(chords, GAP_MS, presetIdx, 1, sampler);
     },
-    [withTonic, playSequence, presetIdx],
+    [withTonic, playSequence, presetIdx, sampler, stop],
   );
 
   // Suena sola al llegar a cada pregunta nueva, pero no al volver de un
@@ -333,18 +337,18 @@ export default function ChordEarGame({
           <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
             <ThemeToggle onPhoto />
             <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-              {PRESETS.map((preset, index) => (
+              {EAR_SOUNDS.map((preset, index) => (
                 <button
                   key={preset.label}
                   type="button"
-                  onClick={() => setPresetIdx(index)}
+                  onClick={() => setSoundIdx(index)}
                   title={preset.label}
                   aria-label={preset.label}
                   className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                    presetIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
+                    soundIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
                   }`}
                 >
-                  {PRESET_ICONS[index]}
+                  {preset.icon}
                 </button>
               ))}
             </div>

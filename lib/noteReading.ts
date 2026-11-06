@@ -6,6 +6,7 @@
 // distintos del pentagrama y se contestan distinto.
 
 import { staffPosition, type Clef } from "./staff";
+import { distinctFromPrevious } from "./noRepeat";
 
 export interface NoteReadingLevel {
   slug: string;
@@ -85,7 +86,7 @@ const isNatural = (semitone: number) =>
   [0, 2, 4, 5, 7, 9, 11].includes(((semitone % 12) + 12) % 12);
 
 /** Semitonos que pueden salir preguntados en una clave. */
-const notesFor = (clef: Clef, accidentals: boolean) => {
+export const notesFor = (clef: Clef, accidentals: boolean) => {
   const { from, to } = CLEF_NOTES[clef];
   const all = Array.from({ length: to - from + 1 }, (_, i) => from + i);
   return accidentals ? all : all.filter(isNatural);
@@ -154,8 +155,10 @@ export const noteLabel = (question: NoteReadingQuestion) => {
 };
 
 /**
- * Preguntas de una partida, cada nota al azar. Puede salir la misma dos veces
- * seguidas: si no, la pregunta anterior descartaría una respuesta.
+ * Preguntas de una partida, cada nota al azar, sin repetir la misma nota en la
+ * misma clave dos veces seguidas. Antes se dejaba, para no descartar una
+ * respuesta; con tantas notas posibles esa pista no vale nada, y la misma
+ * pregunta calcada parecía un fallo.
  */
 export const buildNoteReadingQuiz = (
   level: NoteReadingLevel,
@@ -163,19 +166,28 @@ export const buildNoteReadingQuiz = (
 ): NoteReadingQuestion[] => {
   const questions: NoteReadingQuestion[] = [];
 
-  for (let i = 0; i < count; i++) {
+  const make = (): NoteReadingQuestion => {
     const clef: Clef =
       level.clef === "ambas" ? (Math.random() < 0.5 ? "sol" : "fa") : level.clef;
 
     const notes = notesFor(clef, level.accidentals);
 
-    questions.push({
+    return {
       semitone: notes[Math.floor(Math.random() * notes.length)],
       clef,
       // Las teclas negras salen unas veces como sostenido y otras como bemol,
       // que es como se las va a encontrar en una partitura de verdad.
       preferFlat: Math.random() < 0.5,
-    });
+    };
+  };
+
+  for (let i = 0; i < count; i++) {
+    // Lo que se ve: una nota natural sale igual sea cual sea `preferFlat`.
+    questions.push(
+      distinctFromPrevious(questions[i - 1], make, (question) =>
+        `${question.semitone}|${question.clef}|${isNatural(question.semitone) ? "" : question.preferFlat}`,
+      ),
+    );
   }
 
   return questions;

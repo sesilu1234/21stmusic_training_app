@@ -8,7 +8,7 @@ import { PRIVADO } from "@/lib/seo";
 import { currentStudent } from "@/lib/session";
 import { displayNamesOf } from "@/lib/students";
 import { formatDate } from "@/lib/format";
-import { describeGiven, formatGrade, gradeOf } from "@/lib/exams/check";
+import { describeAnswer, formatGrade, gradeOf } from "@/lib/exams/check";
 import { getExamById, listAttemptsForExam } from "@/lib/exams/db";
 import ShareCode from "../ShareCode";
 import ExamResults, { CloseButton, type QuestionStat, type ResultRow } from "./ExamResults";
@@ -49,10 +49,11 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ id
     date: formatDate(attempt.finishedAt!),
     answers: attempt.answers.map((answer) => {
       const question = exam.questions[answer.q];
+      const described = question ? describeAnswer(question, answer.given) : null;
       return {
         summary: question?.summary ?? "Pregunta",
-        given: question ? describeGiven(question, answer.given) : String(answer.given),
-        solution: question?.solution ?? "",
+        given: described?.given ?? String(answer.given),
+        solution: described?.solution ?? "",
         correct: answer.correct,
         timedOut: answer.timedOut && answer.given === null,
       };

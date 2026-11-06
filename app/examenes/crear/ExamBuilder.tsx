@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Dropdown from "@/app/components/Dropdown";
 import { CATEGORIES } from "@/lib/games";
 import { EXAM_LIMITS, EXAM_MODES, findExamMode } from "@/lib/exams/catalog";
-import ShareCode from "../ShareCode";
 import { publishExam } from "./actions";
 
 interface Block {
@@ -103,7 +102,7 @@ export default function ExamBuilder({ defaultTitle }: { defaultTitle: string }) 
   const [blocks, setBlocks] = useState<Block[]>([newBlock(1)]);
   const [nextId, setNextId] = useState(2);
   const [error, setError] = useState<string | null>(null);
-  const [published, setPublished] = useState<{ id: string; code: string } | null>(null);
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   const total = blocks.reduce((sum, block) => sum + (Number.isFinite(block.count) ? block.count : 0), 0);
@@ -118,33 +117,11 @@ export default function ExamBuilder({ defaultTitle }: { defaultTitle: string }) 
         title,
         blocks.map(({ mode, level, count, seconds }) => ({ mode, level, count, seconds })),
       );
-      if (result.ok) setPublished({ id: result.id, code: result.code });
+      // Recién creado, a su página: ahí está el enlace para compartirlo y los resultados.
+      if (result.ok) router.push(`/examenes/${result.id}`);
       else setError(result.error);
     });
   };
-
-  if (published) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-5">
-          <p className="text-xs text-white/55">Publicado</p>
-          <p className="mt-1 text-xl font-black text-white">{title.trim()}</p>
-          <p className="mt-1 text-xs text-white/55">
-            {total} {total === 1 ? "pregunta" : "preguntas"}. Pásale el enlace a quien tenga que hacerlo.
-          </p>
-        </div>
-        <ShareCode code={published.code} title={title.trim()} />
-        <div className="flex flex-wrap gap-3 text-sm font-bold">
-          <Link href={`/examenes/${published.id}`} className="text-amber-300 hover:text-amber-200">
-            Ver resultados →
-          </Link>
-          <Link href="/examenes" className="text-white/60 hover:text-white">
-            Mis exámenes
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">

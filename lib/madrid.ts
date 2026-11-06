@@ -54,3 +54,15 @@ export const daysBetween = (from: string, to: string) => {
   const [ty, tm, td] = to.split("-").map(Number);
   return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86400000);
 };
+
+/** El día que está `days` después de otro (o antes, si es negativo), los dos como "2026-10-24". */
+export const shiftDay = (day: string, days: number) => {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+};
+
+/** El día anterior a otro, los dos como "2026-10-24". */
+export const previousDay = (day: string) => {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
+};

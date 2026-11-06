@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileCheck2, LogIn, LogOut, Palette, StickyNote, Trophy, Users } from "lucide-react";
+import { FileCheck2, LogIn, LogOut, Palette, Trophy, Users } from "lucide-react";
 import BarsAvatar from "./BarsAvatar";
 import ThemeToggle from "./ThemeToggle";
 import HonorToggle, { prefetchHonorSetting } from "@/app/honor/HonorToggle";
@@ -129,11 +129,11 @@ export default function UserMenu({
             </span>
           </div>
 
-          {/* Las notas son del alumno y se guardan en su cuenta, así que se
-              buscan aquí y no en la barra de navegación. Exámenes: cualquiera
-              con sesión los crea y los hace, no hay roles. */}
+          {/* Exámenes: cualquiera con sesión los crea y los hace, no hay
+              roles. Aquí estaba "Mis notas": se quitó, porque unos apuntes
+              guardados en la cuenta podían leerse como meterse en lo privado
+              del alumno. */}
           <MenuSection label="General">
-            <MenuLink href="/notas" Icon={StickyNote}>Mis notas</MenuLink>
             <MenuLink href="/examenes" Icon={FileCheck2}>Exámenes</MenuLink>
           </MenuSection>
 

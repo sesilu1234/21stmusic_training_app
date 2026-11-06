@@ -26,7 +26,7 @@ import {
   type Attempt,
   type Exam,
 } from "./db";
-import type { ExamQuestion, GivenAnswer, PromptPart, PublicQuestion } from "./types";
+import type { ExamQuestion, GivenAnswer, PromptPart, PublicQuestion, QuestionSection } from "./types";
 
 /** Margen por la red: lo que tarda en llegar la respuesta no es culpa del alumno. */
 const GRACE_MS = 2500;
@@ -69,6 +69,22 @@ const publicQuestion = (
     input,
     limitMs: question.limitMs,
     remainingMs: Math.max(0, Math.round(remainingMs)),
+    section: sectionOf(exam, original),
+  };
+};
+
+/** Dónde cae la pregunta `position` (del examen) en su sección. Sin secciones, nada. */
+const sectionOf = (exam: Exam, position: number): QuestionSection | undefined => {
+  const name = exam.questions[position]?.section;
+  if (!name) return undefined;
+  const names = [...new Set(exam.questions.map((question) => question.section).filter(Boolean))];
+  const same = exam.questions.map((question, index) => ({ question, index })).filter(({ question }) => question.section === name);
+  return {
+    name,
+    index: same.findIndex(({ index }) => index === position),
+    total: same.length,
+    number: names.indexOf(name),
+    count: names.length,
   };
 };
 

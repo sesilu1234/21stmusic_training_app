@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Medal, Target, Trophy } from "lucide-react";
+import { ChevronDown, Medal, Target, Trophy } from "lucide-react";
 import { gameIcons } from "@/app/components/gameIcons";
 import { LevelMedal, MedalAward } from "@/app/components/MedalBadge";
 import { CATEGORIES, categoryOf, labelForStoredName } from "@/lib/games";
 import { dayKey, FORM_WINDOW, type GameProgress, type Progress } from "@/lib/progress";
+import { barColor } from "@/lib/barColor";
 
 /** "hoy", "ayer", "hace 3 días", "12 mar". */
 const whenLabel = (iso: string) => {
@@ -41,8 +42,6 @@ const titleCase = (text: string) => {
 const levelLabel = (slug: string) =>
   slug.split("/").map(titleCase).join(" · ");
 
-const barColor = (value: number) =>
-  value >= 90 ? "bg-emerald-400" : value >= 60 ? "bg-amber-400" : "bg-rose-400";
 
 const Tile = ({
   icon,
@@ -223,6 +222,19 @@ const GameRow = ({ entry }: { entry: GameProgress }) => {
   );
 };
 
+/** Cabecera de un panel plegable: el título a la izquierda y la flecha a la derecha. */
+const PanelSummary = ({ children }: { children: React.ReactNode }) => (
+  <summary className="flex cursor-pointer list-none items-center gap-3 select-none [&::-webkit-details-marker]:hidden">
+    {children}
+    <span
+      aria-hidden
+      className="ml-auto grid h-7 w-7 place-items-center rounded-lg text-white/40 transition hover:bg-white/[0.06] hover:text-white/75"
+    >
+      <ChevronDown size={15} className="transition-transform group-open:rotate-180" />
+    </span>
+  </summary>
+);
+
 export default function ProgressBoard({
   displayName,
   progress,
@@ -322,27 +334,32 @@ export default function ProgressBoard({
             key={category.id}
             className="rounded-[1.75rem] border border-white/10 bg-slate-950/60 p-4 backdrop-blur-sm md:p-5"
           >
-            <div className="mb-3.5 flex items-baseline gap-3">
-              <span className={`h-1.5 w-1.5 rounded-full ${category.dot}`} />
-              <h2 className="text-[11px] font-black uppercase tracking-[0.24em] text-white/75">
-                {category.label}
-              </h2>
-            </div>
+            <details open className="group">
+              <PanelSummary>
+                <span className={`h-1.5 w-1.5 rounded-full ${category.dot}`} />
+                <h2 className="text-[11px] font-black uppercase tracking-[0.24em] text-white/75">
+                  {category.label}
+                </h2>
+              </PanelSummary>
 
-            <ul className="space-y-2.5">
-              {games.map((entry) => (
-                <GameRow key={entry.game.name} entry={entry} />
-              ))}
-            </ul>
+              <ul className="mt-3.5 space-y-2.5">
+                {games.map((entry) => (
+                  <GameRow key={entry.game.name} entry={entry} />
+                ))}
+              </ul>
+            </details>
           </section>
         );
       })}
 
       <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/60 p-4 backdrop-blur-sm md:p-5">
-        <h2 className="mb-3 text-[11px] font-black uppercase tracking-[0.24em] text-white/75">
-          Últimas partidas
-        </h2>
-        <ul className="divide-y divide-white/[0.06]">
+        <details open className="group">
+        <PanelSummary>
+          <h2 className="text-[11px] font-black uppercase tracking-[0.24em] text-white/75">
+            Últimas partidas
+          </h2>
+        </PanelSummary>
+        <ul className="mt-3 divide-y divide-white/[0.06]">
           {progress.recent.map((attempt, index) => {
             const pct = Math.round((attempt.correct / attempt.total) * 100);
             return (
@@ -374,6 +391,7 @@ export default function ProgressBoard({
             );
           })}
         </ul>
+        </details>
       </section>
 
       {/* Decía "esto solo lo ves tú", y no era verdad: está en la base de

@@ -34,28 +34,63 @@
         <!-- - [ ] En armaduras los subniveles tienen distinta pinta que en el resto, queda raro, cambiarlo. -->
       <!-- - [ ] Poner mi nombre. -->
 
-- Revisa que la server action que guarda partidas no se fíe a ciegas del cliente: como mínimo, comprobar aciertos ≤ preguntas y una duración mínima razonable.
-
-juego de , para aparte reto del dia :
-
 memoria melodica
 rapidez en identificar intervalo
-
-o sino uno de los que ya estan , hecho de manera aleatoria pero igual para todo el mundo
-
-aunque tambien , dicho por claude y es verdad : mete ruiddo
-
-modo examen
 
 ssuenaa ritmo y de 4 paartituras decir que ritmo es
 
 suena ritmo y replicarlo
 
-reto diario
-
 en /play/vocalizaciones, lo de empezar de cer es inutil, ya con borrar...quitar friccion
 en vocalizaciones si pones un silencio al final te lo quita....idiota, si pongo un silencio al final es por algo
 
-o que el reto diario sea sin mas un examen aleatorio
+- otro reto puede ser lo de acordes locos , o lo de melodia loca con las 12 notas (cadaa vez una nota mas)
 
-- otro reto puede ser lo de acordes locos , o lo de meloia loca con las 12 notas (cadaa vez una nota mas)
+- lo de la velocidad, donde ponerlo o dejarlo ahi ? es que ya queda un poco caotico
+
+-es posiblmente mejor hacaer subniveles con dropdown , queda mas calaro y no tan caotico
+
+<!--
+- el icono de reto diario queda super IA -->
+
+poder hacer duelos : retar aa otra persona (por ejemplo cada uno elije un ejercicio ), o puede ser lo de memoria, cada vez uno, y cada vez sale una nota mas...es simple memoria
+
+---
+
+<!-- El reto diario podía constar de tres partes + extra:
+
+1.Unas preguntas de armaduras, intervalos, acordes, y escalas que sumaran 6 puntos
+
+2.Un ejercicio de lectura rítmica que valiera dos (o parte proporcional según los fallos)
+
+3.Y otras preguntas de educación del oído: intervalos, acordes, progresiones, que sumara otros dos.
+
+Extra: Y alguna (4 o 6, a 0,25 puntos) de trivial con carácter de “recuperación de puntos”
+
+Total: 10
+
+¿Qué os parece? -->
+
+poner que el pianao e insstrumentos sonidos suenen bien en oido.cambiar sonido guitarra ...
+
+<!-- algo habia aal en aalgunos ejericios de vocalizacion. comprobara toddo y rockschool -->
+<!--
+lo de notas quitarlo? -->
+
+y poner tipo dropdowns , en vez de caards ahi to loco ?
+
+<!-- en algunos modos , poner que merdaallaa es con 12, 12 ejercicios literal, no 24 (modos por ejemplo) -->
+
+<!-- que no pueda salir lo mismo ( la misma combinacion exacta nota + propiedad) -->
+<!--
+que movida . estas en sonido de piano, y cambias aa guitarra y es otra pregunta. por ejemplo pregunta uno menor , estano en piano, cambias a sonido guitarra y te pregunta menor 5 semitonos abajo..solucionaalo ya mismo jaajajaa , en todos sitios donde ocurra, tiene que ser consistente -->
+
+no se ve superclaro los botones y los numeros http://localhost:3000/play/construye-escalas/raras y en similares
+
+<!-- en cuadro de honor poder elegir el dia de calendario de mirar -->
+<!--
+miB no se ve bien, con sostenido sí, pero así no... -->
+
+http://localhost:3000/play/construye-acordes y http://localhost:3000/play/acordes-pentagrama es lo mismo bro...
+
+---

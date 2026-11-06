@@ -9,6 +9,7 @@ import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
 import HandToggle from "@/app/components/HandToggle";
+import { bemol } from "@/lib/bemol";
 import { fretboardFlipClass, useLeftHanded } from "@/lib/handedness";
 
 export default function DiapasonGame() {
@@ -229,7 +230,7 @@ export default function DiapasonGame() {
                 Solución
               </span>
               <span className="text-sm font-bold text-white">
-                {currentQuestion?.answer}
+                {bemol(currentQuestion?.answer ?? "")}
               </span>
             </div>
           </div>
@@ -262,7 +263,7 @@ export default function DiapasonGame() {
                           : "border-white/5 bg-white/5 text-white/20"
                   }`}
                 >
-                  <span className="text-xs md:text-sm font-bold">{nota}</span>
+                  <span className="text-xs md:text-sm font-bold">{bemol(nota)}</span>
                 </button>
               );
             })}

@@ -17,6 +17,7 @@ import {
   type ChordStaffQuestion,
 } from "@/lib/staffChords";
 import { ROUND_LENGTH } from "@/lib/roundLength";
+import { bemol } from "@/lib/bemol";
 
 /** Lo que se ha contestado: la fundamental y la especie, cada una por su lado. */
 interface Answer {
@@ -221,7 +222,7 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
                                 : "border-white/10 bg-white/5 text-white hover:border-amber-300/50 hover:bg-amber-400/20"
                       }`}
                     >
-                      {name}
+                      {bemol(name)}
                     </button>
                   );
                 })}
@@ -270,7 +271,7 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
               <p className="text-center text-[11px] uppercase tracking-[0.2em] text-white/25">
                 {draftRoot === null
                   ? "Elige la fundamental"
-                  : `${draftRoot}… ¿de qué especie?`}
+                  : `${bemol(draftRoot)}… ¿de qué especie?`}
               </p>
             ) : (
               <p
@@ -281,7 +282,7 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
                 {isCorrect ? "¡Bien! Era " : "Era "}
                 {/* normal-case: "m7b5" en mayúsculas se lee "M7B5", que es otro
                     acorde. Ver lib/chordNames.ts. */}
-                <span className="normal-case">{solution}</span>
+                <span className="normal-case">{bemol(solution)}</span>
                 {question.inversion > 0 && ` · ${question.inversion}ª inversión`}
               </p>
             )}

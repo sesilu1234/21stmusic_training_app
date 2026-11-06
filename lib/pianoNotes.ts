@@ -6,6 +6,7 @@
 // todas las notas del nivel caigan dentro.
 
 import type { Clef } from "./staff";
+import { distinctFromPrevious } from "./noRepeat";
 
 export interface PianoNoteLevel {
   slug: string;
@@ -83,8 +84,8 @@ export interface PianoNoteQuestion {
 }
 
 /**
- * Preguntas de una partida, cada nota al azar. Puede salir la misma dos veces
- * seguidas: si no, la pregunta anterior descartaría una respuesta.
+ * Preguntas de una partida, cada nota al azar, sin repetir la misma nota dos
+ * veces seguidas (ver lib/noRepeat).
  */
 export const buildPianoNoteQuiz = (
   level: PianoNoteLevel,
@@ -93,12 +94,20 @@ export const buildPianoNoteQuiz = (
   const questions: PianoNoteQuestion[] = [];
 
   for (let i = 0; i < count; i++) {
-    questions.push({
-      semitone: level.notes[Math.floor(Math.random() * level.notes.length)],
-      // Las teclas negras salen unas veces como sostenido y otras como bemol,
-      // que es como se las va a encontrar en una partitura de verdad.
-      preferFlat: Math.random() < 0.5,
-    });
+    questions.push(
+      distinctFromPrevious(
+        questions[i - 1],
+        () => ({
+          semitone: level.notes[Math.floor(Math.random() * level.notes.length)],
+          // Las teclas negras salen unas veces como sostenido y otras como bemol,
+          // que es como se las va a encontrar en una partitura de verdad.
+          preferFlat: Math.random() < 0.5,
+        }),
+        // Una tecla negra escrita de otra forma (Do# / Reb) ya es otra pregunta.
+        (question) =>
+          `${question.semitone}|${[1, 3, 6, 8, 10].includes(((question.semitone % 12) + 12) % 12) ? question.preferFlat : ""}`,
+      ),
+    );
   }
 
   return questions;

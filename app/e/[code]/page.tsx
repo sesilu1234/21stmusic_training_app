@@ -7,6 +7,7 @@ import { PRIVADO } from "@/lib/seo";
 import { currentStudent } from "@/lib/session";
 import { displayNamesOf } from "@/lib/students";
 import { getAttempt, getExamByCode, normalizeCode } from "@/lib/exams/db";
+import { DAILY_EXAM } from "@/lib/retoExamen";
 import { serve, type ExamView } from "@/lib/exams/runner";
 import ExamRunner from "./ExamRunner";
 
@@ -47,12 +48,16 @@ export default async function ExamPage({ params }: { params: Promise<{ code: str
     );
   }
 
+  // El del día se hace desde su página, que es la que enseña el ranking.
+  const creator = exam.creatorEmail;
+  if (exam.dailyDay || !creator) redirect(DAILY_EXAM.href);
+
   // Su creador no lo hace como un alumno más: lo ve sin tiempo y sin contar.
-  if (exam.creatorEmail === student.email) redirect(`/examenes/${exam.id}/ver`);
+  if (creator === student.email) redirect(`/examenes/${exam.id}/ver`);
 
   const [attempt, names] = await Promise.all([
     getAttempt(exam.id, student.email),
-    displayNamesOf([exam.creatorEmail]).catch(() => new Map<string, string>()),
+    displayNamesOf([creator]).catch(() => new Map<string, string>()),
   ]);
 
   // Si ya lo había empezado, sigue donde iba: sin portada, con el tiempo que le quedaba.
@@ -64,7 +69,7 @@ export default async function ExamPage({ params }: { params: Promise<{ code: str
         code={exam.code}
         cover={{
           title: exam.title,
-          creatorName: names.get(exam.creatorEmail) ?? "alguien de la escuela",
+          byline: `Creado por ${names.get(creator) ?? "alguien de la escuela"}`,
           questionCount: exam.questionCount,
           closed: Boolean(exam.closedAt),
         }}

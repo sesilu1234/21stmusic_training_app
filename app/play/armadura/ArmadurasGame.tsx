@@ -8,6 +8,7 @@ import { CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
+import { bemol } from "@/lib/bemol";
 
 export default function ArmadurasGame({ claves }: { claves: Clave[] }) {
 
@@ -266,7 +267,7 @@ export default function ArmadurasGame({ claves }: { claves: Clave[] }) {
                 Solución
               </span>
               <span className="text-sm md:text-lg font-bold text-white uppercase italic">
-                {formatearSolucion(respuestaCorrecta || "")}
+                {bemol(formatearSolucion(respuestaCorrecta || ""))}
               </span>
             </div>
           </div>
@@ -302,7 +303,7 @@ export default function ArmadurasGame({ claves }: { claves: Clave[] }) {
                   }`}
                 >
                   <span className="text-xs md:text-sm font-bold font-sans">
-                    {nota}
+                    {bemol(nota)}
                   </span>
                 </button>
               );

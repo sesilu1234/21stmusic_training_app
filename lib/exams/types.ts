@@ -100,6 +100,19 @@ export interface ExamQuestion {
   solution: string;
   /** Una línea para los resultados del creador: "Lectura de notas · Clave de sol". */
   summary: string;
+  /** La sección a la que pertenece ("Lenguaje musical"). Solo el reto diario las usa. */
+  section?: string;
+}
+
+/** En qué sección va una pregunta, y por dónde dentro de ella. */
+export interface QuestionSection {
+  name: string;
+  /** Posición dentro de la sección, desde 0. */
+  index: number;
+  total: number;
+  /** Número de la sección (desde 0) y cuántas hay. */
+  number: number;
+  count: number;
 }
 
 /** Lo que ve quien hace el examen: sin respuesta. */
@@ -113,6 +126,8 @@ export interface PublicQuestion {
   limitMs: number;
   /** Lo que le queda, medido en el servidor. */
   remainingMs: number;
+  /** Solo si el examen va por secciones. */
+  section?: QuestionSection;
 }
 
 export interface ExamBlock {
@@ -125,6 +140,8 @@ export interface ExamBlock {
    * lo llevan: sus preguntas ya tienen el tiempo guardado.
    */
   seconds?: number;
+  /** La sección del examen a la que va el bloque. Solo el reto diario las usa. */
+  section?: string;
 }
 
 /** Una respuesta guardada en exam_attempts.answers. */

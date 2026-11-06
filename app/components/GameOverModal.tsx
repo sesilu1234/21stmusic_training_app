@@ -8,6 +8,7 @@ import Crown from "./Crown";
 import { useBackHref } from "./useBackHref";
 import { saveAttempt } from "@/app/progreso/actions";
 import type { SaveResult } from "@/lib/progress";
+import { barColor } from "@/lib/barColor";
 
 interface Props {
   correct: number;
@@ -36,6 +37,8 @@ interface Props {
    * donde saldría lo guardado.
    */
   practice?: string;
+  /** Una línea más bajo la nota, para lo que no es "x de y": "47,2 s · récord 44,8 s". */
+  detail?: string;
 }
 
 const SPARKLES = [
@@ -54,10 +57,12 @@ export default function GameOverModal({
   onClose,
   onReplay,
   practice,
+  detail,
 }: Props) {
   const safeTotal = Math.max(1, total);
   const perfect = correct === total && total > 0;
-  const pct = Math.round((correct / safeTotal) * 100);
+  // Sin llegar a 100 si no es pleno: 99,6 % se queda en 99.
+  const pct = Math.min(correct < safeTotal ? 99 : 100, Math.round((correct / safeTotal) * 100));
   const restart = onRestart || (() => window.location.reload());
 
   const currentPath = usePathname();
@@ -142,6 +147,7 @@ export default function GameOverModal({
             <p className="mt-2 text-xs font-bold uppercase tracking-[0.25em] text-amber-100/80">
               {correct} de {total} · todas correctas
             </p>
+            {detail && <p className="mt-2 text-sm font-bold text-white/80">{detail}</p>}
 
           </>
         ) : (
@@ -165,7 +171,7 @@ export default function GameOverModal({
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
               <div
                 className={`h-full rounded-full transition-all duration-700 ${
-                  pct >= 80 ? "bg-emerald-400" : pct >= 50 ? "bg-amber-400" : "bg-rose-400"
+                  barColor(pct, 80, 50)
                 }`}
                 style={{ width: `${pct}%` }}
               />
@@ -178,6 +184,7 @@ export default function GameOverModal({
                   ? "Bien, sigue así"
                   : "A seguir practicando"}
             </p>
+            {detail && <p className="mt-2 text-sm font-bold text-white/80">{detail}</p>}
           </>
         )}
 

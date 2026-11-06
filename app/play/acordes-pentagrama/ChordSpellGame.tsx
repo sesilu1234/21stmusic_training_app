@@ -20,6 +20,7 @@ import {
   type ChordStaffQuestion,
 } from "@/lib/staffChords";
 import { ROUND_LENGTH } from "@/lib/roundLength";
+import { bemol } from "@/lib/bemol";
 
 interface Round {
   questions: ChordStaffQuestion[];
@@ -187,7 +188,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
               {/* normal-case: "m7b5" en mayúsculas se lee "M7B5", que es otro
                   acorde. Ver lib/chordNames.ts. */}
               <span className="normal-case text-amber-300">
-                {chordName(question)}
+                {bemol(chordName(question))}
               </span>
             </h1>
             <p className="mt-1 truncate text-[9px] font-black uppercase tracking-[0.28em] text-white/35">
@@ -226,7 +227,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
                           : "border-emerald-400/50 bg-emerald-400/15 text-emerald-100"
                   }`}
                 >
-                  {given ?? index + 1}
+                  {given ? bemol(given) : index + 1}
                 </span>
               );
             })}
@@ -251,7 +252,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
                           : "border-white/10 bg-white/5 text-white hover:border-amber-300/50 hover:bg-amber-400/20"
                     }`}
                   >
-                    {name}
+                    {bemol(name)}
                   </button>
                 );
               })}
@@ -280,7 +281,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
                   isCorrect ? "text-emerald-300" : "text-rose-300"
                 }`}
               >
-                {isCorrect ? "¡Bien!" : `Era ${expected.join(" · ")}`}
+                {isCorrect ? "¡Bien!" : `Era ${bemol(expected.join(" · "))}`}
               </p>
             )}
           </div>

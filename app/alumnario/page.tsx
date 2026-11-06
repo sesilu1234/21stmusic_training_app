@@ -9,6 +9,7 @@ import { getStudentAnyStatus, type Student } from "@/lib/students";
 import { getProgress, FORM_WINDOW, type Progress } from "@/lib/progress";
 import { labelForStoredName } from "@/lib/games";
 import StudentSearch from "./StudentSearch";
+import { barColor } from "@/lib/barColor";
 
 /**
  * Alumnario: la actividad de un alumno, para quien da la clase.
@@ -62,8 +63,6 @@ const fmtAgo = (iso: string) => {
   return `el ${fmtDate(iso)}`;
 };
 
-const barColor = (value: number) =>
-  value >= 90 ? "bg-emerald-400" : value >= 60 ? "bg-amber-400" : "bg-rose-400";
 
 /** El nivel, tal cual sale en la URL, escrito para leerlo: "Sol naturales". */
 const levelLabel = (slug: string) => {

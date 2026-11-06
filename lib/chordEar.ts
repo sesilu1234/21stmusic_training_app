@@ -11,6 +11,8 @@
 //    reconoces "un Sol", reconoces "el V". Por eso la tonalidad se transporta
 //    al azar en cada pregunta.
 
+import { distinctFromPrevious } from "./noRepeat";
+
 export type LevelMode = "calidad" | "grado";
 
 export interface ChordOption {
@@ -263,10 +265,12 @@ export const chordNotes = (
 ) => shape.map((s) => keyRoot + option.root + s);
 
 /**
- * Tónica al azar dentro de una octava baja: transporta la pregunta para que no
- * se aprenda de memoria por altura absoluta.
+ * Tónica al azar: transporta la pregunta para que no se aprenda de memoria por
+ * altura absoluta. De Reb a Lab (antes de Lab a Mib, una cuarta más abajo):
+ * con el piano, que suena una octava por debajo, los acordes graves quedaban
+ * embarrados.
  */
-export const randomKeyRoot = () => Math.floor(Math.random() * 8) - 4;
+export const randomKeyRoot = () => Math.floor(Math.random() * 8) + 1;
 
 /** Una pregunta: la tonalidad y los acordes que suenan, en orden. */
 export interface ChordQuestion {
@@ -301,13 +305,19 @@ export const buildChordQuiz = (level: ChordLevel, count: number): ChordQuestion[
   const questions: ChordQuestion[] = [];
 
   for (let i = 0; i < count; i++) {
-    const options = buildSequence(level);
-
-    questions.push({
-      options,
-      keyRoot: randomKeyRoot(),
-      shapes: options.map(pickShape),
-    });
+    // Los mismos acordes pueden repetirse; la misma pregunta calcada (mismos
+    // acordes, misma forma y misma tonalidad) no.
+    questions.push(
+      distinctFromPrevious(
+        questions[i - 1],
+        () => {
+          const options = buildSequence(level);
+          return { options, keyRoot: randomKeyRoot(), shapes: options.map(pickShape) };
+        },
+        (question) =>
+          `${question.keyRoot}|${question.options.map((option) => option.id).join(",")}|${JSON.stringify(question.shapes)}`,
+      ),
+    );
   }
 
   return questions;

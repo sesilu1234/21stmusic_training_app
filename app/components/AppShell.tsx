@@ -19,9 +19,6 @@ import type { StudentRole } from "@/lib/students";
  *               cerrado: es que no hay nada que enseñar, porque sin sesión no
  *               se guarda ninguna partida. Un candado ahí solo daba a entender
  *               que la app está más cerrada de lo que está.
- *
- * "Mis notas" no está aquí: vive en el desplegable de la cuenta, que es donde
- * se busca algo que es tuyo y solo tuyo.
  */
 const ACADEMY_URL = "https://escuelademusicamoderna.com/";
 

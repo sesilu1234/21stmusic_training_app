@@ -11,6 +11,10 @@ export const SITE = {
 // El cuadro de honor. A false: sin línea en la portada, sin menú y /honor da 404.
 export const HONOR_ENABLED = true;
 
+// El cuadro de medallas dentro de /honor. Escondido mientras juega poca gente:
+// con cuatro nombres queda vacío. A true para volver a sacarlo.
+export const HONOR_MEDALS_VISIBLE = false;
+
 export const FOOTER_LINKS = [
   { href: "/guia", label: "Guía" },
   { href: "/contact", label: "Contacto" },

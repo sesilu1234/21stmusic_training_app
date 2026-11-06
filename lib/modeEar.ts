@@ -9,6 +9,8 @@
 // volando—; con él cada modo tiene un color que se reconoce de golpe, que es
 // como se aprenden de verdad.
 
+import { distinctFromPrevious } from "./noRepeat";
+
 export interface EarMode {
   id: string;
   label: string;
@@ -55,9 +57,10 @@ export const droneNote = (question: ModeQuestion) => question.root - 12;
 
 /**
  * Fundamental al azar en una octava baja: se transporta cada pregunta para que
- * el modo se reconozca por su color y no por las notas que salen.
+ * el modo se reconozca por su color y no por las notas que salen. De Mib a
+ * Do (antes de Sib a Sol): con el piano, una octava por debajo, quedaba grave.
  */
-const randomRoot = () => Math.floor(Math.random() * 8) - 2;
+const randomRoot = () => Math.floor(Math.random() * 8) + 3;
 
 /**
  * Preguntas de una ronda, cada modo al azar. Puede salir el mismo dos veces
@@ -67,8 +70,17 @@ export const buildModeQuiz = (count: number): ModeQuestion[] => {
   const questions: ModeQuestion[] = [];
 
   for (let i = 0; i < count; i++) {
-    const mode = EAR_MODES[Math.floor(Math.random() * EAR_MODES.length)];
-    questions.push({ modeId: mode.id, root: randomRoot() });
+    // El mismo modo sí; el mismo modo desde la misma nota, no.
+    questions.push(
+      distinctFromPrevious(
+        questions[i - 1],
+        () => ({
+          modeId: EAR_MODES[Math.floor(Math.random() * EAR_MODES.length)].id,
+          root: randomRoot(),
+        }),
+        (question) => `${question.modeId}|${question.root}`,
+      ),
+    );
   }
 
   return questions;
