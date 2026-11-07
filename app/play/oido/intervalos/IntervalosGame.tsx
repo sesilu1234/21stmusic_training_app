@@ -13,6 +13,7 @@ import {
   withSoftDecay,
 } from "../audio";
 import EarSoundPicker from "../EarSoundPicker";
+import { LetRingToggle, useLetRing } from "../LetRing";
 import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
@@ -39,6 +40,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
   const [solutionStep, setSolutionStep] = useState<number | null>(null);
 
   const { soundIdx, setSoundIdx, variantIdx, setVariantIdx, preset, sampler: chosenSampler } = useEarSound();
+  const { letRing, setLetRing } = useLetRing();
   // PRUEBA: aquí la guitarra lleva una caída más suave (ver withSoftDecay).
   const sampler =
     soundIdx === GUITAR_PRESET && chosenSampler
@@ -110,7 +112,8 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
     if (finishTimerRef.current) window.clearTimeout(finishTimerRef.current);
     setIsPlaying(true);
     setNoteFlash(1);
-    playInterval(interval.semitones, gapMs, preset, root, sampler);
+    // La primera nota se apaga al entrar la segunda, salvo con "Dejar sonar".
+    playInterval(interval.semitones, gapMs, preset, root, sampler, !letRing);
     flashTimerRef.current = window.setTimeout(() => setNoteFlash(2), gapMs);
     finishTimerRef.current = window.setTimeout(() => {
       setNoteFlash(0);
@@ -118,7 +121,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
       flashTimerRef.current = null;
       finishTimerRef.current = null;
     }, gapMs + 1400);
-  }, [isPlaying, gapMs, preset, sampler, playInterval]);
+  }, [isPlaying, gapMs, preset, sampler, playInterval, letRing]);
 
   const handleAnswer = (label: string) => {
     if (userAnswers[step] !== null || gameOver) return;
@@ -252,6 +255,8 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
             <Volume2 size={14} />
             Escuchar
           </button>
+
+          <LetRingToggle letRing={letRing} setLetRing={setLetRing} />
 
           <EarSoundPicker
             soundIdx={soundIdx}

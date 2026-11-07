@@ -50,6 +50,9 @@ const KEY_MAP: { semitone: number; label: string; code: string; key: string }[] 
 const MIN_SHIFT = -24;
 const MAX_SHIFT = 24;
 
+/** Dónde se recuerda el sonido del piano libre. */
+const FREE_VOICE_KEY = "free-voice";
+
 export default function PianoLibrePage() {
   const {
     play: previewVoice,
@@ -58,7 +61,25 @@ export default function PianoLibrePage() {
     releaseAll,
   } = useFreeSynth();
 
-  const [voice, setVoice] = useState<Voice>(VOICES[0]);
+  const [voice, setVoiceState] = useState<Voice>(VOICES[0]);
+  // El sonido elegido se recuerda, aparte de los juegos: aquí hay otros.
+  useEffect(() => {
+    try {
+      const saved = VOICES.find((option) => option.id === localStorage.getItem(FREE_VOICE_KEY));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (saved) setVoiceState(saved);
+    } catch {
+      // Sin almacenamiento: el primero.
+    }
+  }, []);
+  const setVoice = (next: Voice) => {
+    setVoiceState(next);
+    try {
+      localStorage.setItem(FREE_VOICE_KEY, next.id);
+    } catch {
+      // Solo no se recuerda.
+    }
+  };
   const [isVoiceMenuOpen, setIsVoiceMenuOpen] = useState(false);
   const [shift, setShift] = useState(0);
   const [active, setActive] = useState<number[]>([]);

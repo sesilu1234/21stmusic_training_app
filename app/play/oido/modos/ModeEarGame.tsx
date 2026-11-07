@@ -9,6 +9,7 @@ import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import { EAR_SOUNDS, useAudio, useEarSound } from "../audio";
 import SoundIconPicker from "../SoundIconPicker";
+import { LetRingToggle, useLetRing } from "../LetRing";
 import {
   buildModeQuiz,
   droneNote,
@@ -42,6 +43,8 @@ export default function ModeEarGame() {
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
   const { soundIdx, setSoundIdx, variantIdx, setVariantIdx, preset: presetIdx, sampler } = useEarSound();
+  // Cada nota de la escala se apaga al entrar la siguiente, salvo con "Dejar sonar".
+  const { letRing, setLetRing } = useLetRing();
   /** Qué grado de la escala va sonando: -1 = ninguna. */
   const [playIndex, setPlayIndex] = useState(-1);
   /** Si va subiendo o bajando, para que la estela de barras siga a la nota. */
@@ -119,9 +122,9 @@ export default function ModeEarGame() {
         );
       };
 
-      playOverDrone(notes, GAP_MS, presetIdx, droneNote(target), sampler, startFlashes);
+      playOverDrone(notes, GAP_MS, presetIdx, droneNote(target), sampler, startFlashes, !letRing);
     },
-    [playOverDrone, presetIdx, roundTrip, sampler, stop],
+    [playOverDrone, presetIdx, roundTrip, sampler, stop, letRing],
   );
 
   useEffect(() => {
@@ -282,6 +285,8 @@ export default function ModeEarGame() {
                 <Volume2 size={14} strokeWidth={1.8} />
                 Escuchar
               </button>
+
+              <LetRingToggle letRing={letRing} setLetRing={setLetRing} />
 
               {/* Ida y vuelta cuesta el doble de tiempo, así que no viene
                   puesto: se enciende y se queda encendido el resto de la

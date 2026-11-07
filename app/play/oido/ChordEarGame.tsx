@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, RotateCcw, Volume2 } from "lucide-react";
+import { ArrowLeft, Volume2 } from "lucide-react";
+import { LetRingToggle, UndoButton, useLetRing } from "./LetRing";
 import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
@@ -72,6 +73,12 @@ export default function ChordEarGame({
 
   const withTonic = level.mode === "grado";
   const slots = level.length;
+  // Varios acordes seguidos (con la tónica delante, o varias casillas): cada
+  // uno se apaga al entrar el siguiente, salvo con "Dejar sonar" puesto. Con
+  // un acorde suelto no hay nada que apagar.
+  const hasSequence = withTonic || slots > 1;
+  const { letRing, setLetRing } = useLetRing();
+  const damp = hasSequence && !letRing;
 
   // La ronda se arma en un efecto, no al inicializar el estado, porque
   // La ronda se sortea con Math.random(): armarla durante el render del
@@ -141,9 +148,9 @@ export default function ChordEarGame({
         );
       };
 
-      playSequence(chords, GAP_MS, presetIdx, 1, sampler, startFlashes);
+      playSequence(chords, GAP_MS, presetIdx, 1, sampler, startFlashes, damp);
     },
-    [withTonic, playSequence, presetIdx, sampler, stop],
+    [withTonic, playSequence, presetIdx, sampler, stop, damp],
   );
 
   // Suena sola al llegar a cada pregunta nueva, pero no al volver de un
@@ -432,17 +439,15 @@ export default function ChordEarGame({
                 Escuchar
               </button>
 
+              {hasSequence && <LetRingToggle letRing={letRing} setLetRing={setLetRing} />}
+
               {/* Solo tiene sentido con varias casillas: con una, elegir ya corrige. */}
               {slots > 1 && (
-                <button
-                  type="button"
+                <UndoButton
                   onClick={undo}
                   disabled={Boolean(answered) || !draft.length}
-                  className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-white/35 transition hover:text-white/70 disabled:cursor-default disabled:opacity-25 disabled:hover:text-white/35"
-                >
-                  <RotateCcw size={12} />
-                  Borrar
-                </button>
+                  title="Quitar el último acorde marcado"
+                />
               )}
             </div>
           </div>

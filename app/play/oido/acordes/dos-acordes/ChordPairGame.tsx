@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, RotateCcw, Volume2 } from "lucide-react";
+import { ArrowLeft, Volume2 } from "lucide-react";
+import { LetRingToggle, UndoButton, useLetRing } from "../../LetRing";
 import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
@@ -81,6 +82,8 @@ export default function ChordPairGame({
   const { soundIdx, setSoundIdx, variantIdx, setVariantIdx, preset: presetIdx, sampler } =
     // Acordes de 3–4 notas: más bajo, para sonar como armónico.
     useEarSound(EAR_MODE_LEVEL.chords);
+  // El primer acorde se apaga al entrar el segundo, salvo con "Dejar sonar".
+  const { letRing, setLetRing } = useLetRing();
   /** 0 = nada encendido, 1 = primer acorde, 2 = segundo. */
   const [playFlash, setPlayFlash] = useState(0);
 
@@ -144,9 +147,9 @@ export default function ChordPairGame({
       // notas al mismo volumen la de abajo se pierde entre las de arriba y no
       // queda de dónde agarrarse. No es subir el volumen: es que se distinga
       // cuál es la nota de referencia.
-      playSequence(pairChords(target), GAP_MS, presetIdx, BASS_BOOST, sampler, startFlashes);
+      playSequence(pairChords(target), GAP_MS, presetIdx, BASS_BOOST, sampler, startFlashes, !letRing);
     },
-    [playSequence, presetIdx, sampler, stop],
+    [playSequence, presetIdx, sampler, stop, letRing],
   );
 
   useEffect(() => {
@@ -378,15 +381,13 @@ export default function ChordPairGame({
                 Escuchar
               </button>
 
-              <button
-                type="button"
+              <LetRingToggle letRing={letRing} setLetRing={setLetRing} />
+
+              <UndoButton
                 onClick={() => setDraftDistance(null)}
                 disabled={Boolean(answered) || !draftDistance}
-                className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-white/35 transition hover:text-white/70 disabled:cursor-default disabled:opacity-25 disabled:hover:text-white/35"
-              >
-                <RotateCcw size={12} />
-                Borrar
-              </button>
+                title="Quitar la distancia marcada"
+              />
             </div>
           </div>
 

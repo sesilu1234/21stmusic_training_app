@@ -82,7 +82,9 @@ revisar todo, y movil
 
 en ingles
 
-algo de let it ring o no
+guardara en localstorage el instrumento elegido se puede ? ( cuidado aqui en caso de hacerlo porque haya sitios donde el piano de cola no está)
+
+<!-- algo de let it ring o no -->
 
 <!-- algo habia aal en aalgunos ejericios de vocalizacion. comprobara toddo y rockschool -->
 <!--
@@ -101,6 +103,8 @@ que movida . estas en sonido de piano, y cambias aa guitarra y es otra pregunta.
 miB no se ve bien, con sostenido sí, pero así no... -->
 
 <!-- en todos los niveles, poder pulsar x y comprobar todo -->
+
+ver si cambiar, quitar, o añadir, o MODIFICAR algun modo de juego
 
 no se ve superclaro los botones y los numeros http://localhost:3000/play/construye-escalas/raras y en similares
 http://localhost:3000/play/construye-acordes y http://localhost:3000/play/acordes-pentagrama es lo mismo bro...

@@ -316,9 +316,58 @@ export const withSoftDecay = (inner: Sampler, seconds: number): Sampler => {
  */
 export const GUITAR_SOFT_DECAY = [0.8, 1.05];
 
+const SOUND_KEY = "sound-choice";
+
+/**
+ * Instrumentos que no están en todas las listas, y cuál poner en su lugar.
+ * Los juegos de oído tienen Piano (de cola), Eléctrico, Guitarra y Synth; los
+ * de piano, Piano (de osciladores), Guitarra, Flauta y Synth. El "Piano" de
+ * los de piano suena como el Eléctrico de oído.
+ */
+const SOUND_STAND_IN: Record<string, string> = {
+  "Eléctrico": "Piano",
+  Flauta: "Piano",
+};
+
+/**
+ * El instrumento elegido, recordado entre juegos. Se guarda el NOMBRE, no la
+ * posición: las listas de oído y de piano no son iguales, y la tercera de
+ * una (Guitarra) es la Flauta de la otra. Si el guardado no está en esta
+ * lista, va el que lo sustituye; si tampoco, el primero (el piano).
+ */
+function useRememberedSound(labels: string[]) {
+  const [index, setIndex] = useState(0);
+  const key = labels.join("|");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SOUND_KEY);
+      if (!saved) return;
+      const names = key.split("|");
+      let found = names.indexOf(saved);
+      if (found < 0 && SOUND_STAND_IN[saved]) found = names.indexOf(SOUND_STAND_IN[saved]);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (found > 0) setIndex(found);
+    } catch {
+      // Sin almacenamiento: el piano.
+    }
+  }, [key]);
+  const choose = useCallback(
+    (next: number) => {
+      setIndex(next);
+      try {
+        localStorage.setItem(SOUND_KEY, key.split("|")[next]);
+      } catch {
+        // Solo no se recuerda.
+      }
+    },
+    [key],
+  );
+  return [index, choose] as const;
+}
+
 /** El timbre de un juego de piano, con la guitarra elegida ya pedida a la red. */
 export function usePianoGameSound() {
-  const [presetIdx, setPresetIdx] = useState(0);
+  const [presetIdx, setPresetIdx] = useRememberedSound(PRESETS.map((preset) => preset.label));
   const { variantIdx, setVariantIdx } = useGuitarVariant();
   useEffect(() => {
     if (presetIdx !== GUITAR_PRESET) return;
@@ -390,7 +439,7 @@ export const EAR_SOUNDS: EarSound[] = [
  * puesto, para que al darle a escuchar no haya que esperar a la red.
  */
 export function useEarSound(modeLevel: number = EAR_MODE_LEVEL.oneNote) {
-  const [soundIdx, setSoundIdx] = useState(0);
+  const [soundIdx, setSoundIdx] = useRememberedSound(EAR_SOUNDS.map((sound) => sound.label));
   // La versión elegida (acero o nylon) se recuerda entre juegos.
   const { variantIdx, setVariantIdx } = useGuitarVariant();
   const sound = EAR_SOUNDS[soundIdx];
@@ -463,6 +512,21 @@ export type Dyad = { root: number; semi: number };
  * que no se pierda del todo debajo de la grave.
  */
 const HARMONIC_BALANCE = { low: 2.25, high: 1.6 } as const;
+
+/** Lo que tarda en apagarse un acorde o nota al entrar el siguiente (`damp`). */
+const DAMP_SECONDS = 0.25;
+
+/**
+ * Un volumen que deja pasar el sonido hasta `at` y desde ahí lo apaga con un
+ * fundido corto: lo que hace `damp`, como un pianista que levanta los dedos.
+ */
+const dampAt = (ctx: AudioContext, at: number) => {
+  const gain = ctx.createGain();
+  gain.connect(outputNode(ctx));
+  gain.gain.setValueAtTime(1, at);
+  gain.gain.setTargetAtTime(0, at, DAMP_SECONDS / 3);
+  return gain;
+};
 
 /** Lo que tarda en entrar la melodía detrás del pedal, en `playOverDrone`. */
 const MELODY_LEAD = 0.25;
@@ -549,6 +613,8 @@ export function useAudio() {
     bassBoost = 1,
     sampler?: Sampler,
     voices?: StopNote[],
+    /** Dónde enchufar el acorde (por defecto, la salida de la app). */
+    dest?: AudioNode,
   ) => {
     const bass = bassBoost === 1 ? null : Math.min(...semitones);
     let boosted = false;
@@ -559,7 +625,7 @@ export function useAudio() {
       const emphasise = s === bass && !boosted;
       if (emphasise) boosted = true;
 
-      let out: AudioNode = outputNode(ctx);
+      let out: AudioNode = dest ?? outputNode(ctx);
       if (emphasise) {
         const lift = ctx.createGain();
         lift.gain.value = bassBoost;
@@ -593,7 +659,7 @@ export function useAudio() {
    * osciladores. De momento solo lo usa intervalos melódicos, para probarlo.
    * La primera vez espera a que esté cargado; si no carga, suena `presetIdx`.
    */
-  const playInterval = useCallback((semitones: number, gapMs: number, presetIdx: number, rootOffset = -1, chosen?: Sampler) => {
+  const playInterval = useCallback((semitones: number, gapMs: number, presetIdx: number, rootOffset = -1, chosen?: Sampler, damp = false) => {
     const ctx = getCtx();
     const sampler = resolveSampler(presetIdx, chosen);
     const root = rootOffset >= 0 ? rootOffset : Math.floor(Math.random() * 8);
@@ -607,7 +673,10 @@ export function useAudio() {
       track(ctx, voices, now + gap + VOICE_SECONDS);
       const harmonic = gap === 0;
       const rootLift = harmonic ? HARMONIC_BALANCE.low : 1;
-      scheduleChord(ctx, [root], presetIdx, now, rootLift, sampler, voices);
+      // `damp` (solo melódico): la primera se apaga al entrar la segunda, para
+      // que no se quede debajo y el intervalo no suene casi armónico.
+      const rootDest = damp && !harmonic ? dampAt(ctx, now + gap) : undefined;
+      scheduleChord(ctx, [root], presetIdx, now, rootLift, sampler, voices, rootDest);
       // Dos notas perfectamente a la vez y perfectamente afinadas en octava el
       // oído las oye como una. En armónico la de arriba entra 25 ms tarde
       // (como al tocarlo con dos dedos, no se oye como arpegio) y 5 cents alta
@@ -640,6 +709,7 @@ export function useAudio() {
       bassBoost = 1,
       chosen?: Sampler,
       onStart?: () => void,
+      damp = false,
     ) => {
       const ctx = getCtx();
       const sampler = resolveSampler(presetIdx, chosen);
@@ -649,9 +719,15 @@ export function useAudio() {
         const now = ctx.currentTime + (sampler ? 0.02 : 0);
         const voices: StopNote[] = [];
         track(ctx, voices, now + chords.length * gap + VOICE_SECONDS);
-        chords.forEach((chord, index) =>
-          scheduleChord(ctx, chord, presetIdx, now + index * gap, bassBoost, sampler, voices),
-        );
+        chords.forEach((chord, index) => {
+          const start = now + index * gap;
+          let dest: AudioNode | undefined;
+          // `damp`: cada acorde se apaga cuando entra el siguiente, como un
+          // pianista que levanta los dedos sin pedal (fundido de ~0,25 s, no un
+          // corte). Sin esto se quedan sonando todos, como con el pedal pisado.
+          if (damp && index < chords.length - 1) dest = dampAt(ctx, start + gap);
+          scheduleChord(ctx, chord, presetIdx, start, bassBoost, sampler, voices, dest);
+        });
       };
       whenReady(ctx, sampler, doPlay);
     },
@@ -675,6 +751,7 @@ export function useAudio() {
       droneSemitone: number,
       chosen?: Sampler,
       onStart?: (leadMs: number) => void,
+      damp = false,
     ) => {
       const ctx = getCtx();
       const sampler = resolveSampler(presetIdx, chosen);
@@ -690,9 +767,13 @@ export function useAudio() {
         droneCut.connect(outputNode(ctx));
         voices.push(() => fadeOut(ctx, droneCut.gain));
         scheduleDrone(ctx, droneSemitone, now, seconds, droneCut);
-        notes.forEach((note, index) =>
-          scheduleChord(ctx, [note], presetIdx, now + MELODY_LEAD + index * gap, 1, sampler, voices),
-        );
+        notes.forEach((note, index) => {
+          const start = now + MELODY_LEAD + index * gap;
+          // `damp`: cada nota de la escala se apaga al entrar la siguiente (el
+          // pedal sigue sonando debajo).
+          const dest = damp && index < notes.length - 1 ? dampAt(ctx, start + gap) : undefined;
+          scheduleChord(ctx, [note], presetIdx, start, 1, sampler, voices, dest);
+        });
       };
       whenReady(ctx, sampler, doPlay);
     },

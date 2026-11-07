@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, RotateCcw, RotateCw, Volume2 } from "lucide-react";
+import { ArrowLeft, RotateCw, Volume2 } from "lucide-react";
+import { LetRingToggle, UndoButton, useLetRing } from "../LetRing";
 import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
@@ -65,6 +66,7 @@ export default function MelodyEarGame({
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
   const { soundIdx, setSoundIdx, variantIdx, setVariantIdx, preset: presetIdx, sampler } = useEarSound();
+  const { letRing, setLetRing } = useLetRing();
   /** Qué nota de la melodía va sonando: -1 = ninguna. */
   const [playIndex, setPlayIndex] = useState(-1);
 
@@ -125,12 +127,16 @@ export default function MelodyEarGame({
         clearFlashTimers();
         flashTimersRef.current.push(
           window.setTimeout(() => {
+            // Cada nota se apaga al entrar la siguiente, salvo con "Dejar
+            // sonar" (la tónica del principio sí se queda, de referencia).
             playSequence(
               notes.map((note) => [note]),
               GAP_MS,
               presetIdx,
               1,
               sampler,
+              undefined,
+              !letRing,
             );
           }, TONIC_MS),
         );
@@ -146,7 +152,7 @@ export default function MelodyEarGame({
       };
       playSequence([melodyTonicChord(target)], 0, presetIdx, 1, sampler, afterTonic);
     },
-    [playSequence, presetIdx, sampler, stop],
+    [playSequence, presetIdx, sampler, stop, letRing],
   );
 
   useEffect(() => {
@@ -367,20 +373,14 @@ export default function MelodyEarGame({
               {answered === null ? "Escuchar" : "Oírla"}
             </button>
 
+            <LetRingToggle letRing={letRing} setLetRing={setLetRing} />
+
             {answered === null ? (
               <>
                 <p className="text-center text-[11px] uppercase tracking-[0.2em] text-white/25">
                   Faltan {remaining}
                 </p>
-                <button
-                  type="button"
-                  onClick={undo}
-                  disabled={!draft.length}
-                  className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-white/35 transition hover:text-white/70 disabled:cursor-default disabled:opacity-25 disabled:hover:text-white/35"
-                >
-                  <RotateCcw size={12} />
-                  Borrar
-                </button>
+                <UndoButton onClick={undo} disabled={!draft.length} title="Quitar la última nota marcada" />
               </>
             ) : (
               <p
