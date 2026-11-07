@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
 import Backdrop from "@/app/components/Backdrop";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import SiteFooter from "@/app/components/SiteFooter";
 import PianoKeyboard, { type KeyMark } from "@/app/components/PianoKeyboard";
 import { findVoice, useFreeSynth } from "@/lib/freeSynth";
@@ -388,7 +388,7 @@ export default function VocalizacionesPlayer({
         </Link>
 
         <div className="absolute right-4 top-3.5 z-20 md:right-7 md:top-4">
-          <ThemeToggle onPhoto />
+          <ThemeLogoPill />
         </div>
 
         <main className="mx-auto w-full max-w-[1120px] flex-1 pb-4 pt-5 md:pt-3">

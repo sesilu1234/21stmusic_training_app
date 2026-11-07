@@ -4,6 +4,7 @@ import { useCallback, useRef } from "react";
 
 import { createAudioContext, outputNode } from "./audioContext";
 import { playPluckedString, type PluckParams } from "./pluckedString";
+import { FATBOY_NYLON_GUITAR, FLUID_STEEL_GUITAR, type Sampler } from "./sampler";
 import { connectReverb, type ReverbParams } from "./reverb";
 
 /**
@@ -79,11 +80,24 @@ export interface PluckedVoice {
   pluck: PluckParams;
 }
 
-export type Voice = AdditiveVoice | PluckedVoice;
+/**
+ * Voz grabada (lib/sampler.ts): las guitarras. Hasta que se ha cargado la
+ * grabación suena la cuerda sintetizada `pluck`, para no dejar la tecla muda.
+ */
+export interface SampledVoice {
+  id: string;
+  label: string;
+  hint: string;
+  engine: "sampled";
+  sampler: Sampler;
+  pluck: PluckParams;
+}
+
+export type Voice = AdditiveVoice | PluckedVoice | SampledVoice;
 
 /** Solo el órgano se queda sonando mientras tienes la tecla apretada. */
 const isSustained = (voice: Voice) =>
-  voice.engine !== "plucked" && Boolean(voice.sustained);
+  voice.engine !== "plucked" && voice.engine !== "sampled" && Boolean(voice.sustained);
 
 export const VOICES: Voice[] = [
   {
@@ -104,16 +118,22 @@ export const VOICES: Voice[] = [
     duration: 3.2,
     peak: 0.55,
   },
+  // Las mismas guitarras grabadas que en los juegos de oído y de piano.
   {
     id: "guitarra",
     label: "Guitarra acústica",
-    hint: "Cuerda de acero pulsada, con caja de resonancia",
-    engine: "plucked",
-    pluck: {
-      sustain: 3.4,
-      brightness: 0.62,
-      peak: 0.5,
-    },
+    hint: "Cuerdas de acero, grabada (FluidR3)",
+    engine: "sampled",
+    sampler: FLUID_STEEL_GUITAR,
+    pluck: { sustain: 3.4, brightness: 0.62, peak: 0.5 },
+  },
+  {
+    id: "guitarra-nylon",
+    label: "Guitarra española",
+    hint: "Cuerdas de nylon, grabada (FatBoy)",
+    engine: "sampled",
+    sampler: FATBOY_NYLON_GUITAR,
+    pluck: { sustain: 3.4, brightness: 0.5, peak: 0.5 },
   },
   {
     id: "organo",
@@ -281,6 +301,29 @@ const spawnPlucked = (
 };
 
 /**
+ * Guitarra grabada. Las grabaciones de lib/sampler.ts suenan una octava por
+ * debajo de lo escrito (es lo que piden los modos de oído): aquí se sube esa
+ * octava para que suene donde está la tecla, como las demás voces.
+ * Si aún no ha cargado, la pide y esta nota sale con la cuerda sintetizada.
+ */
+const spawnSampled = (
+  ctx: AudioContext,
+  semitone: number,
+  voice: SampledVoice,
+  when: number,
+): HeldNote => {
+  const played = voice.sampler.play(ctx, semitone + 12, when, outputNode(ctx));
+  if (!played) {
+    voice.sampler.load(ctx).catch(() => {
+      // Sin red: sigue la sintetizada.
+    });
+    playPluckedString(ctx, semitoneToFreq(semitone), voice.pluck, when);
+  }
+  // Como la cuerda: levantar el dedo no corta la nota.
+  return { release: () => {} };
+};
+
+/**
  * Monta una nota entera y la arranca.
  *
  * `hold` decide de qué va la envolvente: con `false` la nota trae su final
@@ -300,6 +343,7 @@ const spawn = (
 ): HeldNote => {
   const now = Math.max(when ?? 0, ctx.currentTime);
   if (voice.engine === "plucked") return spawnPlucked(ctx, semitone, voice, now);
+  if (voice.engine === "sampled") return spawnSampled(ctx, semitone, voice, now);
 
   const freq = semitoneToFreq(semitone);
   const end = now + voice.duration;

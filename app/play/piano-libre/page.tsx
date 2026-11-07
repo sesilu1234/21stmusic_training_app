@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, ChevronDown, ChevronUp, Waves } from "lucide-react";
 import Backdrop from "@/app/components/Backdrop";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import SiteFooter from "@/app/components/SiteFooter";
 import PianoKeyboard, { noteName, type KeyMark } from "@/app/components/PianoKeyboard";
 import RotateToLandscape from "@/app/components/RotateToLandscape";
@@ -75,6 +75,15 @@ export default function PianoLibrePage() {
     },
     [pressVoice, voice],
   );
+
+  // Las guitarras son grabaciones: se piden en cuanto se eligen, para que la
+  // primera tecla no tenga que esperar a la red.
+  useEffect(() => {
+    if (voice.engine !== "sampled") return;
+    voice.sampler.prefetch().catch(() => {
+      // Sin red: suena la cuerda sintetizada.
+    });
+  }, [voice]);
 
   useEffect(() => {
     if (!isVoiceMenuOpen) return;
@@ -222,7 +231,7 @@ export default function PianoLibrePage() {
         </Link>
 
         <div className="absolute right-4 top-5 z-20 md:right-8 md:top-7">
-          <ThemeToggle onPhoto />
+          <ThemeLogoPill />
         </div>
 
         <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col justify-center pb-8 pt-2">

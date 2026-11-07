@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, RotateCcw, Volume2 } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import { noteName } from "@/app/components/PianoKeyboard";
-import { EAR_SOUNDS, useAudio, useEarSound } from "../../audio";
+import { EAR_MODE_LEVEL, EAR_SOUNDS, useAudio, useEarSound } from "../../audio";
+import SoundIconPicker from "../../SoundIconPicker";
 import {
   buildPairQuiz,
   findDistance,
@@ -77,7 +78,9 @@ export default function ChordPairGame({
   const [gameOver, setGameOver] = useState(false);
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
-  const { soundIdx, setSoundIdx, preset: presetIdx, sampler } = useEarSound();
+  const { soundIdx, setSoundIdx, variantIdx, setVariantIdx, preset: presetIdx, sampler } =
+    // Acordes de 3–4 notas: más bajo, para sonar como armónico.
+    useEarSound(EAR_MODE_LEVEL.chords);
   /** 0 = nada encendido, 1 = primer acorde, 2 = segundo. */
   const [playFlash, setPlayFlash] = useState(0);
 
@@ -123,13 +126,17 @@ export default function ChordPairGame({
       // Lo que quedara sonando de antes (la cola del piano) se corta.
       stop();
 
-      setPlayFlash(1);
-      flashTimersRef.current.push(
-        window.setTimeout(() => setPlayFlash(2), GAP_MS),
-      );
-      flashTimersRef.current.push(
-        window.setTimeout(() => setPlayFlash(0), GAP_MS + TAIL_MS),
-      );
+      // Las casillas arrancan con el sonido (la primera vez espera a la grabación).
+      const startFlashes = () => {
+        clearFlashTimers();
+        setPlayFlash(1);
+        flashTimersRef.current.push(
+          window.setTimeout(() => setPlayFlash(2), GAP_MS),
+        );
+        flashTimersRef.current.push(
+          window.setTimeout(() => setPlayFlash(0), GAP_MS + TAIL_MS),
+        );
+      };
 
       // El bajo, un poco por encima del resto. Aquí hay que sacar de oído dos
       // cosas a la vez —la distancia entre los dos acordes y de qué tipo es el
@@ -137,15 +144,20 @@ export default function ChordPairGame({
       // notas al mismo volumen la de abajo se pierde entre las de arriba y no
       // queda de dónde agarrarse. No es subir el volumen: es que se distinga
       // cuál es la nota de referencia.
-      playSequence(pairChords(target), GAP_MS, presetIdx, BASS_BOOST, sampler);
+      playSequence(pairChords(target), GAP_MS, presetIdx, BASS_BOOST, sampler, startFlashes);
     },
     [playSequence, presetIdx, sampler, stop],
   );
 
   useEffect(() => {
     if (!question || gameOver || !autoPlayRef.current) return;
-    autoPlayRef.current = false;
-    const timer = window.setTimeout(() => play(question), 150);
+    // El aviso se apaga al sonar, no antes: si algo cambia en estos ms (p. ej.
+    // acaba de sonar la pregunta anterior) el efecto se repite y la vuelve a
+    // programar. Apagándolo antes, a veces la siguiente no sonaba sola.
+    const timer = window.setTimeout(() => {
+      autoPlayRef.current = false;
+      play(question);
+    }, 150);
     return () => window.clearTimeout(timer);
   }, [question, gameOver, play]);
 
@@ -264,23 +276,15 @@ export default function ChordPairGame({
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
-            <ThemeToggle onPhoto />
-            <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-              {EAR_SOUNDS.map((preset, index) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => setSoundIdx(index)}
-                  title={preset.label}
-                  aria-label={preset.label}
-                  className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                    soundIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
-                  }`}
-                >
-                  {preset.icon}
-                </button>
-              ))}
-            </div>
+            <SoundIconPicker
+              options={EAR_SOUNDS}
+              selectedIdx={soundIdx}
+              onSelect={setSoundIdx}
+              variantIdx={variantIdx}
+              onVariant={setVariantIdx}
+              activeClass="bg-violet-400/25"
+            />
+            <ThemeLogoPill />
           </div>
         </div>
 

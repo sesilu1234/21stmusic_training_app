@@ -2,7 +2,7 @@
 
 import { connectReverb, type ReverbParams } from "./reverb";
 
-// Instrumentos grabados: piano de cola y guitarra española, nota a nota.
+// Instrumentos grabados: piano de cola y dos guitarras (acero y nylon), nota a nota.
 //
 // Los timbres de osciladores (PRESETS en app/play/oido/audio.ts) son limpios
 // pero planos: todas las notas tienen el mismo color. Para el oído eso es un
@@ -49,6 +49,18 @@ export const fadeOut = (ctx: BaseAudioContext, param: AudioParam, seconds = CUT_
   param.linearRampToValueAtTime(0, now + seconds);
 };
 
+/** Cuánto multiplicar una grabación para que su primer segundo tenga `db` de RMS. */
+const trimTo = (buffer: AudioBuffer, db: number) => {
+  const length = Math.min(buffer.length, buffer.sampleRate);
+  let sum = 0;
+  for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+    const data = buffer.getChannelData(channel);
+    for (let i = 0; i < length; i++) sum += data[i] * data[i];
+  }
+  const rms = Math.sqrt(sum / (length * buffer.numberOfChannels));
+  return rms > 0 ? 10 ** (db / 20) / rms : 1;
+};
+
 export interface Sampler {
   /** Pide las grabaciones. Se puede llamar las veces que sea: solo pide una. */
   prefetch: () => Promise<void>;
@@ -72,6 +84,9 @@ const createSampler = ({
   transpose = 0,
   hold,
   body,
+  release,
+  normalize,
+  trebleCut,
 }: {
   /** Carpeta dentro de public/samples. */
   dir: string;
@@ -100,11 +115,29 @@ const createSampler = ({
   hold?: number;
   /** Cuerpo: dB que se suben los graves (por debajo de ~320 Hz). */
   body?: number;
+  /**
+   * Segundos del apagado final (con `hold`). Si no se da, un tercio de
+   * `decay`, como mucho 1,2 s.
+   */
+  release?: number;
+  /**
+   * Volumen (dB, RMS del primer segundo) al que se lleva cada nota al cargarla,
+   * antes de `level`. Para grabaciones donde unas notas suenan mucho más fuertes
+   * que otras: en la nylon de FatBoy, entre Do3 y Mi4 hay unos 11 dB.
+   */
+  normalize?: number;
+  /**
+   * Menos brillo: baja `db` decibelios lo que está por encima de `hz` (un
+   * estante de agudos, suave; no corta como `lowpass`).
+   */
+  trebleCut?: { hz: number; db: number };
 }): Sampler => {
   const samples = notes.map((file) => ({ file, semitone: semitoneOf(file) }));
   let fetching: Promise<Map<number, ArrayBuffer>> | null = null;
   let decoding: Promise<void> | null = null;
   const buffers = new Map<number, AudioBuffer>();
+  /** Lo que se multiplica cada nota para llegar a `normalize` (1 si no hay). */
+  const trims = new Map<number, number>();
 
   const fetchAll = () => {
     if (!fetching) {
@@ -134,7 +167,9 @@ const createSampler = ({
             Promise.all(
               [...raw].map(async ([semitone, data]) => {
                 // `decodeAudioData` se queda con el búfer: se le pasa una copia.
-                buffers.set(semitone, await ctx.decodeAudioData(data.slice(0)));
+                const buffer = await ctx.decodeAudioData(data.slice(0));
+                if (normalize !== undefined) trims.set(semitone, trimTo(buffer, normalize));
+                buffers.set(semitone, buffer);
               }),
             ),
           )
@@ -164,12 +199,13 @@ const createSampler = ({
       // Baja desde el ataque hasta casi nada en `decay` segundos. Con `hold`,
       // baja despacio hasta ese nivel y se apaga en el último segundo.
       const gain = ctx.createGain();
-      gain.gain.setValueAtTime(level, when);
+      const noteLevel = level * (trims.get(nearest.semitone) ?? 1);
+      gain.gain.setValueAtTime(noteLevel, when);
       if (hold) {
-        const fade = Math.min(1.2, decay / 3);
-        gain.gain.exponentialRampToValueAtTime(level * hold, when + decay - fade);
+        const fade = release ?? Math.min(1.2, decay / 3);
+        gain.gain.exponentialRampToValueAtTime(noteLevel * hold, when + decay - fade);
       }
-      gain.gain.exponentialRampToValueAtTime(level * 0.001, when + decay);
+      gain.gain.exponentialRampToValueAtTime(noteLevel * 0.001, when + decay);
 
       let tail: AudioNode = source;
       if (body) {
@@ -177,6 +213,14 @@ const createSampler = ({
         shelf.type = "lowshelf";
         shelf.frequency.value = 320;
         shelf.gain.value = body;
+        tail.connect(shelf);
+        tail = shelf;
+      }
+      if (trebleCut) {
+        const shelf = ctx.createBiquadFilter();
+        shelf.type = "highshelf";
+        shelf.frequency.value = trebleCut.hz;
+        shelf.gain.value = -trebleCut.db;
         tail.connect(shelf);
         tail = shelf;
       }
@@ -226,22 +270,42 @@ export const GRAND_PIANO = createSampler({
   transpose: -12,
 });
 
-/** Guitarra española, de nylon (tonejs-instruments): 29 notas de Si1 a La#5. */
-export const NYLON_GUITAR = createSampler({
-  dir: "guitarra",
-  notes: [
-    "B1", "D2", "E2", "Fs2", "Gs2", "A2", "B2", "Cs3", "D3", "E3", "Fs3", "G3", "A3", "B3",
-    "Cs4", "Ds4", "E4", "Fs4", "Gs4", "A4", "B4", "Cs5", "D5", "E5", "Fs5", "G5", "Gs5", "A5", "As5",
-  ],
-  // Vienen normalizadas (pico en -3 dB): más fuertes que el piano.
-  level: 0.9,
-  decay: 3,
-  // Las agudas suenan afiladas: se redondean un poco y se les da algo de sala.
-  lowpass: 3800,
-  room: { seconds: 1.3, mix: 0.16 },
-  // Dos octavas más grave de lo escrito: una octava por debajo del piano, a
-  // petición (con una sola sonaba aguda al lado de los demás). Las notas más
-  // graves que se piden quedan por debajo de lo grabado (Si1) y salen
-  // reafinando esa: algo más apagadas, pero suenan.
-  transpose: -24,
+/** Todas las notas de Do2 a Do6, una a una: así ninguna se reafina. */
+const CHROMATIC_C2_C6 = Array.from({ length: 49 }, (_, i) => {
+  const midi = 36 + i;
+  return `${["C", "Cs", "D", "Ds", "E", "F", "Fs", "G", "Gs", "A", "As", "B"][midi % 12]}${Math.floor(midi / 12) - 1}`;
+});
+
+/**
+ * Las guitarras de los modos de oído, elegidas a oído en una página de prueba
+ * entre ocho. Suenan como vienen: sin caída añadida, sin filtro y sin sala
+ * (con eso las anteriores sonaban peor aquí que sueltas). Solo se apagan en
+ * el último medio segundo para que no acaben de golpe. Duran 3 s.
+ * Soundfonts de midi-js (Benjamin Gleitzman); licencias al lado de cada una.
+ */
+const RAW_GUITAR = {
+  decay: 3.1,
+  hold: 1,
+  release: 0.5,
+  transpose: -12,
+  // Todas las notas al mismo volumen, unos 5 dB por debajo del piano (que
+  // anda por -19): al volumen que venían, las graves atronaban.
+  normalize: -24,
+  level: 1,
+} as const;
+
+/** Acústica de acero, del soundfont FluidR3. */
+export const FLUID_STEEL_GUITAR = createSampler({
+  dir: "guitarra-fluidr3-acero",
+  notes: CHROMATIC_C2_C6,
+  ...RAW_GUITAR,
+  // El ataque pinchaba: un pelín menos de agudos (ajustado a oído en armónico).
+  trebleCut: { hz: 3000, db: 5 },
+});
+
+/** Nylon (española), del soundfont FatBoy. */
+export const FATBOY_NYLON_GUITAR = createSampler({
+  dir: "guitarra-fatboy-nylon",
+  notes: CHROMATIC_C2_C6,
+  ...RAW_GUITAR,
 });

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, RotateCcw } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
@@ -197,7 +197,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
           </div>
 
           <div className="flex w-[42px] md:w-[92px] flex-shrink-0 justify-end">
-            <ThemeToggle onPhoto />
+            <ThemeLogoPill />
           </div>
         </div>
 

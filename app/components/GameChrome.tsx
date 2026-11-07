@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
+import ThemeLogoPill from "./ThemeLogoPill";
 import { useBackHref } from "./useBackHref";
 
 /**
@@ -37,16 +37,7 @@ export default function GameChrome({ children }: { children?: React.ReactNode })
         <span />
       )}
 
-      <div className="flex flex-shrink-0 items-center gap-2 md:gap-3">
-        <ThemeToggle onPhoto />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/assets/logo21stCM_no_white_1-192.png"
-          alt=""
-          aria-hidden="true"
-          className="h-8 w-auto flex-shrink-0 opacity-40 drop-shadow-2xl md:h-12"
-        />
-      </div>
+      <ThemeLogoPill />
     </div>
   );
 }

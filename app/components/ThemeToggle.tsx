@@ -13,6 +13,7 @@ export default function ThemeToggle({
   withLabel = false,
   onPhoto = false,
   compact = false,
+  inPill = false,
 }: {
   withLabel?: boolean;
   /** Pequeño y sin marco, para el pie del menú de usuario. */
@@ -23,6 +24,8 @@ export default function ThemeToggle({
    * que con el `bg-white/5` de siempre en modo claro no se veía.
    */
   onPhoto?: boolean;
+  /** Sin marco propio, dentro de una cápsula (la de la barra de los ejercicios). */
+  inPill?: boolean;
 }) {
   const [isDarkMode, setIsDarkMode] = useStoredThemeMode();
 
@@ -37,7 +40,9 @@ export default function ThemeToggle({
       onClick={() => setIsDarkMode(!isDarkMode)}
       aria-label={isDarkMode ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
       className={
-        compact
+        inPill
+          ? "group grid h-7 w-7 flex-shrink-0 place-items-center rounded-full transition hover:bg-white/10 md:h-8 md:w-8"
+          : compact
           ? "group grid h-7 w-7 place-items-center rounded-lg transition hover:bg-white/10"
           : withLabel
           ? "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-bold text-white/70 transition hover:bg-white/10 hover:text-white"

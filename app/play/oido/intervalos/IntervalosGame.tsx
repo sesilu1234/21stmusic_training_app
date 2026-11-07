@@ -6,10 +6,13 @@ import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
 import {
   INTERVALS,
   BUTTON_LABELS,
-  EAR_SOUNDS,
+  GUITAR_PRESET,
+  GUITAR_SOFT_DECAY,
   useAudio,
   useEarSound,
+  withSoftDecay,
 } from "../audio";
+import EarSoundPicker from "../EarSoundPicker";
 import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
@@ -35,7 +38,12 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
   const [isReviewing, setIsReviewing] = useState(false);
   const [solutionStep, setSolutionStep] = useState<number | null>(null);
 
-  const { soundIdx, setSoundIdx, preset, sampler } = useEarSound();
+  const { soundIdx, setSoundIdx, variantIdx, setVariantIdx, preset, sampler: chosenSampler } = useEarSound();
+  // PRUEBA: aquí la guitarra lleva una caída más suave (ver withSoftDecay).
+  const sampler =
+    soundIdx === GUITAR_PRESET && chosenSampler
+      ? withSoftDecay(chosenSampler, GUITAR_SOFT_DECAY[variantIdx] ?? 1)
+      : chosenSampler;
   const [speed, setSpeed]             = useState(0.25);
   const gapMs                         = Math.round(300 + speed * 1700);
 
@@ -67,13 +75,15 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
       for (let i = 0; i < total; i++) {
         list.push(pool[Math.floor(Math.random() * pool.length)]);
       }
-      // De Fa a Do (antes de Do a Sol): con el piano grabado, que suena una
-      // octava por debajo, la grave cae entre Fa3 y Do4. Si sale el mismo
+      // De Mib a La (antes de Fa a Do, y antes aún de Do a Sol): con todo
+      // sonando una octava por debajo, la grave cae entre Mib3 y La3 y la más
+      // aguda que puede salir es La4. Más arriba la guitarra suena fea. Va
+      // igual con todos los instrumentos. Si sale el mismo
       // intervalo que en la anterior, desde otra nota: el mismo intervalo sí
       // puede repetirse, la misma pregunta calcada no.
       const roots: number[] = [];
       list.forEach((interval, index) => {
-        const randomRoot = () => 5 + Math.floor(Math.random() * 8);
+        const randomRoot = () => 3 + Math.floor(Math.random() * 7);
         const sameAsBefore = index > 0 && list[index - 1] === interval;
         roots.push(
           sameAsBefore
@@ -133,11 +143,13 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
   useEffect(() => {
     if (!currentInterval || !isMounted || isReviewing) return;
     if (!shouldAutoPlayNextRef.current) return;
-    shouldAutoPlayNextRef.current = false;
-    const timer = window.setTimeout(
-      () => triggerPlay(currentInterval, rootsRef.current[step], true),
-      120,
-    );
+    // El aviso se apaga al sonar, no antes: si algo cambia en estos ms (p. ej.
+    // acaba de sonar la pregunta anterior) el efecto se repite y la vuelve a
+    // programar. Apagándolo antes, a veces la siguiente no sonaba sola.
+    const timer = window.setTimeout(() => {
+      shouldAutoPlayNextRef.current = false;
+      triggerPlay(currentInterval, rootsRef.current[step], true);
+    }, 120);
     return () => window.clearTimeout(timer);
   }, [currentInterval, isMounted, isReviewing, triggerPlay, step]);
 
@@ -241,22 +253,12 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
             Escuchar
           </button>
 
-          <div className="flex items-center bg-black/50 border border-white/10 rounded-md p-2 backdrop-blur-md gap-2">
-            {EAR_SOUNDS.map((p, i) => (
-              <button
-                key={p.label}
-                onClick={() => setSoundIdx(i)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all duration-100 border-2
-                  ${soundIdx === i
-                    ? "bg-amber-400 text-black border-black shadow-[4px_4px_0px_#000]"
-                    : "bg-white/5 text-white/40 border-transparent hover:text-white/80 hover:bg-white/10"
-                  }`}
-              >
-                <span className="text-sm leading-none">{p.icon}</span>
-                <span className="hidden sm:inline">{p.label}</span>
-              </button>
-            ))}
-          </div>
+          <EarSoundPicker
+            soundIdx={soundIdx}
+            setSoundIdx={setSoundIdx}
+            variantIdx={variantIdx}
+            setVariantIdx={setVariantIdx}
+          />
 
           <div className="flex items-center gap-3 bg-black/50 border border-white/10 rounded-md px-4 py-2 backdrop-blur-md">
             <span className="text-white/40 text-[9px] uppercase tracking-widest">Tiempo</span>

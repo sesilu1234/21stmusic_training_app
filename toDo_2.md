@@ -70,8 +70,19 @@ Extra: Y alguna (4 o 6, a 0,25 puntos) de trivial con carácter de “recuperaci
 Total: 10
 
 ¿Qué os parece? -->
+<!--
+poner que el pianao e insstrumentos sonidos suenen bien en oido.cambiar sonido guitarra ... -->
 
-poner que el pianao e insstrumentos sonidos suenen bien en oido.cambiar sonido guitarra ...
+<!-- ver que todos los sonidos suenan bien y balanceados -->
+
+mirar la guia y ver que hay que poner sí o sí
+y algo matematico para entender ultra bien
+
+revisar todo, y movil
+
+en ingles
+
+algo de let it ring o no
 
 <!-- algo habia aal en aalgunos ejericios de vocalizacion. comprobara toddo y rockschool -->
 <!--

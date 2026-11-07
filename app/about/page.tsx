@@ -96,16 +96,16 @@ export default function AboutPage() {
         >
           Salamander Grand Piano
         </a>
-        , de Alexander Holm, y la guitarra de{" "}
+        , de Alexander Holm, y las guitarras de los soundfonts{" "}
         <a
-          href="https://github.com/nbrosowsky/tonejs-instruments"
+          href="https://github.com/gleitz/midi-js-soundfonts"
           target="_blank"
           rel="noreferrer"
           className="underline decoration-white/20 underline-offset-4 transition hover:text-white/60"
         >
-          tonejs-instruments
+          FluidR3 y FatBoy
         </a>
-        , de Nicholaus Brosowsky (CC BY 3.0).
+        , en midi-js-soundfonts de Benjamin Gleitzman (CC BY 3.0 y CC BY-SA 3.0).
       </p>
     </PaperShell>
   );

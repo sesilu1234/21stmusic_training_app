@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpDown, Volume2 } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import { EAR_SOUNDS, useAudio, useEarSound } from "../audio";
+import SoundIconPicker from "../SoundIconPicker";
 import {
   buildModeQuiz,
   droneNote,
@@ -40,7 +41,7 @@ export default function ModeEarGame() {
   const [gameOver, setGameOver] = useState(false);
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
-  const { soundIdx, setSoundIdx, preset: presetIdx, sampler } = useEarSound();
+  const { soundIdx, setSoundIdx, variantIdx, setVariantIdx, preset: presetIdx, sampler } = useEarSound();
   /** Qué grado de la escala va sonando: -1 = ninguna. */
   const [playIndex, setPlayIndex] = useState(-1);
   /** Si va subiendo o bajando, para que la estela de barras siga a la nota. */
@@ -99,28 +100,39 @@ export default function ModeEarGame() {
       // suena y la barra que se enciende dejan de ir a la par.
       const bars = findMode(target.modeId).intervals.length;
 
-      notes.forEach((_, index) => {
-        const bar = index < bars ? index : 2 * bars - 2 - index;
+      // Las barras arrancan cuando arranca el sonido: la primera vez hay que
+      // esperar a que cargue la grabación, y antes se adelantaban.
+      // `leadMs`: lo que falta para que suene la primera nota de la escala.
+      const startFlashes = (leadMs: number) => {
+        clearFlashTimers();
+        notes.forEach((_, index) => {
+          const bar = index < bars ? index : 2 * bars - 2 - index;
+          flashTimersRef.current.push(
+            window.setTimeout(() => {
+              setPlayIndex(bar);
+              setPlayDir(index < bars ? "up" : "down");
+            }, leadMs + index * GAP_MS),
+          );
+        });
         flashTimersRef.current.push(
-          window.setTimeout(() => {
-            setPlayIndex(bar);
-            setPlayDir(index < bars ? "up" : "down");
-          }, index * GAP_MS),
+          window.setTimeout(() => setPlayIndex(-1), leadMs + notes.length * GAP_MS),
         );
-      });
-      flashTimersRef.current.push(
-        window.setTimeout(() => setPlayIndex(-1), notes.length * GAP_MS),
-      );
+      };
 
-      playOverDrone(notes, GAP_MS, presetIdx, droneNote(target), sampler);
+      playOverDrone(notes, GAP_MS, presetIdx, droneNote(target), sampler, startFlashes);
     },
     [playOverDrone, presetIdx, roundTrip, sampler, stop],
   );
 
   useEffect(() => {
     if (!question || gameOver || !autoPlayRef.current) return;
-    autoPlayRef.current = false;
-    const timer = window.setTimeout(() => play(question), 150);
+    // El aviso se apaga al sonar, no antes: si algo cambia en estos ms (p. ej.
+    // acaba de sonar la pregunta anterior) el efecto se repite y la vuelve a
+    // programar. Apagándolo antes, a veces la siguiente no sonaba sola.
+    const timer = window.setTimeout(() => {
+      autoPlayRef.current = false;
+      play(question);
+    }, 150);
     return () => window.clearTimeout(timer);
   }, [question, gameOver, play]);
 
@@ -213,23 +225,15 @@ export default function ModeEarGame() {
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
-            <ThemeToggle onPhoto />
-            <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-              {EAR_SOUNDS.map((preset, index) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => setSoundIdx(index)}
-                  title={preset.label}
-                  aria-label={preset.label}
-                  className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                    soundIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
-                  }`}
-                >
-                  {preset.icon}
-                </button>
-              ))}
-            </div>
+            <SoundIconPicker
+              options={EAR_SOUNDS}
+              selectedIdx={soundIdx}
+              onSelect={setSoundIdx}
+              variantIdx={variantIdx}
+              onVariant={setVariantIdx}
+              activeClass="bg-violet-400/25"
+            />
+            <ThemeLogoPill />
           </div>
         </div>
 

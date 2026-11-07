@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, Play, Timer } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import Staff, { type NoteState } from "@/app/components/Staff";
@@ -192,7 +192,7 @@ export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
           </div>
 
           <div className="flex w-[42px] flex-shrink-0 justify-end md:w-[92px]">
-            <ThemeToggle onPhoto />
+            <ThemeLogoPill />
           </div>
         </div>
 

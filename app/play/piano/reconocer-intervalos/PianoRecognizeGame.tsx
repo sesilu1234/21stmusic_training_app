@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Volume2 } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import PianoKeyboard, { type KeyMark } from "@/app/components/PianoKeyboard";
-import { PRESET_ICONS, PRESETS, useAudio } from "@/app/play/oido/audio";
+import { PIANO_GAME_SOUNDS, useAudio, usePianoGameSound } from "@/app/play/oido/audio";
+import SoundIconPicker from "@/app/play/oido/SoundIconPicker";
 import {
   PIANO_INTERVALS,
   buildPianoIntervalQuiz,
@@ -42,7 +43,7 @@ export default function PianoRecognizeGame({ level }: { level: PianoIntervalLeve
   const [gameOver, setGameOver] = useState(false);
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
-  const [presetIdx, setPresetIdx] = useState(0);
+  const { presetIdx, setPresetIdx, variantIdx, setVariantIdx } = usePianoGameSound();
 
   const advanceTimerRef = useRef<number | null>(null);
 
@@ -196,23 +197,15 @@ export default function PianoRecognizeGame({ level }: { level: PianoIntervalLeve
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
-            <ThemeToggle onPhoto />
-            <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-              {PRESETS.map((preset, index) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => setPresetIdx(index)}
-                  title={preset.label}
-                  aria-label={preset.label}
-                  className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                    presetIdx === index ? "bg-emerald-400/25" : "opacity-40 hover:opacity-80"
-                  }`}
-                >
-                  {PRESET_ICONS[index]}
-                </button>
-              ))}
-            </div>
+            <SoundIconPicker
+              options={PIANO_GAME_SOUNDS}
+              selectedIdx={presetIdx}
+              onSelect={setPresetIdx}
+              variantIdx={variantIdx}
+              onVariant={setVariantIdx}
+              activeClass="bg-emerald-400/25"
+            />
+            <ThemeLogoPill />
           </div>
         </div>
 
