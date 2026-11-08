@@ -5,7 +5,7 @@ import SubMenu from "@/app/components/SubMenu";
 import { NOTE_READING_LEVELS } from "@/lib/noteReading";
 import { NOTE_SPRINT_LEVELS } from "@/lib/noteSprint";
 
-const levelIcons = [Music4, Sparkles, Waypoints, Hash, Layers];
+const levelIcons = [Music4, Sparkles, Waypoints, Hash, Hash, Layers];
 
 export default function LecturaNotasMenuPage() {
   return (
@@ -19,7 +19,7 @@ export default function LecturaNotasMenuPage() {
         {
           id: "nota",
           title: "Nota a nota",
-          description: "Una nota cada vez, sin reloj. Cinco niveles de menos a más.",
+          description: "Una nota cada vez, sin reloj. Seis niveles de menos a más.",
         },
         {
           id: "sprint",

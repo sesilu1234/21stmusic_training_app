@@ -13,7 +13,7 @@ import { MELODY_LEVELS } from "../melodyEar";
 import { NOTE_READING_LEVELS } from "../noteReading";
 import { ACORDE_NIVELES, ESCALA_NIVELES } from "../noteSpelling";
 import { CHORD_BUILD_LEVELS, SCALE_BUILD_LEVELS } from "../pianoBuild";
-import { PIANO_INTERVAL_LEVELS } from "../pianoIntervals";
+import { ALL_INTERVALS_LEVELS } from "../pianoIntervals";
 import { PIANO_NOTE_LEVELS } from "../pianoNotes";
 import { RHYTHM_LEVELS } from "../rhythm";
 import { CHORD_NAME_LEVELS, CHORD_SPELL_LEVELS } from "../staffChords";
@@ -80,8 +80,8 @@ const LEVELS: Record<string, ExamLevel[]> = {
     { slug: "septimas", title: "Séptimas" },
   ],
   "/play/piano/notas": titled(PIANO_NOTE_LEVELS),
-  "/play/piano/intervalos": titled(PIANO_INTERVAL_LEVELS),
-  "/play/piano/reconocer-intervalos": titled(PIANO_INTERVAL_LEVELS),
+  "/play/piano/intervalos": titled(ALL_INTERVALS_LEVELS),
+  "/play/piano/reconocer-intervalos": titled(ALL_INTERVALS_LEVELS),
   "/play/piano/acordes": titled(CHORD_BUILD_LEVELS),
   "/play/piano/escalas": titled(SCALE_BUILD_LEVELS),
   "/play/trivia": TRIVIA_TOPICS.map((topic) => ({ slug: topic.slug, title: topic.title })),

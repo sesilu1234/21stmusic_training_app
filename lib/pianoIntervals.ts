@@ -75,6 +75,58 @@ export const PIANO_INTERVAL_LEVELS: PianoIntervalLevel[] = [
   },
 ];
 
+/**
+ * Reconoce el intervalo y Toca el intervalo tienen un solo nivel, los doce:
+ * con cuatro subniveles para algo que se mira y se cuenta, la gente se
+ * desesperaba. En su lugar se eligen a mano los intervalos que se quieran,
+ * como en Intervalos al oído. Con todos es el ejercicio normal y el único que
+ * cuenta para la medalla; con menos es práctica y no se guarda.
+ *
+ * Los niveles de arriba se quedan: las URL viejas siguen abriendo y los
+ * exámenes ya guardados los nombran.
+ */
+export const ALL_INTERVALS_LEVELS: PianoIntervalLevel[] = PIANO_INTERVAL_LEVELS.filter(
+  (level) => level.slug === "cromaticos",
+).map((level) => ({ ...level, badge: "Todos" }));
+
+/** El nivel de los dos modos, el único. */
+export const ALL_INTERVALS_LEVEL = ALL_INTERVALS_LEVELS[0];
+
+/** Cuántos hay que marcar como mínimo: con uno no habría nada que distinguir. */
+export const MIN_CUSTOM_PIANO_INTERVALS = 2;
+
+/** Lo que se dice al acabar una partida con intervalos elegidos a mano. */
+export const PIANO_PRACTICE_NOTE =
+  "Práctica: con intervalos elegidos a mano no cuenta para el progreso ni la medalla.";
+
+/** Todos los semitonos, en orden. */
+export const ALL_PIANO_SEMITONES = PIANO_INTERVALS.map((interval) => interval.semitones);
+
+/**
+ * Una selección a mano, en semitonos. Los que no existen se descartan; si no
+ * llegan al mínimo, null. Si están todos, es lo normal y cuenta.
+ */
+export const pianoIntervalSelection = (semitones: number[]) => {
+  const picked = ALL_PIANO_SEMITONES.filter((value) => semitones.includes(value));
+  if (picked.length < MIN_CUSTOM_PIANO_INTERVALS) return null;
+  return { semitones: picked, custom: picked.length < ALL_PIANO_SEMITONES.length };
+};
+
+/** La selección de la dirección (`?iv=3,4,7`, en semitonos). Si no hay, o no vale, todos. */
+export const pianoIntervalSelectionFromParam = (iv: string | string[] | undefined) => {
+  const value = Array.isArray(iv) ? iv[0] : iv;
+  return (
+    (value && pianoIntervalSelection(value.split(",").map(Number))) || {
+      semitones: ALL_PIANO_SEMITONES,
+      custom: false,
+    }
+  );
+};
+
+/** Lo que va detrás del `?` en el enlace al juego. Vacío si son todos. */
+export const pianoIntervalQuery = (selection: { semitones: number[]; custom: boolean }) =>
+  selection.custom ? `?iv=${selection.semitones.join(",")}` : "";
+
 export const findPianoIntervalLevel = (slug: string) =>
   PIANO_INTERVAL_LEVELS.find((level) => level.slug === slug);
 

@@ -11,6 +11,8 @@ import Staff, { type NoteState } from "@/app/components/Staff";
 import StaffCard from "@/app/components/StaffCard";
 import { alterAccidental, spelledName, type SpelledNote } from "@/lib/staff";
 import {
+  ANSWER_NAMES,
+  ANSWER_ROWS,
   buildChordStaffQuiz,
   chordName,
   type ChordStaffLevel,
@@ -30,13 +32,9 @@ interface Round {
   answers: (Answer | null)[];
 }
 
-const NATURAL_ROOT_NAMES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
-const ALTERED_ROOT_NAMES = ["Do#", "Reb", "Mib", "Fa#", "Sol#", "Lab", "Sib"];
-
+/** Sin fundamentales alteradas basta la fila de naturales; con ellas, las 21. */
 const rootOptions = (level: ChordStaffLevel) =>
-  level.alteredRoots
-    ? [...NATURAL_ROOT_NAMES, ...ALTERED_ROOT_NAMES]
-    : NATURAL_ROOT_NAMES;
+  level.alteredRoots ? ANSWER_NAMES : ANSWER_ROWS[1];
 
 const createRound = (level: ChordStaffLevel): Round => {
   const total = ROUND_LENGTH;
@@ -184,8 +182,8 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
-          <div className="mb-7 flex justify-center">
+        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-6 pt-4 md:pb-6 md:pt-4">
+          <div className="mb-5 flex justify-center">
             <StaffCard>
               <Staff clef={question.clef} columns={columns} label="Acorde en el pentagrama" />
             </StaffCard>
@@ -194,47 +192,96 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
           <div className="mx-auto w-full max-w-[760px] space-y-3">
             {/* Primero la fundamental, después la especie: es el orden en que se
                 lee un acorde, y así la respuesta no se cierra de un clic suelto. */}
-            <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md md:p-5">
-              <p className="mb-3 text-center text-[9px] font-black uppercase tracking-[0.28em] text-white/30">
+            <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md md:p-4">
+              <p className="mb-2.5 text-center text-[9px] font-black uppercase tracking-[0.28em] text-white/30">
                 Fundamental
               </p>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-7 md:gap-2.5">
-                {roots.map((name) => {
-                  const chosen = (answered?.root ?? draftRoot) === name;
-                  const isSolution =
-                    answered !== null && name === spelledName(question.root);
-
-                  return (
-                    <button
-                      key={name}
-                      type="button"
-                      disabled={answered !== null || gameOver}
-                      onClick={() => setDraftRoot(name)}
-                      className={`rounded-xl border py-2.5 text-sm font-black tracking-tight transition active:scale-95 md:py-3 ${
-                        isSolution
-                          ? "border-emerald-400 bg-emerald-400/25 text-emerald-100"
-                          : chosen && answered !== null
-                            ? "border-rose-400 bg-rose-500/25 text-rose-100"
-                            : chosen
-                              ? "border-amber-300 bg-amber-400/25 text-amber-100"
-                              : answered !== null
-                                ? "border-white/5 bg-white/5 text-white/25"
-                                : "border-white/10 bg-white/5 text-white hover:border-amber-300/50 hover:bg-amber-400/20"
-                      }`}
+              {level.alteredRoots ? (
+                /* Una columna por letra partida en tres (#, natural, b), como
+                   en Lectura de notas: siete bloques en vez de 21 botones. */
+                <div className="grid grid-cols-7 gap-1.5 sm:gap-2 md:gap-2.5">
+                  {ANSWER_ROWS[1].map((letter, columnIndex) => (
+                    <div
+                      key={letter}
+                      className="flex flex-col divide-y divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-white/5"
                     >
-                      {bemol(name)}
-                    </button>
-                  );
-                })}
-              </div>
+                      {ANSWER_ROWS.map((row, rowIndex) => {
+                        const name = row[columnIndex];
+                        const natural = rowIndex === 1;
+                        const chosen = (answered?.root ?? draftRoot) === name;
+                        const isSolution =
+                          answered !== null && name === spelledName(question.root);
+
+                        return (
+                          <button
+                            key={name}
+                            type="button"
+                            disabled={answered !== null || gameOver}
+                            onClick={() => setDraftRoot(name)}
+                            className={`px-0.5 font-black tracking-tight transition ${
+                              natural
+                                ? "py-2 text-xs sm:text-sm md:py-2.5"
+                                : "py-1 text-[11px] md:py-1.5 md:text-xs"
+                            } ${
+                              isSolution
+                                ? "bg-emerald-400/25 text-emerald-100"
+                                : chosen && answered !== null
+                                  ? "bg-rose-500/25 text-rose-100"
+                                  : chosen
+                                    ? "bg-amber-400/25 text-amber-100"
+                                    : answered !== null
+                                      ? "text-white/25"
+                                      : natural
+                                        ? "text-white hover:bg-amber-400/20"
+                                        : "text-white/60 hover:bg-amber-400/20 hover:text-white"
+                            }`}
+                          >
+                            {bemol(name)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-7 gap-1.5 sm:gap-2 md:gap-2.5">
+                  {roots.map((name) => {
+                    const chosen = (answered?.root ?? draftRoot) === name;
+                    const isSolution =
+                      answered !== null && name === spelledName(question.root);
+
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        disabled={answered !== null || gameOver}
+                        onClick={() => setDraftRoot(name)}
+                        className={`rounded-xl border px-0.5 py-2.5 text-xs font-black tracking-tight transition active:scale-95 sm:text-sm md:py-3 ${
+                          isSolution
+                            ? "border-emerald-400 bg-emerald-400/25 text-emerald-100"
+                            : chosen && answered !== null
+                              ? "border-rose-400 bg-rose-500/25 text-rose-100"
+                              : chosen
+                                ? "border-amber-300 bg-amber-400/25 text-amber-100"
+                                : answered !== null
+                                  ? "border-white/5 bg-white/5 text-white/25"
+                                  : "border-white/10 bg-white/5 text-white hover:border-amber-300/50 hover:bg-amber-400/20"
+                        }`}
+                      >
+                        {bemol(name)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div
-              className={`rounded-[1.75rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md transition md:p-5 ${
+              className={`rounded-[1.75rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md transition md:p-4 ${
                 draftRoot === null && answered === null ? "opacity-35" : ""
               }`}
             >
-              <p className="mb-3 text-center text-[9px] font-black uppercase tracking-[0.28em] text-white/30">
+              <p className="mb-2.5 text-center text-[9px] font-black uppercase tracking-[0.28em] text-white/30">
                 Especie
               </p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:gap-2.5">
@@ -248,7 +295,7 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
                       type="button"
                       disabled={draftRoot === null || answered !== null || gameOver}
                       onClick={() => close({ root: draftRoot!, shapeId: shape.id })}
-                      className={`rounded-xl border py-2.5 text-sm font-black tracking-tight transition active:scale-95 disabled:cursor-default md:py-3 ${
+                      className={`rounded-xl border py-2 text-sm font-black tracking-tight transition active:scale-95 disabled:cursor-default md:py-2.5 ${
                         isSolution
                           ? "border-emerald-400 bg-emerald-400/25 text-emerald-100"
                           : chosen
@@ -266,7 +313,7 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
             </div>
           </div>
 
-          <div className="mt-6 flex min-h-[2.5rem] items-center justify-center">
+          <div className="mt-4 flex min-h-[2.5rem] items-center justify-center">
             {answered === null ? (
               <p className="text-center text-[11px] uppercase tracking-[0.2em] text-white/25">
                 {draftRoot === null

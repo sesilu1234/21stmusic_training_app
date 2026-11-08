@@ -78,11 +78,11 @@ poner que el pianao e insstrumentos sonidos suenen bien en oido.cambiar sonido g
 mirar la guia y ver que hay que poner sí o sí
 y algo matematico para entender ultra bien
 
-revisar todo, y movil
+<!-- revisar todo, y movil -->
 
 en ingles
 
-guardara en localstorage el instrumento elegido se puede ? ( cuidado aqui en caso de hacerlo porque haya sitios donde el piano de cola no está)
+<!-- guardara en localstorage el instrumento elegido se puede ? ( cuidado aqui en caso de hacerlo porque haya sitios donde el piano de cola no está) -->
 
 <!-- algo de let it ring o no -->
 

@@ -20,7 +20,10 @@ export interface NoteSprintLevel {
   badge: string;
   /** "ambas": cada ristra en una clave. */
   clef: Clef | "ambas";
-  /** El tiempo para las diez ristras. */
+  /**
+   * El tiempo de la medalla, y el que sale por defecto. Cada uno puede poner
+   * el que quiera, pero con más que este es práctica y no se guarda.
+   */
   seconds: number;
 }
 
@@ -40,18 +43,18 @@ export const NOTE_SPRINT_LEVELS: NoteSprintLevel[] = [
   {
     slug: "contrarreloj-fa",
     title: "Contrarreloj · Clave de fa",
-    desc: "Lo mismo en clave de fa, con 60 segundos.",
+    desc: "Lo mismo en clave de fa: 50 segundos.",
     badge: "Contrarreloj",
     clef: "fa",
-    seconds: 60,
+    seconds: 50,
   },
   {
     slug: "contrarreloj-ambas",
     title: "Contrarreloj · Ambas claves",
-    desc: "Cada ristra en una clave: primero mirar cuál toca. 60 segundos.",
+    desc: "Cada ristra en una clave: primero mirar cuál toca. 50 segundos.",
     badge: "Contrarreloj",
     clef: "ambas",
-    seconds: 60,
+    seconds: 50,
   },
 ];
 

@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import Backdrop from "./Backdrop";
 import { MedalSticker } from "./MedalBadge";
 import { useLevelMedals } from "./useLevelMedals";
-import ThemeToggle from "./ThemeToggle";
+import ThemeLogoPill from "./ThemeLogoPill";
 import { useBackHref } from "./useBackHref";
 import SiteFooter from "./SiteFooter";
 import SubMenuLayoutView from "./SubMenuLayouts";
@@ -110,7 +110,7 @@ export default function SubMenu({
             <ArrowLeft size={14} />
             {back.href === "/" ? "Menú principal" : "Atrás"}
           </Link>
-          <ThemeToggle onPhoto />
+          <ThemeLogoPill />
         </div>
 
         {/* Los diseños en columna (acordeón, lista…) van en una columna estrecha y

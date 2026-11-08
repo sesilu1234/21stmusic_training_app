@@ -70,8 +70,8 @@ const LENGUAJE_LIBRE: Option[] = [...LECTURA, ...INTERVALO, ...ACORDE];
 /** Instrumento: cinco cosas distintas entre piano y guitarra (3 + 2, o 2 + 3). */
 const PIANO: Option[] = [
   option("/play/piano/notas", ["sol-naturales", "fa-naturales"], 15),
-  option("/play/piano/intervalos", ["basicos", "terceras-y-quintas"], 20),
-  option("/play/piano/reconocer-intervalos", ["basicos", "terceras-y-quintas"], 20),
+  option("/play/piano/intervalos", ["cromaticos"], 20),
+  option("/play/piano/reconocer-intervalos", ["cromaticos"], 20),
   option("/play/piano/acordes", ["mayor-menor"], 30),
   option("/play/piano/escalas", ["mayor"], 45),
 ];

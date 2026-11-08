@@ -50,6 +50,7 @@ import { RHYTHM_LEVELS, createRhythmScore, rhythmTimeline } from "../rhythm";
 import { alterAccidental, spelledName, staffPosition } from "../staff";
 import {
   ANSWER_NAMES,
+  ANSWER_ROWS,
   CHORD_NAME_LEVELS,
   CHORD_SPELL_LEVELS,
   buildChordStaffQuiz,
@@ -211,7 +212,11 @@ const ADAPTERS: Record<string, Adapter> = {
     const level = need(NOTE_READING_LEVELS.find((item) => item.slug === slug), "ese nivel");
     return buildNoteReadingQuiz(level, count).map((question) => {
       const correct = noteLabel(question);
-      const { degree, accidental } = staffPosition(question.semitone, question.preferFlat);
+      const { degree, accidental } = staffPosition(
+        question.semitone,
+        question.preferFlat,
+        question.rareSpelling,
+      );
       return {
         title: "¿Qué nota es?",
         prompt: [{ type: "staff", clef: question.clef, columns: [[{ degree, accidental }]] }],
@@ -249,9 +254,7 @@ const ADAPTERS: Record<string, Adapter> = {
         const correct = chordName(question);
         const root = spelledName(question.root);
         const sameRoot = level.shapes.map((shape) => `${root} ${shape.label}`);
-        const roots = level.alteredRoots
-          ? ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si", "Do#", "Reb", "Mib", "Fa#", "Sol#", "Lab", "Sib"]
-          : ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
+        const roots = level.alteredRoots ? ANSWER_NAMES : ANSWER_ROWS[1];
         const pool = roots.map((name) => `${name} ${question.shape.label}`).concat(sameRoot);
         return {
           title: "¿Qué acorde es?",
@@ -281,7 +284,7 @@ const ADAPTERS: Record<string, Adapter> = {
           prompt: [{ type: "text", lead: "Las notas de", strong: chordName(question) }],
           input: {
             type: "sequence",
-            pad: [ANSWER_NAMES.slice(0, 9), ANSWER_NAMES.slice(9)],
+            pad: ANSWER_ROWS,
             length: values.length,
             ordered: false,
           },

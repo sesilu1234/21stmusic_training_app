@@ -21,15 +21,23 @@ export interface StaffInterval {
 }
 
 /**
- * Los que se preguntan, con el mismo cifrado que la botonera. El unísono y la
- * octava están en la botonera pero no se preguntan, igual que antes: con dos
- * notas en la misma línea o a una octava no hay nada que contar.
+ * Los que se preguntan, con el mismo cifrado que la botonera: "b" es menor o
+ * disminuido según el intervalo y "#" aumentado. El unísono y la octava están
+ * en la botonera pero no se preguntan: con dos notas en la misma línea o a una
+ * octava no hay nada que contar.
+ *
+ * Están todos los que se cifran con una sola alteración: del 2 al 7, cada
+ * número con su b, natural y #. Los que pedirían doble bemol en el cifrado
+ * (bb3, bb6, bb7) se dejan fuera a propósito.
  */
 export const STAFF_INTERVALS: StaffInterval[] = [
   { answer: "b2", grados: 1, semitonos: 1 },
   { answer: "2", grados: 1, semitonos: 2 },
+  { answer: "#2", grados: 1, semitonos: 3 },
   { answer: "b3", grados: 2, semitonos: 3 },
   { answer: "3", grados: 2, semitonos: 4 },
+  { answer: "#3", grados: 2, semitonos: 5 },
+  { answer: "b4", grados: 3, semitonos: 4 },
   { answer: "4", grados: 3, semitonos: 5 },
   { answer: "#4", grados: 3, semitonos: 6 },
   { answer: "b5", grados: 4, semitonos: 6 },
@@ -37,8 +45,20 @@ export const STAFF_INTERVALS: StaffInterval[] = [
   { answer: "#5", grados: 4, semitonos: 8 },
   { answer: "b6", grados: 5, semitonos: 8 },
   { answer: "6", grados: 5, semitonos: 9 },
+  { answer: "#6", grados: 5, semitonos: 10 },
   { answer: "b7", grados: 6, semitonos: 10 },
   { answer: "7", grados: 6, semitonos: 11 },
+  { answer: "#7", grados: 6, semitonos: 12 },
+];
+
+/**
+ * La botonera, colocada: una columna por número (unísono a octava) y una fila
+ * por alteración, aumentados arriba y disminuidos abajo. null = hueco.
+ */
+export const INTERVAL_BUTTON_ROWS: (string | null)[][] = [
+  [null, "#2", "#3", "#4", "#5", "#6", "#7", null],
+  ["Unisono", "2", "3", "4", "5", "6", "7", "8"],
+  [null, "b2", "b3", "b4", "b5", "b6", "b7", null],
 ];
 
 export interface StaffIntervalQuestion {

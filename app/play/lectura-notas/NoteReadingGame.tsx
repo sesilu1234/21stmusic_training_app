@@ -12,6 +12,7 @@ import StaffCard from "@/app/components/StaffCard";
 import {
   answersFor,
   buildNoteReadingQuiz,
+  NOTE_LETTERS,
   noteLabel,
   type NoteReadingLevel,
   type NoteReadingQuestion,
@@ -118,6 +119,12 @@ export default function NoteReadingGame({ level }: { level: NoteReadingLevel }) 
   const solution = noteLabel(question);
   const isCorrect = answered === solution;
   const options = answersFor(level);
+  // Naturales: una fila. Con alteraciones: #, naturales y b, por columnas.
+  const rows: (string | null)[][] = level.accidentals
+    ? ["#", "", "b"].map((sign) =>
+        NOTE_LETTERS.map((letter) => (options.includes(letter + sign) ? letter + sign : null)),
+      )
+    : [options];
 
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
@@ -160,38 +167,93 @@ export default function NoteReadingGame({ level }: { level: NoteReadingLevel }) 
                 semitone={question.semitone}
                 clef={question.clef}
                 preferFlat={question.preferFlat}
+                rareSpelling={question.rareSpelling}
                 state={answered === null ? "idle" : isCorrect ? "correct" : "wrong"}
               />
             </StaffCard>
           </div>
 
           <div className="mx-auto w-full max-w-[720px] rounded-[2rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md md:p-6">
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:gap-3">
-              {options.map((option) => {
-                const isSolution = answered !== null && option === solution;
-                const isMistake = answered === option && !isCorrect;
-
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    disabled={answered !== null || gameOver}
-                    onClick={() => answer(option)}
-                    className={`rounded-xl border py-3 text-sm font-black tracking-tight transition active:scale-95 md:py-4 md:text-base ${
-                      isSolution
-                        ? "border-emerald-400 bg-emerald-400/25 text-emerald-100"
-                        : isMistake
-                          ? "border-rose-400 bg-rose-500/25 text-rose-100"
-                          : answered !== null
-                            ? "border-white/5 bg-white/5 text-white/25"
-                            : "border-white/10 bg-white/5 text-white hover:border-amber-300/50 hover:bg-amber-400/20"
-                    }`}
+            {level.accidentals ? (
+              /*
+                Con alteraciones, una columna por letra partida en tres:
+                sostenido arriba, natural en medio (más grande) y bemol abajo.
+                Se lee como siete teclas en vez de veintiún botones. Las que no
+                salen nunca (Mi#, Si#, Fab, Dob) dejan su hueco vacío.
+              */
+              <div className="grid grid-cols-7 gap-1.5 sm:gap-2 md:gap-2.5">
+                {NOTE_LETTERS.map((letter, columnIndex) => (
+                  <div
+                    key={letter}
+                    className="flex flex-col divide-y divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-white/5"
                   >
-                    {bemol(option)}
-                  </button>
-                );
-              })}
-            </div>
+                    {rows.map((row, rowIndex) => {
+                      const option = row[columnIndex];
+                      const natural = rowIndex === 1;
+                      const size = natural
+                        ? "py-3 text-sm md:py-3.5 md:text-base"
+                        : "py-1.5 text-xs md:py-2";
+
+                      if (option === null) {
+                        return <span key={rowIndex} aria-hidden className={`${size} select-none`}>&nbsp;</span>;
+                      }
+
+                      const isSolution = answered !== null && option === solution;
+                      const isMistake = answered === option && !isCorrect;
+
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          disabled={answered !== null || gameOver}
+                          onClick={() => answer(option)}
+                          className={`${size} font-black tracking-tight transition active:bg-amber-400/30 ${
+                            isSolution
+                              ? "bg-emerald-400/25 text-emerald-100"
+                              : isMistake
+                                ? "bg-rose-500/25 text-rose-100"
+                                : answered !== null
+                                  ? "text-white/25"
+                                  : natural
+                                    ? "text-white hover:bg-amber-400/20"
+                                    : "text-white/60 hover:bg-amber-400/20 hover:text-white"
+                          }`}
+                        >
+                          {bemol(option)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-7 gap-1.5 sm:gap-2 md:gap-3">
+                {options.map((option) => {
+                  const isSolution = answered !== null && option === solution;
+                  const isMistake = answered === option && !isCorrect;
+
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      disabled={answered !== null || gameOver}
+                      onClick={() => answer(option)}
+                      className={`rounded-xl border py-3 text-sm font-black tracking-tight transition active:scale-95 md:py-4 md:text-base ${
+                        isSolution
+                          ? "border-emerald-400 bg-emerald-400/25 text-emerald-100"
+                          : isMistake
+                            ? "border-rose-400 bg-rose-500/25 text-rose-100"
+                            : answered !== null
+                              ? "border-white/5 bg-white/5 text-white/25"
+                              : "border-white/10 bg-white/5 text-white hover:border-amber-300/50 hover:bg-amber-400/20"
+                      }`}
+                    >
+                      {bemol(option)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="mt-6 flex min-h-[2.5rem] items-center justify-center">

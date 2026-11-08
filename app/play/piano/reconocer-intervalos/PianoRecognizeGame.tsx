@@ -12,6 +12,7 @@ import { PIANO_GAME_SOUNDS, useAudio, usePianoGameSound } from "@/app/play/oido/
 import SoundIconPicker from "@/app/play/oido/SoundIconPicker";
 import {
   PIANO_INTERVALS,
+  PIANO_PRACTICE_NOTE,
   buildPianoIntervalQuiz,
   type PianoIntervalLevel,
   type PianoIntervalQuestion,
@@ -35,7 +36,14 @@ const createRound = (level: PianoIntervalLevel): Round => {
   };
 };
 
-export default function PianoRecognizeGame({ level }: { level: PianoIntervalLevel }) {
+export default function PianoRecognizeGame({
+  level,
+  practice = false,
+}: {
+  level: PianoIntervalLevel;
+  /** true = intervalos elegidos a mano: no se guarda ni cuenta para la medalla. */
+  practice?: boolean;
+}) {
   const { playSequence } = useAudio();
 
   const [round, setRound] = useState<Round | null>(null);
@@ -172,7 +180,13 @@ export default function PianoRecognizeGame({ level }: { level: PianoIntervalLeve
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
       <Backdrop />
 
-      {gameOver && <GameOverModal correct={correctCount} total={total} />}
+      {gameOver && (
+        <GameOverModal
+          correct={correctCount}
+          total={total}
+          practice={practice ? PIANO_PRACTICE_NOTE : undefined}
+        />
+      )}
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
@@ -181,7 +195,7 @@ export default function PianoRecognizeGame({ level }: { level: PianoIntervalLeve
             className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/50 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/60 backdrop-blur-sm transition hover:border-emerald-300/50 hover:text-white md:px-4"
           >
             <ArrowLeft size={14} />
-            <span className="hidden sm:inline">Niveles</span>
+            <span className="hidden sm:inline">Volver</span>
           </Link>
 
           <div className="min-w-0 text-center">

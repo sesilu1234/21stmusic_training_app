@@ -55,12 +55,36 @@ export interface StaffPosition {
 }
 
 /**
- * Dónde se escribe un semitono absoluto. `preferFlat` decide cómo se deletrea
- * una tecla negra: Do# (false) o Reb (true).
+ * Teclas blancas que también se pueden escribir alteradas: Do = Si#, Mi = Fab,
+ * Fa = Mi#, Si = Dob. Semitono dentro de la octava → grado (contando desde el
+ * Do de esa misma octava, así que Si# cae en -1 y Dob en 7) y alteración.
  */
-export const staffPosition = (semitone: number, preferFlat = false): StaffPosition => {
+const RARE_SPELLING: Record<number, { degree: number; accidental: "sharp" | "flat" }> = {
+  0: { degree: -1, accidental: "sharp" },
+  4: { degree: 3, accidental: "flat" },
+  5: { degree: 2, accidental: "sharp" },
+  11: { degree: 7, accidental: "flat" },
+};
+
+/** Si una tecla blanca tiene escritura rara (Si#, Fab, Mi#, Dob). */
+export const hasRareSpelling = (semitone: number) =>
+  (((semitone % 12) + 12) % 12) in RARE_SPELLING;
+
+/**
+ * Dónde se escribe un semitono absoluto. `preferFlat` decide cómo se deletrea
+ * una tecla negra: Do# (false) o Reb (true). `rareSpelling` escribe Do, Mi, Fa
+ * y Si como Si#, Fab, Mi# y Dob; en las demás teclas no hace nada.
+ */
+export const staffPosition = (
+  semitone: number,
+  preferFlat = false,
+  rareSpelling = false,
+): StaffPosition => {
   const octave = Math.floor(semitone / 12);
   const within = ((semitone % 12) + 12) % 12;
+
+  const rare = rareSpelling ? RARE_SPELLING[within] : undefined;
+  if (rare) return { degree: octave * 7 + rare.degree, accidental: rare.accidental };
 
   const natural = DEGREE_SEMITONES.indexOf(within);
   if (natural !== -1) return { degree: octave * 7 + natural, accidental: null };

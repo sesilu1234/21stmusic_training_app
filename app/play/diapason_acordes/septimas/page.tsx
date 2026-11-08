@@ -285,14 +285,9 @@ export default function ChordsGame() {
                   key={opcion.symbol}
                   disabled={contestada !== null || !!showFeedback}
                   onClick={() => handleAnswer(opcion)}
-                  className={`group py-2.5 md:py-3.5 rounded-xl border transition-all active:scale-95 disabled:cursor-default ${estado}`}
+                  className={`py-2.5 md:py-3.5 rounded-xl border text-sm md:text-base font-black transition-all active:scale-95 disabled:cursor-default ${estado}`}
                 >
-                  <span className="block text-sm md:text-base font-black">
-                    {opcion.symbol}
-                  </span>
-                  <span className="mt-0.5 block text-[8px] md:text-[9px] font-bold uppercase tracking-wider opacity-50 group-hover:opacity-70">
-                    {opcion.word}
-                  </span>
+                  {opcion.symbol}
                 </button>
               );
             })}

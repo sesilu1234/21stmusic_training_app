@@ -11,7 +11,7 @@ import Staff, { type StaffColumn } from "@/app/components/Staff";
 import StaffCard from "@/app/components/StaffCard";
 import { alterAccidental } from "@/lib/staff";
 import {
-  ANSWER_NAMES,
+  ANSWER_ROWS,
   buildChordStaffQuiz,
   chordName,
   chordNoteNames,
@@ -201,7 +201,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
+        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-6 pt-4 md:pb-6 md:pt-4">
           <div className="mb-5 flex justify-center">
             <StaffCard>
               <Staff clef={question.clef} columns={columns} label="Acorde en el pentagrama" />
@@ -209,7 +209,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
           </div>
 
           {/* Una casilla por nota que hay que decir. */}
-          <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
             {expected.map((_, index) => {
               const given = draft[index];
               const wrongHere = answered !== null && !expected.includes(given);
@@ -233,33 +233,50 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
             })}
           </div>
 
-          <div className="mx-auto w-full max-w-[760px] rounded-[2rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md md:p-6">
-            <div className="grid grid-cols-5 gap-2 sm:grid-cols-9 md:gap-2.5">
-              {ANSWER_NAMES.map((name) => {
-                const used = draft.includes(name);
+          <div className="mx-auto w-full max-w-[760px] rounded-[2rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md">
+            {/* Una columna por letra partida en tres (#, natural, b), como en
+                Lectura de notas: siete bloques en vez de 21 botones. */}
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 md:gap-2.5">
+              {ANSWER_ROWS[1].map((letter, columnIndex) => (
+                <div
+                  key={letter}
+                  className="flex flex-col divide-y divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-white/5"
+                >
+                  {ANSWER_ROWS.map((row, rowIndex) => {
+                    const name = row[columnIndex];
+                    const natural = rowIndex === 1;
+                    const used = draft.includes(name);
 
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    disabled={answered !== null || gameOver || used}
-                    onClick={() => press(name)}
-                    className={`rounded-xl border py-2.5 text-xs font-black tracking-tight transition active:scale-95 disabled:cursor-default md:py-3 md:text-sm ${
-                      used
-                        ? "border-sky-300/40 bg-sky-400/15 text-sky-100"
-                        : answered !== null
-                          ? "border-white/5 bg-white/5 text-white/20"
-                          : "border-white/10 bg-white/5 text-white hover:border-amber-300/50 hover:bg-amber-400/20"
-                    }`}
-                  >
-                    {bemol(name)}
-                  </button>
-                );
-              })}
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        disabled={answered !== null || gameOver || used}
+                        onClick={() => press(name)}
+                        className={`px-0.5 font-black tracking-tight transition disabled:cursor-default ${
+                          natural
+                            ? "py-2 text-xs sm:text-sm md:py-2.5"
+                            : "py-1 text-[11px] md:py-1.5 md:text-xs"
+                        } ${
+                          used
+                            ? "bg-sky-400/15 text-sky-100"
+                            : answered !== null
+                              ? "text-white/20"
+                              : natural
+                                ? "text-white hover:bg-amber-400/20"
+                                : "text-white/60 hover:bg-amber-400/20 hover:text-white"
+                        }`}
+                      >
+                        {bemol(name)}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="mt-6 flex min-h-[2.5rem] flex-wrap items-center justify-center gap-3">
+          <div className="mt-4 flex min-h-[2.5rem] flex-wrap items-center justify-center gap-3">
             {answered === null ? (
               <>
                 <p className="text-center text-[11px] uppercase tracking-[0.2em] text-white/25">

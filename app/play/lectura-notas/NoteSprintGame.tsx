@@ -42,8 +42,21 @@ const writeRecord = (slug: string, ms: number) => {
   }
 };
 
+/** El deslizador del tiempo: de 5 en 5, de 10 s a tres minutos. */
+const MIN_SECONDS = 10;
+const MAX_SECONDS = 180;
+const STEP_SECONDS = 5;
+const clampSeconds = (value: number) => Math.min(MAX_SECONDS, Math.max(MIN_SECONDS, Math.round(value / STEP_SECONDS) * STEP_SECONDS));
+
 export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
-  const limitMs = level.seconds * 1000;
+  /**
+   * El tiempo lo elige cada uno. `level.seconds` es el de la medalla: con más
+   * tiempo se puede jugar, pero es práctica y no se guarda.
+   */
+  const [chosenSeconds, setChosenSeconds] = useState(level.seconds);
+  const [timeInput, setTimeInput] = useState(String(level.seconds));
+  const limitMs = chosenSeconds * 1000;
+  const practice = chosenSeconds > level.seconds;
   const [phase, setPhase] = useState<Phase>("ready");
   const [runs, setRuns] = useState<SprintRun[]>([]);
   const [results, setResults] = useState<boolean[][]>([]);
@@ -61,7 +74,17 @@ export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
   /** Que no se cierre dos veces si el reloj llega a cero justo con la última nota. */
   const finished = useRef(false);
 
+  /** Lo que hay escrito ahora mismo, aunque aún no se haya empezado. */
+  const typedSeconds = clampSeconds(Number(timeInput) > 0 ? Number(timeInput) : chosenSeconds);
+  const typedPractice = typedSeconds > level.seconds;
+
   const start = () => {
+    // Lo escrito en el campo; si está vacío o no es un número, el de antes.
+    const typed = Number(timeInput.replace(",", "."));
+    const nextSeconds = Number.isFinite(typed) && typed > 0 ? clampSeconds(typed) : chosenSeconds;
+    setChosenSeconds(nextSeconds);
+    setTimeInput(String(nextSeconds));
+
     setRuns(buildSprint(level));
     resultsRef.current = Array.from({ length: SPRINT_RUNS }, () => []);
     setResults(resultsRef.current);
@@ -83,7 +106,8 @@ export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
       setPhase("done");
       setFinishMs(doneMs);
       const perfect = doneMs !== null && finalResults.every((run) => run.length === SPRINT_LENGTH && run.every(Boolean));
-      if (perfect) {
+      // El récord, como la medalla, solo con el tiempo del nivel o menos.
+      if (perfect && !practice) {
         const previous = readRecord(level.slug);
         if (previous === null || doneMs < previous) {
           writeRecord(level.slug, doneMs);
@@ -92,7 +116,7 @@ export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
         }
       }
     },
-    [level.slug],
+    [level.slug, practice],
   );
 
   // El reloj. Si llega al límite, se acaba: cuenta lo leído hasta ahí.
@@ -167,7 +191,19 @@ export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
     <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
       <Backdrop />
 
-      {phase === "done" && <GameOverModal correct={correct} total={total} detail={detail} onRestart={start} />}
+      {phase === "done" && (
+        <GameOverModal
+          correct={correct}
+          total={total}
+          detail={detail}
+          onRestart={start}
+          practice={
+            practice
+              ? `Con más de ${level.seconds} s es práctica: no cuenta para la medalla`
+              : undefined
+          }
+        />
+      )}
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
@@ -203,11 +239,28 @@ export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
                 <Timer size={24} strokeWidth={1.75} className="text-amber-300" />
               </span>
               <p className="text-lg font-black text-white">
-                {SPRINT_RUNS} ristras de {SPRINT_LENGTH} notas en {level.seconds} s
+                {SPRINT_RUNS} ristras de {SPRINT_LENGTH} notas
               </p>
               <p className="mt-2 text-sm leading-6 text-white/60">
-                Di las notas de izquierda a derecha. Si fallas una, sigues: cuenta como fallo. Las diez sin fallos y a
-                tiempo, medalla.
+                Di las notas de izquierda a derecha. Si fallas una, sigues: cuenta como fallo. Medalla: las diez sin
+                fallos en {level.seconds} s o menos.
+              </p>
+              <label className="mt-6 flex items-center gap-3">
+                <span className="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">Tiempo</span>
+                <input
+                  type="range"
+                  min={MIN_SECONDS}
+                  max={MAX_SECONDS}
+                  step={STEP_SECONDS}
+                  value={typedSeconds}
+                  onChange={(event) => setTimeInput(event.target.value)}
+                  aria-label="Segundos"
+                  className="h-1 flex-1 cursor-pointer accent-amber-300"
+                />
+                <span className="w-12 text-right text-sm font-black tabular-nums text-white">{typedSeconds} s</span>
+              </label>
+              <p className="mt-1.5 h-4 text-right text-[11px] text-white/35">
+                {typedPractice ? "Práctica, sin medalla" : ""}
               </p>
               <RecordLine slug={level.slug} />
               <button
@@ -262,7 +315,7 @@ export default function NoteSprintGame({ level }: { level: NoteSprintLevel }) {
                   className={`flex items-center gap-1 text-sm font-black tabular-nums ${urgent ? "text-rose-300" : "text-white/70"}`}
                 >
                   <Timer size={14} />
-                  {seconds(elapsed)} s
+                  {seconds(left)} s
                 </span>
               </div>
               )}

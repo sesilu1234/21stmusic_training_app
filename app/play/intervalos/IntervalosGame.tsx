@@ -4,6 +4,7 @@ import GameChrome from "@/app/components/GameChrome";
 import { barajar } from "@/lib/barajar";
 import { ROUND_LENGTH } from "@/lib/roundLength";
 import {
+  INTERVAL_BUTTON_ROWS,
   allStaffIntervalQuestions,
   type StaffIntervalLevel,
   type StaffIntervalQuestion,
@@ -16,26 +17,6 @@ import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
 
 export default function IntervalosGame({ level }: { level: StaffIntervalLevel }) {
-
-  // Single array for a flexible grid. Son los quince en todos los niveles:
-  // quitar los que no salen en uno (el #5 sin alteraciones) sería dar pistas.
-  const todosBotones = [
-    "Unisono",
-    "b2",
-    "2",
-    "b3",
-    "3",
-    "4",
-    "#4",
-    "b5",
-    "5",
-    "#5",
-    "b6",
-    "6",
-    "b7",
-    "7",
-    "8",
-  ];
 
   const [quizList, setQuizList] = useState<StaffIntervalQuestion[]>([]);
   const [isMounted, setIsMounted] = useState(false);
@@ -183,36 +164,72 @@ export default function IntervalosGame({ level }: { level: StaffIntervalLevel })
 
         {/* RESPONSIVE BUTTON GRID */}
         <div
-          className={`bg-black/40 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/10 w-full backdrop-blur-md transition-all ${answeredHere !== null ? "pointer-events-none" : ""}`}
+          className={`bg-black/40 p-4 md:p-5 rounded-[2rem] md:rounded-[2.5rem] border border-white/10 w-full backdrop-blur-md transition-all ${answeredHere !== null ? "pointer-events-none" : ""}`}
         >
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 gap-2 md:gap-3">
-            {todosBotones.map((btn) => {
-              const isSolution = btn === solutionButton;
-              const isMistake = btn === answeredHere && !isSolution;
+          {/* Una columna por número partida en tres: aumentado arriba, justo en
+              medio (más grande) y disminuido abajo. Unísono y octava no tienen
+              # ni b aquí, así que son un bloque entero. Todos en todos los
+              niveles: quitar los que no salen en uno sería dar pistas. */}
+          <div className="grid grid-cols-8 gap-1.5 md:gap-2.5">
+            {INTERVAL_BUTTON_ROWS[1].map((_, columnIndex) => {
+              const cells = INTERVAL_BUTTON_ROWS.map((row, rowIndex) => ({
+                btn: row[columnIndex],
+                rowIndex,
+              })).filter((cell): cell is { btn: string; rowIndex: number } => cell.btn !== null);
+              const single = cells.length === 1;
 
               return (
-                <button
-                  key={btn}
-                  onClick={() => handleAnswer(btn)}
-                  className={`flex items-center justify-center h-12 md:h-14 rounded-lg md:rounded-xl border transition-all active:scale-90 ${btn === "Unisono" ? "col-span-2 md:col-span-1" : ""} ${
-                    answeredHere === null
-                      ? "border-white/10 bg-white/5 text-white hover:bg-amber-500 hover:text-black"
-                      : isSolution
-                        ? "border-green-400 bg-green-500/80 text-white"
-                        : isMistake
-                          ? "border-red-400 bg-red-500/80 text-white"
-                          : "border-white/5 bg-white/5 text-white/20"
-                  }`}
+                <div
+                  key={columnIndex}
+                  className="flex flex-col divide-y divide-white/10 overflow-hidden rounded-lg md:rounded-xl border border-white/10 bg-white/5"
                 >
-                  <span className="text-[10px] md:text-sm font-bold">{btn}</span>
-                </button>
+                  {cells.map(({ btn, rowIndex }) => {
+                    const natural = rowIndex === 1;
+                    const isSolution = btn === solutionButton;
+                    const isMistake = btn === answeredHere && !isSolution;
+
+                    return (
+                      <button
+                        key={btn}
+                        onClick={() => handleAnswer(btn)}
+                        aria-label={btn === "Unisono" ? "Unísono" : undefined}
+                        className={`flex items-center justify-center font-bold transition-colors ${
+                          single
+                            ? "flex-1 text-[11px] md:text-sm"
+                            : natural
+                              ? "h-10 md:h-11 text-[11px] md:text-sm"
+                              : "h-7 md:h-8 text-[10px] md:text-xs"
+                        } ${
+                          answeredHere === null
+                            ? natural
+                              ? "text-white hover:bg-amber-500 hover:text-black"
+                              : "text-white/60 hover:bg-amber-500 hover:text-black"
+                            : isSolution
+                              ? "bg-green-500/80 text-white"
+                              : isMistake
+                                ? "bg-red-500/80 text-white"
+                                : "text-white/20"
+                        }`}
+                      >
+                        {btn === "Unisono" ? (
+                          <>
+                            <span className="md:hidden">1</span>
+                            <span className="hidden md:inline">Unisono</span>
+                          </>
+                        ) : (
+                          btn
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               );
             })}
           </div>
         </div>
 
         {/* NAVIGATION & PROGRESS */}
-        <div className="w-full mt-10 md:mt-16 flex flex-col items-center gap-6">
+        <div className="w-full mt-8 md:mt-10 flex flex-col items-center gap-6">
           <div className="flex items-center justify-between w-full max-w-md gap-4">
             <button
               onClick={goBack}

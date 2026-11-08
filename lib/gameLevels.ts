@@ -24,7 +24,7 @@ import { NOTE_READING_LEVELS } from "./noteReading";
 import { NOTE_SPRINT_LEVELS } from "./noteSprint";
 import { ACORDE_NIVELES, ESCALA_NIVELES } from "./noteSpelling";
 import { CHORD_BUILD_LEVELS, SCALE_BUILD_LEVELS } from "./pianoBuild";
-import { PIANO_INTERVAL_LEVELS } from "./pianoIntervals";
+import { ALL_INTERVALS_LEVELS } from "./pianoIntervals";
 import { PIANO_NOTE_LEVELS } from "./pianoNotes";
 import { RHYTHM_LEVELS } from "./rhythm";
 import { CHORD_NAME_LEVELS, CHORD_SPELL_LEVELS } from "./staffChords";
@@ -77,8 +77,8 @@ export const GAME_LEVELS: Record<string, string[]> = {
   "/play/oido/dictado": slugs(MELODY_LEVELS),
 
   "/play/piano/notas": slugs(PIANO_NOTE_LEVELS),
-  "/play/piano/intervalos": slugs(PIANO_INTERVAL_LEVELS),
-  "/play/piano/reconocer-intervalos": slugs(PIANO_INTERVAL_LEVELS),
+  "/play/piano/intervalos": slugs(ALL_INTERVALS_LEVELS),
+  "/play/piano/reconocer-intervalos": slugs(ALL_INTERVALS_LEVELS),
   "/play/piano/acordes": slugs(CHORD_BUILD_LEVELS),
   "/play/piano/escalas": slugs(SCALE_BUILD_LEVELS),
 

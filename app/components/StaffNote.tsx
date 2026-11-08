@@ -13,6 +13,7 @@ export default function StaffNote({
   semitone,
   clef = "sol",
   preferFlat = false,
+  rareSpelling = false,
   state = "idle",
   className = "",
 }: {
@@ -21,10 +22,12 @@ export default function StaffNote({
   clef?: Clef;
   /** true escribe las teclas negras como bemol (Reb) en vez de sostenido (Do#). */
   preferFlat?: boolean;
+  /** true escribe Do, Mi, Fa y Si como Si#, Fab, Mi# y Dob. */
+  rareSpelling?: boolean;
   state?: NoteState;
   className?: string;
 }) {
-  const { degree, accidental } = staffPosition(semitone, preferFlat);
+  const { degree, accidental } = staffPosition(semitone, preferFlat, rareSpelling);
 
   return (
     <Staff
