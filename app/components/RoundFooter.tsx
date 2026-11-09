@@ -77,8 +77,11 @@ export default function RoundFooter({
   const canGo = (index: number) =>
     index >= 0 && index <= lastReachable && index !== step;
 
+  // `mb-auto`: el pie va pegado debajo del ejercicio, no al fondo de la
+  // pantalla. El hueco que sobra se queda abajo; si el juego centra su bloque
+  // (`mt-auto` en su <main>), ejercicio y pie se centran juntos.
   return (
-    <footer className="w-full pb-4 pt-2">
+    <footer className="mb-auto w-full pb-4 pt-2">
       <div className="mx-auto flex w-full max-w-md items-center justify-between gap-4">
         <button
           type="button"

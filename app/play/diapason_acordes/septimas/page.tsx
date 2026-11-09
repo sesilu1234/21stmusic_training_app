@@ -134,9 +134,9 @@ export default function ChordsGame() {
 
   if (!isMounted || !currentQuestion)
     return (
-      <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+      <div className="relative min-h-dvh flex flex-col font-sans overflow-x-hidden text-white">
         <Backdrop />
-        <div className="relative z-10 min-h-screen flex flex-col">{enunciado}</div>
+        <div className="relative z-10 min-h-dvh flex flex-col">{enunciado}</div>
       </div>
     );
 
@@ -185,10 +185,10 @@ export default function ChordsGame() {
     opcionesSeptimas.find((opcion) => opcion.answer === currentQuestion.answer);
 
   return (
-    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+    <div className="relative min-h-dvh flex flex-col font-sans overflow-x-hidden text-white">
       <Backdrop />
 
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-dvh flex flex-col">
       {/* HEADER / NAVIGATION */}
       {enunciado}
 
@@ -285,14 +285,9 @@ export default function ChordsGame() {
                   key={opcion.symbol}
                   disabled={contestada !== null || !!showFeedback}
                   onClick={() => handleAnswer(opcion)}
-                  className={`group py-2.5 md:py-3.5 rounded-xl border transition-all active:scale-95 disabled:cursor-default ${estado}`}
+                  className={`py-2.5 md:py-3.5 rounded-xl border text-sm md:text-base font-black transition-all active:scale-95 disabled:cursor-default ${estado}`}
                 >
-                  <span className="block text-sm md:text-base font-black">
-                    {opcion.symbol}
-                  </span>
-                  <span className="mt-0.5 block text-[8px] md:text-[9px] font-bold uppercase tracking-wider opacity-50 group-hover:opacity-70">
-                    {opcion.word}
-                  </span>
+                  {opcion.symbol}
                 </button>
               );
             })}
@@ -300,7 +295,7 @@ export default function ChordsGame() {
         </div>
 
         {/* NAVEGACIÓN Y PROGRESO */}
-        <div className="w-full mt-10 md:mt-16 flex flex-col items-center gap-6">
+        <div className="w-full mt-5 md:mt-8 flex flex-col items-center gap-6">
           <div className="flex items-center justify-between w-full max-w-md gap-4">
             <button
               onClick={goBack}
@@ -343,7 +338,7 @@ export default function ChordsGame() {
           </div>
         </div>
 
-        <footer className="mt-auto py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
+        <footer className="mt-auto pb-4 pt-2 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
           © 2026 21st Century Music
         </footer>
       </div>

@@ -5,7 +5,7 @@ import { SITE_URL } from "@/lib/seo";
  * Lo que los buscadores pueden mirar y lo que no.
  *
  * OJO, QUE ESTO ES AL REVÉS DE LO QUE PARECE: aquí solo se cierra `/api/`, y
- * las páginas privadas —login, guía, progreso, notas, alumnario, muestrario—
+ * las páginas privadas —login, guía, progreso, alumnario, muestrario—
  * se dejan ABIERTAS a propósito, aunque sean justo las que no queremos en
  * Google.
  *

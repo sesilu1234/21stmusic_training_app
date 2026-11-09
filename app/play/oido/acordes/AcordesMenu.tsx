@@ -18,6 +18,11 @@ export default function AcordesMenu({ signedIn }: { signedIn: boolean }) {
       title="Elige el nivel"
       intro="Aquí suena un acorde suelto y hay que decir de qué tipo es, sin más pistas. Si lo que quieres es sacar canciones, el modo de al lado (Progresiones) es el que te interesa."
       category="oido"
+      layout="accordion"
+      groups={[
+        { id: "uno", title: "Un acorde suelto", description: "Suena un acorde y dices de qué tipo es. Al final, también qué hay en el bajo." },
+        { id: "dos", title: "Dos acordes", description: "Suenan dos seguidos y dices cuáles son." },
+      ]}
       options={[
         ...CHORD_LEVELS.map((level, index) => ({
           title: level.title,
@@ -25,6 +30,7 @@ export default function AcordesMenu({ signedIn }: { signedIn: boolean }) {
           href: `/play/oido/acordes/${level.slug}`,
           Icon: levelIcons[index] ?? Layers,
           badge: level.badge,
+          group: "uno",
           locked: locked(signedIn, level.slug),
         })),
         ...PAIR_LEVELS.map((level) => ({
@@ -33,6 +39,7 @@ export default function AcordesMenu({ signedIn }: { signedIn: boolean }) {
           href: `/play/oido/acordes/${level.slug}`,
           Icon: ArrowUpDown,
           badge: level.badge,
+          group: "dos",
           locked: locked(signedIn, level.slug),
         })),
       ]}

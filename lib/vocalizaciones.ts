@@ -77,7 +77,7 @@ export interface VocalExercise {
   /** Una línea de qué se trabaja. */
   desc: string;
   group: VocalGroupId;
-  /** El patrón, en semitonos desde la tónica. `null` = un pulso de silencio (solo en las melodías propias). */
+  /** El patrón, en semitonos desde la tónica. `null` = un pulso de silencio (solo en las melodías). */
   pattern: (number | null)[];
   /** Sílaba sugerida para cantarlo. */
   syllable: string;
@@ -324,13 +324,16 @@ export const VOCAL_EXERCISES: VocalExercise[] = [
   // --- Melodías --------------------------------------------------------
   // Pocas a propósito: son la muestra de lo que se puede hacer, y las que
   // importan son las que crea cada uno (lib/melodies.ts). Todas de dominio
-  // público y escritas en Do, todas las notas de un pulso.
+  // público y escritas en Do, todas las notas de un pulso. Donde la canción
+  // tiene una nota larga a mitad de frase va un `null` detrás (un pulso de
+  // silencio): sin él la frase se pegaba a la siguiente y no sonaba a la
+  // canción.
   {
     slug: "estrellita",
     name: "Estrellita",
     desc: "La primera frase. Saltos cortos y vuelta a casa.",
     group: "melodias",
-    pattern: [0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0],
+    pattern: [0, 0, 7, 7, 9, 9, 7, null, 5, 5, 4, 4, 2, 2, 0],
     syllable: "la",
     bpm: 96,
   },
@@ -348,7 +351,7 @@ export const VOCAL_EXERCISES: VocalExercise[] = [
     name: "Martinillo",
     desc: "Frases que se repiten. Se aprende a la segunda vuelta.",
     group: "melodias",
-    pattern: [0, 2, 4, 0, 0, 2, 4, 0, 4, 5, 7, 4, 5, 7],
+    pattern: [0, 2, 4, 0, 0, 2, 4, 0, 4, 5, 7, null, 4, 5, 7],
     syllable: "la",
     bpm: 108,
   },
@@ -422,6 +425,22 @@ const gapBeatsFor = (notes: number) => {
   return rest - (LAST_BEATS - 1);
 };
 
+/** Pulsos por compás de las melodías: todas las de aquí van a cuatro. */
+const MELODY_METER = 4;
+
+/**
+ * Las melodías, en cambio, van por compases enteros. Son canciones: la
+ * siguiente vuelta tiene que entrar en el 1 del compás, como se cantaría. Con
+ * la regla de los pulsos pares, Estrellita duraba 18 y la vuelta siguiente
+ * entraba a mitad de compás, que es lo que sonaba raro. Se deja la espera
+ * mínima de siempre y se alarga hasta cerrar el compás.
+ */
+const melodyGapBeatsFor = (steps: number) => {
+  let gap = MIN_REST_BEATS - (LAST_BEATS - 1);
+  while ((steps - 1 + LAST_BEATS + gap) % MELODY_METER !== 0) gap++;
+  return gap;
+};
+
 /** El plan de un ejercicio: el motor es el mismo que usa Rockschool. */
 export const buildVocalPlan = (
   exercise: VocalExercise,
@@ -435,5 +454,8 @@ export const buildVocalPlan = (
     bpm,
     mode,
     lastBeats: LAST_BEATS,
-    gapBeats: gapBeatsFor(exercise.pattern.length),
+    gapBeats:
+      exercise.group === "melodias"
+        ? melodyGapBeatsFor(exercise.pattern.length)
+        : gapBeatsFor(exercise.pattern.length),
   });

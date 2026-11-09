@@ -9,6 +9,7 @@ import { getStudentAnyStatus, type Student } from "@/lib/students";
 import { getProgress, FORM_WINDOW, type Progress } from "@/lib/progress";
 import { labelForStoredName } from "@/lib/games";
 import StudentSearch from "./StudentSearch";
+import { barColor } from "@/lib/barColor";
 
 /**
  * Alumnario: la actividad de un alumno, para quien da la clase.
@@ -62,8 +63,6 @@ const fmtAgo = (iso: string) => {
   return `el ${fmtDate(iso)}`;
 };
 
-const barColor = (value: number) =>
-  value >= 90 ? "bg-emerald-400" : value >= 60 ? "bg-amber-400" : "bg-rose-400";
 
 /** El nivel, tal cual sale en la URL, escrito para leerlo: "Sol naturales". */
 const levelLabel = (slug: string) => {
@@ -342,7 +341,7 @@ export default async function AlumnoPage({
           práctica esta pantalla llevaba dos velos apilados y salía mucho más
           apagada que el resto de la app. Bajado a 35%: sigue asentando las
           tarjetas y ya no dobla el oscurecido. */}
-      <div aria-hidden className="fixed inset-0 z-0 bg-slate-950/35" />
+      <div aria-hidden className="fixed inset-x-0 top-0 z-0 h-[100lvh] bg-slate-950/35" />
       {/* El mismo halo que la pantalla de acceso, para que las dos páginas de
           fuera de la app se reconozcan como de la misma casa. */}
       <div

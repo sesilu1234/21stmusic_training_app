@@ -100,32 +100,20 @@ export const TRIADAS = [MAYOR, MENOR, DISMINUIDO, AUMENTADO];
 export const CUATRIADAS = [MAJ7, M7, DOM7, M7B5];
 
 /**
- * Los nombres de nota que se pueden contestar. Son los mismos que en Armaduras:
- * las siete naturales y las diez alteradas de uso corriente.
+ * Los nombres de nota que se pueden contestar, en tres filas: sostenidos,
+ * naturales y bemoles. Están las 21, también Mi#, Si#, Fab y Dob: Do# mayor
+ * lleva Mi#, y sin él no se podría escribir.
  *
- * Fuera de esta lista quedan Si#, Mib doble y compañía. No es que no existan —
- * es que un acorde que las necesite no es material de este modo, así que se
- * descarta al generar la pregunta.
+ * Fuera quedan las dobles alteraciones. Un acorde que las necesite no es
+ * material de este modo, así que se descarta al generar la pregunta.
  */
-export const ANSWER_NAMES = [
-  "Do",
-  "Do#",
-  "Reb",
-  "Re",
-  "Re#",
-  "Mib",
-  "Mi",
-  "Fa",
-  "Fa#",
-  "Solb",
-  "Sol",
-  "Sol#",
-  "Lab",
-  "La",
-  "La#",
-  "Sib",
-  "Si",
+export const ANSWER_ROWS: string[][] = [
+  DEGREE_NAMES.map((name) => `${name}#`),
+  [...DEGREE_NAMES],
+  DEGREE_NAMES.map((name) => `${name}b`),
 ];
+
+export const ANSWER_NAMES: string[] = ANSWER_ROWS.flat();
 
 /** Fundamentales naturales: Do, Re, Mi, Fa, Sol, La, Si. */
 const NATURAL_ROOTS: SpelledNote[] = DEGREE_NAMES.map((_, degree) => ({
@@ -133,16 +121,14 @@ const NATURAL_ROOTS: SpelledNote[] = DEGREE_NAMES.map((_, degree) => ({
   alter: 0,
 }));
 
-/** Fundamentales con alteración, las que se ven de verdad en una partitura. */
-const ALTERED_ROOTS: SpelledNote[] = [
-  { degree: 0, alter: 1 }, // Do#
-  { degree: 1, alter: -1 }, // Reb
-  { degree: 2, alter: -1 }, // Mib
-  { degree: 3, alter: 1 }, // Fa#
-  { degree: 4, alter: 1 }, // Sol#
-  { degree: 5, alter: -1 }, // Lab
-  { degree: 6, alter: -1 }, // Sib
-];
+/**
+ * Fundamentales con alteración: las catorce. Las que no dan un acorde
+ * escribible (Mi# mayor pide Sol doble sostenido) las filtra isWritable.
+ */
+const ALTERED_ROOTS: SpelledNote[] = DEGREE_NAMES.flatMap((_, degree) => [
+  { degree, alter: 1 },
+  { degree, alter: -1 },
+]);
 
 /**
  * Las notas de un acorde, escritas como se escriben.
@@ -345,8 +331,8 @@ export const buildChordStaffQuiz = (
     const shape = pick(level.shapes);
     const notes = chordNotes(root, shape);
 
-    // Acordes que no se pueden escribir con las notas de siempre (Mi aumentado
-    // pide Si#) se tiran y se saca otro: no son material de este modo.
+    // Acordes que piden dobles alteraciones (Sol# aumentado pide Re doble
+    // sostenido) se tiran y se saca otro: no son material de este modo.
     if (!isWritable(notes)) continue;
 
     const previous = questions[questions.length - 1];

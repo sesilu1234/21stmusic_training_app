@@ -84,6 +84,29 @@ export default function AboutPage() {
           Fundada por Jaume Pla Soler en 1998
         </p>
       </div>
+
+      {/* La licencia de los instrumentos grabados (CC BY) pide citar a los autores. */}
+      <p className="mt-10 text-xs leading-5 text-white/30">
+        Instrumentos grabados:{" "}
+        <a
+          href="https://archive.org/details/SalamanderGrandPianoV3"
+          target="_blank"
+          rel="noreferrer"
+          className="underline decoration-white/20 underline-offset-4 transition hover:text-white/60"
+        >
+          Salamander Grand Piano
+        </a>
+        , de Alexander Holm, y las guitarras de los soundfonts{" "}
+        <a
+          href="https://github.com/gleitz/midi-js-soundfonts"
+          target="_blank"
+          rel="noreferrer"
+          className="underline decoration-white/20 underline-offset-4 transition hover:text-white/60"
+        >
+          FluidR3 y FatBoy
+        </a>
+        , en midi-js-soundfonts de Benjamin Gleitzman (CC BY 3.0 y CC BY-SA 3.0).
+      </p>
     </PaperShell>
   );
 }

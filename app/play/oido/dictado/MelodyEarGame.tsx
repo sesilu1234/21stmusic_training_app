@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, RotateCcw, RotateCw, Volume2 } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import { ArrowLeft, RotateCw, Volume2 } from "lucide-react";
+import { LetRingToggle, UndoButton, useLetRing } from "../LetRing";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import PianoKeyboard, { noteName, type KeyMark } from "@/app/components/PianoKeyboard";
-import { PRESET_ICONS, PRESETS, useAudio } from "../audio";
+import { EAR_SOUNDS, useAudio, useEarSound } from "../audio";
+import SoundIconPicker from "../SoundIconPicker";
 import {
   buildMelodyQuiz,
   melodyAnswer,
@@ -17,7 +19,7 @@ import {
   type MelodyLevel,
   type MelodyQuestion,
 } from "@/lib/melodyEar";
-import { ROUND_LENGTH } from "@/lib/roundLength";
+import { SHORT_ROUND_LENGTH } from "@/lib/roundLength";
 
 /** Hueco entre notas de la melodía. */
 const GAP_MS = 520;
@@ -38,8 +40,8 @@ interface Round {
 }
 
 const createRound = (level: MelodyLevel): Round => ({
-  questions: buildMelodyQuiz(level, ROUND_LENGTH),
-  answers: Array<number[] | null>(ROUND_LENGTH).fill(null),
+  questions: buildMelodyQuiz(level, SHORT_ROUND_LENGTH),
+  answers: Array<number[] | null>(SHORT_ROUND_LENGTH).fill(null),
 });
 
 /** Una melodía va en orden: aquí las notas se comparan una a una. */
@@ -54,7 +56,7 @@ export default function MelodyEarGame({
   level: MelodyLevel;
   backHref: string;
 }) {
-  const { playSequence } = useAudio();
+  const { playSequence, stop } = useAudio();
 
   const [round, setRound] = useState<Round | null>(null);
   const [step, setStep] = useState(0);
@@ -63,7 +65,8 @@ export default function MelodyEarGame({
   const [gameOver, setGameOver] = useState(false);
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
-  const [presetIdx, setPresetIdx] = useState(0);
+  const { soundIdx, setSoundIdx, variantIdx, setVariantIdx, preset: presetIdx, sampler } = useEarSound();
+  const { letRing, setLetRing } = useLetRing();
   /** Qué nota de la melodía va sonando: -1 = ninguna. */
   const [playIndex, setPlayIndex] = useState(-1);
 
@@ -113,36 +116,54 @@ export default function MelodyEarGame({
     (target?: MelodyQuestion) => {
       if (!target) return;
       clearFlashTimers();
+      // Lo que quedara sonando de antes (la cola del piano) se corta.
+      stop();
 
       const notes = melodyNotes(target);
-      playSequence([melodyTonicChord(target)], 0, presetIdx);
-
-      flashTimersRef.current.push(
-        window.setTimeout(() => {
-          playSequence(
-            notes.map((note) => [note]),
-            GAP_MS,
-            presetIdx,
-          );
-        }, TONIC_MS),
-      );
-
-      notes.forEach((_, index) => {
+      // Todo lo demás cuenta desde que suena la tónica: la primera vez hay
+      // que esperar a la grabación, y si no la melodía y las casillas se
+      // adelantaban.
+      const afterTonic = () => {
+        clearFlashTimers();
         flashTimersRef.current.push(
-          window.setTimeout(() => setPlayIndex(index), TONIC_MS + index * GAP_MS),
+          window.setTimeout(() => {
+            // Cada nota se apaga al entrar la siguiente, salvo con "Dejar
+            // sonar" (la tónica del principio sí se queda, de referencia).
+            playSequence(
+              notes.map((note) => [note]),
+              GAP_MS,
+              presetIdx,
+              1,
+              sampler,
+              undefined,
+              !letRing,
+            );
+          }, TONIC_MS),
         );
-      });
-      flashTimersRef.current.push(
-        window.setTimeout(() => setPlayIndex(-1), TONIC_MS + notes.length * GAP_MS),
-      );
+
+        notes.forEach((_, index) => {
+          flashTimersRef.current.push(
+            window.setTimeout(() => setPlayIndex(index), TONIC_MS + index * GAP_MS),
+          );
+        });
+        flashTimersRef.current.push(
+          window.setTimeout(() => setPlayIndex(-1), TONIC_MS + notes.length * GAP_MS),
+        );
+      };
+      playSequence([melodyTonicChord(target)], 0, presetIdx, 1, sampler, afterTonic);
     },
-    [playSequence, presetIdx],
+    [playSequence, presetIdx, sampler, stop, letRing],
   );
 
   useEffect(() => {
     if (!question || gameOver || !autoPlayRef.current) return;
-    autoPlayRef.current = false;
-    const timer = window.setTimeout(() => play(question), 200);
+    // El aviso se apaga al sonar, no antes: si algo cambia en estos ms (p. ej.
+    // acaba de sonar la pregunta anterior) el efecto se repite y la vuelve a
+    // programar. Apagándolo antes, a veces la siguiente no sonaba sola.
+    const timer = window.setTimeout(() => {
+      autoPlayRef.current = false;
+      play(question);
+    }, 200);
     return () => window.clearTimeout(timer);
   }, [question, gameOver, play]);
 
@@ -179,7 +200,7 @@ export default function MelodyEarGame({
     const next = [...draft, semitone];
 
     // Se oye cada tecla al pulsarla: si no, se contesta a ciegas.
-    playSequence([[semitone]], 0, presetIdx);
+    playSequence([[semitone]], 0, presetIdx, 1, sampler);
 
     if (next.length < expected.length) {
       setDraft(next);
@@ -218,7 +239,7 @@ export default function MelodyEarGame({
   };
 
   if (!round || !question) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-dvh bg-slate-950" />;
   }
 
   const notes = melodyNotes(question);
@@ -243,13 +264,13 @@ export default function MelodyEarGame({
   const remaining = expected.length - draft.length;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] md:gap-4">
           <Link
             href={backHref}
             className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/50 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/60 backdrop-blur-sm transition hover:border-violet-300/50 hover:text-white md:px-4"
@@ -270,28 +291,24 @@ export default function MelodyEarGame({
             </p>
           </div>
 
-          <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
-            <ThemeToggle onPhoto />
-            <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-              {PRESETS.map((preset, index) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => setPresetIdx(index)}
-                  title={preset.label}
-                  aria-label={preset.label}
-                  className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                    presetIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
-                  }`}
-                >
-                  {PRESET_ICONS[index]}
-                </button>
-              ))}
-            </div>
+          {/* En el móvil el instrumento baja a su propia línea, debajo del
+              título: a su lado le dejaba al título muy poco sitio. */}
+          <div className="col-start-2 row-start-2 justify-self-center sm:col-start-3 sm:row-start-1">
+            <SoundIconPicker
+              options={EAR_SOUNDS}
+              selectedIdx={soundIdx}
+              onSelect={setSoundIdx}
+              variantIdx={variantIdx}
+              onVariant={setVariantIdx}
+              activeClass="bg-violet-400/25"
+            />
+          </div>
+          <div className="col-start-3 row-start-1 sm:col-start-4">
+            <ThemeLogoPill />
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
+        <main className="mt-auto mx-auto flex w-full max-w-[980px] flex-col pb-3 pt-6 md:pb-5 md:pt-8">
           <p className="mb-4 text-center text-xs text-white/35">
             Suena el acorde de la tonalidad y después la melodía. La primera
             nota va dada: toca las demás en el piano.
@@ -360,20 +377,14 @@ export default function MelodyEarGame({
               {answered === null ? "Escuchar" : "Oírla"}
             </button>
 
+            <LetRingToggle letRing={letRing} setLetRing={setLetRing} />
+
             {answered === null ? (
               <>
                 <p className="text-center text-[11px] uppercase tracking-[0.2em] text-white/25">
                   Faltan {remaining}
                 </p>
-                <button
-                  type="button"
-                  onClick={undo}
-                  disabled={!draft.length}
-                  className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-white/35 transition hover:text-white/70 disabled:cursor-default disabled:opacity-25 disabled:hover:text-white/35"
-                >
-                  <RotateCcw size={12} />
-                  Borrar
-                </button>
+                <UndoButton onClick={undo} disabled={!draft.length} title="Quitar la última nota marcada" />
               </>
             ) : (
               <p

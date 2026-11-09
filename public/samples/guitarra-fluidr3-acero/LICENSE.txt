@@ -1,0 +1,7 @@
+Guitarra acústica de acero, del soundfont FluidR3_GM, en midi-js-soundfonts de Benjamin Gleitzman.
+https://github.com/gleitz/midi-js-soundfonts
+Licencia de las muestras: Creative Commons Attribution 3.0 (CC BY 3.0)
+https://creativecommons.org/licenses/by/3.0/
+
+Sin tocar: tal y como vienen (3 s, 128 kbps).
+49 notas sueltas, todas de Do2 a Do6.

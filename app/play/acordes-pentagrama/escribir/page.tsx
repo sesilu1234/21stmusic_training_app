@@ -13,12 +13,18 @@ export default function EscribirAcordeMenuPage() {
       title="Elige el nivel"
       intro="Sale el nombre de un acorde y dices sus notas una a una. Van apareciendo en el pentagrama según las eliges, así que se ve el acorde montarse."
       category="lenguaje"
+      layout="accordion"
+      groups={[
+        { id: "triadas", title: "Tríadas", description: "Tres notas: mayores y menores, y después disminuidas y aumentadas." },
+        { id: "mas", title: "Cuatríadas y más", description: "Cuatro notas, alteraciones y lo más difícil del modo." },
+      ]}
       options={CHORD_SPELL_LEVELS.map((level, index) => ({
         title: level.title,
         description: level.desc,
         href: `/play/acordes-pentagrama/escribir/${level.slug}`,
         Icon: levelIcons[index] ?? Layers,
         badge: level.badge,
+        group: index < 2 ? "triadas" : "mas",
       }))}
     />
   );

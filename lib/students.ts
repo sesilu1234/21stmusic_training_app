@@ -45,10 +45,16 @@ export interface Student {
   firstLoginAt: string | null;
   loginCount: number;
   /**
-   * Si ha pedido salir en el cuadro de honor. false hasta que él lo cambie, y
-   * también si la columna todavía no existe (db/honor.sql).
+   * Si sale en el cuadro de honor y en los rankings del reto. Por defecto sí
+   * (db/honor_todos.sql); false si él lo quita, y también si la columna
+   * todavía no existe (db/honor.sql).
    */
   showInHonor: boolean;
+  /**
+   * Cuándo cerró el aviso de "sales en el cuadro de honor". Null = todavía no
+   * lo ha visto, y entonces se le enseña en la portada.
+   */
+  honorNoticeSeenAt: string | null;
 }
 
 interface StudentRow {
@@ -62,6 +68,7 @@ interface StudentRow {
   first_login_at?: string | null;
   login_count?: number | null;
   show_in_honor?: boolean | null;
+  honor_notice_seen_at?: string | null;
 }
 
 const toStudent = (row: StudentRow): Student => ({
@@ -77,6 +84,7 @@ const toStudent = (row: StudentRow): Student => ({
   firstLoginAt: row.first_login_at ?? null,
   loginCount: row.login_count ?? 0,
   showInHonor: row.show_in_honor === true,
+  honorNoticeSeenAt: row.honor_notice_seen_at ?? null,
 });
 
 const BASE_COLUMNS = "email, display_name, username, is_active, created_at";
@@ -103,6 +111,7 @@ const OPTIONAL_GROUPS = {
     sql: "db/last_login.sql",
   },
   honor: { columns: ["show_in_honor"], sql: "db/honor.sql" },
+  honorNotice: { columns: ["honor_notice_seen_at"], sql: "db/honor_todos.sql" },
 } as const;
 
 type OptionalGroup = keyof typeof OPTIONAL_GROUPS;
@@ -114,7 +123,12 @@ type OptionalGroup = keyof typeof OPTIONAL_GROUPS;
  * alguna de sus columnas, y ya no se vuelve a pedir mientras dure el proceso.
  * Al ejecutar la migración y reiniciar, vuelve a arrancar en true y se queda.
  */
-const enabled: Record<OptionalGroup, boolean> = { role: true, login: true, honor: true };
+const enabled: Record<OptionalGroup, boolean> = {
+  role: true,
+  login: true,
+  honor: true,
+  honorNotice: true,
+};
 
 const UNDEFINED_COLUMN = "42703";
 
@@ -314,14 +328,14 @@ export const touchLogin = (email: unknown): void => {
 };
 
 /**
- * Los alumnos que han pedido salir en el cuadro de honor.
+ * Los alumnos que salen en el cuadro de honor y en los rankings del reto.
  *
- * Solo activos, y de cualquier rol: quien se apunta, sale. El profesorado que
- * no quiera mezclar sus partidas de prueba con las de los alumnos no tiene
- * más que no apuntarse.
+ * Solo activos, y de cualquier rol: sale todo el mundo menos quien se ha
+ * quitado. El profesorado que no quiera mezclar sus partidas de prueba con las
+ * de los alumnos no tiene más que quitarse desde su menú.
  *
- * Si la columna no existe todavía, no hay nadie: es lo mismo que "nadie lo ha
- * pedido", que es como empieza todo el mundo.
+ * Si la columna no existe todavía, no hay nadie: mejor un cuadro vacío que
+ * enseñar a alguien que no ha podido decidir.
  */
 export const listHonorStudents = async (): Promise<Student[]> => {
   if (!enabled.honor) return [];
@@ -329,12 +343,24 @@ export const listHonorStudents = async (): Promise<Student[]> => {
   // Sin `withOptionalColumns`: aquí la columna también va en el filtro, y si
   // faltara, el reintento seguiría fallando por el filtro y acabaría apagando
   // grupos que no tienen la culpa (los roles, las entradas).
-  const { data, error } = await getSupabaseAdmin()
-    .from("students")
-    .select(columns())
-    .eq("is_active", true)
-    .eq("show_in_honor", true)
-    .returns<StudentRow[]>();
+  const run = () =>
+    getSupabaseAdmin()
+      .from("students")
+      .select(columns())
+      .eq("is_active", true)
+      .eq("show_in_honor", true)
+      .returns<StudentRow[]>();
+
+  let { data, error } = await run();
+
+  // La del aviso solo va en el select, no en el filtro: si falta, se apaga su
+  // grupo y se repite sin ella. El cuadro no depende de que se haya pasado
+  // db/honor_todos.sql.
+  if (error?.code === UNDEFINED_COLUMN && error.message.includes("honor_notice_seen_at")) {
+    console.warn("[alumnos] falta la columna honor_notice_seen_at: ejecuta db/honor_todos.sql.");
+    enabled.honorNotice = false;
+    ({ data, error } = await run());
+  }
 
   if (error?.code === UNDEFINED_COLUMN && error.message.includes("show_in_honor")) {
     console.warn("[alumnos] falta la columna show_in_honor: ejecuta db/honor.sql.");
@@ -349,6 +375,9 @@ export const listHonorStudents = async (): Promise<Student[]> => {
 /**
  * Cambia si un alumno sale o no en el cuadro de honor. El email lo pone el
  * servidor desde la sesión, nunca el navegador.
+ *
+ * Tocar el interruptor es haberse enterado, así que de paso se da el aviso de
+ * la portada por visto (ver `markHonorNoticeSeen`).
  */
 export const setShowInHonor = async (email: unknown, value: boolean) => {
   const cleanEmail = normalizeEmail(email);
@@ -367,4 +396,47 @@ export const setShowInHonor = async (email: unknown, value: boolean) => {
     }
     throw new Error(`No se ha podido guardar: ${error.message}`);
   }
+};
+
+/**
+ * Da por visto el aviso de "sales en el cuadro de honor".
+ *
+ * Si la columna no existe todavía no pasa nada: el aviso sale porque nadie lo
+ * ha cerrado, y en cuanto se pase db/honor_todos.sql deja de salir.
+ */
+export const markHonorNoticeSeen = async (email: unknown) => {
+  const cleanEmail = normalizeEmail(email);
+  if (!cleanEmail || !enabled.honorNotice) return;
+
+  const { error } = await getSupabaseAdmin()
+    .from("students")
+    .update({ honor_notice_seen_at: new Date().toISOString() })
+    .eq("email", cleanEmail)
+    .is("honor_notice_seen_at", null);
+
+  if (error && (error.code === UNDEFINED_COLUMN || error.code === "PGRST204")) {
+    console.warn("[alumnos] falta la columna honor_notice_seen_at: ejecuta db/honor_todos.sql.");
+    enabled.honorNotice = false;
+    return;
+  }
+  if (error) throw new Error(`No se ha podido guardar: ${error.message}`);
+};
+
+/**
+ * El nombre de cada correo, para pintar listas (resultados de un examen, el
+ * creador de un examen). Los que no estén se quedan fuera del mapa: quien
+ * pinta decide qué poner.
+ */
+export const displayNamesOf = async (emails: string[]): Promise<Map<string, string>> => {
+  const unique = [...new Set(emails.map(normalizeEmail).filter(Boolean))];
+  if (!unique.length) return new Map();
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("students")
+    .select("email, display_name")
+    .in("email", unique)
+    .returns<{ email: string; display_name: string }[]>();
+
+  if (error) throw new Error(`No se han podido leer los nombres: ${error.message}`);
+  return new Map((data ?? []).map((row) => [row.email, row.display_name]));
 };

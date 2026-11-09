@@ -9,6 +9,7 @@ import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
 import HandToggle from "@/app/components/HandToggle";
+import { bemol } from "@/lib/bemol";
 import { fretboardFlipClass, useLeftHanded } from "@/lib/handedness";
 
 export default function DiapasonGame() {
@@ -118,9 +119,9 @@ export default function DiapasonGame() {
   // Prevent rendering until mounted to avoid mismatch
   if (!isMounted || quizList.length === 0) {
     return (
-      <div className="relative min-h-screen flex flex-col overflow-x-hidden font-sans text-white">
+      <div className="relative min-h-dvh flex flex-col overflow-x-hidden font-sans text-white">
         <Backdrop />
-        <div className="relative z-10 min-h-screen flex flex-col">{enunciado}</div>
+        <div className="relative z-10 min-h-dvh flex flex-col">{enunciado}</div>
       </div>
     );
   }
@@ -174,10 +175,10 @@ export default function DiapasonGame() {
   const answeredHere = userAnswers[step];
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh flex flex-col overflow-x-hidden font-sans text-white">
       <Backdrop />
 
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-dvh flex flex-col">
       {enunciado}
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-6xl mx-auto">
@@ -229,7 +230,7 @@ export default function DiapasonGame() {
                 Solución
               </span>
               <span className="text-sm font-bold text-white">
-                {currentQuestion?.answer}
+                {bemol(currentQuestion?.answer ?? "")}
               </span>
             </div>
           </div>
@@ -262,14 +263,14 @@ export default function DiapasonGame() {
                           : "border-white/5 bg-white/5 text-white/20"
                   }`}
                 >
-                  <span className="text-xs md:text-sm font-bold">{nota}</span>
+                  <span className="text-xs md:text-sm font-bold">{bemol(nota)}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        <div className="w-full mt-8 md:mt-12 flex flex-col items-center gap-6 px-2">
+        <div className="w-full mt-5 md:mt-8 flex flex-col items-center gap-6 px-2">
           <div className="flex items-center justify-between w-full max-w-md gap-4">
             <button
               onClick={goBack}
@@ -312,7 +313,7 @@ export default function DiapasonGame() {
           </div>
         </div>
 
-        <footer className="mt-auto py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
+        <footer className="mt-auto pb-4 pt-2 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
           © 2026 21st Century Music
         </footer>
       </div>

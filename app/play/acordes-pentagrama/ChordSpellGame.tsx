@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, RotateCcw } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
@@ -11,7 +11,7 @@ import Staff, { type StaffColumn } from "@/app/components/Staff";
 import StaffCard from "@/app/components/StaffCard";
 import { alterAccidental } from "@/lib/staff";
 import {
-  ANSWER_NAMES,
+  ANSWER_ROWS,
   buildChordStaffQuiz,
   chordName,
   chordNoteNames,
@@ -20,6 +20,7 @@ import {
   type ChordStaffQuestion,
 } from "@/lib/staffChords";
 import { ROUND_LENGTH } from "@/lib/roundLength";
+import { bemol } from "@/lib/bemol";
 
 interface Round {
   questions: ChordStaffQuestion[];
@@ -136,7 +137,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
   };
 
   if (!round || !question) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-dvh bg-slate-950" />;
   }
 
   const expected = chordNoteNames(question);
@@ -163,12 +164,12 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
     : [];
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href="/play/acordes-pentagrama/escribir"
@@ -187,7 +188,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
               {/* normal-case: "m7b5" en mayúsculas se lee "M7B5", que es otro
                   acorde. Ver lib/chordNames.ts. */}
               <span className="normal-case text-amber-300">
-                {chordName(question)}
+                {bemol(chordName(question))}
               </span>
             </h1>
             <p className="mt-1 truncate text-[9px] font-black uppercase tracking-[0.28em] text-white/35">
@@ -196,19 +197,19 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
           </div>
 
           <div className="flex w-[42px] md:w-[92px] flex-shrink-0 justify-end">
-            <ThemeToggle onPhoto />
+            <ThemeLogoPill />
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
-          <div className="mb-5 flex justify-center">
+        <main className="mt-auto mx-auto flex w-full max-w-[980px] flex-col pb-2 pt-3 md:pb-5 md:pt-4">
+          <div className="mb-3 flex justify-center md:mb-5">
             <StaffCard>
               <Staff clef={question.clef} columns={columns} label="Acorde en el pentagrama" />
             </StaffCard>
           </div>
 
           {/* Una casilla por nota que hay que decir. */}
-          <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
+          <div className="mb-3 flex flex-wrap items-center justify-center gap-2 md:mb-4">
             {expected.map((_, index) => {
               const given = draft[index];
               const wrongHere = answered !== null && !expected.includes(given);
@@ -226,39 +227,56 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
                           : "border-emerald-400/50 bg-emerald-400/15 text-emerald-100"
                   }`}
                 >
-                  {given ?? index + 1}
+                  {given ? bemol(given) : index + 1}
                 </span>
               );
             })}
           </div>
 
-          <div className="mx-auto w-full max-w-[760px] rounded-[2rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md md:p-6">
-            <div className="grid grid-cols-5 gap-2 sm:grid-cols-9 md:gap-2.5">
-              {ANSWER_NAMES.map((name) => {
-                const used = draft.includes(name);
+          <div className="mx-auto w-full max-w-[760px] rounded-[2rem] border border-white/10 bg-slate-950/50 p-3 backdrop-blur-md md:p-4">
+            {/* Una columna por letra partida en tres (#, natural, b), como en
+                Lectura de notas: siete bloques en vez de 21 botones. */}
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 md:gap-2.5">
+              {ANSWER_ROWS[1].map((letter, columnIndex) => (
+                <div
+                  key={letter}
+                  className="flex flex-col divide-y divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-white/5"
+                >
+                  {ANSWER_ROWS.map((row, rowIndex) => {
+                    const name = row[columnIndex];
+                    const natural = rowIndex === 1;
+                    const used = draft.includes(name);
 
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    disabled={answered !== null || gameOver || used}
-                    onClick={() => press(name)}
-                    className={`rounded-xl border py-2.5 text-xs font-black tracking-tight transition active:scale-95 disabled:cursor-default md:py-3 md:text-sm ${
-                      used
-                        ? "border-sky-300/40 bg-sky-400/15 text-sky-100"
-                        : answered !== null
-                          ? "border-white/5 bg-white/5 text-white/20"
-                          : "border-white/10 bg-white/5 text-white hover:border-amber-300/50 hover:bg-amber-400/20"
-                    }`}
-                  >
-                    {name}
-                  </button>
-                );
-              })}
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        disabled={answered !== null || gameOver || used}
+                        onClick={() => press(name)}
+                        className={`px-0.5 font-black tracking-tight transition disabled:cursor-default ${
+                          natural
+                            ? "py-2 text-xs sm:text-sm md:py-2.5"
+                            : "py-1 text-[11px] md:py-1.5 md:text-xs"
+                        } ${
+                          used
+                            ? "bg-sky-400/15 text-sky-100"
+                            : answered !== null
+                              ? "text-white/20"
+                              : natural
+                                ? "text-white hover:bg-amber-400/20"
+                                : "text-white/60 hover:bg-amber-400/20 hover:text-white"
+                        }`}
+                      >
+                        {bemol(name)}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="mt-6 flex min-h-[2.5rem] flex-wrap items-center justify-center gap-3">
+          <div className="mt-2 flex min-h-[2.5rem] flex-wrap items-center justify-center gap-3 md:mt-4">
             {answered === null ? (
               <>
                 <p className="text-center text-[11px] uppercase tracking-[0.2em] text-white/25">
@@ -280,7 +298,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
                   isCorrect ? "text-emerald-300" : "text-rose-300"
                 }`}
               >
-                {isCorrect ? "¡Bien!" : `Era ${expected.join(" · ")}`}
+                {isCorrect ? "¡Bien!" : `Era ${bemol(expected.join(" · "))}`}
               </p>
             )}
           </div>

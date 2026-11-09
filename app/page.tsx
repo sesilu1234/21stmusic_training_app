@@ -1,15 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Flame, Hammer, Lock } from "lucide-react";
+import { ChevronRight, Hammer, Lock } from "lucide-react";
 import AppShell from "./components/AppShell";
 import GamePreview from "./components/GamePreview";
 import HonorStrip from "./components/HonorStrip";
+import HonorNotice from "./components/HonorNotice";
+import RetoCards from "./components/EcoCard";
+import DailyExamCard from "./components/DailyExamCard";
+import { barColor } from "@/lib/barColor";
 import { MedalSticker } from "./components/MedalBadge";
 import { categoryOf, gamesByCategory, type GameMode } from "@/lib/games";
 import { currentStudent } from "@/lib/session";
 import { getProgress, type GameProgress } from "@/lib/progress";
-import { getHonorBoard, HONOR_MIN_PARTICIPANTS } from "@/lib/honor";
 import { HONOR_ENABLED } from "@/lib/site";
+import { madridDay, previousDay } from "@/lib/madrid";
+import { retoStatuses } from "@/lib/ecoResult";
+import { ECO_PULSO_PARKED } from "@/lib/reto";
+import { dailyExamStatus, getDayBoard } from "@/lib/exams/daily";
 import { SITE_URL } from "@/lib/seo";
 
 /**
@@ -146,13 +153,7 @@ const GameCard = ({
         <span className="mt-3 flex items-center gap-2">
           <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/10">
             <span
-              className={`block h-full rounded-full ${
-                stat.mastery >= 90
-                  ? "bg-emerald-400"
-                  : stat.mastery >= 60
-                    ? "bg-amber-400"
-                    : "bg-rose-400"
-              }`}
+              className={`block h-full rounded-full ${barColor(stat.mastery)}`}
               style={{ width: `${stat.mastery}%` }}
             />
           </span>
@@ -176,14 +177,17 @@ export default async function HomePage() {
 
   // El progreso es un extra: si la consulta falla, el menú tiene que salir
   // igual, solo que sin las marcas de cada tarjeta.
-  // Lo mismo con el cuadro de honor, que además solo se enseña con sesión:
-  // son nombres de alumnos.
-  const [progress, honor] = student
-    ? await Promise.all([
-        getProgress(student.email).catch(() => null),
-        HONOR_ENABLED ? getHonorBoard(student.email).catch(() => null) : null,
-      ])
-    : [null, null];
+  // Lo mismo con el ranking del reto (hoy y ayer), que además solo se enseña
+  // con sesión: son nombres de alumnos.
+  const day = madridDay();
+  const ranked = Boolean(student && HONOR_ENABLED);
+  const [progress, retos, examen, today, yesterday] = await Promise.all([
+    student ? getProgress(student.email).catch(() => null) : null,
+    ECO_PULSO_PARKED ? null : retoStatuses(student, day),
+    dailyExamStatus(student, day),
+    ranked ? getDayBoard(day, student!.email) : null,
+    ranked ? getDayBoard(previousDay(day), student!.email) : null,
+  ]);
   const statOf = (name: string) =>
     progress?.games.find((entry) => entry.game.name === name);
 
@@ -191,37 +195,67 @@ export default async function HomePage() {
   return (
     <AppShell displayName={student?.displayName} role={student?.role}>
       <div className="mx-auto w-full max-w-5xl">
+        {/* El reto de hoy (1/3) y, al lado (2/3), su ranking y el de ayer (solo con sesión: son nombres de alumnos). */}
+        {student && ranked ? (
+          <div className="mb-7 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <DailyExamCard day={day} status={examen} className="" tall />
+            <div className="grid grid-cols-2 gap-3 md:col-span-2">
+              <HonorStrip
+                board={today}
+                title="Hoy"
+                empty="Nadie todavía: el 1º está libre."
+                nudge="Inténtalo"
+                listed={student.showInHonor}
+              />
+              <HonorStrip board={yesterday} title="Ayer" empty="Ayer no lo acabó nadie." listed={student.showInHonor} />
+            </div>
+          </div>
+        ) : (
+          <DailyExamCard day={day} status={examen} />
+        )}
+        {retos && <RetoCards day={day} statuses={retos} />}
+
+        {/* La primera vez: que nadie salga en el cuadro sin saberlo. */}
+        {HONOR_ENABLED && student?.showInHonor && !student.honorNoticeSeenAt && (
+          <HonorNotice name={student.displayName.trim()} />
+        )}
+
         {progress && progress.attempts > 0 && (
           <Link
             href="/progreso"
             className="group mb-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-lg transition hover:border-amber-300/40"
           >
-            <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-orange-400/15">
-              <Flame size={17} className="text-orange-300" strokeWidth={1.75} />
+            {/* Un trozo de pentagrama con tres notas que suben: progresar,
+                dicho en música. */}
+            <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-amber-400/10">
+              <svg viewBox="0 0 24 20" className="h-5 w-6" aria-hidden>
+                {[2, 6, 10, 14, 18].map((y) => (
+                  <line key={y} x1="0" x2="24" y1={y} y2={y} stroke="currentColor" strokeWidth="0.8" className="text-white/20" />
+                ))}
+                {[
+                  { x: 5, y: 16 },
+                  { x: 12, y: 11 },
+                  { x: 19, y: 6 },
+                ].map(({ x, y }) => (
+                  <g key={x} className="text-amber-300">
+                    <ellipse cx={x} cy={y} rx="2.4" ry="1.8" transform={`rotate(-20 ${x} ${y})`} fill="currentColor" />
+                  </g>
+                ))}
+              </svg>
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-black tracking-tight text-white">
-                {progress.streak.current === 0
-                  ? "Vuelve a empezar una racha"
-                  : progress.streak.current === 1
-                    ? "1 día seguido"
-                    : `${progress.streak.current} días seguidos`}
+                Consulta tu progreso
               </span>
               <span className="block truncate text-[10px] text-white/35">
-                {progress.streak.playedToday
-                  ? `Hoy ya has practicado${progress.weekEmpty ? "" : ` · ${progress.weekAccuracy}% de aciertos esta semana`}`
-                  : "Con una partida de hoy la mantienes viva"}
+                Por dónde vas en cada modo y las medallas que llevas
               </span>
             </span>
-            <span className="flex-shrink-0 text-[9px] font-black uppercase tracking-[0.18em] text-white/30 transition-colors group-hover:text-white/70">
-              Ver progreso
-            </span>
+            <ChevronRight
+              size={16}
+              className="flex-shrink-0 text-white/30 transition-colors group-hover:text-white/70"
+            />
           </Link>
-        )}
-
-        {/* Con un solo apuntado la franja sería tu nombre y nada más. */}
-        {student && honor && honor.participants >= HONOR_MIN_PARTICIPANTS && (
-          <HonorStrip board={honor} showInHonor={student.showInHonor} />
         )}
 
         <div className="space-y-8 md:space-y-9">

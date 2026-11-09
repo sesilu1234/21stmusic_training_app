@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, RotateCcw, Volume2 } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
@@ -19,7 +19,8 @@ import {
   type Nota,
   type Pregunta,
 } from "@/lib/noteSpelling";
-import { ROUND_LENGTH } from "@/lib/roundLength";
+import { ROUND_LENGTH, SHORT_ROUND_LENGTH } from "@/lib/roundLength";
+import { bemol } from "@/lib/bemol";
 
 interface Ronda {
   preguntas: Pregunta[];
@@ -49,8 +50,9 @@ const acierta = (dadas: Nota[], esperadas: Nota[]) =>
  */
 const crearPreguntas = (tipo: TipoDeletreo, nivel?: DeletreoNivel) => {
   if (tipo === "intervalo") return intervaloQuiz(ROUND_LENGTH);
+  // Escalas y acordes, partida corta: deletrear hasta siete notas por pregunta.
   const quiz = tipo === "escala" ? escalaQuiz : acordeQuiz;
-  return quiz(nivel!, ROUND_LENGTH);
+  return quiz(nivel!, SHORT_ROUND_LENGTH);
 };
 
 export type TipoDeletreo = "escala" | "acorde" | "intervalo";
@@ -82,10 +84,11 @@ export default function NotasGame({
   useEffect(() => {
     // Las preguntas salen de Math.random(): sortearlas durante el render del
     // servidor daría unas distintas al hidratar.
+    const preguntas = crearPreguntas(tipo, nivel);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRonda({
-      preguntas: crearPreguntas(tipo, nivel),
-      respuestas: Array<Nota[] | null>(ROUND_LENGTH).fill(null),
+      preguntas,
+      respuestas: Array<Nota[] | null>(preguntas.length).fill(null),
     });
     setStep(0);
     setBorrador([]);
@@ -194,7 +197,7 @@ export default function NotasGame({
   };
 
   if (!ronda || !pregunta) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-dvh bg-slate-950" />;
   }
 
   const esperadas = pregunta.notas;
@@ -203,12 +206,12 @@ export default function NotasGame({
   const faltan = esperadas.length - puestas.length;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       {gameOver && <GameOverModal correct={aciertos} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href={backHref}
@@ -227,7 +230,7 @@ export default function NotasGame({
               {/* normal-case: el titular va en mayúsculas y el cifrado
                   distingue mayúsculas de minúsculas — "m7b5" en mayúsculas se
                   lee "M7B5", que es otro acorde. Ver lib/chordNames.ts. */}
-              <span className="normal-case text-amber-300">{pregunta.objeto}</span>
+              <span className="normal-case text-amber-300">{bemol(pregunta.objeto)}</span>
             </h1>
             <p className="mt-1 truncate text-[9px] font-black uppercase tracking-[0.28em] text-white/35">
               {subtitulo}
@@ -236,11 +239,11 @@ export default function NotasGame({
 
           {/* Hueco al otro lado para que el titular quede centrado de verdad. */}
           <div className="flex w-10 md:w-20 flex-shrink-0 justify-end">
-            <ThemeToggle onPhoto />
+            <ThemeLogoPill />
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
+        <main className="mt-auto mx-auto flex w-full max-w-[720px] flex-col pb-3 pt-6 md:pb-5 md:pt-8">
           {/* Una casilla por nota que hay que decir. */}
           <div className="mb-7 flex flex-wrap items-center justify-center gap-2">
             {esperadas.map((esperada, index) => {
@@ -261,7 +264,7 @@ export default function NotasGame({
                           : "border-emerald-400/50 bg-emerald-400/15 text-emerald-100"
                   }`}
                 >
-                  {dada ? nombreNota(dada) : index + 1}
+                  {dada ? bemol(nombreNota(dada)) : index + 1}
                 </span>
               );
             })}
@@ -283,7 +286,7 @@ export default function NotasGame({
                         : "border-white/10 bg-white/[0.03] text-white/65"
                     } enabled:hover:border-amber-300/60 enabled:hover:bg-amber-400/15 enabled:hover:text-white enabled:active:scale-95 disabled:opacity-30`}
                   >
-                    {nombreNota(nota)}
+                    {bemol(nombreNota(nota))}
                   </button>
                 ))}
               </div>
@@ -332,7 +335,7 @@ export default function NotasGame({
                     quiere ver, y en las casillas está lo que se ha puesto. */}
                 {!bien && (
                   <p className="text-center text-sm font-black tracking-tight text-emerald-200/90">
-                    {esperadas.map(nombreNota).join("  ·  ")}
+                    {bemol(esperadas.map(nombreNota).join("  ·  "))}
                   </p>
                 )}
               </>

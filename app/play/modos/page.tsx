@@ -100,7 +100,7 @@ export default function ChordsGame() {
   }, [userAnswers, quizList]);
 
   if (!isMounted || !currentQuestion)
-    return <div className="min-h-screen bg-slate-900" />;
+    return <div className="min-h-dvh bg-slate-900" />;
 
   // Respuesta correcta expresada como label de botón ("Jónico", "Mixolidio"...)
   const correctOption = reverseMapping[currentQuestion.answer] || "";
@@ -172,10 +172,10 @@ export default function ChordsGame() {
   const getSolucionTexto = () => reverseMapping[currentQuestion.answer] || "";
 
   return (
-    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+    <div className="relative min-h-dvh flex flex-col font-sans overflow-x-hidden text-white">
       <Backdrop />
 
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-dvh flex flex-col">
       <GameChrome>
         ¿Qué{" "}
         <span className="text-black mx-1 drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
@@ -188,7 +188,7 @@ export default function ChordsGame() {
         {/* TITULO */}
 
         {/* CARTA DE PREGUNTA */}
-        <div className="relative flex flex-col items-center w-full max-w-xl md:max-w-3xl mb-10">
+        <div className="relative flex flex-col items-center w-full max-w-xl md:max-w-3xl mb-9 md:mb-8">
           {/* Alto fijo a propósito, en los dos tamaños. Era `md:h-full`, que
               dentro de este flex sin altura de referencia significa "lo que
               mida la imagen": al pasar de pregunta la nueva imagen todavía no
@@ -256,7 +256,7 @@ export default function ChordsGame() {
 
         {/* GRID DE BOTONES */}
         <div
-          className={`bg-black/40 p-3 md:p-5 rounded-[2rem] border border-white/10 w-full backdrop-blur-md transition-all ${
+          className={`bg-black/40 p-2.5 md:p-3 rounded-[1.5rem] border border-white/10 w-full backdrop-blur-md transition-all ${
             showFeedback ? "pointer-events-none" : ""
           } ${
             userAnswers[step] !== null && !showFeedback
@@ -264,12 +264,14 @@ export default function ChordsGame() {
               : ""
           }`}
         >
-          <div className="grid grid-cols-2 gap-2 md:gap-3">
-            {/* Jónico ocupa toda la fila */}
+          {/* En el móvil, dos columnas con Jónico a lo ancho; en pantalla ancha,
+              los siete en una fila. */}
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-7">
+            {/* Jónico ocupa toda la fila (en el móvil) */}
             <button
               disabled={userAnswers[step] !== null || !!showFeedback}
               onClick={() => handleAnswer("Jónico")}
-              className={`col-span-2 py-3 md:py-4 rounded-xl border transition-all active:scale-95 shadow-sm ${getButtonStyle("Jónico")}`}
+              className={`col-span-2 md:col-span-1 py-2.5 md:py-3 rounded-xl border transition-all active:scale-95 shadow-sm ${getButtonStyle("Jónico")}`}
             >
               <span className="text-xs md:text-sm font-bold">Jónico</span>
             </button>
@@ -280,7 +282,7 @@ export default function ChordsGame() {
                 key={nota}
                 disabled={userAnswers[step] !== null || !!showFeedback}
                 onClick={() => handleAnswer(nota)}
-                className={`py-3 md:py-4 rounded-xl border transition-all active:scale-95 shadow-sm ${getButtonStyle(nota)}`}
+                className={`py-2.5 md:py-3 rounded-xl border transition-all active:scale-95 shadow-sm ${getButtonStyle(nota)}`}
               >
                 <span className="text-xs md:text-sm font-bold">{nota}</span>
               </button>
@@ -289,7 +291,7 @@ export default function ChordsGame() {
         </div>
 
         {/* NAVEGACIÓN Y PROGRESO */}
-        <div className="w-full mt-10 md:mt-16 flex flex-col items-center gap-6">
+        <div className="w-full mt-5 md:mt-8 flex flex-col items-center gap-6">
           <div className="flex items-center justify-between w-full max-w-md gap-4">
             <button
               onClick={goBack}
@@ -336,7 +338,7 @@ export default function ChordsGame() {
           </div>
         </div>
 
-        <footer className="mt-auto py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
+        <footer className="mt-auto pb-4 pt-2 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
           © 2026 21st Century Music
         </footer>
       </div>

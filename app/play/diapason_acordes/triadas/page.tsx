@@ -113,9 +113,9 @@ export default function TriadsGame() {
 
   if (!isMounted || !currentQuestion)
     return (
-      <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+      <div className="relative min-h-dvh flex flex-col font-sans overflow-x-hidden text-white">
         <Backdrop />
-        <div className="relative z-10 min-h-screen flex flex-col">{enunciado}</div>
+        <div className="relative z-10 min-h-dvh flex flex-col">{enunciado}</div>
       </div>
     );
 
@@ -210,10 +210,10 @@ export default function TriadsGame() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+    <div className="relative min-h-dvh flex flex-col font-sans overflow-x-hidden text-white">
       <Backdrop />
 
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-dvh flex flex-col">
       {enunciado}
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 pt-4 md:px-6 md:pb-6 md:pt-6 z-10 w-full max-w-5xl mx-auto">
@@ -306,7 +306,7 @@ export default function TriadsGame() {
         </div>
 
         {/* PROGRESO Y CONTROLES */}
-        <div className="w-full mt-10 md:mt-16 flex flex-col items-center gap-6">
+        <div className="w-full mt-5 md:mt-8 flex flex-col items-center gap-6">
           <div className="flex items-center justify-between w-full max-w-md gap-4">
             <button
               onClick={goBack}
@@ -353,7 +353,7 @@ export default function TriadsGame() {
           </div>
         </div>
 
-        <footer className="mt-auto py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
+        <footer className="mt-auto pb-4 pt-2 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
           © 2026 21st Century Music
         </footer>
       </div>

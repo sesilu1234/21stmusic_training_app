@@ -23,7 +23,7 @@ const LONG_NAMES: Record<string, string> = {
  * Qué intervalos se practican, en /play/oido encima de las tarjetas.
  *
  * Una tarjeta baja, como las de debajo y no suelta sobre la foto, con los
- * trece en una sola fila. Con todos marcados es el ejercicio normal, el que
+ * trece en una fila (dos en el móvil). Con todos marcados es el ejercicio normal, el que
  * cuenta para el progreso y la medalla; con menos es práctica.
  */
 export default function EarIntervalPicker({
@@ -66,11 +66,12 @@ export default function EarIntervalPicker({
         </div>
       </div>
 
-      {/* Una fila: en el móvil no caben los trece, así que se desliza de lado. */}
+      {/* Una fila en pantalla ancha. En el móvil no caben los trece: pasan a
+          dos filas, sin scroll de lado, para que se vean todos a la vez. */}
       <div
         role="group"
         aria-label="Intervalos que se practican"
-        className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]"
+        className="grid grid-cols-7 gap-1 sm:grid-cols-[repeat(13,minmax(0,1fr))]"
       >
         {ALL_EAR_INTERVALS.map((name) => {
           const on = marked.includes(name);
@@ -81,7 +82,7 @@ export default function EarIntervalPicker({
               aria-pressed={on}
               title={LONG_NAMES[name]}
               onClick={() => toggle(name)}
-              className={`h-8 min-w-10 flex-1 shrink-0 rounded-lg border px-2 text-[11px] font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 ${
+              className={`h-8 min-w-0 rounded-lg border px-1 text-[11px] font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 ${
                 on
                   ? "border-violet-300/60 bg-violet-400/25 text-white"
                   : "border-white/10 bg-white/3 text-white/30 hover:border-white/25 hover:text-white/70"

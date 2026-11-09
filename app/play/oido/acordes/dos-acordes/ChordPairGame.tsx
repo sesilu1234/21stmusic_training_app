@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, RotateCcw, Volume2 } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import { ArrowLeft, Volume2 } from "lucide-react";
+import { LetRingToggle, UndoButton, useLetRing } from "../../LetRing";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import { noteName } from "@/app/components/PianoKeyboard";
-import { PRESET_ICONS, PRESETS, useAudio } from "../../audio";
+import { EAR_MODE_LEVEL, EAR_SOUNDS, useAudio, useEarSound } from "../../audio";
+import SoundIconPicker from "../../SoundIconPicker";
 import {
   buildPairQuiz,
   findDistance,
@@ -19,7 +21,7 @@ import {
   type PairLevel,
   type PairQuestion,
 } from "@/lib/chordPair";
-import { ROUND_LENGTH } from "@/lib/roundLength";
+import { SHORT_ROUND_LENGTH } from "@/lib/roundLength";
 
 /** Hueco entre el primer acorde y el segundo. */
 const GAP_MS = 1150;
@@ -37,8 +39,8 @@ interface Round {
 }
 
 const createRound = (level: PairLevel): Round => ({
-  questions: buildPairQuiz(ROUND_LENGTH, level.firstVariable),
-  answers: Array<Answer | null>(ROUND_LENGTH).fill(null),
+  questions: buildPairQuiz(SHORT_ROUND_LENGTH, level.firstVariable),
+  answers: Array<Answer | null>(SHORT_ROUND_LENGTH).fill(null),
 });
 
 const isRight = (given: Answer, question: PairQuestion) =>
@@ -68,7 +70,7 @@ export default function ChordPairGame({
   level: PairLevel;
   backHref: string;
 }) {
-  const { playSequence } = useAudio();
+  const { playSequence, stop } = useAudio();
 
   const [round, setRound] = useState<Round | null>(null);
   const [step, setStep] = useState(0);
@@ -77,7 +79,11 @@ export default function ChordPairGame({
   const [gameOver, setGameOver] = useState(false);
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
-  const [presetIdx, setPresetIdx] = useState(0);
+  const { soundIdx, setSoundIdx, variantIdx, setVariantIdx, preset: presetIdx, sampler } =
+    // Acordes de 3–4 notas: más bajo, para sonar como armónico.
+    useEarSound(EAR_MODE_LEVEL.chords);
+  // El primer acorde se apaga al entrar el segundo, salvo con "Dejar sonar".
+  const { letRing, setLetRing } = useLetRing();
   /** 0 = nada encendido, 1 = primer acorde, 2 = segundo. */
   const [playFlash, setPlayFlash] = useState(0);
 
@@ -120,14 +126,20 @@ export default function ChordPairGame({
     (target?: PairQuestion) => {
       if (!target) return;
       clearFlashTimers();
+      // Lo que quedara sonando de antes (la cola del piano) se corta.
+      stop();
 
-      setPlayFlash(1);
-      flashTimersRef.current.push(
-        window.setTimeout(() => setPlayFlash(2), GAP_MS),
-      );
-      flashTimersRef.current.push(
-        window.setTimeout(() => setPlayFlash(0), GAP_MS + TAIL_MS),
-      );
+      // Las casillas arrancan con el sonido (la primera vez espera a la grabación).
+      const startFlashes = () => {
+        clearFlashTimers();
+        setPlayFlash(1);
+        flashTimersRef.current.push(
+          window.setTimeout(() => setPlayFlash(2), GAP_MS),
+        );
+        flashTimersRef.current.push(
+          window.setTimeout(() => setPlayFlash(0), GAP_MS + TAIL_MS),
+        );
+      };
 
       // El bajo, un poco por encima del resto. Aquí hay que sacar de oído dos
       // cosas a la vez —la distancia entre los dos acordes y de qué tipo es el
@@ -135,15 +147,20 @@ export default function ChordPairGame({
       // notas al mismo volumen la de abajo se pierde entre las de arriba y no
       // queda de dónde agarrarse. No es subir el volumen: es que se distinga
       // cuál es la nota de referencia.
-      playSequence(pairChords(target), GAP_MS, presetIdx, BASS_BOOST);
+      playSequence(pairChords(target), GAP_MS, presetIdx, BASS_BOOST, sampler, startFlashes, !letRing);
     },
-    [playSequence, presetIdx],
+    [playSequence, presetIdx, sampler, stop, letRing],
   );
 
   useEffect(() => {
     if (!question || gameOver || !autoPlayRef.current) return;
-    autoPlayRef.current = false;
-    const timer = window.setTimeout(() => play(question), 150);
+    // El aviso se apaga al sonar, no antes: si algo cambia en estos ms (p. ej.
+    // acaba de sonar la pregunta anterior) el efecto se repite y la vuelve a
+    // programar. Apagándolo antes, a veces la siguiente no sonaba sola.
+    const timer = window.setTimeout(() => {
+      autoPlayRef.current = false;
+      play(question);
+    }, 150);
     return () => window.clearTimeout(timer);
   }, [question, gameOver, play]);
 
@@ -203,7 +220,7 @@ export default function ChordPairGame({
   };
 
   if (!round || !question) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-dvh bg-slate-950" />;
   }
 
   const correct = answered ? isRight(answered, question) : null;
@@ -234,13 +251,13 @@ export default function ChordPairGame({
     : "border-white/10 bg-white/5 text-white hover:-translate-y-0.5 hover:border-violet-300/50 hover:bg-white/10";
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[960px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[960px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] md:gap-4">
           <Link
             href={backHref}
             className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/50 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/60 backdrop-blur-sm transition hover:border-violet-300/50 hover:text-white md:px-4"
@@ -261,28 +278,24 @@ export default function ChordPairGame({
             </p>
           </div>
 
-          <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
-            <ThemeToggle onPhoto />
-            <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-              {PRESETS.map((preset, index) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => setPresetIdx(index)}
-                  title={preset.label}
-                  aria-label={preset.label}
-                  className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                    presetIdx === index ? "bg-violet-400/25" : "opacity-40 hover:opacity-80"
-                  }`}
-                >
-                  {PRESET_ICONS[index]}
-                </button>
-              ))}
-            </div>
+          {/* En el móvil el instrumento baja a su propia línea, debajo del
+              título: a su lado le dejaba al título muy poco sitio. */}
+          <div className="col-start-2 row-start-2 justify-self-center sm:col-start-3 sm:row-start-1">
+            <SoundIconPicker
+              options={EAR_SOUNDS}
+              selectedIdx={soundIdx}
+              onSelect={setSoundIdx}
+              variantIdx={variantIdx}
+              onVariant={setVariantIdx}
+              activeClass="bg-violet-400/25"
+            />
+          </div>
+          <div className="col-start-3 row-start-1 sm:col-start-4">
+            <ThemeLogoPill />
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[760px] flex-1 flex-col justify-start pb-10 pt-6 md:pb-12 md:pt-8">
+        <main className="mx-auto flex w-full max-w-[760px] flex-col pb-3 pt-6 md:pb-5 md:pt-8">
           <p className="mb-3 text-center text-xs text-white/35">
             El primero te lo damos. Di cuánto sube el segundo y de qué tipo es.
           </p>
@@ -372,15 +385,13 @@ export default function ChordPairGame({
                 Escuchar
               </button>
 
-              <button
-                type="button"
+              <LetRingToggle letRing={letRing} setLetRing={setLetRing} />
+
+              <UndoButton
                 onClick={() => setDraftDistance(null)}
                 disabled={Boolean(answered) || !draftDistance}
-                className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-white/35 transition hover:text-white/70 disabled:cursor-default disabled:opacity-25 disabled:hover:text-white/35"
-              >
-                <RotateCcw size={12} />
-                Borrar
-              </button>
+                title="Quitar la distancia marcada"
+              />
             </div>
           </div>
 

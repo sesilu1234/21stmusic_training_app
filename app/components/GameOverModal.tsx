@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Eye, Flame, Home, Medal, Repeat, RotateCcw } from "lucide-react";
+import { ArrowLeft, Eye, Home, Medal, Repeat, RotateCcw, Trophy } from "lucide-react";
 import Crown from "./Crown";
 import { useBackHref } from "./useBackHref";
 import { saveAttempt } from "@/app/progreso/actions";
 import type { SaveResult } from "@/lib/progress";
+import { barColor } from "@/lib/barColor";
 
 interface Props {
   correct: number;
@@ -21,8 +22,12 @@ interface Props {
    */
   savePath?: string;
   /**
-   * Si se pasa, el panel lleva una X (y se cierra con Escape) para quitarlo de
-   * en medio y ver el ejercicio ya terminado: dónde se ha fallado.
+   * El panel lleva siempre su botón de "Revisar" (y se cierra con Escape) para
+   * quitarlo de en medio y ver el ejercicio ya terminado: dónde se ha fallado.
+   *
+   * Sin `onClose` se esconde él solo y deja un botón flotante para volver a
+   * abrirlo, que es lo que usan casi todos los modos. Con `onClose` lo cierra
+   * quien lo monta (Lectura rítmica, que tiene sus propios controles).
    */
   onClose?: () => void;
   /**
@@ -36,6 +41,8 @@ interface Props {
    * donde saldría lo guardado.
    */
   practice?: string;
+  /** Una línea más bajo la nota, para lo que no es "x de y": "47,2 s · récord 44,8 s". */
+  detail?: string;
 }
 
 const SPARKLES = [
@@ -54,10 +61,12 @@ export default function GameOverModal({
   onClose,
   onReplay,
   practice,
+  detail,
 }: Props) {
   const safeTotal = Math.max(1, total);
   const perfect = correct === total && total > 0;
-  const pct = Math.round((correct / safeTotal) * 100);
+  // Sin llegar a 100 si no es pleno: 99,6 % se queda en 99.
+  const pct = Math.min(correct < safeTotal ? 99 : 100, Math.round((correct / safeTotal) * 100));
   const restart = onRestart || (() => window.location.reload());
 
   const currentPath = usePathname();
@@ -79,20 +88,51 @@ export default function GameOverModal({
       .catch(() => setSaved(null));
   }, [pathname, correct, total, practice]);
 
+  // Escondido, no desmontado: así no se vuelve a guardar la partida al abrirlo
+  // otra vez.
+  const [hidden, setHidden] = useState(false);
+  const close = useCallback(() => (onClose ? onClose() : setHidden(true)), [onClose]);
+
   useEffect(() => {
-    if (!onClose) return;
+    if (hidden) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") close();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  }, [close, hidden]);
+
+  // Cerrado para revisar: solo queda un botón para volver a la nota. En el
+  // móvil va centrado y por encima del pie (las casillas y las flechas están
+  // abajo del todo); con pantalla ancha, en la esquina, donde no tapa nada.
+  if (hidden) {
+    return (
+      <button
+        type="button"
+        onClick={() => setHidden(false)}
+        className="rise-in fixed bottom-24 left-1/2 z-50 inline-flex -translate-x-1/2 items-center gap-2 rounded-full border border-amber-300/40 bg-slate-950/90 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.18em] text-amber-200 shadow-[0_12px_30px_rgba(0,0,0,0.5)] backdrop-blur-md transition hover:border-amber-300/70 hover:text-white md:bottom-6 md:left-auto md:right-6 md:translate-x-0"
+      >
+        <Trophy size={14} />
+        <span className="tabular-nums">
+          {correct}/{total}
+        </span>
+        <span className="text-white/30">·</span>
+        Ver nota
+      </button>
+    );
+  }
 
   // El velo tapaba demasiado: iba a media opacidad y con 24px de desenfoque, y
   // detrás no se veía nada. Ahora es lo justo para que la tarjeta se despegue
   // del fondo y se siga viendo dónde estabas.
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 p-4 backdrop-blur-[3px]">
+    // Pulsar fuera de la tarjeta también la cierra, como el botón de Revisar.
+    <div
+      onClick={(event) => {
+        if (event.target === event.currentTarget) close();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 p-4 backdrop-blur-[3px]"
+    >
       {perfect && (
         <div className="glow-pulse pointer-events-none absolute h-[26rem] w-[26rem] rounded-full bg-amber-400/25 blur-3xl" />
       )}
@@ -100,17 +140,15 @@ export default function GameOverModal({
       <div className="rise-in relative w-full max-w-sm rounded-[2.5rem] border border-white/15 bg-slate-950/80 p-8 text-center shadow-[0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl md:p-10">
         {/* Con una X a secas no se entendía que debajo seguía el ejercicio
             para mirarlo: parecía solo "cerrar". Con la palabra se ve a qué se va. */}
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            title="Cerrar y revisar el ejercicio"
-            className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/70 transition hover:border-amber-300/50 hover:bg-white/10 hover:text-white"
-          >
-            <Eye size={13} strokeWidth={2.25} />
-            Revisar
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={close}
+          title="Cerrar y revisar el ejercicio"
+          className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/70 transition hover:border-amber-300/50 hover:bg-white/10 hover:text-white"
+        >
+          <Eye size={13} strokeWidth={2.25} />
+          Revisar
+        </button>
         {perfect ? (
           <>
             <div className="relative mx-auto mb-6 h-32 w-40">
@@ -142,6 +180,7 @@ export default function GameOverModal({
             <p className="mt-2 text-xs font-bold uppercase tracking-[0.25em] text-amber-100/80">
               {correct} de {total} · todas correctas
             </p>
+            {detail && <p className="mt-2 text-sm font-bold text-white/80">{detail}</p>}
 
           </>
         ) : (
@@ -165,7 +204,7 @@ export default function GameOverModal({
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
               <div
                 className={`h-full rounded-full transition-all duration-700 ${
-                  pct >= 80 ? "bg-emerald-400" : pct >= 50 ? "bg-amber-400" : "bg-rose-400"
+                  barColor(pct, 80, 50)
                 }`}
                 style={{ width: `${pct}%` }}
               />
@@ -178,6 +217,7 @@ export default function GameOverModal({
                   ? "Bien, sigue así"
                   : "A seguir practicando"}
             </p>
+            {detail && <p className="mt-2 text-sm font-bold text-white/80">{detail}</p>}
           </>
         )}
 
@@ -205,12 +245,6 @@ export default function GameOverModal({
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/15 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
                     <Medal size={12} />
                     Medalla nueva
-                  </span>
-                )}
-                {saved.streak > 1 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/60">
-                    <Flame size={12} className="text-orange-300" />
-                    {saved.streak} días seguidos
                   </span>
                 )}
                 <Link

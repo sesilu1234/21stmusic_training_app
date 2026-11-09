@@ -87,7 +87,7 @@ export default function IntervalosGame() {
   }, [step, currentQuestion]);
 
   if (!isMounted || !currentQuestion) {
-    return <div className="min-h-screen bg-slate-900" />;
+    return <div className="min-h-dvh bg-slate-900" />;
   }
 
   const handleAnswer = (val: string) => {
@@ -142,10 +142,10 @@ export default function IntervalosGame() {
     currentQuestion.answer === "0" ? "Unisono" : currentQuestion.answer;
 
   return (
-    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+    <div className="relative min-h-dvh flex flex-col font-sans overflow-x-hidden text-white">
       <Backdrop />
 
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-dvh flex flex-col">
       <GameChrome>
         ¿Qué{" "}
         <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">
@@ -235,7 +235,7 @@ export default function IntervalosGame() {
         </div>
 
         {/* NAVIGATION & PROGRESS */}
-        <div className="w-full mt-10 md:mt-16 flex flex-col items-center gap-6">
+        <div className="w-full mt-5 md:mt-8 flex flex-col items-center gap-6">
           <div className="flex items-center justify-between w-full max-w-md gap-4">
             <button
               onClick={goBack}
@@ -278,7 +278,7 @@ export default function IntervalosGame() {
           </div>
         </div>
 
-        <footer className="mt-auto py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
+        <footer className="mt-auto pb-4 pt-2 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
           © 2026 21st Century Music
         </footer>
       </div>

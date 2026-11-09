@@ -1,0 +1,7 @@
+Guitarra de nylon, del soundfont FatBoy (https://fatboy.site), en midi-js-soundfonts de Benjamin Gleitzman.
+https://github.com/gleitz/midi-js-soundfonts
+Licencia de las muestras: Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0)
+https://creativecommons.org/licenses/by-sa/3.0/
+
+Sin tocar: tal y como vienen (3 s, 128 kbps).
+49 notas sueltas, todas de Do2 a Do6.

@@ -14,9 +14,9 @@
 // acorde en `normal-case`. Si en algún modo nuevo se pinta un acorde dentro de
 // un texto en mayúsculas, esto es lo que hay que acordarse de hacer.
 //
-// El bemol va con la "b" de siempre y no con el signo ♭: el resto de la app ya
-// escribe "Sib", "Mib" y "b3", y mezclar los dos sistemas se lee peor que
-// tener uno solo, aunque sea el pobre.
+// Por dentro el bemol va con la "b" de siempre ("Sib", "Mib"), pero en pantalla
+// se pinta con ♭ pasando el texto por `bemol()` (lib/bemol.ts): "Mib 7" se
+// leía "MIB". Si un modo nuevo enseña nombres de notas, que use `bemol()`.
 
 /**
  * El cifrado de cada calidad: lo que se escribe pegado a la fundamental.

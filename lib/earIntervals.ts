@@ -86,3 +86,19 @@ const BUTTON_GRIDS: Record<number, string> = {
 
 export const earButtonGrid = (count: number) =>
   BUTTON_GRIDS[count] ?? "grid-cols-4 sm:grid-cols-5 md:grid-cols-8";
+
+/**
+ * Como `earButtonGrid`, pero con muchos botones nunca en una sola fila: en
+ * pantalla ancha se reparten en dos filas iguales (12 → 6 y 6).
+ */
+const TWO_ROW_GRIDS: Record<number, string> = {
+  7: "grid-cols-4",
+  8: "grid-cols-4 max-w-2xl mx-auto",
+  9: "grid-cols-3 sm:grid-cols-5",
+  10: "grid-cols-5",
+  11: "grid-cols-4 sm:grid-cols-6",
+  12: "grid-cols-4 sm:grid-cols-6",
+};
+
+export const earButtonGridTwoRows = (count: number) =>
+  TWO_ROW_GRIDS[count] ?? earButtonGrid(count);

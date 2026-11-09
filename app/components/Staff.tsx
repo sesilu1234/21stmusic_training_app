@@ -130,6 +130,7 @@ export default function Staff({
   head = "whole",
   padding = 3.5,
   fit = "width",
+  pointer,
 }: {
   columns: StaffColumn[];
   clef?: Clef;
@@ -147,6 +148,11 @@ export default function Staff({
   padding?: number;
   /** Qué manda en el tamaño: el ancho de la caja (lo normal) o su alto. */
   fit?: "width" | "height";
+  /**
+   * La columna que toca leer ahora: lleva una franja suave detrás y una
+   * flechita encima (arriba hay más sitio: abajo pueden ir dos líneas adicionales). En una ristra larga, el color solo no basta para verla.
+   */
+  pointer?: number;
 }) {
   const colors = INK[ink];
   const headWidth = HEAD_WIDTH[head];
@@ -171,6 +177,22 @@ export default function Staff({
       role="img"
       aria-label={label}
     >
+      {pointer !== undefined && pointer >= 0 && pointer < columns.length && (
+        <g fill={colors.state.hint}>
+          <rect
+            x={columnX(pointer) + HEAD_OFFSET - 22}
+            y={4}
+            width={44}
+            height={height - 8}
+            rx={10}
+            opacity={0.12}
+          />
+          <path
+            d={`M ${columnX(pointer) + HEAD_OFFSET} 15 l -7 -10 h 14 z`}
+          />
+        </g>
+      )}
+
       {/* Las cinco líneas. */}
       {[0, 1, 2, 3, 4].map((line) => (
         <line

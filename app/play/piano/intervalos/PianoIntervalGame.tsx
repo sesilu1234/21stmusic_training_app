@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Volume2 } from "lucide-react";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import ThemeLogoPill from "@/app/components/ThemeLogoPill";
 import Backdrop from "@/app/components/Backdrop";
 import GameOverModal from "@/app/components/GameOverModal";
 import RoundFooter from "@/app/components/RoundFooter";
 import PianoKeyboard, { noteName, type KeyMark } from "@/app/components/PianoKeyboard";
-import { PRESET_ICONS, PRESETS, useAudio } from "@/app/play/oido/audio";
+import { PIANO_GAME_SOUNDS, useAudio, usePianoGameSound } from "@/app/play/oido/audio";
+import SoundIconPicker from "@/app/play/oido/SoundIconPicker";
 import {
+  PIANO_PRACTICE_NOTE,
   buildPianoIntervalQuiz,
   type PianoIntervalLevel,
   type PianoIntervalQuestion,
@@ -36,7 +38,14 @@ const createRound = (level: PianoIntervalLevel): Round => {
 const targetOf = (question: PianoIntervalQuestion) =>
   question.root + question.interval.semitones;
 
-export default function PianoIntervalGame({ level }: { level: PianoIntervalLevel }) {
+export default function PianoIntervalGame({
+  level,
+  practice = false,
+}: {
+  level: PianoIntervalLevel;
+  /** true = intervalos elegidos a mano: no se guarda ni cuenta para la medalla. */
+  practice?: boolean;
+}) {
   const { playSequence } = useAudio();
 
   const [round, setRound] = useState<Round | null>(null);
@@ -44,7 +53,7 @@ export default function PianoIntervalGame({ level }: { level: PianoIntervalLevel
   const [gameOver, setGameOver] = useState(false);
   /** true mientras estás mirando una pregunta vieja en vez de jugando. */
   const [reviewing, setReviewing] = useState(false);
-  const [presetIdx, setPresetIdx] = useState(0);
+  const { presetIdx, setPresetIdx, variantIdx, setVariantIdx } = usePianoGameSound();
 
   const advanceTimerRef = useRef<number | null>(null);
 
@@ -132,7 +141,7 @@ export default function PianoIntervalGame({ level }: { level: PianoIntervalLevel
   };
 
   if (!round || !question) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-dvh bg-slate-950" />;
   }
 
   const target = targetOf(question);
@@ -150,19 +159,25 @@ export default function PianoIntervalGame({ level }: { level: PianoIntervalLevel
   if (answered !== null) badges[target] = question.interval.short;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh overflow-x-hidden font-sans text-white">
       <Backdrop />
 
-      {gameOver && <GameOverModal correct={correctCount} total={total} />}
+      {gameOver && (
+        <GameOverModal
+          correct={correctCount}
+          total={total}
+          practice={practice ? PIANO_PRACTICE_NOTE : undefined}
+        />
+      )}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] md:gap-4">
           <Link
             href="/play/piano/intervalos"
             className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/50 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/60 backdrop-blur-sm transition hover:border-emerald-300/50 hover:text-white md:px-4"
           >
             <ArrowLeft size={14} />
-            <span className="hidden sm:inline">Niveles</span>
+            <span className="hidden sm:inline">Volver</span>
           </Link>
 
           <div className="min-w-0 text-center">
@@ -178,28 +193,24 @@ export default function PianoIntervalGame({ level }: { level: PianoIntervalLevel
             </p>
           </div>
 
-          <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
-            <ThemeToggle onPhoto />
-            <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/10 bg-slate-950/50 p-1 backdrop-blur-sm">
-              {PRESETS.map((preset, index) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => setPresetIdx(index)}
-                  title={preset.label}
-                  aria-label={preset.label}
-                  className={`grid h-7 w-7 place-items-center rounded-full text-xs transition md:h-8 md:w-8 md:text-sm ${
-                    presetIdx === index ? "bg-emerald-400/25" : "opacity-40 hover:opacity-80"
-                  }`}
-                >
-                  {PRESET_ICONS[index]}
-                </button>
-              ))}
-            </div>
+          {/* En el móvil el instrumento baja a su propia línea, debajo del
+              título: a su lado le dejaba al título muy poco sitio. */}
+          <div className="col-start-2 row-start-2 justify-self-center sm:col-start-3 sm:row-start-1">
+            <SoundIconPicker
+              options={PIANO_GAME_SOUNDS}
+              selectedIdx={presetIdx}
+              onSelect={setPresetIdx}
+              variantIdx={variantIdx}
+              onVariant={setVariantIdx}
+              activeClass="bg-emerald-400/25"
+            />
+          </div>
+          <div className="col-start-3 row-start-1 sm:col-start-4">
+            <ThemeLogoPill />
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
+        <main className="mt-auto mx-auto flex w-full max-w-[980px] flex-col pb-3 pt-6 md:pb-5 md:pt-8">
           <div className="mb-6 flex justify-center">
             <button
               type="button"

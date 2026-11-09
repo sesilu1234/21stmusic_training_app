@@ -122,8 +122,13 @@ const buildMelody = (level: MelodyLevel) => {
   return degrees;
 };
 
-/** Tónica al azar dentro de una octava: transporta cada pregunta. */
-const randomKeyRoot = () => Math.floor(Math.random() * 12);
+/**
+ * Tónica al azar: transporta cada pregunta. De Fa a Si (antes de Do a Si): el
+ * piano suena una octava por debajo y desde Do quedaba grave. No sube más
+ * porque la melodía se aleja hasta una octava de la tónica y tiene que caber
+ * en el teclado (de Do3 a Si5).
+ */
+const randomKeyRoot = () => 5 + Math.floor(Math.random() * 7);
 
 /** Preguntas de una ronda, sin repetir la misma melodía dos veces seguidas. */
 export const buildMelodyQuiz = (

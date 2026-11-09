@@ -6,13 +6,18 @@ import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
 import {
   INTERVALS,
   BUTTON_LABELS,
-  PRESETS,
-  PRESET_ICONS,
+  GUITAR_PRESET,
+  GUITAR_SOFT_DECAY,
   useAudio,
+  useEarSound,
+  withSoftDecay,
 } from "../audio";
+import EarSoundPicker from "../EarSoundPicker";
+import { LetRingToggle, useLetRing } from "../LetRing";
 import GameOverModal from "@/app/components/GameOverModal";
 import { useAbandono } from "@/app/components/useAbandono";
 import Backdrop from "@/app/components/Backdrop";
+import { distinctFromPrevious } from "@/lib/noRepeat";
 import { PRACTICE_NOTE, earButtonGrid, type EarIntervalSet } from "@/lib/earIntervals";
 
 
@@ -34,7 +39,13 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
   const [isReviewing, setIsReviewing] = useState(false);
   const [solutionStep, setSolutionStep] = useState<number | null>(null);
 
-  const [presetIdx, setPresetIdx]     = useState(0);
+  const { soundIdx, setSoundIdx, variantIdx, setVariantIdx, preset, sampler: chosenSampler } = useEarSound();
+  const { letRing, setLetRing } = useLetRing();
+  // PRUEBA: aquí la guitarra lleva una caída más suave (ver withSoftDecay).
+  const sampler =
+    soundIdx === GUITAR_PRESET && chosenSampler
+      ? withSoftDecay(chosenSampler, GUITAR_SOFT_DECAY[variantIdx] ?? 1)
+      : chosenSampler;
   const [speed, setSpeed]             = useState(0.25);
   const gapMs                         = Math.round(300 + speed * 1700);
 
@@ -66,8 +77,23 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
       for (let i = 0; i < total; i++) {
         list.push(pool[Math.floor(Math.random() * pool.length)]);
       }
-      // El mismo abanico que sorteaba `playInterval` al sonar: de Do a Sol.
-      rootsRef.current = list.map(() => Math.floor(Math.random() * 8));
+      // De Mib a La (antes de Fa a Do, y antes aún de Do a Sol): con todo
+      // sonando una octava por debajo, la grave cae entre Mib3 y La3 y la más
+      // aguda que puede salir es La4. Más arriba la guitarra suena fea. Va
+      // igual con todos los instrumentos. Si sale el mismo
+      // intervalo que en la anterior, desde otra nota: el mismo intervalo sí
+      // puede repetirse, la misma pregunta calcada no.
+      const roots: number[] = [];
+      list.forEach((interval, index) => {
+        const randomRoot = () => 3 + Math.floor(Math.random() * 7);
+        const sameAsBefore = index > 0 && list[index - 1] === interval;
+        roots.push(
+          sameAsBefore
+            ? distinctFromPrevious(roots[index - 1], randomRoot, String)
+            : randomRoot(),
+        );
+      });
+      rootsRef.current = roots;
       setQuizList(list);
       setIsMounted(true);
     };
@@ -86,7 +112,8 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
     if (finishTimerRef.current) window.clearTimeout(finishTimerRef.current);
     setIsPlaying(true);
     setNoteFlash(1);
-    playInterval(interval.semitones, gapMs, presetIdx, root);
+    // La primera nota se apaga al entrar la segunda, salvo con "Dejar sonar".
+    playInterval(interval.semitones, gapMs, preset, root, sampler, !letRing);
     flashTimerRef.current = window.setTimeout(() => setNoteFlash(2), gapMs);
     finishTimerRef.current = window.setTimeout(() => {
       setNoteFlash(0);
@@ -94,7 +121,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
       flashTimerRef.current = null;
       finishTimerRef.current = null;
     }, gapMs + 1400);
-  }, [isPlaying, gapMs, presetIdx, playInterval]);
+  }, [isPlaying, gapMs, preset, sampler, playInterval, letRing]);
 
   const handleAnswer = (label: string) => {
     if (userAnswers[step] !== null || gameOver) return;
@@ -119,11 +146,13 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
   useEffect(() => {
     if (!currentInterval || !isMounted || isReviewing) return;
     if (!shouldAutoPlayNextRef.current) return;
-    shouldAutoPlayNextRef.current = false;
-    const timer = window.setTimeout(
-      () => triggerPlay(currentInterval, rootsRef.current[step], true),
-      120,
-    );
+    // El aviso se apaga al sonar, no antes: si algo cambia en estos ms (p. ej.
+    // acaba de sonar la pregunta anterior) el efecto se repite y la vuelve a
+    // programar. Apagándolo antes, a veces la siguiente no sonaba sola.
+    const timer = window.setTimeout(() => {
+      shouldAutoPlayNextRef.current = false;
+      triggerPlay(currentInterval, rootsRef.current[step], true);
+    }, 120);
     return () => window.clearTimeout(timer);
   }, [currentInterval, isMounted, isReviewing, triggerPlay, step]);
 
@@ -146,15 +175,15 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
     }
   };
 
-  if (!isMounted || !currentInterval) return <div className="min-h-screen bg-slate-900" />;
+  if (!isMounted || !currentInterval) return <div className="min-h-dvh bg-slate-900" />;
 
   const pct = Math.round((correctCount / totalQuestions) * 100);
 
   return (
-    <div className="relative min-h-screen flex flex-col font-sans overflow-x-hidden text-white">
+    <div className="relative min-h-dvh flex flex-col font-sans overflow-x-hidden text-white">
       <Backdrop />
 
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-dvh flex flex-col">
       <GameChrome>
         ¿Qué{" "}
         <span className="text-black drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">INTERVALO</span>
@@ -227,22 +256,14 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
             Escuchar
           </button>
 
-          <div className="flex items-center bg-black/50 border border-white/10 rounded-md p-2 backdrop-blur-md gap-2">
-            {PRESETS.map((p, i) => (
-              <button
-                key={i}
-                onClick={() => setPresetIdx(i)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all duration-100 border-2
-                  ${presetIdx === i
-                    ? "bg-amber-400 text-black border-black shadow-[4px_4px_0px_#000]"
-                    : "bg-white/5 text-white/40 border-transparent hover:text-white/80 hover:bg-white/10"
-                  }`}
-              >
-                <span className="text-sm leading-none">{PRESET_ICONS[i]}</span>
-                <span className="hidden sm:inline">{p.label}</span>
-              </button>
-            ))}
-          </div>
+          <LetRingToggle letRing={letRing} setLetRing={setLetRing} />
+
+          <EarSoundPicker
+            soundIdx={soundIdx}
+            setSoundIdx={setSoundIdx}
+            variantIdx={variantIdx}
+            setVariantIdx={setVariantIdx}
+          />
 
           <div className="flex items-center gap-3 bg-black/50 border border-white/10 rounded-md px-4 py-2 backdrop-blur-md">
             <span className="text-white/40 text-[9px] uppercase tracking-widest">Tiempo</span>
@@ -288,7 +309,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
           </div>
         </div>
 
-        <div className="w-full mt-10 md:mt-14 flex flex-col items-center">
+        <div className="w-full mt-5 md:mt-8 flex flex-col items-center">
           <div className="flex items-center justify-between w-full max-w-md gap-4">
             <button
               onClick={goBack}
@@ -335,7 +356,7 @@ export default function IntervalosAuditivos({ level }: { level: EarIntervalSet }
           </div>
         </div>
 
-        <footer className="mt-auto py-8 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
+        <footer className="mt-auto pb-4 pt-2 text-center text-slate-600 text-[8px] tracking-[0.6em] uppercase">
           © 2026 21st Century Music
         </footer>
       </div>

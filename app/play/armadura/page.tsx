@@ -36,7 +36,11 @@ export default function ArmadurasMenuPage() {
       title="Armaduras"
       intro="Sale una armadura y dices de qué tonalidad es, mayor o menor. Elige con qué clave quieres jugar."
       category="lenguaje"
-      compact
+      layout="accordion"
+      groups={[
+        { id: "una", title: "Una clave", description: "Todas las armaduras en una sola clave." },
+        { id: "ambas", title: "Las dos claves", description: "Sol y Fa mezcladas: primero mirar qué clave hay." },
+      ]}
       options={CLAVE_LEVELS.map((level) => ({
         title: level.titulo,
         description: level.sub,
@@ -44,6 +48,7 @@ export default function ArmadurasMenuPage() {
         Icon: KeyRound,
         image: <ClaveImages level={level} />,
         badge: level.badge,
+        group: level.claves.length > 1 ? "ambas" : "una",
       }))}
     />
   );

@@ -13,12 +13,18 @@ export default function ProgresionesOidoMenuPage() {
       title="Elige el nivel"
       intro="Suena la tónica y después los acordes de la rueda: hay que decir qué grados son, en orden. Empieza por el 1 aunque te parezca fácil, porque acostumbrarse a esa referencia es justo lo que hace falta para sacar canciones."
       category="oido"
+      layout="accordion"
+      groups={[
+        { id: "grados", title: "Acordes sueltos", description: "Reconocer cada grado contra la tónica: primero tres, luego la rueda entera." },
+        { id: "progresiones", title: "Progresiones", description: "Dos, tres y cuatro acordes seguidos, en orden." },
+      ]}
       options={PROGRESSION_LEVELS.map((level, index) => ({
         title: level.title,
         description: level.desc,
         href: `/play/oido/progresiones/${level.slug}`,
         Icon: levelIcons[index] ?? ListMusic,
         badge: level.badge,
+        group: index < 2 ? "grados" : "progresiones",
       }))}
     />
   );

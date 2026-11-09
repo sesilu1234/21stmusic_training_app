@@ -2,40 +2,56 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AppShell from "../components/AppShell";
 import StudentsOnlyGate from "../components/StudentsOnlyGate";
-import HonorToggle from "./HonorToggle";
-import HonorView from "./HonorView";
+import HonorView, { type EcoToday, type ExamBoards } from "./HonorView";
 import { PRIVADO } from "@/lib/seo";
-import { HONOR_ENABLED } from "@/lib/site";
+import { HONOR_ENABLED, HONOR_MEDALS_VISIBLE } from "@/lib/site";
 import { currentStudent } from "@/lib/session";
-import { categoryOf } from "@/lib/games";
 import { getProgress } from "@/lib/progress";
-import {
-  getHonorBoard,
-  HONOR_FAMILIES,
-  HONOR_MIN_PARTICIPANTS,
-  honorName,
-} from "@/lib/honor";
+import { getHonorBoard } from "@/lib/honor";
+import { madridDay, previousDay } from "@/lib/madrid";
+import { ECO_PULSO_PARKED, RETO_KINDS, retoNumber, type RetoKind } from "@/lib/reto";
+import { getEcoDayBoard, getTodayPlays } from "@/lib/ecoDb";
+import { dailyExamStatus, getDayBoard } from "@/lib/exams/daily";
+import { DAILY_EXAM } from "@/lib/retoExamen";
+
+/**
+ * El reto diario de hoy y de otro día para el cuadro: ayer, o el que se haya
+ * elegido en el calendario. Si nadie lo abrió ese día, sale vacío.
+ */
+const examBoards = async (
+  student: { email: string; showInHonor: boolean },
+  day: string,
+  past: string,
+): Promise<ExamBoards> => {
+  const [today, yesterday, status] = await Promise.all([
+    getDayBoard(day, student.email),
+    getDayBoard(past, student.email),
+    dailyExamStatus(student, day),
+  ]);
+  return { today, yesterday, status };
+};
+
+/**
+ * El día que se mira en la segunda tarjeta (`?dia=2026-10-29`). Solo días ya
+ * cerrados, del primer reto a ayer: cualquier otra cosa, ayer.
+ */
+const pickPastDay = (wanted: string | undefined, day: string) => {
+  const yesterday = previousDay(day);
+  if (!wanted || !/^\d{4}-\d{2}-\d{2}$/.test(wanted)) return yesterday;
+  if (wanted < DAILY_EXAM.launch || wanted > yesterday) return yesterday;
+  return wanted;
+};
 
 // Nombres de alumnos: fuera de los buscadores, y solo con sesión (abajo).
 export const metadata: Metadata = { title: "Cuadro de honor", robots: PRIVADO };
 
 export const dynamic = "force-dynamic";
 
-const MONTHS = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-];
-
-/** "2026-10-10", "2026-10-16" → "Del 10 al 16 de octubre". */
-const weekLabel = (from: string, to: string) => {
-  const [, fromMonth, fromDay] = from.split("-").map(Number);
-  const [, toMonth, toDay] = to.split("-").map(Number);
-  return fromMonth === toMonth
-    ? `Del ${fromDay} al ${toDay} de ${MONTHS[toMonth - 1]}`
-    : `Del ${fromDay} de ${MONTHS[fromMonth - 1]} al ${toDay} de ${MONTHS[toMonth - 1]}`;
-};
-
-export default async function HonorPage() {
+export default async function HonorPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ dia?: string }>;
+}) {
   if (!HONOR_ENABLED) notFound();
 
   const student = await currentStudent();
@@ -46,53 +62,55 @@ export default async function HonorPage() {
       <StudentsOnlyGate
         intro="El cuadro de honor es para los alumnos de 21st Century Music."
         backLabel="Volver a los juegos"
+        loginNext="/honor"
       >
         <></>
       </StudentsOnlyGate>
     );
   }
 
+  const day = madridDay();
+  const past = pickPastDay((await searchParams)?.dia, day);
+
   // A quien no sale se le enseña el puesto que tendría, así que hace falta su
   // progreso. A quien sale ya se le lee con el resto del cuadro.
-  const viewerProgress = student.showInHonor
+  // Con las medallas escondidas no hace falta nada de esto.
+  const viewerProgress =
+    !HONOR_MEDALS_VISIBLE || student.showInHonor ? null : await getProgress(student.email).catch(() => null);
+
+  const [board, examen, plays, ...boards] = await Promise.all([
+    HONOR_MEDALS_VISIBLE ? getHonorBoard(student.email, viewerProgress).catch(() => null) : null,
+    examBoards(student, day, past).catch(() => ({ today: null, yesterday: null, status: null })),
+    // Eco y Pulso, solo si no están aparcados.
+    ECO_PULSO_PARKED ? null : getTodayPlays(student.email, day).catch(() => ({ eco: null, pulso: null })),
+    ...(ECO_PULSO_PARKED ? [] : RETO_KINDS.map((kind) => getEcoDayBoard(day, kind, student.email).catch(() => null))),
+  ]);
+
+  const retos = ECO_PULSO_PARKED
     ? null
-    : await getProgress(student.email).catch(() => null);
-  const board = await getHonorBoard(student.email, viewerProgress).catch(() => null);
-  const viewerName = honorName(student.displayName);
+    : (Object.fromEntries(
+    RETO_KINDS.map((kind, index): [RetoKind, EcoToday | null] => {
+      const reto = boards[index];
+      const play = plays?.[kind];
+      return [
+        kind,
+        reto
+          ? {
+              kind,
+              number: retoNumber(kind, day),
+              top: reto.top,
+              players: reto.players,
+              myScore: play ? (play.score ?? 0) : null,
+            }
+          : null,
+      ];
+    }),
+  ) as Record<RetoKind, EcoToday | null>);
 
   return (
     <AppShell displayName={student.displayName} role={student.role}>
-      {!board ? (
-        <div className="mx-auto w-full max-w-4xl rounded-2xl border border-white/10 bg-slate-950/70 p-6 text-center text-sm text-white/60">
-          Ahora mismo no se puede leer el cuadro de honor. Vuelve a probar en un rato.
-        </div>
-      ) : board.participants < HONOR_MIN_PARTICIPANTS ? (
-        <div className="mx-auto w-full max-w-4xl">
-          <h1 className="text-3xl font-black italic tracking-tight md:text-4xl">Cuadro de honor</h1>
-          <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/70 px-6 py-10 text-center shadow-lg">
-            <p className="text-lg font-black text-white">Aún no hay cuadro</p>
-            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/60">
-              {student.showInHonor
-                ? "Ya te has apuntado. En cuanto se apunte alguien más, aparecéis aquí."
-                : "Sale en cuanto haya dos alumnos apuntados. Si te apuntas, ya va uno."}
-            </p>
-          </div>
-          <footer className="mt-4">
-            <HonorToggle initial={student.showInHonor} name={viewerName} />
-          </footer>
-        </div>
-      ) : (
-        <HonorView
-          board={board}
-          families={HONOR_FAMILIES.map((id) => ({
-            id,
-            label: id === "todo" ? "Todo" : categoryOf(id).label,
-          }))}
-          weekLabel={weekLabel(board.weekFrom, board.weekTo)}
-          viewerName={viewerName}
-          showInHonor={student.showInHonor}
-        />
-      )}
+      {/* Si las medallas no se pueden leer, se quedan fuera; lo del reto sale igual. */}
+      <HonorView board={board} examen={examen} retos={retos} day={day} past={past} />
     </AppShell>
   );
 }

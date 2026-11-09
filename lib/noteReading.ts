@@ -5,7 +5,8 @@
 // está?". Lo que sí cuenta es cómo está escrita: Do# y Reb caen en sitios
 // distintos del pentagrama y se contestan distinto.
 
-import { staffPosition, type Clef } from "./staff";
+import { hasRareSpelling, staffPosition, type Clef } from "./staff";
+import { distinctFromPrevious } from "./noRepeat";
 
 export interface NoteReadingLevel {
   slug: string;
@@ -48,6 +49,7 @@ export const ALTERED_ANSWERS = [
  * salen juntas, que es justo la pareja que hay que aprender a distinguir.
  */
 export const CHROMATIC_ANSWERS = [
+  "Si#",
   "Do",
   "Do#",
   "Reb",
@@ -55,6 +57,8 @@ export const CHROMATIC_ANSWERS = [
   "Re#",
   "Mib",
   "Mi",
+  "Fab",
+  "Mi#",
   "Fa",
   "Fa#",
   "Solb",
@@ -65,6 +69,7 @@ export const CHROMATIC_ANSWERS = [
   "La#",
   "Sib",
   "Si",
+  "Dob",
 ];
 
 export const answersFor = (level: NoteReadingLevel) =>
@@ -85,7 +90,7 @@ const isNatural = (semitone: number) =>
   [0, 2, 4, 5, 7, 9, 11].includes(((semitone % 12) + 12) % 12);
 
 /** Semitonos que pueden salir preguntados en una clave. */
-const notesFor = (clef: Clef, accidentals: boolean) => {
+export const notesFor = (clef: Clef, accidentals: boolean) => {
   const { from, to } = CLEF_NOTES[clef];
   const all = Array.from({ length: to - from + 1 }, (_, i) => from + i);
   return accidentals ? all : all.filter(isNatural);
@@ -125,10 +130,18 @@ export const NOTE_READING_LEVELS: NoteReadingLevel[] = [
     accidentals: true,
   },
   {
+    slug: "fa-alteraciones",
+    title: "Fa con alteraciones",
+    desc: "Sostenidos y bemoles, ahora en clave de fa.",
+    badge: "Nivel 5",
+    clef: "fa",
+    accidentals: true,
+  },
+  {
     slug: "ambas-alteraciones",
     title: "Todo mezclado",
     desc: "Las dos claves y todas las alteraciones. El examen de verdad.",
-    badge: "Nivel 5",
+    badge: "Nivel 6",
     clef: "ambas",
     accidentals: true,
   },
@@ -142,11 +155,17 @@ export interface NoteReadingQuestion {
   clef: Clef;
   /** Cómo se escribe si es tecla negra: true = bemol, false = sostenido. */
   preferFlat: boolean;
+  /** Do, Mi, Fa o Si escritas como Si#, Fab, Mi# o Dob. */
+  rareSpelling?: boolean;
 }
 
 /** Cómo se llama la nota tal y como está escrita: "Do", "Do#", "Reb"… */
 export const noteLabel = (question: NoteReadingQuestion) => {
-  const { degree, accidental } = staffPosition(question.semitone, question.preferFlat);
+  const { degree, accidental } = staffPosition(
+    question.semitone,
+    question.preferFlat,
+    question.rareSpelling,
+  );
   const letter = NOTE_LETTERS[((degree % 7) + 7) % 7];
   if (accidental === "sharp") return `${letter}#`;
   if (accidental === "flat") return `${letter}b`;
@@ -154,28 +173,55 @@ export const noteLabel = (question: NoteReadingQuestion) => {
 };
 
 /**
- * Preguntas de una partida, cada nota al azar. Puede salir la misma dos veces
- * seguidas: si no, la pregunta anterior descartaría una respuesta.
+ * Preguntas de una partida, cada nota al azar, sin repetir la misma nota en la
+ * misma clave dos veces seguidas. Antes se dejaba, para no descartar una
+ * respuesta; con tantas notas posibles esa pista no vale nada, y la misma
+ * pregunta calcada parecía un fallo.
  */
+/** Qué parte de las preguntas con alteraciones sale como Si#, Fab, Mi# o Dob. */
+const RARE_SPELLING_CHANCE = 0.1;
+
 export const buildNoteReadingQuiz = (
   level: NoteReadingLevel,
   count: number,
 ): NoteReadingQuestion[] => {
   const questions: NoteReadingQuestion[] = [];
 
-  for (let i = 0; i < count; i++) {
+  const make = (): NoteReadingQuestion => {
     const clef: Clef =
       level.clef === "ambas" ? (Math.random() < 0.5 ? "sol" : "fa") : level.clef;
 
     const notes = notesFor(clef, level.accidentals);
 
-    questions.push({
+    // Con alteraciones, de vez en cuando Si#, Fab, Mi# o Dob: existen y se
+    // ven (Si# en Do# menor, Mi# en Fa# mayor, Dob en Solb mayor…), pero son
+    // menos que las de tecla negra, así que salen poco.
+    if (level.accidentals && Math.random() < RARE_SPELLING_CHANCE) {
+      const rare = notes.filter(hasRareSpelling);
+      return {
+        semitone: rare[Math.floor(Math.random() * rare.length)],
+        clef,
+        preferFlat: false,
+        rareSpelling: true,
+      };
+    }
+
+    return {
       semitone: notes[Math.floor(Math.random() * notes.length)],
       clef,
       // Las teclas negras salen unas veces como sostenido y otras como bemol,
       // que es como se las va a encontrar en una partitura de verdad.
       preferFlat: Math.random() < 0.5,
-    });
+    };
+  };
+
+  for (let i = 0; i < count; i++) {
+    // Lo que se ve: una nota natural sale igual sea cual sea `preferFlat`.
+    questions.push(
+      distinctFromPrevious(questions[i - 1], make, (question) =>
+        `${question.semitone}|${question.clef}|${isNatural(question.semitone) ? !!question.rareSpelling : question.preferFlat}`,
+      ),
+    );
   }
 
   return questions;
