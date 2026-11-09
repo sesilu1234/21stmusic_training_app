@@ -39,6 +39,7 @@ export default function HonorStrip({
   title,
   empty,
   listed,
+  nudge,
 }: {
   board: DailyDayBoard | null;
   title: string;
@@ -46,6 +47,11 @@ export default function HonorStrip({
   empty: string;
   /** false = se ha quitado del cuadro: el puesto es el que tendría. */
   listed: boolean;
+  /**
+   * Qué poner arriba a la derecha si no estás en el ranking (hoy: "Inténtalo").
+   * Ahí ya no va cuántos han jugado: decir "3 jugadores" quedaba pobre.
+   */
+  nudge?: string;
 }) {
   const rows = board?.top.slice(0, SHOWN) ?? [];
   // Tu fila, si estás pero no entre los que se ven.
@@ -60,7 +66,7 @@ export default function HonorStrip({
       <span className="flex items-baseline justify-between gap-3 px-1.5">
         <span className="truncate text-sm font-black tracking-tight text-white">{title}</span>
         <span className="flex-shrink-0 text-[11px] font-bold text-amber-300 transition-colors group-hover:text-amber-200">
-          {place ?? (board && board.players > 0 ? `${board.players} ${board.players === 1 ? "jugador" : "jugadores"}` : "")}
+          {place ?? (board ? nudge : null)}
         </span>
       </span>
 

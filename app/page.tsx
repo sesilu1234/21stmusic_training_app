@@ -204,6 +204,7 @@ export default async function HomePage() {
                 board={today}
                 title="Hoy"
                 empty="Nadie todavía: el 1º está libre."
+                nudge="Inténtalo"
                 listed={student.showInHonor}
               />
               <HonorStrip board={yesterday} title="Ayer" empty="Ayer no lo acabó nadie." listed={student.showInHonor} />

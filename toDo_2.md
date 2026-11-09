@@ -80,6 +80,7 @@ y algo matematico para entender ultra bien
 
 <!-- revisar todo, y movil -->
 
+en reto diario, poner lo de acorde y que da el segundo aletaroio. asi , que sea bastante dificil. y lo de leer una sola nota, quitarlo, es demasiado facil
 en ingles
 
 <!-- guardara en localstorage el instrumento elegido se puede ? ( cuidado aqui en caso de hacerlo porque haya sitios donde el piano de cola no está) -->

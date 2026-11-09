@@ -28,8 +28,6 @@ import { generateBlock } from "./generate";
 import { getAttempt, getDailyExam, listAttemptsForExam, saveDailyExam, type Attempt, type Exam } from "./db";
 import type { ExamBlock, ExamQuestion } from "./types";
 
-const DUMMY_BOARD = true; // DUMMY (BORRAR)
-
 /**
  * De dónde salen las preguntas: tres secciones de cinco, siempre en el mismo
  * orden (DAILY_SECTIONS). Niveles de fácil a medio: es un reto de cada día,
@@ -276,23 +274,6 @@ export const getDailyBoard = async (exam: Exam, viewerEmail: string | null): Pro
  * crea el examen: si ese día nadie lo abrió, sale vacío. null si falla.
  */
 export const getDayBoard = async (day: string, viewerEmail: string | null): Promise<DailyDayBoard | null> => {
-  // DUMMY (BORRAR): 40 jugadores de prueba en cualquier día, para ver cómo
-  // quedan la portada y /honor. Hoy no sales; los demás días vas el 23º.
-  if (DUMMY_BOARD) {
-    const names = ["Lucía", "Martín Fernández", "Sofía", "Hugo", "Valentina Rodríguez", "Mateo", "Martina", "Leo", "Paula", "Daniel"];
-    const total = DAILY_EXAM.questions;
-    const meAt = day === madridDay() ? 0 : 23;
-    const top = Array.from({ length: 40 }, (_, i) => ({
-      rank: i + 1,
-      name: `${names[i % names.length]} ${i + 1}`,
-      correct: Math.max(0, total - Math.floor(i / 3)),
-      total,
-      ms: 95_000 + i * 7_300,
-      isMe: i + 1 === meAt,
-    }));
-    return { day, number: dailyExamNumber(day), top, players: 40, myRank: meAt };
-  }
-  // FIN DUMMY
   try {
     const exam = await getDailyExam(day);
     const number = dailyExamNumber(day);
