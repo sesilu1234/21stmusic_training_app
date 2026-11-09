@@ -227,7 +227,7 @@ export default function PianoRecognizeGame({
           </div>
         </div>
 
-        <main className="mt-auto mx-auto flex w-full max-w-[980px] flex-col pb-3 pt-6 md:pb-5 md:pt-8">
+        <main className="mt-auto mx-auto flex w-full max-w-[980px] flex-col pb-2 pt-3 md:pb-5 md:pt-8">
           <PianoKeyboard
             from={0}
             octaves={2}
@@ -236,7 +236,7 @@ export default function PianoRecognizeGame({
             disabled
           />
 
-          <div className="mt-5 flex justify-center">
+          <div className="mt-3 flex justify-center md:mt-5">
             <button
               type="button"
               onClick={() => play(question)}
@@ -247,7 +247,9 @@ export default function PianoRecognizeGame({
             </button>
           </div>
 
-          <div className="mx-auto mt-6 grid w-full max-w-[680px] grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-6">
+          {/* En el móvil, cuatro por fila y más bajos: tres filas en vez de cuatro,
+              para que la pantalla entre sin scroll. */}
+          <div className="mx-auto mt-4 grid w-full max-w-[680px] grid-cols-4 gap-1.5 sm:gap-2.5 md:mt-6 md:grid-cols-6">
             {options.map((interval) => (
               <button
                 key={interval.semitones}
@@ -255,7 +257,7 @@ export default function PianoRecognizeGame({
                 onClick={() => choose(interval.semitones)}
                 disabled={answered !== null}
                 title={interval.name}
-                className={`min-h-[58px] rounded-2xl border px-2 py-3 text-lg font-black tracking-tight backdrop-blur-sm transition duration-150 disabled:cursor-default ${optionClass(interval.semitones)}`}
+                className={`min-h-[44px] rounded-xl border px-1 py-2 text-base font-black sm:min-h-[58px] sm:rounded-2xl sm:px-2 sm:py-3 sm:text-lg tracking-tight backdrop-blur-sm transition duration-150 disabled:cursor-default ${optionClass(interval.semitones)}`}
               >
                 {interval.short}
               </button>
@@ -263,7 +265,7 @@ export default function PianoRecognizeGame({
           </div>
 
           <p
-            className={`mt-5 text-center text-xs font-black uppercase tracking-[0.2em] transition-opacity ${
+            className={`mt-3 text-center text-xs font-black uppercase tracking-[0.2em] transition-opacity md:mt-5 ${
               answered === null
                 ? "opacity-0"
                 : isCorrect

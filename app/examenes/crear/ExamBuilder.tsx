@@ -131,11 +131,9 @@ export default function ExamBuilder({ defaultTitle }: { defaultTitle: string }) 
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           maxLength={EXAM_LIMITS.titleMax}
-          // Mientras sea el de por defecto, se ve tenue y al entrar se selecciona
-          // entero: se nota que es una sugerencia y se cambia escribiendo encima.
-          onFocus={(event) => {
-            if (title === defaultTitle) event.currentTarget.select();
-          }}
+          // Mientras sea el de por defecto, se ve tenue: se nota que es una
+          // sugerencia. Al entrar NO se selecciona entero (era incómodo: el
+          // cursor va donde se pulsa, como en cualquier campo).
           className={`w-full rounded-2xl border border-white/10 bg-slate-900/90 px-3.5 py-3 text-base outline-none transition-colors focus:border-amber-300/60 ${
             title === defaultTitle ? "text-white/45" : "text-white"
           }`}
