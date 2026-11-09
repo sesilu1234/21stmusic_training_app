@@ -20,10 +20,15 @@ import DustLayer from "./DustLayer";
  *    claro entraba con un parpadeo. Ahora lo elige el CSS a partir del
  *    `data-theme-mode` que el script de `layout.tsx` pone antes de pintar, y de
  *    paso este componente deja de necesitar cliente.
+ *
+ * Mide `100lvh` (la pantalla con la barra del navegador escondida) y no
+ * `inset-0`: en móvil, al hacer scroll rápido la barra entra y sale, y una capa
+ * fija con `inset-0` tarda un instante en estirarse. En ese hueco asomaba el
+ * fondo de la página, una franja negra arriba o abajo.
  */
 export default function Backdrop() {
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden">
+    <div className="fixed inset-x-0 top-0 z-0 h-[100lvh] overflow-hidden">
       {/*
         La foto, con el desenfoque horneado.
 

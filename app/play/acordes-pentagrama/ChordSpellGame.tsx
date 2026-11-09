@@ -137,7 +137,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
   };
 
   if (!round || !question) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-dvh bg-slate-950" />;
   }
 
   const expected = chordNoteNames(question);
@@ -164,12 +164,12 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
     : [];
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href="/play/acordes-pentagrama/escribir"
@@ -201,15 +201,15 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-6 pt-4 md:pb-6 md:pt-4">
-          <div className="mb-5 flex justify-center">
+        <main className="mt-auto mx-auto flex w-full max-w-[980px] flex-col pb-2 pt-3 md:pb-5 md:pt-4">
+          <div className="mb-3 flex justify-center md:mb-5">
             <StaffCard>
               <Staff clef={question.clef} columns={columns} label="Acorde en el pentagrama" />
             </StaffCard>
           </div>
 
           {/* Una casilla por nota que hay que decir. */}
-          <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+          <div className="mb-3 flex flex-wrap items-center justify-center gap-2 md:mb-4">
             {expected.map((_, index) => {
               const given = draft[index];
               const wrongHere = answered !== null && !expected.includes(given);
@@ -233,7 +233,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
             })}
           </div>
 
-          <div className="mx-auto w-full max-w-[760px] rounded-[2rem] border border-white/10 bg-slate-950/50 p-4 backdrop-blur-md">
+          <div className="mx-auto w-full max-w-[760px] rounded-[2rem] border border-white/10 bg-slate-950/50 p-3 backdrop-blur-md md:p-4">
             {/* Una columna por letra partida en tres (#, natural, b), como en
                 Lectura de notas: siete bloques en vez de 21 botones. */}
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 md:gap-2.5">
@@ -276,7 +276,7 @@ export default function ChordSpellGame({ level }: { level: ChordStaffLevel }) {
             </div>
           </div>
 
-          <div className="mt-4 flex min-h-[2.5rem] flex-wrap items-center justify-center gap-3">
+          <div className="mt-2 flex min-h-[2.5rem] flex-wrap items-center justify-center gap-3 md:mt-4">
             {answered === null ? (
               <>
                 <p className="text-center text-[11px] uppercase tracking-[0.2em] text-white/25">

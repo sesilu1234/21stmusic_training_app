@@ -39,7 +39,7 @@ export default function DailyExamCard({
   return (
     <Link
       href={DAILY_EXAM.href}
-      className={`group flex items-center gap-3.5 ${tall ? "md:flex-col md:items-start md:justify-between md:gap-3" : ""} rounded-2xl border border-amber-300/25 bg-gradient-to-r from-amber-400/15 via-slate-950/70 to-slate-950/70 px-4 py-3.5 shadow-lg transition hover:border-amber-300/50 ${className}`}
+      className={`group flex min-w-0 items-center gap-3.5 ${tall ? "md:flex-col md:items-start md:justify-between md:gap-3" : ""} rounded-2xl border border-amber-300/25 bg-gradient-to-r from-amber-400/15 via-slate-950/70 to-slate-950/70 px-4 py-3.5 shadow-lg transition hover:border-amber-300/50 ${className}`}
     >
       <DailyIcon number={dailyExamNumber(day)} className="h-11 w-11 text-lg" />
       <span className={`min-w-0 flex-1 ${tall ? "md:flex-none" : ""}`}>

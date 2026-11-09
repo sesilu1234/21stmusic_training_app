@@ -6,7 +6,7 @@ import Staff from "@/app/components/Staff";
 import StaffCard from "@/app/components/StaffCard";
 import PianoKeyboard, { type KeyMark } from "@/app/components/PianoKeyboard";
 import { fretboardFlipClass, useLeftHanded } from "@/lib/handedness";
-import { audioContext, playExamAudio } from "@/app/components/notePlayer";
+import { audioContext, playExamAudio, stopExamAudio } from "@/app/components/notePlayer";
 import type { ExamAudio, PromptPart } from "@/lib/exams/types";
 import { bemol } from "@/lib/bemol";
 
@@ -34,6 +34,8 @@ const AudioPart = ({ audio }: { audio: ExamAudio }) => {
     if (audioContext().state === "running") play();
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
+      // Al pasar a la siguiente pregunta esta se desmonta: que no siga sonando.
+      stopExamAudio();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -40,12 +40,17 @@ export const unlockAudio = () => {
 };
 
 /** Unas notas a la vez, en `when` (reloj del audio). */
-export const scheduleNotes = (notes: number[], when: number, bassBoost = 1) => {
+export const scheduleNotes = (
+  notes: number[],
+  when: number,
+  bassBoost = 1,
+  destination: AudioNode = outputNode(audioContext()),
+) => {
   const ctx = audioContext();
   const bass = bassBoost === 1 ? null : Math.min(...notes);
   let boosted = false;
   notes.forEach((semitone) => {
-    let out: AudioNode = outputNode(ctx);
+    let out: AudioNode = destination;
     if (semitone === bass && !boosted) {
       boosted = true;
       const lift = ctx.createGain();
@@ -64,13 +69,44 @@ export const playNow = (semitone: number) => {
   scheduleNotes([semitone], ctx.currentTime + 0.01);
 };
 
+/**
+ * Por dónde sale lo que suena ahora en el examen. Las notas van programadas en
+ * el reloj del audio y no se pueden "desprogramar" una a una, así que pasan
+ * todas por este volumen propio: para callarlas basta con bajarlo a cero.
+ */
+let examBus: GainNode | null = null;
+
+/** Corta en seco lo que esté sonando del examen (al pasar de pregunta, al repetir). */
+export const stopExamAudio = () => {
+  const bus = examBus;
+  if (!bus) return;
+  examBus = null;
+  const ctx = audioContext();
+  const now = ctx.currentTime;
+  // Una bajada de 30 ms y no un corte a cero: el salto brusco suena a chasquido.
+  bus.gain.cancelScheduledValues(now);
+  bus.gain.setValueAtTime(bus.gain.value, now);
+  bus.gain.linearRampToValueAtTime(0, now + 0.03);
+  window.setTimeout(() => bus.disconnect(), 100);
+};
+
 /** Lo que suena en una pregunta de examen. Devuelve cuándo acaba (reloj del audio). */
 export const playExamAudio = (audio: ExamAudio) => {
   const ctx = audioContext();
   if (ctx.state === "suspended") void ctx.resume();
+  // Si aún sonaba lo anterior (otra pregunta, o pulsar "Escuchar" dos veces),
+  // se calla antes de empezar: dos a la vez no hay quien los distinga.
+  stopExamAudio();
+  const bus = ctx.createGain();
+  bus.connect(outputNode(ctx));
+  examBus = bus;
   const start = ctx.currentTime + 0.08;
-  if (audio.drone) scheduleDrone(ctx, audio.drone.note, start, audio.drone.seconds);
-  audio.events.forEach((event) => scheduleNotes(event.notes, start + event.at, audio.bassBoost ?? 1));
+  if (audio.drone) scheduleDrone(ctx, audio.drone.note, start, audio.drone.seconds, bus);
+  // El pedal no se mueve: en el juego tampoco (`playOverDrone`).
+  const shift = audio.transpose ?? 0;
+  audio.events.forEach((event) =>
+    scheduleNotes(event.notes.map((note) => note + shift), start + event.at, audio.bassBoost ?? 1, bus),
+  );
   return start + audio.seconds;
 };
 

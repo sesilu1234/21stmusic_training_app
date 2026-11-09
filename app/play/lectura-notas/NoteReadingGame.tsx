@@ -113,7 +113,7 @@ export default function NoteReadingGame({ level }: { level: NoteReadingLevel }) 
   };
 
   if (!round || !question) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-dvh bg-slate-950" />;
   }
 
   const solution = noteLabel(question);
@@ -127,12 +127,12 @@ export default function NoteReadingGame({ level }: { level: NoteReadingLevel }) 
     : [options];
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href="/play/lectura-notas"
@@ -160,8 +160,8 @@ export default function NoteReadingGame({ level }: { level: NoteReadingLevel }) 
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
-          <div className="mb-7 flex justify-center">
+        <main className="mt-auto mx-auto flex w-full max-w-[980px] flex-col pb-2 pt-3 md:pb-5 md:pt-8">
+          <div className="mb-4 flex justify-center md:mb-7">
             <StaffCard>
               <StaffNote
                 semitone={question.semitone}
@@ -256,7 +256,7 @@ export default function NoteReadingGame({ level }: { level: NoteReadingLevel }) 
             )}
           </div>
 
-          <div className="mt-6 flex min-h-[2.5rem] items-center justify-center">
+          <div className="mt-3 flex min-h-[2.5rem] items-center justify-center md:mt-6">
             {answered === null ? (
               <p className="text-center text-[11px] uppercase tracking-[0.2em] text-white/25">
                 Di qué nota está escrita

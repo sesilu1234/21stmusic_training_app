@@ -20,6 +20,21 @@
   font-display: block;
 }
 
+/* El fondo de la página por debajo de la foto. Solo asoma en el rebote del
+   scroll del móvil (arriba y abajo), y era negro: se veía una franja. Ahora
+   son los colores de la foto con el velo ya puesto, de marrón arriba a azul
+   noche abajo, para que al asomar no se note. */
+html {
+  background-color: #020b21;
+  background-image: linear-gradient(to bottom, #4e372c, #2a1d2a 50%, #020b21);
+  background-attachment: fixed;
+}
+
+html[data-theme-mode="light"] {
+  background-color: #081a38;
+  background-image: linear-gradient(to bottom, #ad784b, #5e4552 50%, #081a38);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

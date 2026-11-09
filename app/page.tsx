@@ -197,7 +197,7 @@ export default async function HomePage() {
       <div className="mx-auto w-full max-w-5xl">
         {/* El reto de hoy (1/3) y, al lado (2/3), su ranking y el de ayer (solo con sesión: son nombres de alumnos). */}
         {student && ranked ? (
-          <div className="mb-7 grid gap-3 md:grid-cols-3">
+          <div className="mb-7 grid grid-cols-1 gap-3 md:grid-cols-3">
             <DailyExamCard day={day} status={examen} className="" tall />
             <div className="grid grid-cols-2 gap-3 md:col-span-2">
               <HonorStrip

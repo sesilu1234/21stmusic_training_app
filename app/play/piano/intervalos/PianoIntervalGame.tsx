@@ -141,7 +141,7 @@ export default function PianoIntervalGame({
   };
 
   if (!round || !question) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-dvh bg-slate-950" />;
   }
 
   const target = targetOf(question);
@@ -159,7 +159,7 @@ export default function PianoIntervalGame({
   if (answered !== null) badges[target] = question.interval.short;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       {gameOver && (
@@ -170,8 +170,8 @@ export default function PianoIntervalGame({
         />
       )}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] md:gap-4">
           <Link
             href="/play/piano/intervalos"
             className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/50 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/60 backdrop-blur-sm transition hover:border-emerald-300/50 hover:text-white md:px-4"
@@ -193,7 +193,9 @@ export default function PianoIntervalGame({
             </p>
           </div>
 
-          <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-2">
+          {/* En el móvil el instrumento baja a su propia línea, debajo del
+              título: a su lado le dejaba al título muy poco sitio. */}
+          <div className="col-start-2 row-start-2 justify-self-center sm:col-start-3 sm:row-start-1">
             <SoundIconPicker
               options={PIANO_GAME_SOUNDS}
               selectedIdx={presetIdx}
@@ -202,11 +204,13 @@ export default function PianoIntervalGame({
               onVariant={setVariantIdx}
               activeClass="bg-emerald-400/25"
             />
+          </div>
+          <div className="col-start-3 row-start-1 sm:col-start-4">
             <ThemeLogoPill />
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
+        <main className="mt-auto mx-auto flex w-full max-w-[980px] flex-col pb-3 pt-6 md:pb-5 md:pt-8">
           <div className="mb-6 flex justify-center">
             <button
               type="button"

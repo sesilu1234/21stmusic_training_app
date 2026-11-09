@@ -197,7 +197,7 @@ export default function NotasGame({
   };
 
   if (!ronda || !pregunta) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-dvh bg-slate-950" />;
   }
 
   const esperadas = pregunta.notas;
@@ -206,12 +206,12 @@ export default function NotasGame({
   const faltan = esperadas.length - puestas.length;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       {gameOver && <GameOverModal correct={aciertos} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href={backHref}
@@ -243,7 +243,7 @@ export default function NotasGame({
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col justify-center pb-8 pt-6 md:pb-10 md:pt-8">
+        <main className="mt-auto mx-auto flex w-full max-w-[720px] flex-col pb-3 pt-6 md:pb-5 md:pt-8">
           {/* Una casilla por nota que hay que decir. */}
           <div className="mb-7 flex flex-wrap items-center justify-center gap-2">
             {esperadas.map((esperada, index) => {

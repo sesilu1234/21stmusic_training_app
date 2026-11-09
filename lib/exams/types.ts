@@ -46,6 +46,12 @@ export interface ExamAudio {
   drone?: { note: number; seconds: number };
   /** Realce del bajo (dos acordes seguidos). */
   bassBoost?: number;
+  /**
+   * Cuántos semitonos se mueve lo que suena al tocarlo (no el pedal). Los
+   * modos de oído suenan una octava por debajo de lo escrito (-12), y el
+   * examen tiene que sonar igual que ellos.
+   */
+  transpose?: number;
   /** Cuánto dura todo, para saber cuándo se ha acabado de oír. */
   seconds: number;
 }
@@ -71,6 +77,8 @@ export type ExamInput =
       /** Teclas marcadas de entrada: la de partida, la nota que se da hecha. */
       marks?: Record<number, KeyMarkKind>;
       badges?: Record<number, string>;
+      /** Cuánto se mueve el sonido de cada tecla, como `ExamAudio.transpose` (dictado: -12). */
+      soundTranspose?: number;
     }
   /** Dar los golpes de un ritmo con el metrónomo. */
   | { type: "taps"; score: ScoreItem[]; bpm: number };

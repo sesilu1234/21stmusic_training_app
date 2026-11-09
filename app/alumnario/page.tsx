@@ -341,7 +341,7 @@ export default async function AlumnoPage({
           práctica esta pantalla llevaba dos velos apilados y salía mucho más
           apagada que el resto de la app. Bajado a 35%: sigue asentando las
           tarjetas y ya no dobla el oscurecido. */}
-      <div aria-hidden className="fixed inset-0 z-0 bg-slate-950/35" />
+      <div aria-hidden className="fixed inset-x-0 top-0 z-0 h-[100lvh] bg-slate-950/35" />
       {/* El mismo halo que la pantalla de acceso, para que las dos páginas de
           fuera de la app se reconozcan como de la misma casa. */}
       <div

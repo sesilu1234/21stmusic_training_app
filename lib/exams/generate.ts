@@ -150,6 +150,14 @@ const audioOf = (part: PromptPart[]) =>
 
 // --- Sonidos -----------------------------------------------------------
 
+/**
+ * Lo de los modos de oído suena una octava por debajo de lo escrito, como
+ * todos sus timbres en el juego (EAR_OCTAVE en app/play/oido/audio.ts). Sin
+ * esto el examen sonaba una octava más agudo que el juego.
+ */
+const EAR_OCTAVE = -12;
+const earOctave = (audio: ExamAudio): ExamAudio => ({ ...audio, transpose: EAR_OCTAVE });
+
 /** Acordes uno detrás de otro, como `playSequence`. */
 const sequenceAudio = (chords: number[][], gap: number, tail = 1.6, bassBoost?: number): ExamAudio => ({
   events: chords.map((notes, index) => ({ at: index * gap, notes })),
@@ -378,18 +386,24 @@ const ADAPTERS: Record<string, Adapter> = {
     );
     let previous: { interval: (typeof pool)[number]; root: number } | undefined;
     return Array.from({ length: count }, () => {
-      // El mismo abanico que el juego: de Fa a Do. Y nunca la misma pregunta
-      // calcada (mismo intervalo desde la misma nota) dos veces seguidas.
+      // El mismo abanico que el juego: de Re# a La en melódico, a Sib en
+      // armónico. Y nunca la misma pregunta calcada (mismo intervalo desde la
+      // misma nota) dos veces seguidas.
       const drawn = distinctFromPrevious(
         previous,
-        () => ({ interval: pool[Math.floor(rng() * pool.length)], root: 5 + Math.floor(rng() * 8) }),
+        () => ({
+          interval: pool[Math.floor(rng() * pool.length)],
+          root: 3 + Math.floor(rng() * (harmonic ? 8 : 7)),
+        }),
         (item) => `${item.interval.semitones}|${item.root}`,
       );
       previous = drawn;
       const { interval, root } = drawn;
-      const audio = harmonic
-        ? sequenceAudio([[root, root + interval.semitones]], 0)
-        : sequenceAudio([[root], [root + interval.semitones]], 0.9);
+      const audio = earOctave(
+        harmonic
+          ? sequenceAudio([[root, root + interval.semitones]], 0)
+          : sequenceAudio([[root], [root + interval.semitones]], 0.9),
+      );
       return {
         title: "¿Qué intervalo suena?",
         prompt: [{ type: "audio", audio }],
@@ -414,7 +428,7 @@ const ADAPTERS: Record<string, Adapter> = {
           title: "¿Cuánto sube y de qué tipo es?",
           prompt: [
             { type: "text", lead: "El primero es", strong: first },
-            { type: "audio", audio: sequenceAudio(pairChords(question), 1.15, 1.6, 2.2) },
+            { type: "audio", audio: earOctave(sequenceAudio(pairChords(question), 1.15, 1.6, 2.2)) },
           ],
           ...choice(correct, choicesFor(correct, pool, rng, sameDistance)),
           detail: `Desde ${first}`,
@@ -424,7 +438,7 @@ const ADAPTERS: Record<string, Adapter> = {
     const level = need(CHORD_LEVELS.find((item) => item.slug === slug), "ese nivel");
     return buildChordQuiz(level, count).map((question) => {
       const option = question.options[0];
-      const audio = sequenceAudio([chordNotes(option, question.keyRoot, question.shapes[0])], 0);
+      const audio = earOctave(sequenceAudio([chordNotes(option, question.keyRoot, question.shapes[0])], 0));
       return {
         title: level.heading
           ? `${level.heading.lead} ${level.heading.word.toLowerCase()}${level.heading.tail}`
@@ -446,7 +460,7 @@ const ADAPTERS: Record<string, Adapter> = {
         title: values.length === 1 ? "¿Qué grado suena?" : "¿Qué grados suenan?",
         prompt: [
           { type: "text", lead: "Primero suena la tónica (I)" },
-          { type: "audio", audio: sequenceAudio([tonicChord(question.keyRoot), ...chords], 1.15) },
+          { type: "audio", audio: earOctave(sequenceAudio([tonicChord(question.keyRoot), ...chords], 1.15)) },
         ],
         input: {
           type: "sequence",
@@ -466,7 +480,7 @@ const ADAPTERS: Record<string, Adapter> = {
       return {
         title: "¿Qué modo suena?",
         prompt: [
-          { type: "audio", audio: droneAudio(modeNotes(question), 0.43, droneNote(question)) },
+          { type: "audio", audio: earOctave(droneAudio(modeNotes(question), 0.43, droneNote(question))) },
         ],
         ...choice(correct, choicesFor(correct, EAR_MODES.map((mode) => mode.label), rng)),
       };
@@ -485,6 +499,7 @@ const ADAPTERS: Record<string, Adapter> = {
           ...notes.map((note, index) => ({ at: tonicAt + index * gap, notes: [note] })),
         ],
         seconds: tonicAt + notes.length * gap + 0.8,
+        transpose: EAR_OCTAVE,
       };
       return {
         title: "Toca la melodía",
@@ -499,6 +514,8 @@ const ADAPTERS: Record<string, Adapter> = {
           count: keys.length,
           ordered: true,
           exactOctave: true,
+          // Las teclas suenan donde la melodía, como en el juego.
+          soundTranspose: EAR_OCTAVE,
           marks: { [notes[0]]: "root" },
           badges: { [notes[0]]: "Empieza" },
         },

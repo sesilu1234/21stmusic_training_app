@@ -132,7 +132,7 @@ const PianoInput = ({
 
   const press = (semitone: number) => {
     if (disabled || sent) return;
-    playNow(semitone);
+    playNow(semitone + (input.soundTranspose ?? 0));
     let next: number[];
     if (!input.ordered) {
       next = keys.includes(semitone) ? keys.filter((key) => key !== semitone) : [...keys, semitone];

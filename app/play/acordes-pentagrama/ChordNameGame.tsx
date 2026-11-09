@@ -131,7 +131,7 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
   };
 
   if (!round || !question) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return <div className="min-h-dvh bg-slate-950" />;
   }
 
   const isCorrect = answered !== null && isRight(answered, question);
@@ -150,12 +150,12 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
   ];
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden font-sans text-white">
+    <div className="relative min-h-dvh overflow-x-hidden font-sans text-white">
       <Backdrop />
 
       {gameOver && <GameOverModal correct={correctCount} total={total} />}
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pb-5 pt-4 md:px-8 md:pb-7 md:pt-5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-4">
           <Link
             href="/play/acordes-pentagrama/nombrar"
@@ -182,7 +182,7 @@ export default function ChordNameGame({ level }: { level: ChordStaffLevel }) {
           </div>
         </div>
 
-        <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col justify-center pb-6 pt-4 md:pb-6 md:pt-4">
+        <main className="mt-auto mx-auto flex w-full max-w-[980px] flex-col pb-3 pt-4 md:pb-5 md:pt-4">
           <div className="mb-5 flex justify-center">
             <StaffCard>
               <Staff clef={question.clef} columns={columns} label="Acorde en el pentagrama" />
